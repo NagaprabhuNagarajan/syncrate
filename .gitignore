@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Next.js
+.next
+out
+
+# Build
+dist
+build
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage
+playwright-report
+test-results
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Supabase
+supabase/.branches
+supabase/.temp
+
+# Misc
+*.log
+npm-debug.log*
+pnpm-debug.log*

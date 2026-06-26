@@ -1,0 +1,71 @@
+version: "3.8"
+
+# =============================================================================
+# Syncrate — Local Development with Supabase
+# =============================================================================
+# Usage:
+#   Start:  docker compose up -d
+#   Stop:   docker compose down
+#   Logs:   docker compose logs -f
+#
+# After starting:
+#   Supabase Studio: http://localhost:54323
+#   Supabase API:    http://localhost:54321
+#   Next.js:         http://localhost:3000 (run pnpm dev separately)
+# =============================================================================
+
+services:
+  # Supabase local development stack
+  supabase-db:
+    image: supabase/postgres:15.1.0.147
+    container_name: syncrate-db
+    healthcheck:
+      test: pg_isready -U postgres -h localhost
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+    restart: unless-stopped
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      JWT_EXP: 3600
+    volumes:
+      - syncrate-db-data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+
+  supabase-studio:
+    image: supabase/studio:20241202-71e8571
+    container_name: syncrate-studio
+    restart: unless-stopped
+    ports:
+      - "54323:3000"
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: postgres
+      DEFAULT_ORGANIZATION_NAME: Syncrate
+      DEFAULT_PROJECT_NAME: Syncrate Local
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_PUBLIC_URL: http://localhost:54321
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlLWRlbW8iLCJpYXQiOjE2NDE3NjkyMDAsImV4cCI6MTc5OTUzNTYwMH0.dc_X5iR_VP_qroQncgBZe1BrOeEdCHbJ-DVuLtXPPHA
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UtZGVtbyIsImlhdCI6MTY0MTc2OTIwMCwiZXhwIjoxNzk5NTM1NjAwfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X_4bXnlw
+
+volumes:
+  syncrate-db-data:
+
+networks:
+  default:
+    name: syncrate-network
