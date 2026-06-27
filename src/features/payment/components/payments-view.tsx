@@ -591,24 +591,42 @@ function SupplierPaymentsTab({
 // Loading skeleton
 // ─────────────────────────────────────────────────────────────
 
+const SKELETON_COLUMN_KEYS = [
+  "col-1",
+  "col-2",
+  "col-3",
+  "col-4",
+  "col-5",
+  "col-6",
+  "col-7",
+] as const;
+
+const SKELETON_ROW_KEYS = [
+  "row-1",
+  "row-2",
+  "row-3",
+  "row-4",
+  "row-5",
+] as const;
+
 function PaymentsTableSkeleton() {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200">
       <table className="min-w-full">
         <thead className="bg-slate-50">
           <tr>
-            {Array.from({ length: 7 }).map((_, i) => (
-              <th key={i} className="px-4 py-3">
+            {SKELETON_COLUMN_KEYS.map((columnKey) => (
+              <th key={columnKey} className="px-4 py-3">
                 <Skeleton className="h-4 w-20" />
               </th>
             ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <tr key={i}>
-              {Array.from({ length: 7 }).map((_, j) => (
-                <td key={j} className="px-4 py-3">
+          {SKELETON_ROW_KEYS.map((rowKey) => (
+            <tr key={rowKey}>
+              {SKELETON_COLUMN_KEYS.map((columnKey) => (
+                <td key={`${rowKey}-${columnKey}`} className="px-4 py-3">
                   <Skeleton className="h-4 w-full" />
                 </td>
               ))}
