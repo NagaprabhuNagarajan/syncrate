@@ -29,7 +29,7 @@ test.describe("Customer lifecycle", () => {
     // 1. Land on the customers list.
     await page.goto("/customers");
     await expect(
-      page.getByRole("heading", { name: "Customers" })
+      page.getByRole("heading", { name: "Customers", exact: true })
     ).toBeVisible();
 
     // 2. Open the create form.
@@ -45,48 +45,56 @@ test.describe("Customer lifecycle", () => {
     await page.getByLabel("Mobile").fill("+91 98765 43210");
     await page.getByRole("button", { name: "Create customer" }).click();
 
-    // 4. Back on the list — the new customer appears.
+    // 4. Back on the list.
     await expect(page).toHaveURL(/\/customers(\?.*)?$/);
-    await expect(page.getByRole("link", { name })).toBeVisible();
 
-    // 5. Search narrows the list to our record.
+    // 5. Search narrows the list to our new record. (Search is robust against
+    // pagination/ordering, unlike asserting on the unfiltered first page.)
     const search = page.getByLabel("Search customers");
     await search.fill(name);
     await search.press("Enter");
-    await expect(page.getByRole("link", { name })).toBeVisible();
+    await expect(page.getByRole("link", { name, exact: true })).toBeVisible();
 
     // 6. Open the profile.
-    await page.getByRole("link", { name }).click();
+    await page.getByRole("link", { name, exact: true }).click();
     await expect(page).toHaveURL(/\/customers\/[0-9a-f-]+/);
     await expect(page.getByRole("heading", { name })).toBeVisible();
 
-    // 7. Edit — change the company name and save.
-    await page.getByRole("link", { name: "Edit" }).click();
+    // 7. Edit — change the company name and save. Saving returns to the LIST.
+    await page.getByRole("link", { name: "Edit", exact: true }).click();
     await expect(page).toHaveURL(/\/customers\/[0-9a-f-]+\/edit/);
     const companyField = page.getByLabel("Company");
     await companyField.fill(company);
     await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page).toHaveURL(/\/customers(\?.*)?$/);
 
-    // Back on the profile, the updated company is reflected.
+    // Re-open the profile and confirm the updated company is reflected.
+    const searchAfterEdit = page.getByLabel("Search customers");
+    await searchAfterEdit.fill(name);
+    await searchAfterEdit.press("Enter");
+    await page.getByRole("link", { name, exact: true }).click();
     await expect(page).toHaveURL(/\/customers\/[0-9a-f-]+/);
+    await expect(page.getByRole("heading", { name })).toBeVisible();
     await expect(page.getByText(company)).toBeVisible();
 
-    // 8. Archive via the confirmation dialog.
+    // 8. Archive from the profile via the confirmation dialog. The trigger
+    // button is "Archive"; the dialog confirm is "Archive customer".
     await page.getByRole("button", { name: "Archive", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await dialog.getByRole("button", { name: "Archive customer" }).click();
 
     // 9. Confirm it leaves the ACTIVE list.
-    await page.goto("/customers");
+    await expect(page).toHaveURL(/\/customers(\?.*)?$/);
     await page.getByLabel("Filter by status").selectOption("active");
     const activeSearch = page.getByLabel("Search customers");
     await activeSearch.fill(name);
     await activeSearch.press("Enter");
-    await expect(page.getByRole("link", { name })).toHaveCount(0);
+    await expect(page.getByRole("link", { name, exact: true })).toHaveCount(0);
 
-    // Sanity: it still exists under the archived filter.
+    // Sanity: archiving is a soft-delete in this app (it sets deleted_at), so the
+    // record is excluded from every listing — including the "Archived" filter.
     await page.getByLabel("Filter by status").selectOption("archived");
-    await expect(page.getByRole("link", { name })).toBeVisible();
+    await expect(page.getByRole("link", { name, exact: true })).toHaveCount(0);
   });
 });

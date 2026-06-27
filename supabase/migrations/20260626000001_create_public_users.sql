@@ -100,23 +100,10 @@ CREATE POLICY "users_update_own"
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
 
--- Org members can read profiles of members in the same org
-CREATE POLICY "users_select_org_members"
-  ON public.users FOR SELECT
-  TO authenticated
-  USING (
-    id IN (
-      SELECT om.user_id
-        FROM public.organization_members om
-       WHERE om.organization_id IN (
-         SELECT om2.organization_id
-           FROM public.organization_members om2
-          WHERE om2.user_id = auth.uid()
-            AND om2.deleted_at IS NULL
-       )
-         AND om.deleted_at IS NULL
-    )
-  );
+-- NOTE: the "users_select_org_members" policy (org members reading each other's
+-- profiles) depends on public.organization_members, which is created later in
+-- 20260626000005. It is therefore defined in 20260627000010, after that table
+-- exists — defining it here would fail with "relation does not exist".
 
 COMMENT ON TABLE public.users IS
   'Public user profiles. Mirrors auth.users. Auto-created by trigger on registration.';

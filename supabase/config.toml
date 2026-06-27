@@ -26,9 +26,6 @@ max_client_conn = 100
 [realtime]
 enabled = true
 ip_version = "IPv6"
-heartbeat_interval_ms = 5000
-min_messages_lag_ms = 0
-max_messages_lag_ms = 30000
 
 [studio]
 enabled = true
@@ -62,7 +59,7 @@ enable_signup = true
 enable_anonymous_sign_ins = false
 enable_manual_linking = false
 minimum_password_length = 8
-password_requirements = "upper_lower_letters_digits_symbols"
+password_requirements = "lower_upper_letters_digits_symbols"
 
 [auth.email]
 enable_signup = true
