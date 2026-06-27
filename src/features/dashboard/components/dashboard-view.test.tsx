@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@/tests/utils";
 import type { Organization } from "@/features/organization/types/organization.types";
+import type { DashboardKpis } from "@/features/dashboard/services/dashboard.service";
 import { DashboardView } from "./dashboard-view";
 
 // ─────────────────────────────────────────────────────────────
@@ -38,10 +39,26 @@ function makeOrg(overrides: Partial<Organization> = {}): Organization {
   };
 }
 
-function renderDashboard(org: Organization = makeOrg()) {
-  return render(
-    <DashboardView organization={org} organizations={[org]} userId="user-1" />
-  );
+function makeKpis(overrides: Partial<DashboardKpis> = {}): DashboardKpis {
+  return {
+    salesThisMonth: 150000,
+    salesLastMonth: 100000,
+    purchasesThisMonth: 50000,
+    outstandingReceivable: 25000,
+    outstandingPayable: 10000,
+    lowStockCount: 3,
+    outOfStockCount: 1,
+    openInvoiceCount: 5,
+    recentActivity: [],
+    ...overrides,
+  };
+}
+
+function renderDashboard(
+  org: Organization = makeOrg(),
+  kpis: DashboardKpis = makeKpis()
+) {
+  return render(<DashboardView organization={org} kpis={kpis} />);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -60,58 +77,76 @@ describe("DashboardView", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the get-started setup banner with a link to settings", () => {
+  it("renders all four KPI card labels", () => {
     renderDashboard();
 
-    expect(
-      screen.getByText(/get started with syncrate/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /complete setup/i })
-    ).toHaveAttribute("href", "/settings");
+    expect(screen.getByText("Sales This Month")).toBeInTheDocument();
+    expect(screen.getByText("Outstanding Receivable")).toBeInTheDocument();
+    expect(screen.getByText("Outstanding Payable")).toBeInTheDocument();
+    expect(screen.getByText("Low Stock Items")).toBeInTheDocument();
   });
 
-  it("renders all four stat cards", () => {
-    renderDashboard();
+  it("shows open invoice count in the receivable badge when > 0", () => {
+    renderDashboard(makeOrg(), makeKpis({ openInvoiceCount: 7 }));
 
-    expect(screen.getByText("Total Revenue")).toBeInTheDocument();
-    expect(screen.getByText("Active Customers")).toBeInTheDocument();
-    expect(screen.getByText("Open Invoices")).toBeInTheDocument();
-    expect(screen.getByText("Payments Received")).toBeInTheDocument();
-    // All stat cards start with no data.
-    expect(screen.getAllByText("No data yet")).toHaveLength(4);
+    expect(screen.getByText("7")).toBeInTheDocument();
+    expect(screen.getByText(/7 open invoice/i)).toBeInTheDocument();
   });
 
-  it("renders the recent activity section with its empty state", () => {
-    renderDashboard();
+  it("renders the recent activity section with empty state when no activity", () => {
+    renderDashboard(makeOrg(), makeKpis({ recentActivity: [] }));
 
     expect(
       screen.getByRole("heading", { name: /recent activity/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/no activity yet/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /view all/i })).toHaveAttribute(
-      "href",
-      "/reports"
-    );
   });
 
-  it("renders all quick actions with their destinations", () => {
+  it("renders activity rows when recent activity is provided", () => {
+    const kpis = makeKpis({
+      recentActivity: [
+        {
+          type: "invoice",
+          id: "inv-1",
+          reference: "INV-001",
+          amount: 10000,
+          date: "2024-06-01",
+          partyName: "Test Customer",
+        },
+      ],
+    });
+    renderDashboard(makeOrg(), kpis);
+
+    expect(screen.getByText("INV-001")).toBeInTheDocument();
+    expect(screen.getByText("Test Customer")).toBeInTheDocument();
+  });
+
+  it("renders all quick actions with correct destinations", () => {
     renderDashboard();
 
     expect(
       screen.getByRole("heading", { name: /quick actions/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /new invoice/i })
-    ).toHaveAttribute("href", "/invoices/new");
+      screen.getByRole("link", { name: /new sales invoice/i })
+    ).toHaveAttribute("href", "/sales/invoices/new");
     expect(
-      screen.getByRole("link", { name: /add customer/i })
-    ).toHaveAttribute("href", "/customers/new");
+      screen.getByRole("link", { name: /new purchase invoice/i })
+    ).toHaveAttribute("href", "/purchases/invoices/new");
     expect(
       screen.getByRole("link", { name: /record payment/i })
     ).toHaveAttribute("href", "/payments/new");
     expect(
-      screen.getByRole("link", { name: /add product/i })
-    ).toHaveAttribute("href", "/products/new");
+      screen.getByRole("link", { name: /view inventory/i })
+    ).toHaveAttribute("href", "/inventory");
+  });
+
+  it("shows positive growth indicator when sales increased", () => {
+    renderDashboard(
+      makeOrg(),
+      makeKpis({ salesThisMonth: 200000, salesLastMonth: 100000 })
+    );
+
+    expect(screen.getByText(/\+100\.0%/)).toBeInTheDocument();
   });
 });

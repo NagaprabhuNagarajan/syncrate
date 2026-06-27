@@ -742,6 +742,70 @@ type CreditNotesRow = AuditFields & {
   notes: string | null;
 };
 
+// ── Payment domain ────────────────────────────────────────────
+
+type PaymentMethod =
+  | "cash"
+  | "upi"
+  | "bank_transfer"
+  | "cheque"
+  | "credit_card"
+  | "debit_card"
+  | "wallet"
+  | "other";
+
+type CustomerPaymentsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  payment_number: string;
+  customer_id: string;
+  payment_date: string;
+  amount: number;
+  payment_method: PaymentMethod;
+  reference_number: string | null;
+  notes: string | null;
+  status: "completed" | "voided";
+  voided_at: string | null;
+  voided_by: string | null;
+  void_reason: string | null;
+};
+
+type CustomerPaymentAllocationsRow = {
+  id: string;
+  organization_id: string;
+  customer_payment_id: string;
+  invoice_id: string;
+  allocated_amount: number;
+  created_at: string;
+  created_by: string | null;
+};
+
+type SupplierPaymentsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  payment_number: string;
+  supplier_id: string;
+  payment_date: string;
+  amount: number;
+  payment_method: PaymentMethod;
+  reference_number: string | null;
+  notes: string | null;
+  status: "completed" | "voided";
+  voided_at: string | null;
+  voided_by: string | null;
+  void_reason: string | null;
+};
+
+type SupplierPaymentAllocationsRow = {
+  id: string;
+  organization_id: string;
+  supplier_payment_id: string;
+  purchase_invoice_id: string;
+  allocated_amount: number;
+  created_at: string;
+  created_by: string | null;
+};
+
 // ─────────────────────────────────────────────────────────────
 
 type RolesRow = AuditFields & {
@@ -1979,6 +2043,128 @@ export interface Database {
         ];
       };
 
+      // ── customer_payments ─────────────────────────────────
+      customer_payments: {
+        Row: CustomerPaymentsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          payment_number: string;
+          customer_id: string;
+          payment_date?: string;
+          amount: number;
+          payment_method?: PaymentMethod;
+          reference_number?: string | null;
+          notes?: string | null;
+          status?: CustomerPaymentsRow["status"];
+          voided_at?: string | null;
+          voided_by?: string | null;
+          void_reason?: string | null;
+        };
+        Update: Partial<CustomerPaymentsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "customer_payments_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── customer_payment_allocations ──────────────────────
+      customer_payment_allocations: {
+        Row: CustomerPaymentAllocationsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          customer_payment_id: string;
+          invoice_id: string;
+          allocated_amount: number;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<CustomerPaymentAllocationsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "customer_payment_allocations_customer_payment_id_fkey";
+            columns: ["customer_payment_id"];
+            isOneToOne: false;
+            referencedRelation: "customer_payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_payment_allocations_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── supplier_payments ─────────────────────────────────
+      supplier_payments: {
+        Row: SupplierPaymentsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          payment_number: string;
+          supplier_id: string;
+          payment_date?: string;
+          amount: number;
+          payment_method?: PaymentMethod;
+          reference_number?: string | null;
+          notes?: string | null;
+          status?: SupplierPaymentsRow["status"];
+          voided_at?: string | null;
+          voided_by?: string | null;
+          void_reason?: string | null;
+        };
+        Update: Partial<SupplierPaymentsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payments_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── supplier_payment_allocations ──────────────────────
+      supplier_payment_allocations: {
+        Row: SupplierPaymentAllocationsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          supplier_payment_id: string;
+          purchase_invoice_id: string;
+          allocated_amount: number;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<SupplierPaymentAllocationsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payment_allocations_supplier_payment_id_fkey";
+            columns: ["supplier_payment_id"];
+            isOneToOne: false;
+            referencedRelation: "supplier_payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "supplier_payment_allocations_purchase_invoice_id_fkey";
+            columns: ["purchase_invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_invoices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       // ── roles ─────────────────────────────────────────────
       roles: {
         Row: RolesRow;
@@ -2252,6 +2438,34 @@ export interface Database {
       complete_sales_return: {
         Args: { p_return_id: string };
         Returns: undefined;
+      };
+      record_customer_payment: {
+        Args: {
+          p_org_id: string;
+          p_customer_id: string;
+          p_amount: number;
+          p_method: string | null;
+          p_reference: string | null;
+          p_payment_date: string | null;
+          p_notes: string | null;
+          p_payment_number: string;
+          p_allocations: Json;
+        };
+        Returns: string;
+      };
+      record_supplier_payment: {
+        Args: {
+          p_org_id: string;
+          p_supplier_id: string;
+          p_amount: number;
+          p_method: string | null;
+          p_reference: string | null;
+          p_payment_date: string | null;
+          p_notes: string | null;
+          p_payment_number: string;
+          p_allocations: Json;
+        };
+        Returns: string;
       };
     };
     Enums: Record<string, never>;
