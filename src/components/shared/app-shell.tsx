@@ -12,6 +12,7 @@ import {
   Warehouse,
   ShoppingCart,
   FileText,
+  TrendingUp,
   CreditCard,
   BarChart2,
   Settings,
@@ -35,6 +36,8 @@ interface NavItem {
   readonly href: string;
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly badge?: string;
+  /** Override the prefix used for active detection (e.g. "/sales" matches all sales sub-routes). */
+  readonly activePrefix?: string;
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
@@ -44,8 +47,8 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: "Products", href: "/products", icon: Package },
   { label: "Inventory", href: "/inventory", icon: Warehouse },
   { label: "Purchases", href: "/purchases", icon: ShoppingCart },
-  { label: "Sales", href: "/sales", icon: FileText },
-  { label: "Invoices", href: "/invoices", icon: FileText },
+  { label: "Sales", href: "/sales/orders", icon: TrendingUp, activePrefix: "/sales" },
+  { label: "Invoices", href: "/sales/invoices", icon: FileText },
   { label: "Payments", href: "/payments", icon: CreditCard },
   { label: "Reports", href: "/reports", icon: BarChart2 },
   { label: "AI Insights", href: "/ai", icon: Sparkles, badge: "Beta" },
@@ -69,8 +72,12 @@ function NavLink({
   readonly collapsed: boolean;
 }) {
   const pathname = usePathname();
+  const prefix = item.activePrefix ?? item.href;
   const isActive =
-    pathname === item.href || pathname.startsWith(`${item.href}/`);
+    pathname === item.href ||
+    pathname.startsWith(`${item.href}/`) ||
+    (item.activePrefix !== undefined && pathname.startsWith(`${prefix}/`)) ||
+    pathname === prefix;
   const Icon = item.icon;
 
   return (
