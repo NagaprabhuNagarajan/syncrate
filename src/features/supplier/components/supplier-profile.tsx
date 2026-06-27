@@ -346,8 +346,14 @@ export function SupplierProfile({
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">Ledger</CardTitle>
+              <Link
+                href={`/suppliers/${supplier.id}/ledger`}
+                className="text-xs font-medium text-primary-600 hover:text-primary-700"
+              >
+                View full ledger →
+              </Link>
             </CardHeader>
             <CardContent>
               {ledger.entries.length === 0 ? (

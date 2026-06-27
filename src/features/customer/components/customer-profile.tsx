@@ -340,7 +340,15 @@ export function CustomerProfile({
 
       {/* Ledger */}
       <div className="mt-6">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Ledger</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900">Ledger</h2>
+          <Link
+            href={`/customers/${customer.id}/ledger`}
+            className="text-xs font-medium text-primary-600 hover:text-primary-700"
+          >
+            View full ledger →
+          </Link>
+        </div>
         {ledger.entries.length === 0 ? (
           <EmptyState
             icon={Users}

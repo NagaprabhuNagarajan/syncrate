@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
+import { getDashboardKpis } from "@/features/dashboard/services/dashboard.service";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -29,7 +30,6 @@ export default async function DashboardPage({
     redirect("/create-organization");
   }
 
-  // Resolve active org from URL param or default to first
   const orgId = params.org ?? organizations[0]?.id;
   const activeOrg =
     organizations.find((o) => o.id === orgId) ?? organizations[0];
@@ -38,11 +38,7 @@ export default async function DashboardPage({
     redirect("/create-organization");
   }
 
-  return (
-    <DashboardView
-      organization={activeOrg}
-      organizations={organizations}
-      userId={data.user.id}
-    />
-  );
+  const kpis = await getDashboardKpis(supabase, activeOrg.id);
+
+  return <DashboardView organization={activeOrg} kpis={kpis} />;
 }
