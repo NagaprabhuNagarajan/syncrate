@@ -50,6 +50,7 @@ function readFormCandidate(formData: FormData): Record<string, unknown> {
     currency: formData.get("currency") || undefined,
     notes: formData.get("notes") || undefined,
     terms: formData.get("terms") || undefined,
+    version: formData.get("version") || undefined,
     items: parseItems(formData.get("items")) ?? [],
   };
 }

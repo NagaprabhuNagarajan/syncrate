@@ -106,6 +106,7 @@ export type GoodsReceiptErrorCode =
   | "forbidden"
   | "validation"
   | "invalid_status"
+  | "insufficient_stock"
   | "unknown";
 
 export interface GoodsReceiptError {

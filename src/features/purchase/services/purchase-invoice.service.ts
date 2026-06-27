@@ -43,6 +43,21 @@ function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+/**
+ * Maps a raw `post_purchase_invoice` RPC error message to a domain error code.
+ * The Postgres function raises messages that CONTAIN a stable token.
+ */
+function mapPostError(message: string): PurchaseInvoiceErrorCode {
+  const lower = message.toLowerCase();
+  if (lower.includes("not_found")) {
+    return "not_found";
+  }
+  if (lower.includes("invalid_status")) {
+    return "invalid_status";
+  }
+  return "unknown";
+}
+
 // ─────────────────────────────────────────────────────────────
 // Totals computation
 // ─────────────────────────────────────────────────────────────
@@ -178,7 +193,8 @@ export class PurchaseInvoiceService {
     purchaseInvoiceId: string,
     input: UpdatePurchaseInvoiceInput,
     organizationId: string,
-    userId: string
+    userId: string,
+    expectedVersion: number
   ): Promise<PurchaseInvoiceActionResult<PurchaseInvoiceWithItems>> {
     const existing = await this.repo.findById(purchaseInvoiceId);
     if (!existing || existing.organizationId !== organizationId) {
@@ -211,13 +227,16 @@ export class PurchaseInvoiceService {
         total_amount: totals.totalAmount,
         notes: nz(input.notes),
       },
-      userId
+      userId,
+      expectedVersion
     );
 
     if (!header) {
+      // The draft existed and was a draft, so a missing row here means the
+      // optimistic lock failed: someone edited it since this form loaded.
       return fail(
-        "unknown",
-        "Failed to update purchase invoice. Please try again."
+        "conflict",
+        "This purchase invoice was changed by someone else. Reload and try again."
       );
     }
 
@@ -240,58 +259,31 @@ export class PurchaseInvoiceService {
     return ok(full ?? { ...header, items: [] });
   }
 
-  // ── Post (draft → posted; writes the supplier ledger) ──────
+  // ── Post (draft → posted; atomic via RPC) ──────────────────
 
   /**
-   * Posts a draft invoice. A purchase invoice INCREASES the amount payable to
-   * the supplier, so we CREDIT the supplier ledger by the invoice total. The
-   * new running balance is the supplier's latest balance plus the total.
+   * Posts a draft invoice atomically. The `post_purchase_invoice` Postgres
+   * function stamps the invoice posted AND appends the supplier-ledger credit
+   * (a purchase invoice INCREASES the payable) in a single transaction, so this
+   * service only delegates to the RPC, maps any raised error and re-fetches.
    */
   async postPurchaseInvoice(
     purchaseInvoiceId: string,
-    organizationId: string,
-    userId: string
+    _organizationId: string,
+    _userId: string
   ): Promise<PurchaseInvoiceActionResult<PurchaseInvoice>> {
-    const existing = await this.repo.findById(purchaseInvoiceId);
-    if (!existing || existing.organizationId !== organizationId) {
+    const { error } = await this.repo.postInvoiceRpc(purchaseInvoiceId);
+    if (error) {
+      return fail(
+        mapPostError(error.message),
+        "Failed to post purchase invoice."
+      );
+    }
+
+    const posted = await this.repo.findById(purchaseInvoiceId);
+    if (!posted) {
       return fail("not_found", "Purchase invoice not found");
     }
-    if (existing.status !== "draft") {
-      return fail(
-        "invalid_status",
-        "Only draft purchase invoices can be posted"
-      );
-    }
-
-    const posted = await this.repo.setPosted(purchaseInvoiceId, userId);
-    if (!posted) {
-      return fail("unknown", "Failed to post purchase invoice. Please try again.");
-    }
-
-    const lastBalance = await this.repo.getLastLedgerBalance(existing.supplierId);
-    const total = posted.totalAmount;
-    const newBalance = round2(lastBalance + total);
-
-    const ledgerWritten = await this.repo.insertLedgerEntry({
-      organization_id: organizationId,
-      supplier_id: existing.supplierId,
-      entry_date: posted.invoiceDate.toISOString().slice(0, 10),
-      reference_type: "purchase_invoice",
-      reference_id: purchaseInvoiceId,
-      description: `Purchase invoice ${posted.invoiceNumber}`,
-      debit: 0,
-      credit: total,
-      running_balance: newBalance,
-      created_by: userId,
-    });
-
-    if (!ledgerWritten) {
-      return fail(
-        "unknown",
-        "Invoice posted but the supplier ledger could not be updated."
-      );
-    }
-
     return ok(posted);
   }
 

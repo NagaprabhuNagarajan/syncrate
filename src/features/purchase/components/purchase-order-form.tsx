@@ -57,6 +57,8 @@ interface PurchaseOrderFormValues {
   currency: string;
   notes: string;
   terms: string;
+  /** Optimistic-lock version, present (and validated) only in edit mode. */
+  version?: number;
   items: LineItemValue[];
 }
 
@@ -238,6 +240,7 @@ export function PurchaseOrderForm({
       currency: purchaseOrder?.currency ?? "INR",
       notes: purchaseOrder?.notes ?? "",
       terms: purchaseOrder?.terms ?? "",
+      version: purchaseOrder?.version,
       items:
         purchaseOrder && purchaseOrder.items.length > 0
           ? purchaseOrder.items.map((item) => ({
@@ -314,6 +317,11 @@ export function PurchaseOrderForm({
     }
     if (values.terms.trim()) {
       fd.append("terms", values.terms.trim());
+    }
+    // In edit mode carry the loaded version so the update is optimistically
+    // locked — the server rejects the write if the order moved on since load.
+    if (isEdit && purchaseOrder) {
+      fd.append("version", String(purchaseOrder.version));
     }
 
     const items = values.items.map((item) => ({

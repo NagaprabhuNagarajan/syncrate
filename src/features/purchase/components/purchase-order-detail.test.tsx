@@ -49,6 +49,7 @@ function makeOrder(
     createdAt: new Date("2026-06-01"),
     updatedAt: new Date("2026-06-01"),
     createdBy: "user-1",
+    version: 1,
     items: [
       {
         id: "item-1",

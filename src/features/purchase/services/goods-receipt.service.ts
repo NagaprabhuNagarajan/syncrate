@@ -1,8 +1,7 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
-import type { Database } from "@/types/database.types";
+import type { Json } from "@/types/database.types";
 import { GoodsReceiptRepository } from "@/features/purchase/repositories/goods-receipt.repository";
 import { PurchaseOrderRepository } from "@/features/purchase/repositories/purchase-order.repository";
-import { InventoryRepository } from "@/features/inventory/repositories/inventory.repository";
 import type {
   CreateGoodsReceiptInput,
   GoodsReceiptActionResult,
@@ -15,11 +14,17 @@ import type {
 import type {
   PurchaseOrderItem,
   PurchaseOrderStatus,
-  PurchaseOrderWithItems,
 } from "@/features/purchase/types/purchase-order.types";
 
-type DbGoodsReceiptItemInsert =
-  Database["public"]["Tables"]["goods_receipt_items"]["Insert"];
+/** One element of the `p_items` JSON array passed to `receive_goods`. */
+interface ReceiveGoodsLine {
+  readonly purchase_order_item_id: string;
+  readonly product_id: string;
+  readonly ordered_quantity: number;
+  readonly received_quantity: number;
+  readonly rejected_quantity: number;
+  readonly batch_id: string | null;
+}
 
 /** Purchase order statuses from which goods may be received. */
 const RECEIVABLE_STATUSES: ReadonlySet<PurchaseOrderStatus> = new Set([
@@ -40,6 +45,32 @@ function fail(
   return { success: false, error };
 }
 
+/**
+ * Maps a `receive_goods` exception message to a typed error. The RPC encodes
+ * the failure kind as a substring of the raised message.
+ */
+function mapRpcError(message: string): GoodsReceiptActionResult<never> {
+  if (message.includes("not_found")) {
+    return fail("not_found", "Purchase order not found");
+  }
+  if (message.includes("invalid_status")) {
+    return fail(
+      "invalid_status",
+      "Goods can only be received against an approved, ordered or partially received purchase order."
+    );
+  }
+  if (
+    message.includes("insufficient_stock") ||
+    message.includes("negative_stock")
+  ) {
+    return fail(
+      "insufficient_stock",
+      "Not enough stock to complete this goods receipt."
+    );
+  }
+  return fail("unknown", "Failed to record goods receipt. Please try again.");
+}
+
 /** Normalizes an optional string: trims and converts "" → null. */
 function nz(value: string | undefined): string | null {
   if (value === undefined) {
@@ -52,12 +83,10 @@ function nz(value: string | undefined): string | null {
 export class GoodsReceiptService {
   private readonly repo: GoodsReceiptRepository;
   private readonly poRepo: PurchaseOrderRepository;
-  private readonly inventoryRepo: InventoryRepository;
 
   constructor(supabase: AppSupabaseClient) {
     this.repo = new GoodsReceiptRepository(supabase);
     this.poRepo = new PurchaseOrderRepository(supabase);
-    this.inventoryRepo = new InventoryRepository(supabase);
   }
 
   // ── Reads ──────────────────────────────────────────────────
@@ -82,18 +111,20 @@ export class GoodsReceiptService {
   // ── Create ─────────────────────────────────────────────────
 
   /**
-   * Records a goods receipt against a purchase order. On success this:
-   *   1. inserts the GRN header (status "completed") and its line items,
-   *   2. writes one atomic inventory `purchase` event per received line
-   *      (increases stock via the shared RPC),
-   *   3. bumps each matching `purchase_order_items.received_quantity`,
-   *   4. recomputes and advances the parent PO status
-   *      (completed when every line is fully received, else partially_received).
+   * Records a goods receipt against a purchase order. Validation that needs the
+   * caller's input (line membership, at least one quantity) happens here; the
+   * header + items insert, per-line `purchase` stock events, PO received-qty
+   * bumps and PO status advance all run inside one transaction via the
+   * `receive_goods` RPC. RPC exceptions are mapped back to typed error codes.
+   *
+   * The acting user is not passed to the RPC: it stamps `created_by` from the
+   * Postgres auth context, so `_userId` is accepted only for signature parity
+   * with the other create flows.
    */
   async createGoodsReceipt(
     input: CreateGoodsReceiptInput,
     organizationId: string,
-    userId: string
+    _userId: string
   ): Promise<GoodsReceiptActionResult<GoodsReceiptWithItems>> {
     const po = await this.poRepo.findWithItems(input.purchaseOrderId);
     if (!po || po.organizationId !== organizationId) {
@@ -129,108 +160,44 @@ export class GoodsReceiptService {
 
     const grnNumber = await this.nextGrnNumber(organizationId);
 
-    const header = await this.repo.createHeader({
-      organization_id: organizationId,
-      grn_number: grnNumber,
-      purchase_order_id: po.id,
-      warehouse_id: input.warehouseId,
-      received_date:
-        nz(input.receivedDate) ?? new Date().toISOString().slice(0, 10),
-      status: "completed",
-      notes: nz(input.notes),
-      created_by: userId,
-    });
-
-    if (!header) {
-      return fail("unknown", "Failed to create goods receipt. Please try again.");
-    }
-
-    const itemRows: DbGoodsReceiptItemInsert[] = receivableLines.map((line) => {
+    const items: ReceiveGoodsLine[] = receivableLines.map((line) => {
       const poItem = poItemsById.get(line.purchaseOrderItemId);
       return {
-        organization_id: organizationId,
-        goods_receipt_id: header.id,
         purchase_order_item_id: line.purchaseOrderItemId,
         product_id: line.productId,
         ordered_quantity: poItem ? poItem.quantity : 0,
         received_quantity: line.receivedQuantity,
         rejected_quantity: line.rejectedQuantity ?? 0,
         batch_id: nz(line.batchId),
-        created_by: userId,
       };
     });
 
-    const itemsInserted = await this.repo.insertItems(itemRows);
-    if (!itemsInserted) {
-      return fail("unknown", "Failed to save received line items. Please try again.");
+    const { data, error } = await this.repo.receiveGoodsRpc({
+      p_organization_id: organizationId,
+      p_purchase_order_id: po.id,
+      p_warehouse_id: input.warehouseId,
+      p_grn_number: grnNumber,
+      p_received_date:
+        nz(input.receivedDate) ?? new Date().toISOString().slice(0, 10),
+      p_notes: nz(input.notes),
+      p_items: items as unknown as Json,
+    });
+
+    if (error) {
+      return mapRpcError(error.message);
+    }
+    if (!data) {
+      return fail("unknown", "Failed to record goods receipt. Please try again.");
     }
 
-    // 1) Inventory: one atomic `purchase` event per received line.
-    for (const line of receivableLines) {
-      if (line.receivedQuantity <= 0) {
-        continue;
-      }
-      const { error } = await this.inventoryRepo.adjustStockRpc({
-        p_organization_id: organizationId,
-        p_product_id: line.productId,
-        p_warehouse_id: input.warehouseId,
-        p_quantity: line.receivedQuantity,
-        p_type: "purchase",
-        p_reference_type: "goods_receipt",
-        p_reference_id: header.id,
-        p_batch_id: nz(line.batchId),
-      });
-      if (error) {
-        return fail(
-          "unknown",
-          `Failed to update stock for a received line: ${error.message}`
-        );
-      }
+    const full = await this.repo.findWithItems(data);
+    if (!full) {
+      return fail("unknown", "Goods receipt was recorded but could not be loaded.");
     }
-
-    // 2) Bump each PO line's received_quantity.
-    for (const line of receivableLines) {
-      if (line.receivedQuantity > 0) {
-        await this.repo.bumpPoItemReceived(
-          line.purchaseOrderItemId,
-          line.receivedQuantity
-        );
-      }
-    }
-
-    // 3) Recompute + advance the PO status from fresh line data.
-    await this.advancePurchaseOrderStatus(po, userId);
-
-    const full = await this.repo.findWithItems(header.id);
-    return ok(full ?? { ...header, items: [] });
+    return ok(full);
   }
 
   // ── Helpers ────────────────────────────────────────────────
-
-  /**
-   * Re-reads the PO line items (post-bump) and sets the PO status:
-   *   - every line received >= ordered → "completed"
-   *   - otherwise (some received)      → "partially_received"
-   */
-  private async advancePurchaseOrderStatus(
-    po: PurchaseOrderWithItems,
-    userId: string
-  ): Promise<void> {
-    const items = await this.poRepo.findItems(po.id);
-    if (items.length === 0) {
-      return;
-    }
-    const fullyReceived = items.every(
-      (item) => item.receivedQuantity >= item.quantity
-    );
-    const nextStatus: PurchaseOrderStatus = fullyReceived
-      ? "completed"
-      : "partially_received";
-
-    if (nextStatus !== po.status) {
-      await this.repo.setPoStatus(po.id, nextStatus, userId);
-    }
-  }
 
   /** Generates the next sequential GRN number: `GRN-#####`. */
   private async nextGrnNumber(organizationId: string): Promise<string> {

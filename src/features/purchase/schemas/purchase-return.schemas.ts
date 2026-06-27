@@ -13,6 +13,7 @@ export const PURCHASE_RETURN_REASONS = [
   "wrong_item",
   "expired",
   "quality_issue",
+  "supplier_recall",
   "other",
 ] as const;
 
@@ -24,6 +25,7 @@ export const PURCHASE_RETURN_REASON_LABELS: Record<
   wrong_item: "Wrong item",
   expired: "Expired",
   quality_issue: "Quality issue",
+  supplier_recall: "Supplier recall",
   other: "Other",
 };
 

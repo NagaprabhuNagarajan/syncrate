@@ -16,13 +16,22 @@ type DbPurchaseReturnItem =
   Database["public"]["Tables"]["purchase_return_items"]["Row"];
 type DbPurchaseReturnItemInsert =
   Database["public"]["Tables"]["purchase_return_items"]["Insert"];
-type DbSupplierLedgerInsert =
-  Database["public"]["Tables"]["supplier_ledger_entries"]["Insert"];
 
 /** A list row enriched with the joined supplier name from `suppliers(name)`. */
 type DbPurchaseReturnListRow = DbPurchaseReturn & {
   suppliers: { name: string } | { name: string }[] | null;
 };
+
+/** Minimal error shape surfaced by Supabase RPC calls. */
+export interface RpcError {
+  readonly message: string;
+}
+
+/** Passthrough result of an atomic RPC call. */
+export interface RpcResult<T> {
+  readonly data: T | null;
+  readonly error: RpcError | null;
+}
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -49,6 +58,7 @@ function mapPurchaseReturn(row: DbPurchaseReturn): PurchaseReturn {
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     createdBy: row.created_by,
+    version: row.version,
   };
 }
 
@@ -239,10 +249,17 @@ export class PurchaseReturnRepository {
     return this.insertItems(items);
   }
 
+  /**
+   * Applies a header patch guarded by an optimistic lock: the update only
+   * matches when the stored `version` equals `expectedVersion`. A concurrent
+   * write bumps the version (via the `handle_updated_at` trigger), so a stale
+   * caller matches no row and gets `null` — the service maps this to a conflict.
+   */
   async updateHeader(
     id: string,
     patch: Partial<DbPurchaseReturn>,
-    updatedBy: string
+    updatedBy: string,
+    expectedVersion: number
   ): Promise<PurchaseReturn | null> {
     const { data, error } = await this.supabase
       .from("purchase_returns")
@@ -252,6 +269,7 @@ export class PurchaseReturnRepository {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
+      .eq("version", expectedVersion)
       .is("deleted_at", null)
       .select("*")
       .single();
@@ -297,35 +315,18 @@ export class PurchaseReturnRepository {
     return !error;
   }
 
-  // ── Supplier ledger (read last balance + append) ───────────────
-  //
-  // Owned here (not in the supplier module) so the purchase return flow can
-  // compute a running balance and append a reversing entry without coupling to
-  // sibling features still in flight.
-
   /**
-   * Reads the latest running balance for a supplier. Returns 0 when the supplier
-   * has no ledger history yet. Uses `limit(1)` rather than `single()` so an
-   * empty ledger does not surface as an error.
+   * Completes a return atomically via the `complete_purchase_return` Postgres
+   * function: in a single transaction it writes a negative `purchase_return`
+   * stock event per line (reusing `adjust_stock`), appends the supplier-ledger
+   * debit (running_balance = last − total) and flips the status to `completed`.
+   * Raises messages containing `not_found`, `invalid_status`,
+   * `insufficient_stock` or `validation`.
    */
-  async getLastLedgerBalance(supplierId: string): Promise<number> {
-    const { data, error } = await this.supabase
-      .from("supplier_ledger_entries")
-      .select("running_balance")
-      .eq("supplier_id", supplierId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (error || !data || data.length === 0) {
-      return 0;
-    }
-    return Number(data[0]?.running_balance ?? 0);
-  }
-
-  async insertLedgerEntry(entry: DbSupplierLedgerInsert): Promise<boolean> {
-    const { error } = await this.supabase
-      .from("supplier_ledger_entries")
-      .insert(entry);
-    return !error;
+  async completeReturnRpc(returnId: string): Promise<RpcResult<null>> {
+    const { error } = await this.supabase.rpc("complete_purchase_return", {
+      p_return_id: returnId,
+    });
+    return { data: null, error };
   }
 }

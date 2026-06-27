@@ -33,6 +33,8 @@ export interface PurchaseInvoice {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly createdBy: string | null;
+  /** Optimistic-lock counter, auto-incremented by the `handle_updated_at` trigger. */
+  readonly version?: number;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -125,6 +127,7 @@ export type PurchaseInvoiceErrorCode =
   | "forbidden"
   | "validation"
   | "invalid_status"
+  | "conflict"
   | "unknown";
 
 export interface PurchaseInvoiceError {

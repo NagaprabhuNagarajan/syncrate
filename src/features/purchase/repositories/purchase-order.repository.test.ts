@@ -31,6 +31,7 @@ interface MockBuilder {
   update: Mock;
   delete: Mock;
   single: Mock;
+  maybeSingle: Mock;
 }
 
 interface MockClient {
@@ -65,6 +66,7 @@ function createMockClient(results: QueryResult[]): MockClient {
       update: vi.fn(() => builder),
       delete: vi.fn(() => builder),
       single: vi.fn(() => Promise.resolve(result)),
+      maybeSingle: vi.fn(() => Promise.resolve(result)),
       then: (onFulfilled, onRejected) =>
         Promise.resolve(result).then(onFulfilled, onRejected),
     };
@@ -448,33 +450,52 @@ describe("PurchaseOrderRepository", () => {
   });
 
   describe("updateHeader", () => {
-    it("applies the patch with updated_by/updated_at", async () => {
+    it("applies the patch, version-gates the write, and returns ok", async () => {
       const { client, builders } = createMockClient([
-        { data: buildDbOrder({ notes: "updated" }), error: null },
+        { data: buildDbOrder({ notes: "updated", version: 3 }), error: null },
       ]);
-      const order = await new PurchaseOrderRepository(client).updateHeader(
+      const result = await new PurchaseOrderRepository(client).updateHeader(
         "po-1",
         { notes: "updated" },
-        "user-9"
+        "user-9",
+        2
       );
-      expect(order?.notes).toBe("updated");
+      expect(result.status).toBe("ok");
+      if (result.status === "ok") {
+        expect(result.order.notes).toBe("updated");
+        expect(result.order.version).toBe(3);
+      }
       const patch = builders[0].update.mock.calls[0][0] as Record<string, unknown>;
       expect(patch.notes).toBe("updated");
       expect(patch.updated_by).toBe("user-9");
       expect(typeof patch.updated_at).toBe("string");
+      expect(builders[0].eq).toHaveBeenCalledWith("id", "po-1");
+      expect(builders[0].eq).toHaveBeenCalledWith("version", 2);
+      expect(builders[0].maybeSingle).toHaveBeenCalled();
     });
 
-    it("returns null on error", async () => {
+    it("reports a conflict when no row matches the expected version", async () => {
+      const { client } = createMockClient([{ data: null, error: null }]);
+      const result = await new PurchaseOrderRepository(client).updateHeader(
+        "po-1",
+        { notes: "x" },
+        "user-9",
+        9
+      );
+      expect(result.status).toBe("conflict");
+    });
+
+    it("reports an error when the write fails", async () => {
       const { client } = createMockClient([
         { data: null, error: { message: "x" } },
       ]);
-      expect(
-        await new PurchaseOrderRepository(client).updateHeader(
-          "po-1",
-          {},
-          "user-9"
-        )
-      ).toBeNull();
+      const result = await new PurchaseOrderRepository(client).updateHeader(
+        "po-1",
+        {},
+        "user-9",
+        1
+      );
+      expect(result.status).toBe("error");
     });
   });
 

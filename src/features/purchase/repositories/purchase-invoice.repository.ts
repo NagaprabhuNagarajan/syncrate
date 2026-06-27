@@ -17,13 +17,22 @@ type DbPurchaseInvoiceItem =
   Database["public"]["Tables"]["purchase_invoice_items"]["Row"];
 type DbPurchaseInvoiceItemInsert =
   Database["public"]["Tables"]["purchase_invoice_items"]["Insert"];
-type DbSupplierLedgerEntryInsert =
-  Database["public"]["Tables"]["supplier_ledger_entries"]["Insert"];
 
 /** A list row enriched with the joined supplier name from `suppliers(name)`. */
 type DbPurchaseInvoiceListRow = DbPurchaseInvoice & {
   suppliers: { name: string } | { name: string }[] | null;
 };
+
+/** Minimal error shape surfaced by Supabase RPC calls. */
+export interface RpcError {
+  readonly message: string;
+}
+
+/** Passthrough result of an atomic RPC call. */
+export interface RpcResult<T> {
+  readonly data: T | null;
+  readonly error: RpcError | null;
+}
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -54,6 +63,7 @@ function mapPurchaseInvoice(row: DbPurchaseInvoice): PurchaseInvoice {
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     createdBy: row.created_by,
+    version: row.version,
   };
 }
 
@@ -244,10 +254,17 @@ export class PurchaseInvoiceRepository {
     return this.insertItems(items);
   }
 
+  /**
+   * Applies a header patch guarded by an optimistic lock: the update only
+   * matches when the stored `version` equals `expectedVersion`. A concurrent
+   * write bumps the version (via the `handle_updated_at` trigger), so a stale
+   * caller matches no row and gets `null` — the service maps this to a conflict.
+   */
   async updateHeader(
     id: string,
     patch: Partial<DbPurchaseInvoice>,
-    updatedBy: string
+    updatedBy: string,
+    expectedVersion: number
   ): Promise<PurchaseInvoice | null> {
     const { data, error } = await this.supabase
       .from("purchase_invoices")
@@ -257,6 +274,7 @@ export class PurchaseInvoiceRepository {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
+      .eq("version", expectedVersion)
       .is("deleted_at", null)
       .select("*")
       .single();
@@ -288,27 +306,18 @@ export class PurchaseInvoiceRepository {
     return mapPurchaseInvoice(data);
   }
 
-  /** Posts an invoice: stamps status, posted_at and posted_by. */
-  async setPosted(id: string, userId: string): Promise<PurchaseInvoice | null> {
-    const now = new Date().toISOString();
-    const { data, error } = await this.supabase
-      .from("purchase_invoices")
-      .update({
-        status: "posted",
-        posted_at: now,
-        posted_by: userId,
-        updated_by: userId,
-        updated_at: now,
-      })
-      .eq("id", id)
-      .is("deleted_at", null)
-      .select("*")
-      .single();
-
-    if (error || !data) {
-      return null;
-    }
-    return mapPurchaseInvoice(data);
+  /**
+   * Posts an invoice atomically via the `post_purchase_invoice` Postgres
+   * function: in a single transaction it stamps the invoice posted
+   * (posted_at/posted_by) AND appends the supplier-ledger credit
+   * (running_balance = last + total). Raises messages containing `not_found`
+   * or `invalid_status`.
+   */
+  async postInvoiceRpc(invoiceId: string): Promise<RpcResult<null>> {
+    const { error } = await this.supabase.rpc("post_purchase_invoice", {
+      p_invoice_id: invoiceId,
+    });
+    return { data: null, error };
   }
 
   async softDelete(id: string, deletedBy: string): Promise<boolean> {
@@ -322,36 +331,6 @@ export class PurchaseInvoiceRepository {
       .eq("id", id)
       .is("deleted_at", null);
 
-    return !error;
-  }
-
-  // ── Supplier ledger (direct queries; owned by this module) ──
-
-  /**
-   * Reads the running balance of the supplier's most recent ledger entry.
-   * Returns 0 when the supplier has no ledger history yet.
-   */
-  async getLastLedgerBalance(supplierId: string): Promise<number> {
-    const { data, error } = await this.supabase
-      .from("supplier_ledger_entries")
-      .select("running_balance")
-      .eq("supplier_id", supplierId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (error || !data || data.length === 0) {
-      return 0;
-    }
-    return Number(data[0].running_balance);
-  }
-
-  /** Appends a supplier ledger entry. */
-  async insertLedgerEntry(
-    entry: DbSupplierLedgerEntryInsert
-  ): Promise<boolean> {
-    const { error } = await this.supabase
-      .from("supplier_ledger_entries")
-      .insert(entry);
     return !error;
   }
 }

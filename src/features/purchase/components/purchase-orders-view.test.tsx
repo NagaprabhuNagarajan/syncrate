@@ -47,6 +47,7 @@ function makeOrder(
     createdAt: new Date("2026-06-01"),
     updatedAt: new Date("2026-06-01"),
     createdBy: null,
+    version: 1,
     ...overrides,
   };
 }

@@ -130,10 +130,26 @@ describe("createPurchaseOrderSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("updatePurchaseOrderSchema validates the same shape", () => {
-    expect(updatePurchaseOrderSchema.safeParse(validOrder()).success).toBe(true);
+  it("updatePurchaseOrderSchema validates the create shape plus a version", () => {
     expect(
-      updatePurchaseOrderSchema.safeParse(validOrder({ items: [] })).success
+      updatePurchaseOrderSchema.safeParse(validOrder({ version: "2" })).success
+    ).toBe(true);
+    expect(
+      updatePurchaseOrderSchema.safeParse(validOrder({ items: [], version: "2" }))
+        .success
     ).toBe(false);
+  });
+
+  it("updatePurchaseOrderSchema requires a version", () => {
+    const result = updatePurchaseOrderSchema.safeParse(validOrder());
+    expect(result.success).toBe(false);
+  });
+
+  it("updatePurchaseOrderSchema coerces the version to a number", () => {
+    const result = updatePurchaseOrderSchema.safeParse(validOrder({ version: "5" }));
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.version).toBe(5);
+    }
   });
 });

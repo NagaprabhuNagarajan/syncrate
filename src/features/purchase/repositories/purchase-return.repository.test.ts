@@ -38,12 +38,17 @@ interface MockBuilder {
 interface MockClient {
   client: AppSupabaseClient;
   from: Mock;
+  rpc: Mock;
   builders: MockBuilder[];
 }
 
-function createMockClient(results: QueryResult[]): MockClient {
+function createMockClient(
+  results: QueryResult[],
+  rpcResult: { data: unknown; error: unknown } = { data: null, error: null }
+): MockClient {
   const builders: MockBuilder[] = [];
   let index = 0;
+  const rpc = vi.fn(() => Promise.resolve(rpcResult));
 
   const from = vi.fn(() => {
     const result = results[index] ?? { data: null, error: null };
@@ -76,8 +81,8 @@ function createMockClient(results: QueryResult[]): MockClient {
     return builder;
   });
 
-  const client = { from } as unknown as AppSupabaseClient;
-  return { client, from, builders };
+  const client = { from, rpc } as unknown as AppSupabaseClient;
+  return { client, from, rpc, builders };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -442,14 +447,15 @@ describe("PurchaseReturnRepository", () => {
   });
 
   describe("updateHeader", () => {
-    it("applies the patch with updated_by/updated_at", async () => {
+    it("applies the patch with updated_by/updated_at and guards on version", async () => {
       const { client, builders } = createMockClient([
         { data: buildDbReturn({ notes: "updated" }), error: null },
       ]);
       const entry = await new PurchaseReturnRepository(client).updateHeader(
         "pret-1",
         { notes: "updated" },
-        "user-9"
+        "user-9",
+        4
       );
       expect(entry?.notes).toBe("updated");
       const patch = builders[0].update.mock.calls[0][0] as Record<
@@ -459,6 +465,9 @@ describe("PurchaseReturnRepository", () => {
       expect(patch.notes).toBe("updated");
       expect(patch.updated_by).toBe("user-9");
       expect(typeof patch.updated_at).toBe("string");
+      // Optimistic lock: the update is scoped to the expected version.
+      expect(builders[0].eq).toHaveBeenCalledWith("id", "pret-1");
+      expect(builders[0].eq).toHaveBeenCalledWith("version", 4);
     });
 
     it("returns null on error", async () => {
@@ -469,7 +478,21 @@ describe("PurchaseReturnRepository", () => {
         await new PurchaseReturnRepository(client).updateHeader(
           "pret-1",
           {},
-          "user-9"
+          "user-9",
+          1
+        )
+      ).toBeNull();
+    });
+
+    it("returns null when the version does not match (optimistic-lock conflict)", async () => {
+      // A stale version matches no row, so PostgREST returns no data.
+      const { client } = createMockClient([{ data: null, error: null }]);
+      expect(
+        await new PurchaseReturnRepository(client).updateHeader(
+          "pret-1",
+          { notes: "stale" },
+          "user-9",
+          1
         )
       ).toBeNull();
     });
@@ -536,69 +559,29 @@ describe("PurchaseReturnRepository", () => {
     });
   });
 
-  // ── Supplier ledger ──────────────────────────────────────────
+  // ── Atomic completion RPC ────────────────────────────────────
 
-  describe("getLastLedgerBalance", () => {
-    it("reads the latest running balance via limit(1)", async () => {
-      const { client, builders } = createMockClient([
-        { data: [{ running_balance: 5000 }], error: null },
-      ]);
-      const balance = await new PurchaseReturnRepository(
-        client
-      ).getLastLedgerBalance("sup-1");
-      expect(balance).toBe(5000);
-      expect(builders[0].eq).toHaveBeenCalledWith("supplier_id", "sup-1");
-      expect(builders[0].order).toHaveBeenCalledWith("created_at", {
-        ascending: false,
-      });
-      expect(builders[0].limit).toHaveBeenCalledWith(1);
-    });
-
-    it("returns 0 when the supplier has no ledger history", async () => {
-      const { client } = createMockClient([{ data: [], error: null }]);
-      expect(
-        await new PurchaseReturnRepository(client).getLastLedgerBalance("sup-1")
-      ).toBe(0);
-    });
-
-    it("returns 0 on error", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new PurchaseReturnRepository(client).getLastLedgerBalance("sup-1")
-      ).toBe(0);
-    });
-  });
-
-  describe("insertLedgerEntry", () => {
-    it("inserts a ledger row and returns true", async () => {
-      const { client, builders } = createMockClient([
-        { data: null, error: null },
-      ]);
-      const result = await new PurchaseReturnRepository(client).insertLedgerEntry(
-        {
-          organization_id: "org-1",
-          supplier_id: "sup-1",
-          debit: 1180,
-          credit: 0,
-          running_balance: 3820,
-        }
+  describe("completeReturnRpc", () => {
+    it("calls the complete_purchase_return RPC with the return id", async () => {
+      const { client, rpc } = createMockClient([], { data: null, error: null });
+      const result = await new PurchaseReturnRepository(client).completeReturnRpc(
+        "pret-1"
       );
-      expect(result).toBe(true);
-      expect(builders[0].insert).toHaveBeenCalled();
+      expect(rpc).toHaveBeenCalledWith("complete_purchase_return", {
+        p_return_id: "pret-1",
+      });
+      expect(result.error).toBeNull();
     });
 
-    it("returns false on error", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new PurchaseReturnRepository(client).insertLedgerEntry({
-          organization_id: "org-1",
-          supplier_id: "sup-1",
-        })
-      ).toBe(false);
+    it("passes through a raised RPC error", async () => {
+      const { client } = createMockClient([], {
+        data: null,
+        error: { message: "insufficient_stock" },
+      });
+      const result = await new PurchaseReturnRepository(client).completeReturnRpc(
+        "pret-1"
+      );
+      expect(result.error?.message).toBe("insufficient_stock");
     });
   });
 });

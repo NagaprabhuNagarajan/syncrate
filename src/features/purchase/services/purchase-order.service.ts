@@ -225,10 +225,17 @@ export class PurchaseOrderService {
         tax_amount: totals.taxAmount,
         total_amount: totals.totalAmount,
       },
-      userId
+      userId,
+      input.version
     );
 
-    if (!header) {
+    if (header.status === "conflict") {
+      return fail(
+        "conflict",
+        "This purchase order was changed by someone else. Reload and try again."
+      );
+    }
+    if (header.status === "error") {
       return fail("unknown", "Failed to update purchase order. Please try again.");
     }
 
@@ -248,7 +255,7 @@ export class PurchaseOrderService {
     }
 
     const full = await this.repo.findWithItems(purchaseOrderId);
-    return ok(full ?? { ...header, items: [] });
+    return ok(full ?? { ...header.order, items: [] });
   }
 
   // ── Status transitions ─────────────────────────────────────

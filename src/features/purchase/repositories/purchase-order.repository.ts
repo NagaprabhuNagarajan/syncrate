@@ -22,6 +22,17 @@ type DbPurchaseOrderListRow = DbPurchaseOrder & {
   suppliers: { name: string } | { name: string }[] | null;
 };
 
+/**
+ * Outcome of an optimistically-locked header update:
+ *   - `ok`       → the row was updated (returns the new state),
+ *   - `conflict` → the row exists but its version moved on (no write happened),
+ *   - `error`    → the write failed for another reason.
+ */
+export type UpdateHeaderResult =
+  | { readonly status: "ok"; readonly order: PurchaseOrder }
+  | { readonly status: "conflict" }
+  | { readonly status: "error" };
+
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 
@@ -53,6 +64,7 @@ function mapPurchaseOrder(row: DbPurchaseOrder): PurchaseOrder {
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     createdBy: row.created_by,
+    version: Number(row.version),
   };
 }
 
@@ -245,11 +257,18 @@ export class PurchaseOrderRepository {
     return this.insertItems(items);
   }
 
+  /**
+   * Optimistically-locked header update. The write only matches a row whose
+   * `version` equals `expectedVersion`; the `handle_updated_at` trigger bumps
+   * the version automatically. A zero-row result means another writer won the
+   * race — reported as a `conflict` rather than an error.
+   */
   async updateHeader(
     id: string,
     patch: Partial<DbPurchaseOrder>,
-    updatedBy: string
-  ): Promise<PurchaseOrder | null> {
+    updatedBy: string,
+    expectedVersion: number
+  ): Promise<UpdateHeaderResult> {
     const { data, error } = await this.supabase
       .from("purchase_orders")
       .update({
@@ -258,14 +277,18 @@ export class PurchaseOrderRepository {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
+      .eq("version", expectedVersion)
       .is("deleted_at", null)
       .select("*")
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
-      return null;
+    if (error) {
+      return { status: "error" };
     }
-    return mapPurchaseOrder(data);
+    if (!data) {
+      return { status: "conflict" };
+    }
+    return { status: "ok", order: mapPurchaseOrder(data) };
   }
 
   /**

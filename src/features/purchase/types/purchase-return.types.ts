@@ -16,6 +16,7 @@ export type PurchaseReturnReason =
   | "wrong_item"
   | "expired"
   | "quality_issue"
+  | "supplier_recall"
   | "other";
 
 // ─────────────────────────────────────────────────────────────
@@ -39,6 +40,8 @@ export interface PurchaseReturn {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly createdBy: string | null;
+  /** Optimistic-lock counter, auto-incremented by the `handle_updated_at` trigger. */
+  readonly version?: number;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -132,6 +135,7 @@ export type PurchaseReturnErrorCode =
   | "validation"
   | "invalid_status"
   | "insufficient_stock"
+  | "conflict"
   | "unknown";
 
 export interface PurchaseReturnError {

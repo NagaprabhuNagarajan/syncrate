@@ -43,6 +43,8 @@ export interface PurchaseOrder {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly createdBy: string | null;
+  /** Optimistic-lock counter; bumped by the `handle_updated_at` trigger. */
+  readonly version: number;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -100,8 +102,14 @@ export interface CreatePurchaseOrderInput {
   readonly items: readonly CreatePurchaseOrderItemInput[];
 }
 
-/** Update replaces the whole document (header + items); same shape as create. */
-export type UpdatePurchaseOrderInput = CreatePurchaseOrderInput;
+/**
+ * Update replaces the whole document (header + items). It additionally carries
+ * the `version` the client loaded so the write can be optimistically locked —
+ * the update is rejected (`conflict`) if the row changed in the meantime.
+ */
+export interface UpdatePurchaseOrderInput extends CreatePurchaseOrderInput {
+  readonly version: number;
+}
 
 // ─────────────────────────────────────────────────────────────
 // Listing / search
@@ -138,6 +146,7 @@ export type PurchaseOrderErrorCode =
   | "forbidden"
   | "validation"
   | "invalid_status"
+  | "conflict"
   | "unknown";
 
 export interface PurchaseOrderError {

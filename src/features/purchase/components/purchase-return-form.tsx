@@ -288,6 +288,10 @@ export function PurchaseReturnForm({
     if (values.notes.trim()) {
       fd.append("notes", values.notes.trim());
     }
+    if (isEdit && purchaseReturn) {
+      // Carry the optimistic-lock version so the server can detect a stale edit.
+      fd.append("version", String(purchaseReturn.version ?? 1));
+    }
 
     const items = values.items.map((item) => ({
       productId: item.productId,
@@ -357,6 +361,14 @@ export function PurchaseReturnForm({
       )}
 
       <form onSubmit={onSubmit} noValidate className="space-y-5">
+        {isEdit && purchaseReturn && (
+          <input
+            type="hidden"
+            name="version"
+            value={String(purchaseReturn.version ?? 1)}
+            readOnly
+          />
+        )}
         {/* Header fields */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormField

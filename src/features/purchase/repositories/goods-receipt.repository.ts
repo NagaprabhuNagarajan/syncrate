@@ -7,15 +7,25 @@ import type {
   GoodsReceiptListResult,
   GoodsReceiptWithItems,
 } from "@/features/purchase/types/goods-receipt.types";
-import type { PurchaseOrderStatus } from "@/features/purchase/types/purchase-order.types";
 
 type DbGoodsReceipt = Database["public"]["Tables"]["goods_receipts"]["Row"];
-type DbGoodsReceiptInsert =
-  Database["public"]["Tables"]["goods_receipts"]["Insert"];
 type DbGoodsReceiptItem =
   Database["public"]["Tables"]["goods_receipt_items"]["Row"];
-type DbGoodsReceiptItemInsert =
-  Database["public"]["Tables"]["goods_receipt_items"]["Insert"];
+
+/** Arguments accepted by the atomic `receive_goods` Postgres function. */
+export type ReceiveGoodsArgs =
+  Database["public"]["Functions"]["receive_goods"]["Args"];
+
+/** Minimal error shape surfaced by Supabase RPC calls. */
+export interface RpcError {
+  readonly message: string;
+}
+
+/** Passthrough result of the atomic `receive_goods` RPC: the new GRN id. */
+export interface ReceiveGoodsResult {
+  readonly data: string | null;
+  readonly error: RpcError | null;
+}
 
 /** Shape of the nested PO + supplier join used by list rows. */
 interface PurchaseOrderJoin {
@@ -182,73 +192,16 @@ export class GoodsReceiptRepository {
     };
   }
 
-  async createHeader(input: DbGoodsReceiptInsert): Promise<GoodsReceipt | null> {
-    const { data, error } = await this.supabase
-      .from("goods_receipts")
-      .insert(input)
-      .select("*")
-      .single();
-
-    if (error || !data) {
-      return null;
-    }
-    return mapGoodsReceipt(data);
-  }
-
-  async insertItems(items: DbGoodsReceiptItemInsert[]): Promise<boolean> {
-    if (items.length === 0) {
-      return true;
-    }
-    const { error } = await this.supabase
-      .from("goods_receipt_items")
-      .insert(items);
-    return !error;
-  }
-
   /**
-   * Increments `purchase_order_items.received_quantity` by `qty`. Reads the
-   * current value then writes the sum — purchase order lines are not edited
-   * directly anywhere else once the PO leaves draft, so this is safe.
+   * Records a goods receipt atomically via the `receive_goods` Postgres
+   * function. In a single transaction it inserts the GRN header + items, writes
+   * one `purchase` stock event per received line, bumps each PO line's
+   * received quantity, and advances the PO status. It raises on `not_found`,
+   * `invalid_status`, `negative_stock`, or `insufficient_stock`. Returns the
+   * new GRN id.
    */
-  async bumpPoItemReceived(poItemId: string, qty: number): Promise<boolean> {
-    if (qty <= 0) {
-      return true;
-    }
-    const { data, error } = await this.supabase
-      .from("purchase_order_items")
-      .select("received_quantity")
-      .eq("id", poItemId)
-      .single();
-
-    if (error || !data) {
-      return false;
-    }
-
-    const next = Number(data.received_quantity) + qty;
-    const { error: updateError } = await this.supabase
-      .from("purchase_order_items")
-      .update({ received_quantity: next })
-      .eq("id", poItemId);
-
-    return !updateError;
-  }
-
-  /** Advances the parent purchase order's status after a receipt. */
-  async setPoStatus(
-    poId: string,
-    status: PurchaseOrderStatus,
-    userId: string
-  ): Promise<boolean> {
-    const { error } = await this.supabase
-      .from("purchase_orders")
-      .update({
-        status,
-        updated_by: userId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", poId)
-      .is("deleted_at", null);
-
-    return !error;
+  async receiveGoodsRpc(args: ReceiveGoodsArgs): Promise<ReceiveGoodsResult> {
+    const { data, error } = await this.supabase.rpc("receive_goods", args);
+    return { data: data ?? null, error };
   }
 }

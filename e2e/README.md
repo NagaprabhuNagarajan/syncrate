@@ -14,6 +14,7 @@ Supabase backend, while the app boots fine with placeholder env for public pages
 | `auth.spec.ts` | 2 — register / login / logout | Yes |
 | `customer.spec.ts` | 2 — customer lifecycle | Yes |
 | `supplier.spec.ts` | 2 — supplier lifecycle | Yes |
+| `purchase.spec.ts` | 2 — procurement journey (PO → submit → approve → receive → invoice → post) | Yes |
 | `helpers/auth.ts` | shared `loginAs` / `logout` / credential helpers | — |
 
 Tier 2 specs guard themselves with
@@ -54,7 +55,12 @@ Notes:
 
 Tier 2 drives real login and real data mutations, so it needs a running
 Supabase instance, applied migrations, and a seeded test user + organization
-with `customer.*` / `supplier.*` permissions.
+with `customer.*` / `supplier.*` / `purchase.*` permissions. The purchase
+journey (`purchase.spec.ts`) additionally needs at least one supplier, one
+warehouse and one product seeded so the order/invoice selects have options; it
+walks a full procurement chain (create PO → submit → approve → receive goods →
+create a supplier invoice → post), asserting the status badge advances at each
+step.
 
 ```bash
 # 1. Start Docker, then the local Supabase stack

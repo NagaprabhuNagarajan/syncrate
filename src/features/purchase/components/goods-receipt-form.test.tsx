@@ -40,6 +40,7 @@ function buildPo(): PurchaseOrderWithItems {
     createdAt: new Date("2026-06-01"),
     updatedAt: new Date("2026-06-01"),
     createdBy: "user-1",
+    version: 1,
     items: [
       {
         id: "poi-a",

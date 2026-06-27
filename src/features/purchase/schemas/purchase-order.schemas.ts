@@ -65,7 +65,15 @@ export const createPurchaseOrderSchema = z.object({
 
 export type CreatePurchaseOrderFormValues = z.infer<typeof createPurchaseOrderSchema>;
 
-/** Update replaces the entire document, so it validates the same shape. */
-export const updatePurchaseOrderSchema = createPurchaseOrderSchema;
+/**
+ * Update replaces the entire document and additionally carries the optimistic
+ * locking `version` the client loaded the order at.
+ */
+export const updatePurchaseOrderSchema = createPurchaseOrderSchema.extend({
+  version: z.coerce
+    .number({ invalid_type_error: "Version must be a number" })
+    .int("Version must be an integer")
+    .min(1, "Version is required"),
+});
 
 export type UpdatePurchaseOrderFormValues = z.infer<typeof updatePurchaseOrderSchema>;

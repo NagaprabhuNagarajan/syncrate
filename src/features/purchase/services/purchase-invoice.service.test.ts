@@ -19,10 +19,8 @@ const { mockRepo } = vi.hoisted(() => ({
     replaceItems: vi.fn(),
     updateHeader: vi.fn(),
     updateStatus: vi.fn(),
-    setPosted: vi.fn(),
+    postInvoiceRpc: vi.fn(),
     softDelete: vi.fn(),
-    getLastLedgerBalance: vi.fn(),
-    insertLedgerEntry: vi.fn(),
   },
 }));
 
@@ -196,7 +194,7 @@ describe("PurchaseInvoiceService.createPurchaseInvoice", () => {
 // ─────────────────────────────────────────────────────────────
 
 describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
-  it("recomputes totals and replaces items for a draft", async () => {
+  it("recomputes totals, forwards the expected version, and replaces items for a draft", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
     mockRepo.updateHeader.mockResolvedValue(buildInvoice());
     mockRepo.replaceItems.mockResolvedValue(true);
@@ -206,7 +204,8 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
-      "user-1"
+      "user-1",
+      3
     );
 
     expect(result.success).toBe(true);
@@ -216,6 +215,8 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
     >;
     expect(patch.subtotal).toBe(1250);
     expect(patch.total_amount).toBe(1442.5);
+    // The expected version is forwarded to the repo for optimistic locking.
+    expect(mockRepo.updateHeader.mock.calls[0][3]).toBe(3);
     expect(mockRepo.replaceItems).toHaveBeenCalled();
   });
 
@@ -225,7 +226,8 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
-      "u"
+      "u",
+      1
     );
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
@@ -238,7 +240,8 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-2",
-      "u"
+      "u",
+      1
     );
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
@@ -251,7 +254,8 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
-      "u"
+      "u",
+      1
     );
     if (!result.success) {
       expect(result.error.code).toBe("invalid_status");
@@ -259,18 +263,21 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
     expect(mockRepo.updateHeader).not.toHaveBeenCalled();
   });
 
-  it("fails when the header update fails", async () => {
+  it("returns conflict when the optimistic lock fails (no row updated)", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
     mockRepo.updateHeader.mockResolvedValue(null);
     const result = await service.updatePurchaseInvoice(
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
-      "u"
+      "u",
+      1
     );
+    expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.code).toBe("unknown");
+      expect(result.error.code).toBe("conflict");
     }
+    expect(mockRepo.replaceItems).not.toHaveBeenCalled();
   });
 
   it("fails when replacing items fails", async () => {
@@ -281,7 +288,8 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
-      "u"
+      "u",
+      1
     );
     if (!result.success) {
       expect(result.error.code).toBe("unknown");
@@ -290,103 +298,67 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// postPurchaseInvoice — writes the supplier ledger (CREDIT)
+// postPurchaseInvoice — atomic via post_purchase_invoice RPC
 // ─────────────────────────────────────────────────────────────
 
 describe("PurchaseInvoiceService.postPurchaseInvoice", () => {
-  it("posts a draft and CREDITS the supplier ledger with running_balance = last + total", async () => {
+  it("delegates to the post RPC and re-fetches the posted invoice on success", async () => {
+    mockRepo.postInvoiceRpc.mockResolvedValue({ data: null, error: null });
     mockRepo.findById.mockResolvedValue(
-      buildInvoice({ status: "draft", supplierId: "sup-1" })
+      buildInvoice({ status: "posted", totalAmount: 1180 })
     );
-    mockRepo.setPosted.mockResolvedValue(
-      buildInvoice({
-        status: "posted",
-        totalAmount: 1180,
-        invoiceNumber: "PINV-00001",
-        invoiceDate: new Date("2026-06-01"),
-      })
-    );
-    mockRepo.getLastLedgerBalance.mockResolvedValue(5000);
-    mockRepo.insertLedgerEntry.mockResolvedValue(true);
 
     const result = await service.postPurchaseInvoice("pinv-1", "org-1", "user-1");
 
     expect(result.success).toBe(true);
-    expect(mockRepo.setPosted).toHaveBeenCalledWith("pinv-1", "user-1");
-    expect(mockRepo.getLastLedgerBalance).toHaveBeenCalledWith("sup-1");
-
-    const entry = mockRepo.insertLedgerEntry.mock.calls[0][0] as Record<
-      string,
-      unknown
-    >;
-    expect(entry.organization_id).toBe("org-1");
-    expect(entry.supplier_id).toBe("sup-1");
-    expect(entry.reference_type).toBe("purchase_invoice");
-    expect(entry.reference_id).toBe("pinv-1");
-    // A purchase invoice INCREASES the payable → CREDIT the supplier.
-    expect(entry.debit).toBe(0);
-    expect(entry.credit).toBe(1180);
-    expect(entry.running_balance).toBe(6180); // 5000 + 1180
-    expect(entry.entry_date).toBe("2026-06-01");
-    expect(entry.created_by).toBe("user-1");
+    if (result.success) {
+      expect(result.data.status).toBe("posted");
+    }
+    expect(mockRepo.postInvoiceRpc).toHaveBeenCalledWith("pinv-1");
+    expect(mockRepo.findById).toHaveBeenCalledWith("pinv-1");
   });
 
-  it("starts the running balance from 0 when the supplier has no history", async () => {
-    mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
-    mockRepo.setPosted.mockResolvedValue(
-      buildInvoice({ status: "posted", totalAmount: 500 })
-    );
-    mockRepo.getLastLedgerBalance.mockResolvedValue(0);
-    mockRepo.insertLedgerEntry.mockResolvedValue(true);
-
-    await service.postPurchaseInvoice("pinv-1", "org-1", "user-1");
-
-    const entry = mockRepo.insertLedgerEntry.mock.calls[0][0] as Record<
-      string,
-      number
-    >;
-    expect(entry.credit).toBe(500);
-    expect(entry.running_balance).toBe(500);
-  });
-
-  it("returns not_found when the invoice is missing", async () => {
-    mockRepo.findById.mockResolvedValue(null);
+  it("maps a not_found RPC error to not_found", async () => {
+    mockRepo.postInvoiceRpc.mockResolvedValue({
+      data: null,
+      error: { message: "purchase invoice not_found" },
+    });
     const result = await service.postPurchaseInvoice("pinv-1", "org-1", "u");
+    expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
     }
-    expect(mockRepo.setPosted).not.toHaveBeenCalled();
+    expect(mockRepo.findById).not.toHaveBeenCalled();
   });
 
-  it("rejects posting a non-draft invoice", async () => {
-    mockRepo.findById.mockResolvedValue(buildInvoice({ status: "posted" }));
+  it("maps an invalid_status RPC error to invalid_status", async () => {
+    mockRepo.postInvoiceRpc.mockResolvedValue({
+      data: null,
+      error: { message: "invalid_status: not a draft" },
+    });
     const result = await service.postPurchaseInvoice("pinv-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("invalid_status");
     }
-    expect(mockRepo.setPosted).not.toHaveBeenCalled();
   });
 
-  it("fails when posting the header fails (no ledger written)", async () => {
-    mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
-    mockRepo.setPosted.mockResolvedValue(null);
+  it("maps an unrecognized RPC error to unknown", async () => {
+    mockRepo.postInvoiceRpc.mockResolvedValue({
+      data: null,
+      error: { message: "deadlock detected" },
+    });
     const result = await service.postPurchaseInvoice("pinv-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("unknown");
     }
-    expect(mockRepo.insertLedgerEntry).not.toHaveBeenCalled();
   });
 
-  it("fails when the ledger write fails", async () => {
-    mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
-    mockRepo.setPosted.mockResolvedValue(
-      buildInvoice({ status: "posted", totalAmount: 100 })
-    );
-    mockRepo.getLastLedgerBalance.mockResolvedValue(0);
-    mockRepo.insertLedgerEntry.mockResolvedValue(false);
+  it("returns not_found when the re-fetch comes back empty", async () => {
+    mockRepo.postInvoiceRpc.mockResolvedValue({ data: null, error: null });
+    mockRepo.findById.mockResolvedValue(null);
     const result = await service.postPurchaseInvoice("pinv-1", "org-1", "u");
     if (!result.success) {
-      expect(result.error.code).toBe("unknown");
+      expect(result.error.code).toBe("not_found");
     }
   });
 });

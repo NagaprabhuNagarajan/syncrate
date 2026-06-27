@@ -38,12 +38,17 @@ interface MockBuilder {
 interface MockClient {
   client: AppSupabaseClient;
   from: Mock;
+  rpc: Mock;
   builders: MockBuilder[];
 }
 
-function createMockClient(results: QueryResult[]): MockClient {
+function createMockClient(
+  results: QueryResult[],
+  rpcResult: { data: unknown; error: unknown } = { data: null, error: null }
+): MockClient {
   const builders: MockBuilder[] = [];
   let index = 0;
+  const rpc = vi.fn(() => Promise.resolve(rpcResult));
 
   const from = vi.fn(() => {
     const result = results[index] ?? { data: null, error: null };
@@ -76,8 +81,8 @@ function createMockClient(results: QueryResult[]): MockClient {
     return builder;
   });
 
-  const client = { from } as unknown as AppSupabaseClient;
-  return { client, from, builders };
+  const client = { from, rpc } as unknown as AppSupabaseClient;
+  return { client, from, rpc, builders };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -469,14 +474,15 @@ describe("PurchaseInvoiceRepository", () => {
   });
 
   describe("updateHeader", () => {
-    it("applies the patch with updated_by/updated_at", async () => {
+    it("applies the patch with updated_by/updated_at and guards on version", async () => {
       const { client, builders } = createMockClient([
         { data: buildDbInvoice({ notes: "updated" }), error: null },
       ]);
       const invoice = await new PurchaseInvoiceRepository(client).updateHeader(
         "pinv-1",
         { notes: "updated" },
-        "user-9"
+        "user-9",
+        3
       );
       expect(invoice?.notes).toBe("updated");
       const patch = builders[0].update.mock.calls[0][0] as Record<
@@ -486,6 +492,9 @@ describe("PurchaseInvoiceRepository", () => {
       expect(patch.notes).toBe("updated");
       expect(patch.updated_by).toBe("user-9");
       expect(typeof patch.updated_at).toBe("string");
+      // Optimistic lock: the update is scoped to the expected version.
+      expect(builders[0].eq).toHaveBeenCalledWith("id", "pinv-1");
+      expect(builders[0].eq).toHaveBeenCalledWith("version", 3);
     });
 
     it("returns null on error", async () => {
@@ -496,7 +505,21 @@ describe("PurchaseInvoiceRepository", () => {
         await new PurchaseInvoiceRepository(client).updateHeader(
           "pinv-1",
           {},
-          "user-9"
+          "user-9",
+          1
+        )
+      ).toBeNull();
+    });
+
+    it("returns null when the version does not match (optimistic-lock conflict)", async () => {
+      // A stale version matches no row, so PostgREST returns no data.
+      const { client } = createMockClient([{ data: null, error: null }]);
+      expect(
+        await new PurchaseInvoiceRepository(client).updateHeader(
+          "pinv-1",
+          { notes: "stale" },
+          "user-9",
+          1
         )
       ).toBeNull();
     });
@@ -535,41 +558,27 @@ describe("PurchaseInvoiceRepository", () => {
     });
   });
 
-  describe("setPosted", () => {
-    it("stamps status posted with posted_at/posted_by", async () => {
-      const { client, builders } = createMockClient([
-        {
-          data: buildDbInvoice({
-            status: "posted",
-            posted_by: "user-9",
-            posted_at: "2026-06-02T00:00:00.000Z",
-          }),
-          error: null,
-        },
-      ]);
-      const invoice = await new PurchaseInvoiceRepository(client).setPosted(
-        "pinv-1",
-        "user-9"
+  describe("postInvoiceRpc", () => {
+    it("calls the post_purchase_invoice RPC with the invoice id", async () => {
+      const { client, rpc } = createMockClient([], { data: null, error: null });
+      const result = await new PurchaseInvoiceRepository(client).postInvoiceRpc(
+        "pinv-1"
       );
-      expect(invoice?.status).toBe("posted");
-      expect(invoice?.postedBy).toBe("user-9");
-      expect(invoice?.postedAt).toBeInstanceOf(Date);
-      const patch = builders[0].update.mock.calls[0][0] as Record<
-        string,
-        unknown
-      >;
-      expect(patch.status).toBe("posted");
-      expect(patch.posted_by).toBe("user-9");
-      expect(typeof patch.posted_at).toBe("string");
+      expect(rpc).toHaveBeenCalledWith("post_purchase_invoice", {
+        p_invoice_id: "pinv-1",
+      });
+      expect(result.error).toBeNull();
     });
 
-    it("returns null on error", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new PurchaseInvoiceRepository(client).setPosted("pinv-1", "u")
-      ).toBeNull();
+    it("passes through a raised RPC error", async () => {
+      const { client } = createMockClient([], {
+        data: null,
+        error: { message: "invalid_status" },
+      });
+      const result = await new PurchaseInvoiceRepository(client).postInvoiceRpc(
+        "pinv-1"
+      );
+      expect(result.error?.message).toBe("invalid_status");
     });
   });
 
@@ -601,73 +610,4 @@ describe("PurchaseInvoiceRepository", () => {
     });
   });
 
-  // ── Supplier ledger ────────────────────────────────────────
-
-  describe("getLastLedgerBalance", () => {
-    it("returns the running balance of the most recent entry", async () => {
-      const { client, builders } = createMockClient([
-        { data: [{ running_balance: 4200 }], error: null },
-      ]);
-      const balance = await new PurchaseInvoiceRepository(
-        client
-      ).getLastLedgerBalance("sup-1");
-      expect(balance).toBe(4200);
-      expect(builders[0].eq).toHaveBeenCalledWith("supplier_id", "sup-1");
-      expect(builders[0].order).toHaveBeenCalledWith("created_at", {
-        ascending: false,
-      });
-      expect(builders[0].limit).toHaveBeenCalledWith(1);
-    });
-
-    it("returns 0 when the supplier has no ledger history", async () => {
-      const { client } = createMockClient([{ data: [], error: null }]);
-      expect(
-        await new PurchaseInvoiceRepository(client).getLastLedgerBalance("sup-1")
-      ).toBe(0);
-    });
-
-    it("returns 0 on error", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new PurchaseInvoiceRepository(client).getLastLedgerBalance("sup-1")
-      ).toBe(0);
-    });
-  });
-
-  describe("insertLedgerEntry", () => {
-    it("inserts a ledger row and returns true on success", async () => {
-      const { client, builders } = createMockClient([
-        { data: null, error: null },
-      ]);
-      const result = await new PurchaseInvoiceRepository(
-        client
-      ).insertLedgerEntry({
-        organization_id: "org-1",
-        supplier_id: "sup-1",
-        credit: 1180,
-        debit: 0,
-        running_balance: 1180,
-      });
-      expect(result).toBe(true);
-      expect(builders[0].insert).toHaveBeenCalled();
-    });
-
-    it("returns false on error", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      const result = await new PurchaseInvoiceRepository(
-        client
-      ).insertLedgerEntry({
-        organization_id: "org-1",
-        supplier_id: "sup-1",
-        credit: 1,
-        debit: 0,
-        running_balance: 1,
-      });
-      expect(result).toBe(false);
-    });
-  });
 });

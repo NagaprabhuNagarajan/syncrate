@@ -483,6 +483,38 @@ type PurchaseReturnItemsRow = {
   created_by: string | null;
 };
 
+type PurchaseRequestsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  request_number: string;
+  status:
+    | "draft"
+    | "submitted"
+    | "approved"
+    | "rejected"
+    | "converted"
+    | "cancelled";
+  warehouse_id: string | null;
+  required_date: string | null;
+  notes: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  rejected_reason: string | null;
+  converted_po_id: string | null;
+};
+
+type PurchaseRequestItemsRow = {
+  id: string;
+  organization_id: string;
+  purchase_request_id: string;
+  product_id: string;
+  description: string | null;
+  quantity: number;
+  estimated_price: number;
+  created_at: string;
+  created_by: string | null;
+};
+
 type RolesRow = AuditFields & {
   id: string;
   organization_id: string | null;
@@ -1236,6 +1268,60 @@ export interface Database {
         ];
       };
 
+      // ── purchase_requests ─────────────────────────────────
+      purchase_requests: {
+        Row: PurchaseRequestsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          request_number: string;
+          status?: PurchaseRequestsRow["status"];
+          warehouse_id?: string | null;
+          required_date?: string | null;
+          notes?: string | null;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          rejected_reason?: string | null;
+          converted_po_id?: string | null;
+        };
+        Update: Partial<PurchaseRequestsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "purchase_requests_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── purchase_request_items ────────────────────────────
+      purchase_request_items: {
+        Row: PurchaseRequestItemsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          purchase_request_id: string;
+          product_id: string;
+          description?: string | null;
+          quantity: number;
+          estimated_price?: number;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<PurchaseRequestItemsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "purchase_request_items_purchase_request_id_fkey";
+            columns: ["purchase_request_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_requests";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       // ── audit_logs ────────────────────────────────────────
       audit_logs: {
         Row: AuditLogsRow;
@@ -1566,6 +1652,26 @@ export interface Database {
           p_note?: string | null;
           p_batch_id?: string | null;
         };
+        Returns: undefined;
+      };
+      receive_goods: {
+        Args: {
+          p_organization_id: string;
+          p_purchase_order_id: string;
+          p_warehouse_id: string;
+          p_grn_number: string;
+          p_received_date: string | null;
+          p_notes: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
+      post_purchase_invoice: {
+        Args: { p_invoice_id: string };
+        Returns: undefined;
+      };
+      complete_purchase_return: {
+        Args: { p_return_id: string };
         Returns: undefined;
       };
     };

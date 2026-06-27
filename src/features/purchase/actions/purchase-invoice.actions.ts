@@ -40,6 +40,16 @@ function parseItems(value: FormDataEntryValue | null): unknown[] | null {
   }
 }
 
+/**
+ * Parses the optimistic-lock `version` from FormData. Defaults to 1 when the
+ * field is missing or malformed so the update is still attempted against the
+ * initial version rather than silently skipping the lock.
+ */
+function parseVersion(value: FormDataEntryValue | null): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
 /** Builds the schema-shaped candidate object from a purchase invoice FormData. */
 function readFormCandidate(formData: FormData): Record<string, unknown> {
   return {
@@ -169,7 +179,8 @@ export async function updatePurchaseInvoiceAction(
     purchaseInvoiceId,
     parsed.data,
     organizationId,
-    auth.userId
+    auth.userId,
+    parseVersion(formData.get("version"))
   );
 
   if (result.success) {

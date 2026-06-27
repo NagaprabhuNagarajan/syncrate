@@ -250,17 +250,41 @@ describe("updatePurchaseReturnAction", () => {
       success: true,
       data: fullReturn,
     });
-    await updatePurchaseReturnAction("org-1", "pret-1", returnFormData());
+    await updatePurchaseReturnAction(
+      "org-1",
+      "pret-1",
+      returnFormData({ version: "5" })
+    );
     expect(mockService.updatePurchaseReturn).toHaveBeenCalledWith(
       "pret-1",
       expect.objectContaining({ supplierId: "sup-1" }),
       "org-1",
-      "user-1"
+      "user-1",
+      5
     );
     expect(revalidateMock).toHaveBeenCalledWith("/purchases/returns");
     expect(revalidateMock).toHaveBeenCalledWith("/purchases/returns/pret-1");
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: "purchase_return.update" })
+    );
+  });
+
+  it("defaults the optimistic-lock version to 1 when the field is absent", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["purchase.create"])
+    );
+    mockService.updatePurchaseReturn.mockResolvedValue({
+      success: true,
+      data: fullReturn,
+    });
+    await updatePurchaseReturnAction("org-1", "pret-1", returnFormData());
+    expect(mockService.updatePurchaseReturn).toHaveBeenCalledWith(
+      "pret-1",
+      expect.anything(),
+      "org-1",
+      "user-1",
+      1
     );
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor } from "@/tests/utils";
+import type { PurchaseReturnWithItems } from "@/features/purchase/types/purchase-return.types";
 import {
   PurchaseReturnForm,
   type ProductOption,
@@ -39,6 +40,44 @@ function renderForm() {
       products={products}
     />
   );
+}
+
+function buildEditReturn(version = 4): PurchaseReturnWithItems {
+  return {
+    id: "pret-1",
+    organizationId: "org-1",
+    returnNumber: "PRET-00001",
+    purchaseOrderId: null,
+    supplierId: "sup-1",
+    warehouseId: "wh-1",
+    status: "draft",
+    returnDate: new Date("2026-06-01"),
+    reason: "supplier_recall",
+    subtotal: 100,
+    taxAmount: 18,
+    totalAmount: 118,
+    notes: null,
+    createdAt: new Date("2026-06-01"),
+    updatedAt: new Date("2026-06-01"),
+    createdBy: "user-1",
+    version,
+    items: [
+      {
+        id: "item-1",
+        organizationId: "org-1",
+        purchaseReturnId: "pret-1",
+        productId: "p-1",
+        quantity: 1,
+        unitPrice: 100,
+        taxRate: 18,
+        taxAmount: 18,
+        lineTotal: 118,
+        batchId: null,
+        createdAt: new Date("2026-06-01"),
+        createdBy: "user-1",
+      },
+    ],
+  };
 }
 
 beforeEach(() => {
@@ -121,6 +160,35 @@ describe("PurchaseReturnForm", () => {
     await waitFor(() =>
       expect(mockPush).toHaveBeenCalledWith("/purchases/returns/pret-9")
     );
+  });
+
+  it("renders a hidden version field and submits it for optimistic locking on edit", async () => {
+    const user = userEvent.setup();
+    updateActionMock.mockResolvedValue({
+      success: true,
+      data: { id: "pret-1" },
+    });
+    const { container } = render(
+      <PurchaseReturnForm
+        organizationId="org-1"
+        suppliers={suppliers}
+        warehouses={warehouses}
+        products={products}
+        purchaseReturn={buildEditReturn(4)}
+      />
+    );
+
+    const hidden = container.querySelector(
+      'input[name="version"]'
+    ) as HTMLInputElement | null;
+    expect(hidden).not.toBeNull();
+    expect(hidden?.value).toBe("4");
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(updateActionMock).toHaveBeenCalled());
+    const fd = updateActionMock.mock.calls[0][2] as FormData;
+    expect(fd.get("version")).toBe("4");
   });
 
   it("surfaces a server error", async () => {

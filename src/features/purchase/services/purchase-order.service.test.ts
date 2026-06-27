@@ -4,6 +4,7 @@ import type {
   CreatePurchaseOrderInput,
   PurchaseOrder,
   PurchaseOrderWithItems,
+  UpdatePurchaseOrderInput,
 } from "@/features/purchase/types/purchase-order.types";
 import { PurchaseOrderService } from "./purchase-order.service";
 
@@ -49,6 +50,7 @@ function buildOrder(overrides: Partial<PurchaseOrder> = {}): PurchaseOrder {
     createdAt: new Date("2026-06-01"),
     updatedAt: new Date("2026-06-01"),
     createdBy: "user-1",
+    version: 1,
     ...overrides,
   };
 }
@@ -57,12 +59,17 @@ function withItems(order: PurchaseOrder): PurchaseOrderWithItems {
   return { ...order, items: [] };
 }
 
-const MULTI_ITEM_INPUT: CreatePurchaseOrderInput = {
+const CREATE_INPUT: CreatePurchaseOrderInput = {
   supplierId: "sup-1",
   items: [
     { productId: "p-a", quantity: 10, unitPrice: 100, discountPercent: 10, taxRate: 18 },
     { productId: "p-b", quantity: 5, unitPrice: 50, discountPercent: 0, taxRate: 5 },
   ],
+};
+
+const MULTI_ITEM_INPUT: UpdatePurchaseOrderInput = {
+  ...CREATE_INPUT,
+  version: 2,
 };
 
 let service: PurchaseOrderService;
@@ -157,9 +164,9 @@ describe("PurchaseOrderService.createPurchaseOrder", () => {
 // ─────────────────────────────────────────────────────────────
 
 describe("PurchaseOrderService.updatePurchaseOrder", () => {
-  it("recomputes totals and replaces items for a draft", async () => {
+  it("recomputes totals, version-gates the write, and replaces items for a draft", async () => {
     mockRepo.findById.mockResolvedValue(buildOrder({ status: "draft" }));
-    mockRepo.updateHeader.mockResolvedValue(buildOrder());
+    mockRepo.updateHeader.mockResolvedValue({ status: "ok", order: buildOrder() });
     mockRepo.replaceItems.mockResolvedValue(true);
     mockRepo.findWithItems.mockResolvedValue(withItems(buildOrder()));
 
@@ -171,10 +178,22 @@ describe("PurchaseOrderService.updatePurchaseOrder", () => {
     );
 
     expect(result.success).toBe(true);
-    const patch = mockRepo.updateHeader.mock.calls[0][1] as Record<string, number>;
+    const call = mockRepo.updateHeader.mock.calls[0];
+    const patch = call[1] as Record<string, number>;
     expect(patch.subtotal).toBe(1250);
     expect(patch.total_amount).toBe(1324.5);
+    // The expected version is forwarded as the 4th argument.
+    expect(call[3]).toBe(2);
     expect(mockRepo.replaceItems).toHaveBeenCalled();
+  });
+
+  it("returns conflict when the version no longer matches", async () => {
+    mockRepo.findById.mockResolvedValue(buildOrder({ status: "draft" }));
+    mockRepo.updateHeader.mockResolvedValue({ status: "conflict" });
+    const result = await service.updatePurchaseOrder("po-1", MULTI_ITEM_INPUT, "org-1", "u");
+    expect(result.success).toBe(false);
+    if (!result.success) {expect(result.error.code).toBe("conflict");}
+    expect(mockRepo.replaceItems).not.toHaveBeenCalled();
   });
 
   it("returns not_found when the order does not exist", async () => {
@@ -199,9 +218,9 @@ describe("PurchaseOrderService.updatePurchaseOrder", () => {
     expect(mockRepo.updateHeader).not.toHaveBeenCalled();
   });
 
-  it("fails when the header update fails", async () => {
+  it("fails when the header update errors", async () => {
     mockRepo.findById.mockResolvedValue(buildOrder({ status: "draft" }));
-    mockRepo.updateHeader.mockResolvedValue(null);
+    mockRepo.updateHeader.mockResolvedValue({ status: "error" });
     const result = await service.updatePurchaseOrder("po-1", MULTI_ITEM_INPUT, "org-1", "u");
     expect(result.success).toBe(false);
     if (!result.success) {expect(result.error.code).toBe("unknown");}
@@ -209,7 +228,7 @@ describe("PurchaseOrderService.updatePurchaseOrder", () => {
 
   it("fails when replacing items fails", async () => {
     mockRepo.findById.mockResolvedValue(buildOrder({ status: "draft" }));
-    mockRepo.updateHeader.mockResolvedValue(buildOrder());
+    mockRepo.updateHeader.mockResolvedValue({ status: "ok", order: buildOrder() });
     mockRepo.replaceItems.mockResolvedValue(false);
     const result = await service.updatePurchaseOrder("po-1", MULTI_ITEM_INPUT, "org-1", "u");
     expect(result.success).toBe(false);

@@ -7,7 +7,7 @@ import type {
 } from "@/features/purchase/types/purchase-return.types";
 import { PurchaseReturnService } from "./purchase-return.service";
 
-const { mockRepo, mockInventoryRepo } = vi.hoisted(() => ({
+const { mockRepo } = vi.hoisted(() => ({
   mockRepo: {
     list: vi.fn(),
     findById: vi.fn(),
@@ -20,20 +20,12 @@ const { mockRepo, mockInventoryRepo } = vi.hoisted(() => ({
     updateHeader: vi.fn(),
     updateStatus: vi.fn(),
     softDelete: vi.fn(),
-    getLastLedgerBalance: vi.fn(),
-    insertLedgerEntry: vi.fn(),
-  },
-  mockInventoryRepo: {
-    adjustStockRpc: vi.fn(),
+    completeReturnRpc: vi.fn(),
   },
 }));
 
 vi.mock("@/features/purchase/repositories/purchase-return.repository", () => ({
   PurchaseReturnRepository: vi.fn(() => mockRepo),
-}));
-
-vi.mock("@/features/inventory/repositories/inventory.repository", () => ({
-  InventoryRepository: vi.fn(() => mockInventoryRepo),
 }));
 
 function buildReturn(overrides: Partial<PurchaseReturn> = {}): PurchaseReturn {
@@ -64,37 +56,6 @@ function withItems(
 ): PurchaseReturnWithItems {
   return { ...entry, items };
 }
-
-const TWO_LINES: PurchaseReturnWithItems["items"] = [
-  {
-    id: "i-1",
-    organizationId: "org-1",
-    purchaseReturnId: "pret-1",
-    productId: "p-a",
-    quantity: 4,
-    unitPrice: 100,
-    taxRate: 18,
-    taxAmount: 72,
-    lineTotal: 472,
-    batchId: "batch-9",
-    createdAt: new Date("2026-06-01"),
-    createdBy: "user-1",
-  },
-  {
-    id: "i-2",
-    organizationId: "org-1",
-    purchaseReturnId: "pret-1",
-    productId: "p-b",
-    quantity: 2,
-    unitPrice: 50,
-    taxRate: 5,
-    taxAmount: 5,
-    lineTotal: 105,
-    batchId: null,
-    createdAt: new Date("2026-06-01"),
-    createdBy: "user-1",
-  },
-];
 
 const MULTI_ITEM_INPUT: CreatePurchaseReturnInput = {
   supplierId: "sup-1",
@@ -210,7 +171,7 @@ describe("PurchaseReturnService.createPurchaseReturn", () => {
 // ─────────────────────────────────────────────────────────────
 
 describe("PurchaseReturnService.updatePurchaseReturn", () => {
-  it("recomputes totals and replaces items for a draft", async () => {
+  it("recomputes totals, forwards the expected version, and replaces items for a draft", async () => {
     mockRepo.findById.mockResolvedValue(buildReturn({ status: "draft" }));
     mockRepo.updateHeader.mockResolvedValue(buildReturn());
     mockRepo.replaceItems.mockResolvedValue(true);
@@ -220,7 +181,8 @@ describe("PurchaseReturnService.updatePurchaseReturn", () => {
       "pret-1",
       MULTI_ITEM_INPUT,
       "org-1",
-      "user-1"
+      "user-1",
+      4
     );
 
     expect(result.success).toBe(true);
@@ -230,6 +192,8 @@ describe("PurchaseReturnService.updatePurchaseReturn", () => {
     >;
     expect(patch.subtotal).toBe(1250);
     expect(patch.total_amount).toBe(1442.5);
+    // The expected version is forwarded to the repo for optimistic locking.
+    expect(mockRepo.updateHeader.mock.calls[0][3]).toBe(4);
     expect(mockRepo.replaceItems).toHaveBeenCalled();
   });
 
@@ -239,7 +203,8 @@ describe("PurchaseReturnService.updatePurchaseReturn", () => {
       "pret-1",
       MULTI_ITEM_INPUT,
       "org-1",
-      "u"
+      "u",
+      1
     );
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
@@ -252,7 +217,8 @@ describe("PurchaseReturnService.updatePurchaseReturn", () => {
       "pret-1",
       MULTI_ITEM_INPUT,
       "org-2",
-      "u"
+      "u",
+      1
     );
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
@@ -265,31 +231,41 @@ describe("PurchaseReturnService.updatePurchaseReturn", () => {
       "pret-1",
       MULTI_ITEM_INPUT,
       "org-1",
-      "u"
+      "u",
+      1
     );
     if (!result.success) {
       expect(result.error.code).toBe("invalid_status");
     }
     expect(mockRepo.updateHeader).not.toHaveBeenCalled();
   });
+
+  it("returns conflict when the optimistic lock fails (no row updated)", async () => {
+    mockRepo.findById.mockResolvedValue(buildReturn({ status: "draft" }));
+    mockRepo.updateHeader.mockResolvedValue(null);
+    const result = await service.updatePurchaseReturn(
+      "pret-1",
+      MULTI_ITEM_INPUT,
+      "org-1",
+      "u",
+      1
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("conflict");
+    }
+    expect(mockRepo.replaceItems).not.toHaveBeenCalled();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────
-// completePurchaseReturn — inventory reversal + ledger debit
+// completePurchaseReturn — atomic via complete_purchase_return RPC
 // ─────────────────────────────────────────────────────────────
 
 describe("PurchaseReturnService.completePurchaseReturn", () => {
-  it("decreases stock per line with NEGATIVE qty and type purchase_return, then debits the ledger", async () => {
-    mockRepo.findWithItems.mockResolvedValue(
-      withItems(
-        buildReturn({ status: "draft", totalAmount: 577, supplierId: "sup-1" }),
-        TWO_LINES
-      )
-    );
-    mockInventoryRepo.adjustStockRpc.mockResolvedValue({ data: 1, error: null });
-    mockRepo.getLastLedgerBalance.mockResolvedValue(5000);
-    mockRepo.insertLedgerEntry.mockResolvedValue(true);
-    mockRepo.updateStatus.mockResolvedValue(buildReturn({ status: "completed" }));
+  it("delegates to the complete RPC and re-fetches the completed return on success", async () => {
+    mockRepo.completeReturnRpc.mockResolvedValue({ data: null, error: null });
+    mockRepo.findById.mockResolvedValue(buildReturn({ status: "completed" }));
 
     const result = await service.completePurchaseReturn(
       "pret-1",
@@ -298,114 +274,77 @@ describe("PurchaseReturnService.completePurchaseReturn", () => {
     );
 
     expect(result.success).toBe(true);
-
-    // One RPC call per line, each with NEGATIVE quantity.
-    expect(mockInventoryRepo.adjustStockRpc).toHaveBeenCalledTimes(2);
-    expect(mockInventoryRepo.adjustStockRpc).toHaveBeenNthCalledWith(1, {
-      p_organization_id: "org-1",
-      p_product_id: "p-a",
-      p_warehouse_id: "wh-1",
-      p_quantity: -4,
-      p_type: "purchase_return",
-      p_reference_type: "purchase_return",
-      p_reference_id: "pret-1",
-      p_batch_id: "batch-9",
-    });
-    expect(mockInventoryRepo.adjustStockRpc).toHaveBeenNthCalledWith(2, {
-      p_organization_id: "org-1",
-      p_product_id: "p-b",
-      p_warehouse_id: "wh-1",
-      p_quantity: -2,
-      p_type: "purchase_return",
-      p_reference_type: "purchase_return",
-      p_reference_id: "pret-1",
-      p_batch_id: undefined,
-    });
-
-    // Ledger reversal: a return REDUCES the payable → DEBIT the supplier.
-    const ledger = mockRepo.insertLedgerEntry.mock.calls[0][0] as Record<
-      string,
-      unknown
-    >;
-    expect(ledger.reference_type).toBe("purchase_return");
-    expect(ledger.reference_id).toBe("pret-1");
-    expect(ledger.debit).toBe(577);
-    expect(ledger.credit).toBe(0);
-    expect(ledger.running_balance).toBe(5000 - 577); // lastBalance − total
-    expect(ledger.supplier_id).toBe("sup-1");
-
-    expect(mockRepo.updateStatus).toHaveBeenCalledWith(
-      "pret-1",
-      "completed",
-      "user-1"
-    );
+    if (result.success) {
+      expect(result.data.status).toBe("completed");
+    }
+    expect(mockRepo.completeReturnRpc).toHaveBeenCalledWith("pret-1");
+    expect(mockRepo.findById).toHaveBeenCalledWith("pret-1");
   });
 
-  it("returns not_found when missing or cross-org", async () => {
-    mockRepo.findWithItems.mockResolvedValue(null);
+  it("maps an insufficient_stock RPC error to insufficient_stock", async () => {
+    mockRepo.completeReturnRpc.mockResolvedValue({
+      data: null,
+      error: { message: "insufficient_stock for product" },
+    });
+    const result = await service.completePurchaseReturn("pret-1", "org-1", "u");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("insufficient_stock");
+    }
+    expect(mockRepo.findById).not.toHaveBeenCalled();
+  });
+
+  it("maps an invalid_status RPC error to invalid_status", async () => {
+    mockRepo.completeReturnRpc.mockResolvedValue({
+      data: null,
+      error: { message: "invalid_status: not a draft" },
+    });
+    const result = await service.completePurchaseReturn("pret-1", "org-1", "u");
+    if (!result.success) {
+      expect(result.error.code).toBe("invalid_status");
+    }
+  });
+
+  it("maps a not_found RPC error to not_found", async () => {
+    mockRepo.completeReturnRpc.mockResolvedValue({
+      data: null,
+      error: { message: "purchase return not_found" },
+    });
     const result = await service.completePurchaseReturn("pret-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
     }
   });
 
-  it("rejects completing a non-draft return", async () => {
-    mockRepo.findWithItems.mockResolvedValue(
-      withItems(buildReturn({ status: "completed" }), TWO_LINES)
-    );
-    const result = await service.completePurchaseReturn("pret-1", "org-1", "u");
-    if (!result.success) {
-      expect(result.error.code).toBe("invalid_status");
-    }
-    expect(mockInventoryRepo.adjustStockRpc).not.toHaveBeenCalled();
-  });
-
-  it("maps a negative_stock RPC error to insufficient_stock and skips the ledger", async () => {
-    mockRepo.findWithItems.mockResolvedValue(
-      withItems(buildReturn({ status: "draft" }), TWO_LINES)
-    );
-    mockInventoryRepo.adjustStockRpc.mockResolvedValue({
+  it("maps a validation RPC error to validation", async () => {
+    mockRepo.completeReturnRpc.mockResolvedValue({
       data: null,
-      error: { message: "negative_stock" },
+      error: { message: "validation: warehouse required" },
     });
-
     const result = await service.completePurchaseReturn("pret-1", "org-1", "u");
-    expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.code).toBe("insufficient_stock");
+      expect(result.error.code).toBe("validation");
     }
-    expect(mockRepo.insertLedgerEntry).not.toHaveBeenCalled();
-    expect(mockRepo.updateStatus).not.toHaveBeenCalled();
   });
 
   it("maps an unexpected RPC error to unknown", async () => {
-    mockRepo.findWithItems.mockResolvedValue(
-      withItems(buildReturn({ status: "draft" }), TWO_LINES)
-    );
-    mockInventoryRepo.adjustStockRpc.mockResolvedValue({
+    mockRepo.completeReturnRpc.mockResolvedValue({
       data: null,
       error: { message: "deadlock detected" },
     });
-
     const result = await service.completePurchaseReturn("pret-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("unknown");
     }
   });
 
-  it("fails when the ledger insert fails", async () => {
-    mockRepo.findWithItems.mockResolvedValue(
-      withItems(buildReturn({ status: "draft", totalAmount: 100 }), TWO_LINES)
-    );
-    mockInventoryRepo.adjustStockRpc.mockResolvedValue({ data: 1, error: null });
-    mockRepo.getLastLedgerBalance.mockResolvedValue(0);
-    mockRepo.insertLedgerEntry.mockResolvedValue(false);
-
+  it("returns not_found when the re-fetch comes back empty", async () => {
+    mockRepo.completeReturnRpc.mockResolvedValue({ data: null, error: null });
+    mockRepo.findById.mockResolvedValue(null);
     const result = await service.completePurchaseReturn("pret-1", "org-1", "u");
     if (!result.success) {
-      expect(result.error.code).toBe("unknown");
+      expect(result.error.code).toBe("not_found");
     }
-    expect(mockRepo.updateStatus).not.toHaveBeenCalled();
   });
 });
 

@@ -132,6 +132,14 @@ describe("createPurchaseReturnSchema", () => {
     }
   });
 
+  it("accepts the supplier_recall reason", () => {
+    expect(PURCHASE_RETURN_REASONS).toContain("supplier_recall");
+    const result = createPurchaseReturnSchema.safeParse(
+      validHeader({ reason: "supplier_recall" })
+    );
+    expect(result.success).toBe(true);
+  });
+
   it("allows an optional return number and purchase order id", () => {
     const result = createPurchaseReturnSchema.safeParse(
       validHeader({ returnNumber: "PRET-00001", purchaseOrderId: "po-1" })

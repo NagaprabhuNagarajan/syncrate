@@ -293,6 +293,10 @@ export function PurchaseInvoiceForm({
     if (values.notes.trim()) {
       fd.append("notes", values.notes.trim());
     }
+    if (isEdit && purchaseInvoice) {
+      // Carry the optimistic-lock version so the server can detect a stale edit.
+      fd.append("version", String(purchaseInvoice.version ?? 1));
+    }
 
     const items = values.items.map((item) => ({
       productId: item.productId,
@@ -363,6 +367,14 @@ export function PurchaseInvoiceForm({
       )}
 
       <form onSubmit={onSubmit} noValidate className="space-y-5">
+        {isEdit && purchaseInvoice && (
+          <input
+            type="hidden"
+            name="version"
+            value={String(purchaseInvoice.version ?? 1)}
+            readOnly
+          />
+        )}
         {/* Header fields */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormField

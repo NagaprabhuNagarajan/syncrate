@@ -26,18 +26,20 @@ interface MockBuilder {
   in: Mock;
   order: Mock;
   range: Mock;
-  insert: Mock;
-  update: Mock;
   single: Mock;
 }
 
 interface MockClient {
   client: AppSupabaseClient;
   from: Mock;
+  rpc: Mock;
   builders: MockBuilder[];
 }
 
-function createMockClient(results: QueryResult[]): MockClient {
+function createMockClient(
+  results: QueryResult[],
+  rpcResult: QueryResult = { data: null, error: null }
+): MockClient {
   const builders: MockBuilder[] = [];
   let index = 0;
 
@@ -58,8 +60,6 @@ function createMockClient(results: QueryResult[]): MockClient {
       in: vi.fn(() => builder),
       order: vi.fn(() => builder),
       range: vi.fn(() => builder),
-      insert: vi.fn(() => builder),
-      update: vi.fn(() => builder),
       single: vi.fn(() => Promise.resolve(result)),
       then: (onFulfilled, onRejected) =>
         Promise.resolve(result).then(onFulfilled, onRejected),
@@ -69,8 +69,9 @@ function createMockClient(results: QueryResult[]): MockClient {
     return builder;
   });
 
-  const client = { from } as unknown as AppSupabaseClient;
-  return { client, from, builders };
+  const rpc = vi.fn(() => Promise.resolve(rpcResult));
+  const client = { from, rpc } as unknown as AppSupabaseClient;
+  return { client, from, rpc, builders };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -279,149 +280,53 @@ describe("GoodsReceiptRepository", () => {
     });
   });
 
-  describe("createHeader", () => {
-    it("inserts and maps the created header", async () => {
-      const { client, builders } = createMockClient([
-        { data: buildDbReceipt(), error: null },
-      ]);
-      const receipt = await new GoodsReceiptRepository(client).createHeader({
-        organization_id: "org-1",
-        grn_number: "GRN-00001",
-        purchase_order_id: "po-1",
-        warehouse_id: "wh-1",
+  describe("receiveGoodsRpc", () => {
+    it("invokes the receive_goods function with the given args and returns the new id", async () => {
+      const { client, rpc } = createMockClient([], {
+        data: "grn-1",
+        error: null,
       });
-      expect(receipt?.id).toBe("grn-1");
-      expect(builders[0].insert).toHaveBeenCalled();
-    });
-
-    it("returns null on error", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new GoodsReceiptRepository(client).createHeader({
-          organization_id: "org-1",
-          grn_number: "GRN-1",
-          purchase_order_id: "po-1",
-          warehouse_id: "wh-1",
-        })
-      ).toBeNull();
-    });
-  });
-
-  describe("insertItems", () => {
-    it("returns true without querying when there are no items", async () => {
-      const { client, from } = createMockClient([]);
-      expect(await new GoodsReceiptRepository(client).insertItems([])).toBe(true);
-      expect(from).not.toHaveBeenCalled();
-    });
-
-    it("inserts items and returns true on success", async () => {
-      const { client, builders } = createMockClient([
-        { data: null, error: null },
-      ]);
-      const result = await new GoodsReceiptRepository(client).insertItems([
-        {
-          organization_id: "org-1",
-          goods_receipt_id: "grn-1",
-          product_id: "prod-1",
-        },
-      ]);
-      expect(result).toBe(true);
-      expect(builders[0].insert).toHaveBeenCalled();
-    });
-
-    it("returns false on error", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new GoodsReceiptRepository(client).insertItems([
+      const args = {
+        p_organization_id: "org-1",
+        p_purchase_order_id: "po-1",
+        p_warehouse_id: "wh-1",
+        p_grn_number: "GRN-00001",
+        p_received_date: "2026-06-26",
+        p_notes: null,
+        p_items: [
           {
-            organization_id: "org-1",
-            goods_receipt_id: "grn-1",
+            purchase_order_item_id: "poi-1",
             product_id: "prod-1",
+            ordered_quantity: 10,
+            received_quantity: 5,
+            rejected_quantity: 0,
+            batch_id: null,
           },
-        ])
-      ).toBe(false);
-    });
-  });
-
-  describe("bumpPoItemReceived", () => {
-    it("reads the current received quantity then writes the sum", async () => {
-      const { client, builders } = createMockClient([
-        { data: { received_quantity: 4 }, error: null }, // select
-        { data: null, error: null }, // update
-      ]);
-      const result = await new GoodsReceiptRepository(client).bumpPoItemReceived(
-        "poi-1",
-        6
+        ],
+      };
+      const result = await new GoodsReceiptRepository(client).receiveGoodsRpc(
+        args
       );
-      expect(result).toBe(true);
-      expect(builders[0].eq).toHaveBeenCalledWith("id", "poi-1");
-      const patch = builders[1].update.mock.calls[0][0] as Record<string, unknown>;
-      expect(patch.received_quantity).toBe(10);
-      expect(builders[1].eq).toHaveBeenCalledWith("id", "poi-1");
+      expect(rpc).toHaveBeenCalledWith("receive_goods", args);
+      expect(result).toEqual({ data: "grn-1", error: null });
     });
 
-    it("returns true without querying when qty is zero", async () => {
-      const { client, from } = createMockClient([]);
-      expect(
-        await new GoodsReceiptRepository(client).bumpPoItemReceived("poi-1", 0)
-      ).toBe(true);
-      expect(from).not.toHaveBeenCalled();
-    });
-
-    it("returns false when the current row cannot be read", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new GoodsReceiptRepository(client).bumpPoItemReceived("poi-1", 5)
-      ).toBe(false);
-    });
-
-    it("returns false when the update fails", async () => {
-      const { client } = createMockClient([
-        { data: { received_quantity: 1 }, error: null },
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new GoodsReceiptRepository(client).bumpPoItemReceived("poi-1", 5)
-      ).toBe(false);
-    });
-  });
-
-  describe("setPoStatus", () => {
-    it("updates the PO status and stamps updated_by/updated_at", async () => {
-      const { client, builders } = createMockClient([
-        { data: null, error: null },
-      ]);
-      const result = await new GoodsReceiptRepository(client).setPoStatus(
-        "po-1",
-        "completed",
-        "user-9"
-      );
-      expect(result).toBe(true);
-      const patch = builders[0].update.mock.calls[0][0] as Record<string, unknown>;
-      expect(patch.status).toBe("completed");
-      expect(patch.updated_by).toBe("user-9");
-      expect(typeof patch.updated_at).toBe("string");
-      expect(builders[0].eq).toHaveBeenCalledWith("id", "po-1");
-      expect(builders[0].is).toHaveBeenCalledWith("deleted_at", null);
-    });
-
-    it("returns false on error", async () => {
-      const { client } = createMockClient([
-        { data: null, error: { message: "x" } },
-      ]);
-      expect(
-        await new GoodsReceiptRepository(client).setPoStatus(
-          "po-1",
-          "partially_received",
-          "user-9"
-        )
-      ).toBe(false);
+    it("passes through the raised error and nulls the data", async () => {
+      const { client } = createMockClient([], {
+        data: null,
+        error: { message: "invalid_status" },
+      });
+      const result = await new GoodsReceiptRepository(client).receiveGoodsRpc({
+        p_organization_id: "org-1",
+        p_purchase_order_id: "po-1",
+        p_warehouse_id: "wh-1",
+        p_grn_number: "GRN-00001",
+        p_received_date: null,
+        p_notes: null,
+        p_items: [],
+      });
+      expect(result.data).toBeNull();
+      expect(result.error).toEqual({ message: "invalid_status" });
     });
   });
 });

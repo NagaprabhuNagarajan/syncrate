@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor } from "@/tests/utils";
+import type { PurchaseInvoiceWithItems } from "@/features/purchase/types/purchase-invoice.types";
 import {
   PurchaseInvoiceForm,
   type ProductOption,
@@ -36,6 +37,48 @@ function renderForm() {
       products={products}
     />
   );
+}
+
+function buildEditInvoice(version = 7): PurchaseInvoiceWithItems {
+  return {
+    id: "pinv-1",
+    organizationId: "org-1",
+    invoiceNumber: "PINV-00001",
+    supplierInvoiceNumber: null,
+    purchaseOrderId: null,
+    supplierId: "sup-1",
+    status: "draft",
+    invoiceDate: new Date("2026-06-01"),
+    dueDate: null,
+    subtotal: 100,
+    discountAmount: 0,
+    taxAmount: 18,
+    totalAmount: 118,
+    amountPaid: 0,
+    notes: null,
+    postedAt: null,
+    postedBy: null,
+    createdAt: new Date("2026-06-01"),
+    updatedAt: new Date("2026-06-01"),
+    createdBy: "user-1",
+    version,
+    items: [
+      {
+        id: "item-1",
+        organizationId: "org-1",
+        purchaseInvoiceId: "pinv-1",
+        productId: "p-1",
+        description: null,
+        quantity: 1,
+        unitPrice: 100,
+        taxRate: 18,
+        taxAmount: 18,
+        lineTotal: 118,
+        createdAt: new Date("2026-06-01"),
+        createdBy: "user-1",
+      },
+    ],
+  };
 }
 
 beforeEach(() => {
@@ -156,6 +199,34 @@ describe("PurchaseInvoiceForm", () => {
       expect(screen.getByText("Supplier is required")).toBeInTheDocument()
     );
     expect(createActionMock).not.toHaveBeenCalled();
+  });
+
+  it("renders a hidden version field and submits it for optimistic locking on edit", async () => {
+    const user = userEvent.setup();
+    updateActionMock.mockResolvedValue({
+      success: true,
+      data: { id: "pinv-1" },
+    });
+    const { container } = render(
+      <PurchaseInvoiceForm
+        organizationId="org-1"
+        suppliers={suppliers}
+        products={products}
+        purchaseInvoice={buildEditInvoice(7)}
+      />
+    );
+
+    const hidden = container.querySelector(
+      'input[name="version"]'
+    ) as HTMLInputElement | null;
+    expect(hidden).not.toBeNull();
+    expect(hidden?.value).toBe("7");
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(updateActionMock).toHaveBeenCalled());
+    const fd = updateActionMock.mock.calls[0][2] as FormData;
+    expect(fd.get("version")).toBe("7");
   });
 
   it("falls back to a zero tax rate for products outside the allowed slabs", async () => {

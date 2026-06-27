@@ -72,6 +72,7 @@ function poFormData(overrides: Record<string, string> = {}): FormData {
   const form = new FormData();
   form.set("supplierId", "sup-1");
   form.set("items", VALID_ITEMS);
+  form.set("version", "1");
   for (const [key, value] of Object.entries(overrides)) {
     form.set(key, value);
   }
@@ -97,6 +98,7 @@ function buildOrder(): PurchaseOrder {
     totalAmount: 236,
     approvedBy: null,
     approvedAt: null,
+    version: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
     createdBy: "user-1",
@@ -242,7 +244,7 @@ describe("updatePurchaseOrderAction", () => {
     await updatePurchaseOrderAction("org-1", "po-1", poFormData());
     expect(mockService.updatePurchaseOrder).toHaveBeenCalledWith(
       "po-1",
-      expect.objectContaining({ supplierId: "sup-1" }),
+      expect.objectContaining({ supplierId: "sup-1", version: 1 }),
       "org-1",
       "user-1"
     );
@@ -251,6 +253,35 @@ describe("updatePurchaseOrderAction", () => {
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: "purchase_order.update" })
     );
+  });
+
+  it("returns a validation error when the version is missing", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["purchase.create"])
+    );
+    const form = poFormData();
+    form.delete("version");
+    const result = await updatePurchaseOrderAction("org-1", "po-1", form);
+    expect(result.success).toBe(false);
+    if (!result.success) {expect(result.error.code).toBe("validation");}
+    expect(mockService.updatePurchaseOrder).not.toHaveBeenCalled();
+  });
+
+  it("surfaces a conflict from the service without auditing", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["purchase.create"])
+    );
+    mockService.updatePurchaseOrder.mockResolvedValue({
+      success: false,
+      error: { code: "conflict", message: "changed by someone else" },
+    });
+    const result = await updatePurchaseOrderAction("org-1", "po-1", poFormData());
+    expect(result.success).toBe(false);
+    if (!result.success) {expect(result.error.code).toBe("conflict");}
+    expect(revalidateMock).not.toHaveBeenCalled();
+    expect(auditLogMock).not.toHaveBeenCalled();
   });
 });
 

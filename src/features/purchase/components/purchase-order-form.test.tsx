@@ -199,6 +199,7 @@ describe("PurchaseOrderForm", () => {
       createdAt: new Date("2026-06-01"),
       updatedAt: new Date("2026-06-01"),
       createdBy: "user-1",
+      version: 4,
       items: [
         {
           id: "item-1",
@@ -243,5 +244,13 @@ describe("PurchaseOrderForm", () => {
         expect.any(FormData)
       )
     );
+
+    // The loaded optimistic-lock version is forwarded to the update action.
+    const [, , formData] = updateActionMock.mock.calls[0] as [
+      string,
+      string,
+      FormData,
+    ];
+    expect(formData.get("version")).toBe("4");
   });
 });

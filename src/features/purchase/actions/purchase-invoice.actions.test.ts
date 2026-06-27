@@ -252,17 +252,41 @@ describe("updatePurchaseInvoiceAction", () => {
       success: true,
       data: fullInvoice,
     });
-    await updatePurchaseInvoiceAction("org-1", "pinv-1", invoiceFormData());
+    await updatePurchaseInvoiceAction(
+      "org-1",
+      "pinv-1",
+      invoiceFormData({ version: "5" })
+    );
     expect(mockService.updatePurchaseInvoice).toHaveBeenCalledWith(
       "pinv-1",
       expect.objectContaining({ supplierId: "sup-1" }),
       "org-1",
-      "user-1"
+      "user-1",
+      5
     );
     expect(revalidateMock).toHaveBeenCalledWith("/purchases/invoices");
     expect(revalidateMock).toHaveBeenCalledWith("/purchases/invoices/pinv-1");
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: "purchase_invoice.update" })
+    );
+  });
+
+  it("defaults the optimistic-lock version to 1 when the field is absent", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["purchase.create"])
+    );
+    mockService.updatePurchaseInvoice.mockResolvedValue({
+      success: true,
+      data: fullInvoice,
+    });
+    await updatePurchaseInvoiceAction("org-1", "pinv-1", invoiceFormData());
+    expect(mockService.updatePurchaseInvoice).toHaveBeenCalledWith(
+      "pinv-1",
+      expect.anything(),
+      "org-1",
+      "user-1",
+      1
     );
   });
 });
