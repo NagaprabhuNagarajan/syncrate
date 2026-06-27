@@ -14,8 +14,8 @@
 
 The name combines:
 
-* **Sync** – Seamless synchronization of business operations.
-* **Crate** – A container representing products, inventory, and commerce.
+- **Sync** – Seamless synchronization of business operations.
+- **Crate** – A container representing products, inventory, and commerce.
 
 Together, **Syncrate** represents a platform that securely connects businesses and synchronizes operations in real time.
 
@@ -37,15 +37,15 @@ Simplify business management through intelligent automation, seamless collaborat
 
 Syncrate is built on the following values:
 
-* Trust
-* Simplicity
-* Innovation
-* Transparency
-* Reliability
-* Collaboration
-* Security
-* Customer Success
-* Continuous Improvement
+- Trust
+- Simplicity
+- Innovation
+- Transparency
+- Reliability
+- Collaboration
+- Security
+- Customer Success
+- Continuous Improvement
 
 ---
 
@@ -53,14 +53,14 @@ Syncrate is built on the following values:
 
 Syncrate should always feel:
 
-* Professional
-* Modern
-* Intelligent
-* Friendly
-* Reliable
-* Efficient
-* Innovative
-* Confident
+- Professional
+- Modern
+- Intelligent
+- Friendly
+- Reliable
+- Efficient
+- Innovative
+- Confident
 
 The product should communicate expertise without being overly technical.
 
@@ -78,12 +78,12 @@ Syncrate is an AI-powered Business Operating System that helps businesses manage
 
 Unlike traditional invoicing or ERP software, Syncrate combines:
 
-* Business Management
-* AI Automation
-* Connected Business Network
-* Intelligent Insights
-* Enterprise Security
-* Modern User Experience
+- Business Management
+- AI Automation
+- Connected Business Network
+- Intelligent Insights
+- Enterprise Security
+- Modern User Experience
 
 into one unified platform.
 
@@ -93,20 +93,20 @@ into one unified platform.
 
 Primary Audience
 
-* Small Businesses
-* Retailers
-* Wholesalers
-* Distributors
-* Manufacturers
-* Trading Companies
+- Small Businesses
+- Retailers
+- Wholesalers
+- Distributors
+- Manufacturers
+- Trading Companies
 
 Secondary Audience
 
-* Service Businesses
-* Restaurants
-* Pharmacies
-* Educational Institutions
-* Construction Companies
+- Service Businesses
+- Restaurants
+- Pharmacies
+- Educational Institutions
+- Construction Companies
 
 ---
 
@@ -116,20 +116,20 @@ Secondary Audience
 
 The Syncrate logo should represent:
 
-* Connection
-* Synchronization
-* Business Growth
-* Intelligence
-* Simplicity
+- Connection
+- Synchronization
+- Business Growth
+- Intelligence
+- Simplicity
 
 Logo Variants
 
-* Full Logo
-* Icon Only
-* Horizontal Logo
-* Vertical Logo
-* Monochrome Version
-* Dark Theme Version
+- Full Logo
+- Icon Only
+- Horizontal Logo
+- Vertical Logo
+- Monochrome Version
+- Dark Theme Version
 
 ---
 
@@ -149,10 +149,10 @@ Represents professionalism and stability.
 
 ### Accent Colors
 
-* Green – Success
-* Amber – Warning
-* Red – Error
-* Cyan – Information
+- Green – Success
+- Amber – Warning
+- Red – Error
+- Cyan – Information
 
 Consistent usage across product and marketing materials is required.
 
@@ -176,10 +176,10 @@ Typography should prioritize readability across all devices.
 
 Use a consistent icon library across:
 
-* Web Application
-* Documentation
-* Marketing Website
-* Presentations
+- Web Application
+- Documentation
+- Marketing Website
+- Presentations
 
 Preferred Library
 
@@ -191,11 +191,11 @@ Lucide Icons
 
 Communication should be:
 
-* Clear
-* Helpful
-* Friendly
-* Professional
-* Confident
+- Clear
+- Helpful
+- Friendly
+- Professional
+- Confident
 
 Avoid unnecessary technical jargon when communicating with business users.
 
@@ -205,11 +205,11 @@ Avoid unnecessary technical jargon when communicating with business users.
 
 Core Messages
 
-* Run your business smarter.
-* Connect your business digitally.
-* Automate repetitive work.
-* Make better business decisions with AI.
-* Collaborate with suppliers and customers effortlessly.
+- Run your business smarter.
+- Connect your business digitally.
+- Automate repetitive work.
+- Make better business decisions with AI.
+- Collaborate with suppliers and customers effortlessly.
 
 ---
 
@@ -217,18 +217,18 @@ Core Messages
 
 Essential Pages
 
-* Home
-* Features
-* Pricing
-* Industries
-* AI Platform
-* Connected Business Network
-* Integrations
-* Resources
-* Blog
-* About
-* Contact
-* Help Center
+- Home
+- Features
+- Pricing
+- Industries
+- AI Platform
+- Connected Business Network
+- Integrations
+- Resources
+- Blog
+- About
+- Contact
+- Help Center
 
 Primary Call-to-Action
 
@@ -244,27 +244,27 @@ Secondary Call-to-Action
 
 Digital Marketing
 
-* SEO
-* Google Ads
-* LinkedIn
-* Facebook
-* Instagram
-* YouTube
+- SEO
+- Google Ads
+- LinkedIn
+- Facebook
+- Instagram
+- YouTube
 
 Content Marketing
 
-* Product Tutorials
-* Business Guides
-* AI Tips
-* Customer Stories
-* Industry Insights
+- Product Tutorials
+- Business Guides
+- AI Tips
+- Customer Stories
+- Industry Insights
 
 Community Marketing
 
-* Webinars
-* Workshops
-* Online Communities
-* User Meetups
+- Webinars
+- Workshops
+- Online Communities
+- User Meetups
 
 ---
 
@@ -272,15 +272,15 @@ Community Marketing
 
 Target Keywords
 
-* GST Billing Software
-* Invoicing Software
-* Inventory Management Software
-* Business Management Software
-* AI ERP
-* Small Business ERP
-* Purchase Management Software
-* Sales Management Software
-* Supplier Management Software
+- GST Billing Software
+- Invoicing Software
+- Inventory Management Software
+- Business Management Software
+- AI ERP
+- Small Business ERP
+- Purchase Management Software
+- Sales Management Software
+- Supplier Management Software
 
 Content should be optimized for search intent and user value.
 
@@ -292,8 +292,8 @@ Content should be optimized for search intent and user value.
 
 Private Alpha
 
-* Internal testing
-* Feedback collection
+- Internal testing
+- Feedback collection
 
 ---
 
@@ -301,8 +301,8 @@ Private Alpha
 
 Closed Beta
 
-* Selected businesses
-* Feature validation
+- Selected businesses
+- Feature validation
 
 ---
 
@@ -310,8 +310,8 @@ Closed Beta
 
 Public Beta
 
-* Free registrations
-* Community feedback
+- Free registrations
+- Community feedback
 
 ---
 
@@ -319,9 +319,9 @@ Public Beta
 
 General Availability (GA)
 
-* Paid subscriptions
-* Marketing campaigns
-* Partner onboarding
+- Paid subscriptions
+- Marketing campaigns
+- Partner onboarding
 
 ---
 
@@ -329,14 +329,14 @@ General Availability (GA)
 
 Channels
 
-* Organic Search
-* Content Marketing
-* Social Media
-* Referral Program
-* Product Hunt Launch
-* LinkedIn Outreach
-* YouTube Demonstrations
-* Partner Network
+- Organic Search
+- Content Marketing
+- Social Media
+- Referral Program
+- Product Hunt Launch
+- LinkedIn Outreach
+- YouTube Demonstrations
+- Partner Network
 
 ---
 
@@ -344,13 +344,13 @@ Channels
 
 Focus Areas
 
-* Smooth onboarding
-* In-app tutorials
-* Knowledge Base
-* Live Chat Support
-* Webinars
-* Customer Success Team
-* Regular Product Updates
+- Smooth onboarding
+- In-app tutorials
+- Knowledge Base
+- Live Chat Support
+- Webinars
+- Customer Success Team
+- Regular Product Updates
 
 Happy customers become long-term advocates.
 
@@ -362,10 +362,10 @@ Customers receive rewards for successful referrals.
 
 Possible Rewards
 
-* Free subscription months
-* AI Credits
-* Premium Features
-* Marketplace Credits
+- Free subscription months
+- AI Credits
+- Premium Features
+- Marketplace Credits
 
 The referral process should be simple and trackable.
 
@@ -375,19 +375,19 @@ The referral process should be simple and trackable.
 
 Potential Partners
 
-* Chartered Accountants
-* GST Consultants
-* IT Service Providers
-* ERP Consultants
-* Technology Resellers
-* Digital Agencies
+- Chartered Accountants
+- GST Consultants
+- IT Service Providers
+- ERP Consultants
+- Technology Resellers
+- Digital Agencies
 
 Partner Benefits
 
-* Revenue Sharing
-* Training
-* Marketing Support
-* Dedicated Partner Portal
+- Revenue Sharing
+- Training
+- Marketing Support
+- Dedicated Partner Portal
 
 ---
 
@@ -395,12 +395,12 @@ Partner Benefits
 
 Content Types
 
-* Product Updates
-* Customer Success Stories
-* AI Productivity Tips
-* Industry News
-* Feature Walkthroughs
-* Behind-the-Scenes Development
+- Product Updates
+- Customer Success Stories
+- AI Productivity Tips
+- Industry News
+- Feature Walkthroughs
+- Behind-the-Scenes Development
 
 Maintain a consistent posting schedule and engage with the community.
 
@@ -444,12 +444,12 @@ Sales should focus on solving business problems rather than simply selling softw
 
 Key Messages
 
-* Large SME market opportunity.
-* AI-first Business Operating System.
-* Connected Business Network creates network effects.
-* Recurring SaaS revenue.
-* Multiple monetization channels.
-* Scalable cloud-native architecture.
+- Large SME market opportunity.
+- AI-first Business Operating System.
+- Connected Business Network creates network effects.
+- Recurring SaaS revenue.
+- Multiple monetization channels.
+- Scalable cloud-native architecture.
 
 ---
 
@@ -457,16 +457,16 @@ Key Messages
 
 Essential Assets
 
-* Logo Files
-* Brand Guidelines
-* Product Screenshots
-* Marketing Videos
-* Pitch Deck
-* Sales Deck
-* One-Pager
-* Case Studies
-* Social Media Templates
-* Email Templates
+- Logo Files
+- Brand Guidelines
+- Product Screenshots
+- Marketing Videos
+- Pitch Deck
+- Sales Deck
+- One-Pager
+- Case Studies
+- Social Media Templates
+- Email Templates
 
 All assets should follow the official brand guidelines.
 
@@ -476,15 +476,15 @@ All assets should follow the official brand guidelines.
 
 Marketing KPIs
 
-* Website Traffic
-* Organic Search Rankings
-* Lead Conversion Rate
-* Trial Sign-Ups
-* Customer Acquisition Cost (CAC)
-* Monthly Recurring Revenue (MRR)
-* Referral Rate
-* Customer Retention
-* Net Promoter Score (NPS)
+- Website Traffic
+- Organic Search Rankings
+- Lead Conversion Rate
+- Trial Sign-Ups
+- Customer Acquisition Cost (CAC)
+- Monthly Recurring Revenue (MRR)
+- Referral Rate
+- Customer Retention
+- Net Promoter Score (NPS)
 
 Regular analysis of these metrics should guide future marketing investments.
 
@@ -494,11 +494,11 @@ Regular analysis of these metrics should guide future marketing investments.
 
 Over the next 5–10 years, Syncrate aims to become:
 
-* The preferred Business Operating System for SMEs.
-* A trusted AI business assistant.
-* A global Connected Business Network.
-* A marketplace connecting buyers and suppliers.
-* A platform enabling digital business transformation.
+- The preferred Business Operating System for SMEs.
+- A trusted AI business assistant.
+- A global Connected Business Network.
+- A marketplace connecting buyers and suppliers.
+- A platform enabling digital business transformation.
 
 ---
 

@@ -12,6 +12,7 @@ Syncrate is an AI-powered Connected Business Operating System (SaaS) for Small a
 **How to apply:** Every feature built must consider the CBN angle and multi-tenant isolation. Business logic should align with the defined product philosophy: every feature must Save Time, Reduce Manual Work, Increase Revenue, Reduce Errors, Improve Collaboration, or Provide Actionable Insights.
 
 **Core Modules (in priority order per roadmap):**
+
 1. Identity & Organization (Sprint 1)
 2. Customer & Supplier Management (Sprint 2)
 3. Product, Inventory & Warehouse (Sprint 3)

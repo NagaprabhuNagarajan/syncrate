@@ -20,13 +20,13 @@ The platform follows the principles of **Zero Trust**, **Least Privilege Access*
 
 The authentication and authorization system shall:
 
-* Secure user identities.
-* Protect organization data.
-* Prevent unauthorized access.
-* Support multiple authentication methods.
-* Enable fine-grained permissions.
-* Maintain complete audit trails.
-* Support enterprise security requirements.
+- Secure user identities.
+- Protect organization data.
+- Prevent unauthorized access.
+- Support multiple authentication methods.
+- Enable fine-grained permissions.
+- Maintain complete audit trails.
+- Support enterprise security requirements.
 
 ---
 
@@ -78,20 +78,20 @@ Authentication is handled using **Supabase Auth** with JWT-based session managem
 
 Current Release
 
-* Email & Password
-* Magic Link
-* Invitation-based Registration
+- Email & Password
+- Magic Link
+- Invitation-based Registration
 
 Future Releases
 
-* Google Sign-In
-* Microsoft Entra ID
-* GitHub Login
-* Apple Sign-In
-* SAML SSO
-* OAuth 2.0
-* LDAP
-* Active Directory
+- Google Sign-In
+- Microsoft Entra ID
+- GitHub Login
+- Apple Sign-In
+- SAML SSO
+- OAuth 2.0
+- LDAP
+- Active Directory
 
 ---
 
@@ -101,25 +101,25 @@ The platform supports multiple user categories.
 
 ### Platform Users
 
-* Super Administrator
-* Platform Support
+- Super Administrator
+- Platform Support
 
 ### Organization Users
 
-* Owner
-* Administrator
-* Manager
-* Accountant
-* Sales Executive
-* Warehouse Manager
-* Cashier
-* Employee
+- Owner
+- Administrator
+- Manager
+- Accountant
+- Sales Executive
+- Warehouse Manager
+- Cashier
+- Employee
 
 ### External Users
 
-* Connected Supplier
-* Connected Customer (Future)
-* Auditor (Read Only)
+- Connected Supplier
+- Connected Customer (Future)
+- Auditor (Read Only)
 
 ---
 
@@ -147,11 +147,11 @@ Metro Steels
 
 Each organization maintains independent:
 
-* Roles
-* Permissions
-* Settings
-* Audit Logs
-* Business Data
+- Roles
+- Permissions
+- Settings
+- Audit Logs
+- Business Data
 
 ---
 
@@ -159,9 +159,9 @@ Each organization maintains independent:
 
 Every request must contain:
 
-* User ID
-* Organization ID
-* Branch ID (Optional)
+- User ID
+- Organization ID
+- Branch ID (Optional)
 
 Every database query is filtered by:
 
@@ -179,16 +179,16 @@ Permissions are assigned to roles rather than users.
 
 ### Default Roles
 
-* Super Admin
-* Owner
-* Admin
-* Branch Manager
-* Accountant
-* Sales Executive
-* Warehouse Manager
-* Cashier
-* Employee
-* Viewer
+- Super Admin
+- Owner
+- Admin
+- Branch Manager
+- Accountant
+- Sales Executive
+- Warehouse Manager
+- Cashier
+- Employee
+- Viewer
 
 Organizations may create custom roles.
 
@@ -230,81 +230,81 @@ settings.manage
 
 ### Customer
 
-* Create
-* View
-* Update
-* Archive
-* Export
+- Create
+- View
+- Update
+- Archive
+- Export
 
 ### Supplier
 
-* Create
-* View
-* Update
-* Archive
+- Create
+- View
+- Update
+- Archive
 
 ### Product
 
-* Create
-* View
-* Update
-* Delete
-* Import
-* Export
+- Create
+- View
+- Update
+- Delete
+- Import
+- Export
 
 ### Inventory
 
-* View
-* Adjust
-* Transfer
-* Audit
+- View
+- Adjust
+- Transfer
+- Audit
 
 ### Purchase
 
-* Create
-* Approve
-* Cancel
+- Create
+- Approve
+- Cancel
 
 ### Sales
 
-* Create
-* Approve
-* Cancel
+- Create
+- Approve
+- Cancel
 
 ### Invoice
 
-* Create
-* Edit Draft
-* Post
-* Print
-* Share
-* Cancel
+- Create
+- Edit Draft
+- Post
+- Print
+- Share
+- Cancel
 
 ### Payments
 
-* Receive
-* Refund
-* Reverse
+- Receive
+- Refund
+- Reverse
 
 ### Reports
 
-* View
-* Export
-* Schedule
+- View
+- Export
+- Schedule
 
 ### AI
 
-* View
-* Generate
-* Configure
+- View
+- Generate
+- Configure
 
 ### Administration
 
-* User Management
-* Role Management
-* Organization Settings
-* Billing
-* Audit Logs
+- User Management
+- Role Management
+- Organization Settings
+- Billing
+- Audit Logs
 
 ---
 
@@ -312,12 +312,12 @@ settings.manage
 
 The platform shall support:
 
-* Secure JWT Access Tokens
-* Refresh Tokens
-* Automatic Token Renewal
-* Session Timeout
-* Forced Logout
-* Device-based Sessions
+- Secure JWT Access Tokens
+- Refresh Tokens
+- Automatic Token Renewal
+- Session Timeout
+- Forced Logout
+- Device-based Sessions
 
 Default Session Timeout
 
@@ -331,11 +331,11 @@ Configurable by organization.
 
 Requirements
 
-* Minimum 8 Characters
-* Uppercase Letter
-* Lowercase Letter
-* Number
-* Special Character
+- Minimum 8 Characters
+- Uppercase Letter
+- Lowercase Letter
+- Number
+- Special Character
 
 Password History
 
@@ -351,10 +351,10 @@ Configurable.
 
 Supported Methods
 
-* Email OTP
-* SMS OTP
-* Authenticator App
-* Security Keys (FIDO2)
+- Email OTP
+- SMS OTP
+- Authenticator App
+- Security Keys (FIDO2)
 
 Organizations may enforce MFA for selected roles.
 
@@ -364,12 +364,12 @@ Organizations may enforce MFA for selected roles.
 
 Security Features
 
-* Rate Limiting
-* Account Lockout
-* Brute Force Protection
-* CAPTCHA (Future)
-* Suspicious Login Detection
-* New Device Detection
+- Rate Limiting
+- Account Lockout
+- Brute Force Protection
+- CAPTCHA (Future)
+- Suspicious Login Detection
+- New Device Detection
 
 ---
 
@@ -377,11 +377,11 @@ Security Features
 
 Every API request validates:
 
-* Authentication Token
-* User Status
-* Organization Membership
-* Permissions
-* Tenant Context
+- Authentication Token
+- User Status
+- Organization Membership
+- Permissions
+- Tenant Context
 
 Unauthorized requests return appropriate HTTP status codes.
 
@@ -425,11 +425,11 @@ Certain actions require elevated permissions.
 
 Examples
 
-* High-value Invoice Approval
-* Purchase Approval
-* Inventory Adjustment
-* Payment Reversal
-* Credit Limit Override
+- High-value Invoice Approval
+- Purchase Approval
+- Inventory Adjustment
+- Payment Reversal
+- Credit Limit Override
 
 Approval workflows are configurable.
 
@@ -441,12 +441,12 @@ Organizations decide what connected businesses may access.
 
 Permissions include:
 
-* Receive Purchase Orders
-* Receive Invoices
-* View Product Catalog
-* Share Delivery Updates
-* View Pricing
-* Exchange Documents
+- Receive Purchase Orders
+- Receive Invoices
+- View Product Catalog
+- Share Delivery Updates
+- View Pricing
+- Exchange Documents
 
 Private business data is never shared.
 
@@ -458,24 +458,24 @@ Every authentication event is recorded.
 
 Examples
 
-* Login
-* Logout
-* Password Change
-* MFA Enabled
-* Role Changed
-* Permission Updated
-* Failed Login
-* Session Expired
+- Login
+- Logout
+- Password Change
+- MFA Enabled
+- Role Changed
+- Permission Updated
+- Failed Login
+- Session Expired
 
 Audit Log Fields
 
-* User
-* Organization
-* Timestamp
-* IP Address
-* Device
-* Browser
-* Action
+- User
+- Organization
+- Timestamp
+- IP Address
+- Device
+- Browser
+- Action
 
 Audit records are immutable.
 
@@ -485,22 +485,22 @@ Audit records are immutable.
 
 Authentication Errors
 
-* Invalid Credentials
-* Account Disabled
-* Session Expired
-* Invalid Token
+- Invalid Credentials
+- Account Disabled
+- Session Expired
+- Invalid Token
 
 Authorization Errors
 
-* Permission Denied
-* Organization Access Denied
-* Branch Access Denied
+- Permission Denied
+- Organization Access Denied
+- Branch Access Denied
 
 Security Errors
 
-* Suspicious Login
-* Brute Force Attempt
-* Invalid Session
+- Suspicious Login
+- Brute Force Attempt
+- Invalid Session
 
 ---
 
@@ -530,28 +530,28 @@ Availability
 
 # 23. Security Best Practices
 
-* HTTPS Only
-* Secure Cookies
-* CSRF Protection
-* XSS Prevention
-* SQL Injection Prevention
-* Content Security Policy (CSP)
-* Secure Headers
-* Encryption at Rest
-* Encryption in Transit
+- HTTPS Only
+- Secure Cookies
+- CSRF Protection
+- XSS Prevention
+- SQL Injection Prevention
+- Content Security Policy (CSP)
+- Secure Headers
+- Encryption at Rest
+- Encryption in Transit
 
 ---
 
 # 24. Future Enhancements
 
-* Single Sign-On (SSO)
-* Enterprise Identity Providers
-* Passwordless Login
-* Biometric Authentication
-* Device Trust
-* Adaptive Authentication
-* Risk-Based Authentication
-* Just-In-Time User Provisioning
+- Single Sign-On (SSO)
+- Enterprise Identity Providers
+- Passwordless Login
+- Biometric Authentication
+- Device Trust
+- Adaptive Authentication
+- Risk-Based Authentication
+- Just-In-Time User Provisioning
 
 ---
 
@@ -559,27 +559,27 @@ Availability
 
 Authentication
 
-* Users authenticate securely.
-* Sessions are managed correctly.
-* Token refresh works seamlessly.
+- Users authenticate securely.
+- Sessions are managed correctly.
+- Token refresh works seamlessly.
 
 Authorization
 
-* Permissions are enforced consistently.
-* Unauthorized access is blocked.
-* Role changes take effect immediately.
+- Permissions are enforced consistently.
+- Unauthorized access is blocked.
+- Role changes take effect immediately.
 
 Security
 
-* Multi-tenant isolation is guaranteed.
-* Audit logs capture all security events.
-* Sensitive information is protected.
+- Multi-tenant isolation is guaranteed.
+- Audit logs capture all security events.
+- Sensitive information is protected.
 
 Performance
 
-* Authentication meets defined SLAs.
-* Permission checks are optimized.
-* High availability is maintained.
+- Authentication meets defined SLAs.
+- Permission checks are optimized.
+- High availability is maintained.
 
 ---
 

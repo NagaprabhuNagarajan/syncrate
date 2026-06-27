@@ -18,13 +18,13 @@ Testing is integrated throughout the Software Development Life Cycle (SDLC) and 
 
 The testing strategy aims to:
 
-* Deliver high-quality software.
-* Prevent production defects.
-* Ensure business rule accuracy.
-* Protect customer data.
-* Validate performance and scalability.
-* Support continuous delivery.
-* Minimize regression issues.
+- Deliver high-quality software.
+- Prevent production defects.
+- Ensure business rule accuracy.
+- Protect customer data.
+- Validate performance and scalability.
+- Support continuous delivery.
+- Minimize regression issues.
 
 ---
 
@@ -32,14 +32,14 @@ The testing strategy aims to:
 
 The testing process follows these principles:
 
-* Test Early
-* Automate Wherever Possible
-* Test Business Scenarios
-* Test Edge Cases
-* Security by Default
-* Performance by Design
-* Accessibility Compliance
-* Continuous Testing
+- Test Early
+- Automate Wherever Possible
+- Test Business Scenarios
+- Test Edge Cases
+- Security by Default
+- Performance by Design
+- Accessibility Compliance
+- Continuous Testing
 
 ---
 
@@ -53,10 +53,10 @@ Verify individual functions, hooks, services, and utilities.
 
 Examples:
 
-* Tax calculation
-* Discount calculation
-* Validation utilities
-* Inventory calculations
+- Tax calculation
+- Discount calculation
+- Validation utilities
+- Inventory calculations
 
 Target Coverage:
 
@@ -72,19 +72,19 @@ Validate reusable UI components.
 
 Examples:
 
-* Buttons
-* Forms
-* Tables
-* Modals
-* Charts
-* Dropdowns
+- Buttons
+- Forms
+- Tables
+- Modals
+- Charts
+- Dropdowns
 
 Checks:
 
-* Rendering
-* User interaction
-* Accessibility
-* Error states
+- Rendering
+- User interaction
+- Accessibility
+- Error states
 
 ---
 
@@ -96,11 +96,11 @@ Validate interaction between modules.
 
 Examples:
 
-* Invoice → Inventory
-* Invoice → Payment
-* Purchase → Inventory
-* Authentication → Authorization
-* AI → Business Modules
+- Invoice → Inventory
+- Invoice → Payment
+- Purchase → Inventory
+- Authentication → Authorization
+- AI → Business Modules
 
 ---
 
@@ -112,13 +112,13 @@ Verify REST APIs.
 
 Checks:
 
-* Authentication
-* Authorization
-* Validation
-* Error Handling
-* Pagination
-* Filtering
-* Rate Limiting
+- Authentication
+- Authorization
+- Validation
+- Error Handling
+- Pagination
+- Filtering
+- Rate Limiting
 
 ---
 
@@ -130,13 +130,13 @@ Validate complete user workflows.
 
 Examples:
 
-* Login
-* Customer Creation
-* Product Creation
-* Invoice Generation
-* Payment Collection
-* Business Connection
-* AI Invoice OCR
+- Login
+- Customer Creation
+- Product Creation
+- Invoice Generation
+- Payment Collection
+- Business Connection
+- AI Invoice OCR
 
 ---
 
@@ -152,11 +152,11 @@ Quick validation after deployment.
 
 Checks:
 
-* Login
-* Dashboard
-* Database Connectivity
-* API Health
-* Navigation
+- Login
+- Dashboard
+- Database Connectivity
+- API Health
+- Navigation
 
 ---
 
@@ -172,16 +172,16 @@ Verifies newly implemented features before detailed testing.
 
 Validate:
 
-* Response Time
-* Throughput
-* Concurrency
-* Resource Usage
+- Response Time
+- Throughput
+- Concurrency
+- Resource Usage
 
 Targets:
 
-* Dashboard < 3 seconds
-* Invoice Creation < 2 seconds
-* Search < 300 ms
+- Dashboard < 3 seconds
+- Invoice Creation < 2 seconds
+- Search < 300 ms
 
 ---
 
@@ -191,10 +191,10 @@ Simulate expected production traffic.
 
 Scenarios:
 
-* 10,000 Concurrent Users
-* Bulk Invoice Creation
-* Report Generation
-* AI Requests
+- 10,000 Concurrent Users
+- Bulk Invoice Creation
+- Report Generation
+- AI Requests
 
 ---
 
@@ -208,15 +208,15 @@ Push the system beyond normal operating limits to identify breaking points and r
 
 Validate:
 
-* Authentication
-* Authorization
-* RBAC
-* RLS
-* SQL Injection Prevention
-* XSS Prevention
-* CSRF Protection
-* Secure Headers
-* Token Security
+- Authentication
+- Authorization
+- RBAC
+- RLS
+- SQL Injection Prevention
+- XSS Prevention
+- CSRF Protection
+- Secure Headers
+- Token Security
 
 ---
 
@@ -228,11 +228,11 @@ WCAG 2.2 AA Compliance
 
 Checks:
 
-* Keyboard Navigation
-* Screen Reader Support
-* Color Contrast
-* Focus Indicators
-* Semantic HTML
+- Keyboard Navigation
+- Screen Reader Support
+- Color Contrast
+- Focus Indicators
+- Semantic HTML
 
 ---
 
@@ -240,16 +240,16 @@ Checks:
 
 Supported Browsers:
 
-* Chrome
-* Edge
-* Firefox
-* Safari
+- Chrome
+- Edge
+- Firefox
+- Safari
 
 Supported Devices:
 
-* Desktop
-* Laptop
-* Tablet
+- Desktop
+- Laptop
+- Tablet
 
 ---
 
@@ -257,20 +257,20 @@ Supported Devices:
 
 AI Features Tested:
 
-* OCR Accuracy
-* AI Assistant
-* Forecasting
-* Recommendations
-* Smart Search
-* Report Generation
+- OCR Accuracy
+- AI Assistant
+- Forecasting
+- Recommendations
+- Smart Search
+- Report Generation
 
 Checks:
 
-* Accuracy
-* Confidence Scores
-* Hallucination Prevention
-* Business Rule Compliance
-* Human Approval Workflow
+- Accuracy
+- Confidence Scores
+- Hallucination Prevention
+- Business Rule Compliance
+- Human Approval Workflow
 
 ---
 
@@ -298,14 +298,14 @@ Each environment must mirror production as closely as possible.
 
 Test data should include:
 
-* Sample Organizations
-* Customers
-* Suppliers
-* Products
-* Inventory
-* Purchase Orders
-* Sales Invoices
-* Payments
+- Sample Organizations
+- Customers
+- Suppliers
+- Products
+- Inventory
+- Purchase Orders
+- Sales Invoices
+- Payments
 
 Sensitive production data must never be used directly in testing.
 
@@ -315,12 +315,12 @@ Sensitive production data must never be used directly in testing.
 
 Automated Testing includes:
 
-* Unit Tests
-* Component Tests
-* API Tests
-* Integration Tests
-* E2E Tests
-* Regression Tests
+- Unit Tests
+- Component Tests
+- API Tests
+- Integration Tests
+- E2E Tests
+- Regression Tests
 
 Automation should be part of every CI/CD pipeline.
 
@@ -330,28 +330,28 @@ Automation should be part of every CI/CD pipeline.
 
 Frontend
 
-* Vitest
-* React Testing Library
-* Playwright
+- Vitest
+- React Testing Library
+- Playwright
 
 Backend
 
-* Vitest
-* Supertest
+- Vitest
+- Supertest
 
 Performance
 
-* k6
+- k6
 
 Security
 
-* OWASP ZAP
-* npm audit
+- OWASP ZAP
+- npm audit
 
 Accessibility
 
-* axe-core
-* Lighthouse
+- axe-core
+- Lighthouse
 
 ---
 
@@ -359,19 +359,19 @@ Accessibility
 
 Every Pull Request must pass:
 
-* Linting
-* Formatting
-* Type Checking
-* Unit Tests
-* Component Tests
-* Integration Tests
-* Security Scan
+- Linting
+- Formatting
+- Type Checking
+- Unit Tests
+- Component Tests
+- Integration Tests
+- Security Scan
 
 Production deployment additionally requires:
 
-* E2E Tests
-* Smoke Tests
-* Performance Validation
+- E2E Tests
+- Smoke Tests
+- Performance Validation
 
 ---
 
@@ -379,28 +379,28 @@ Production deployment additionally requires:
 
 Severity Levels:
 
-* Critical
-* High
-* Medium
-* Low
+- Critical
+- High
+- Medium
+- Low
 
 Priority Levels:
 
-* P0
-* P1
-* P2
-* P3
+- P0
+- P1
+- P2
+- P3
 
 Each defect includes:
 
-* Steps to Reproduce
-* Expected Result
-* Actual Result
-* Screenshots
-* Logs
-* Environment
-* Severity
-* Priority
+- Steps to Reproduce
+- Expected Result
+- Actual Result
+- Screenshots
+- Logs
+- Environment
+- Severity
+- Priority
 
 ---
 
@@ -408,12 +408,12 @@ Each defect includes:
 
 A release is approved when:
 
-* All P0 and P1 defects are resolved.
-* Test coverage targets are met.
-* Security tests pass.
-* Performance meets SLA.
-* Accessibility compliance is verified.
-* Product Owner approves the release.
+- All P0 and P1 defects are resolved.
+- Test coverage targets are met.
+- Security tests pass.
+- Performance meets SLA.
+- Accessibility compliance is verified.
+- Product Owner approves the release.
 
 ---
 
@@ -421,26 +421,26 @@ A release is approved when:
 
 Track:
 
-* Test Coverage
-* Pass Rate
-* Defect Density
-* Escaped Defects
-* Mean Time to Detect (MTTD)
-* Mean Time to Resolve (MTTR)
-* Automation Coverage
-* Release Success Rate
+- Test Coverage
+- Pass Rate
+- Defect Density
+- Escaped Defects
+- Mean Time to Detect (MTTD)
+- Mean Time to Resolve (MTTR)
+- Automation Coverage
+- Release Success Rate
 
 ---
 
 # 15. Future Enhancements
 
-* Visual Regression Testing
-* Chaos Engineering
-* Mutation Testing
-* Contract Testing
-* AI-Assisted Test Generation
-* Self-Healing E2E Tests
-* Continuous Production Monitoring
+- Visual Regression Testing
+- Chaos Engineering
+- Mutation Testing
+- Contract Testing
+- AI-Assisted Test Generation
+- Self-Healing E2E Tests
+- Continuous Production Monitoring
 
 ---
 

@@ -6,6 +6,7 @@ metadata:
 ---
 
 **Every table must include these columns (non-negotiable):**
+
 - `id` — UUID primary key
 - `organization_id` — tenant isolation foreign key
 - `created_at`, `updated_at`, `deleted_at` — timestamps
@@ -13,6 +14,7 @@ metadata:
 - `version` — optimistic locking
 
 **Naming standards:**
+
 - Tables: `snake_case` (e.g., `invoice_items`)
 - Columns: `snake_case`
 - Primary key: `id`
@@ -21,6 +23,7 @@ metadata:
 - Unique constraints: `uq_{table}_{field}` (e.g., `uq_invoice_number`)
 
 **Security rules:**
+
 - Row Level Security (RLS) on every table: `organization_id = current_user.organization_id`
 - Soft deletes only (never hard delete business records)
 - Immutable financial records

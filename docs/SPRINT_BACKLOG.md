@@ -12,15 +12,15 @@ The Sprint Backlog defines the complete implementation plan for Syncrate using A
 
 Each feature is organized into:
 
-* Epic
-* Feature
-* User Story
-* Technical Tasks
-* Acceptance Criteria
-* Story Points
-* Priority
-* Dependencies
-* Sprint Assignment
+- Epic
+- Feature
+- User Story
+- Technical Tasks
+- Acceptance Criteria
+- Story Points
+- Priority
+- Dependencies
+- Sprint Assignment
 
 Sprint Duration
 
@@ -53,23 +53,23 @@ Every sprint should produce deployable software.
 
 ### Features
 
-* Monorepo Setup
-* CI/CD Pipeline
-* Docker Environment
-* Environment Configuration
-* Authentication Setup
-* Code Standards
-* Testing Framework
-* Design System
-* Shared Component Library
+- Monorepo Setup
+- CI/CD Pipeline
+- Docker Environment
+- Environment Configuration
+- Authentication Setup
+- Code Standards
+- Testing Framework
+- Design System
+- Shared Component Library
 
 ### Deliverables
 
-* Development environment
-* GitHub Actions
-* Deployment pipeline
-* Coding standards
-* Project documentation
+- Development environment
+- GitHub Actions
+- Deployment pipeline
+- Coding standards
+- Project documentation
 
 Estimated Story Points: **40**
 
@@ -81,27 +81,27 @@ Estimated Story Points: **40**
 
 ### Features
 
-* Login
-* Registration
-* Organization Creation
-* Branch Management
-* User Invitations
-* RBAC
-* Session Management
+- Login
+- Registration
+- Organization Creation
+- Branch Management
+- User Invitations
+- RBAC
+- Session Management
 
 ### User Stories
 
-* User can register an organization.
-* Owner can invite employees.
-* Users can log in securely.
-* Owner can assign roles.
-* Session expires securely.
+- User can register an organization.
+- Owner can invite employees.
+- Users can log in securely.
+- Owner can assign roles.
+- Session expires securely.
 
 Acceptance Criteria
 
-* Secure authentication.
-* JWT validation.
-* Role-based access enforced.
+- Secure authentication.
+- JWT validation.
+- Role-based access enforced.
 
 Estimated Story Points: **55**
 
@@ -113,27 +113,27 @@ Estimated Story Points: **55**
 
 ### Features
 
-* Customer CRUD
-* Supplier CRUD
-* Search
-* Import/Export
-* Customer Ledger
-* Supplier Ledger
+- Customer CRUD
+- Supplier CRUD
+- Search
+- Import/Export
+- Customer Ledger
+- Supplier Ledger
 
 ### User Stories
 
-* Add customer.
-* Edit customer.
-* Archive customer.
-* Add supplier.
-* Search suppliers.
-* View transaction history.
+- Add customer.
+- Edit customer.
+- Archive customer.
+- Add supplier.
+- Search suppliers.
+- View transaction history.
 
 Acceptance Criteria
 
-* Duplicate validation.
-* Fast search.
-* Audit logs generated.
+- Duplicate validation.
+- Fast search.
+- Audit logs generated.
 
 Estimated Story Points: **65**
 
@@ -145,20 +145,20 @@ Estimated Story Points: **65**
 
 ### Features
 
-* Products
-* Categories
-* Brands
-* Units
-* Warehouses
-* Inventory
-* Barcode
-* Batch Tracking
+- Products
+- Categories
+- Brands
+- Units
+- Warehouses
+- Inventory
+- Barcode
+- Batch Tracking
 
 Acceptance Criteria
 
-* Stock updates automatically.
-* Inventory ledger maintained.
-* Barcode supported.
+- Stock updates automatically.
+- Inventory ledger maintained.
+- Barcode supported.
 
 Estimated Story Points: **80**
 
@@ -170,17 +170,17 @@ Estimated Story Points: **80**
 
 ### Features
 
-* Purchase Requests
-* Purchase Orders
-* Goods Receipt
-* Purchase Invoice
-* Purchase Returns
+- Purchase Requests
+- Purchase Orders
+- Goods Receipt
+- Purchase Invoice
+- Purchase Returns
 
 Acceptance Criteria
 
-* Inventory updated.
-* Supplier ledger updated.
-* Approval workflow supported.
+- Inventory updated.
+- Supplier ledger updated.
+- Approval workflow supported.
 
 Estimated Story Points: **70**
 
@@ -192,19 +192,19 @@ Estimated Story Points: **70**
 
 ### Features
 
-* Quotations
-* Sales Orders
-* Invoice Generation
-* GST Engine
-* Pricing Engine
-* Discount Engine
-* PDF Generation
+- Quotations
+- Sales Orders
+- Invoice Generation
+- GST Engine
+- Pricing Engine
+- Discount Engine
+- PDF Generation
 
 Acceptance Criteria
 
-* GST-compliant invoices.
-* Automatic inventory deduction.
-* Invoice sharing.
+- GST-compliant invoices.
+- Automatic inventory deduction.
+- Invoice sharing.
 
 Estimated Story Points: **90**
 
@@ -216,17 +216,17 @@ Estimated Story Points: **90**
 
 ### Features
 
-* Payment Collection
-* Customer Ledger
-* Supplier Ledger
-* Reports
-* Dashboard Widgets
+- Payment Collection
+- Customer Ledger
+- Supplier Ledger
+- Reports
+- Dashboard Widgets
 
 Acceptance Criteria
 
-* Outstanding updated.
-* Reports generated.
-* Dashboard refreshed.
+- Outstanding updated.
+- Reports generated.
+- Dashboard refreshed.
 
 Estimated Story Points: **65**
 
@@ -238,18 +238,18 @@ Estimated Story Points: **65**
 
 ### Features
 
-* Business Discovery
-* Connections
-* Invoice Synchronization
-* Purchase Synchronization
-* Shared Documents
-* Trust Score
+- Business Discovery
+- Connections
+- Invoice Synchronization
+- Purchase Synchronization
+- Shared Documents
+- Trust Score
 
 Acceptance Criteria
 
-* Connected businesses exchange transactions.
-* Automatic synchronization.
-* Permission validation.
+- Connected businesses exchange transactions.
+- Automatic synchronization.
+- Permission validation.
 
 Estimated Story Points: **95**
 
@@ -261,18 +261,18 @@ Estimated Story Points: **95**
 
 ### Features
 
-* OCR
-* AI Assistant
-* Forecasting
-* Recommendations
-* Smart Reports
-* Smart Search
+- OCR
+- AI Assistant
+- Forecasting
+- Recommendations
+- Smart Reports
+- Smart Search
 
 Acceptance Criteria
 
-* AI integrated with core modules.
-* OCR accuracy >95%.
-* User approval for AI actions.
+- AI integrated with core modules.
+- OCR accuracy >95%.
+- User approval for AI actions.
 
 Estimated Story Points: **85**
 
@@ -284,18 +284,18 @@ Estimated Story Points: **85**
 
 ### Features
 
-* Workflow Engine
-* Approval Engine
-* Audit Center
-* Advanced Permissions
-* API Keys
-* Webhooks
+- Workflow Engine
+- Approval Engine
+- Audit Center
+- Advanced Permissions
+- API Keys
+- Webhooks
 
 Acceptance Criteria
 
-* Enterprise security.
-* Configurable approvals.
-* Audit compliance.
+- Enterprise security.
+- Configurable approvals.
+- Audit compliance.
 
 Estimated Story Points: **75**
 
@@ -307,17 +307,17 @@ Estimated Story Points: **75**
 
 ### Features
 
-* Supplier Marketplace
-* Product Marketplace
-* Reputation System
-* Logistics Integration
-* Marketplace Payments
+- Supplier Marketplace
+- Product Marketplace
+- Reputation System
+- Logistics Integration
+- Marketplace Payments
 
 Acceptance Criteria
 
-* Marketplace operational.
-* Reputation scoring.
-* Secure transactions.
+- Marketplace operational.
+- Reputation scoring.
+- Secure transactions.
 
 Estimated Story Points: **90**
 
@@ -327,11 +327,11 @@ Estimated Story Points: **90**
 
 A user story is ready when:
 
-* Business requirements are clear.
-* UI/UX is approved.
-* Acceptance criteria defined.
-* Dependencies identified.
-* Estimates completed.
+- Business requirements are clear.
+- UI/UX is approved.
+- Acceptance criteria defined.
+- Dependencies identified.
+- Estimates completed.
 
 ---
 
@@ -339,15 +339,15 @@ A user story is ready when:
 
 A story is complete when:
 
-* Development completed.
-* Code reviewed.
-* Unit tests passed.
-* Integration tests passed.
-* E2E tests passed.
-* Accessibility verified.
-* Documentation updated.
-* Deployed to staging.
-* Product Owner approved.
+- Development completed.
+- Code reviewed.
+- Unit tests passed.
+- Integration tests passed.
+- E2E tests passed.
+- Accessibility verified.
+- Documentation updated.
+- Deployed to staging.
+- Product Owner approved.
 
 ---
 
@@ -371,13 +371,13 @@ Development always begins with P0 items.
 
 Story Points
 
-* 1 – Very Small
-* 2 – Small
-* 3 – Medium
-* 5 – Moderate
-* 8 – Large
-* 13 – Complex
-* 21 – Epic
+- 1 – Very Small
+- 2 – Small
+- 3 – Medium
+- 5 – Moderate
+- 8 – Large
+- 13 – Complex
+- 21 – Epic
 
 ---
 
@@ -385,13 +385,13 @@ Story Points
 
 Track:
 
-* Velocity
-* Sprint Burndown
-* Sprint Completion Rate
-* Defect Rate
-* Lead Time
-* Cycle Time
-* Escaped Defects
+- Velocity
+- Sprint Burndown
+- Sprint Completion Rate
+- Defect Rate
+- Lead Time
+- Cycle Time
+- Escaped Defects
 
 ---
 
@@ -399,23 +399,23 @@ Track:
 
 Release 1.0
 
-* MVP
+- MVP
 
 Release 2.0
 
-* Connected Business Network
+- Connected Business Network
 
 Release 3.0
 
-* AI Platform
+- AI Platform
 
 Release 4.0
 
-* Enterprise Features
+- Enterprise Features
 
 Release 5.0
 
-* Marketplace
+- Marketplace
 
 ---
 

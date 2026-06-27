@@ -10,12 +10,12 @@
 
 The pricing strategy is designed to achieve the following goals:
 
-* Easy adoption for small businesses.
-* Sustainable recurring revenue.
-* Fair pricing based on business growth.
-* High customer retention.
-* Enterprise scalability.
-* AI usage monetization.
+- Easy adoption for small businesses.
+- Sustainable recurring revenue.
+- Fair pricing based on business growth.
+- High customer retention.
+- Enterprise scalability.
+- AI usage monetization.
 
 The pricing model combines feature-based licensing with usage-based limits.
 
@@ -25,12 +25,12 @@ The pricing model combines feature-based licensing with usage-based limits.
 
 The pricing strategy follows these principles:
 
-* Start Free
-* Pay As You Grow
-* Transparent Pricing
-* No Hidden Charges
-* Enterprise Flexibility
-* AI Usage Control
+- Start Free
+- Pay As You Grow
+- Transparent Pricing
+- No Hidden Charges
+- Enterprise Flexibility
+- AI Usage Control
 
 ---
 
@@ -42,21 +42,21 @@ Designed for very small businesses.
 
 Ideal for:
 
-* Startups
-* Freelancers
-* Small Shops
+- Startups
+- Freelancers
+- Small Shops
 
 Includes:
 
-* 1 Organization
-* 2 Users
-* 100 Customers
-* 50 Suppliers
-* 500 Products
-* 100 Invoices / Month
-* Basic Reports
-* Basic Dashboard
-* Email Support
+- 1 Organization
+- 2 Users
+- 100 Customers
+- 50 Suppliers
+- 500 Products
+- 100 Invoices / Month
+- Basic Reports
+- Basic Dashboard
+- Email Support
 
 No Connected Business Network.
 
@@ -70,18 +70,18 @@ Ideal for growing businesses.
 
 Includes:
 
-* 5 Users
-* Unlimited Customers
-* Unlimited Suppliers
-* Unlimited Products
-* Unlimited Invoices
-* Inventory Management
-* Purchase Management
-* Sales Management
-* GST Billing
-* Standard Reports
-* Connected Business Network
-* Basic AI OCR
+- 5 Users
+- Unlimited Customers
+- Unlimited Suppliers
+- Unlimited Products
+- Unlimited Invoices
+- Inventory Management
+- Purchase Management
+- Sales Management
+- GST Billing
+- Standard Reports
+- Connected Business Network
+- Basic AI OCR
 
 Priority Email Support.
 
@@ -93,17 +93,17 @@ Designed for established businesses.
 
 Includes everything in Starter plus:
 
-* Unlimited Users
-* Multi Branch
-* Multi Warehouse
-* AI Business Assistant
-* AI Forecasting
-* AI Recommendations
-* Workflow Approvals
-* Advanced Reports
-* Scheduled Reports
-* Dashboard Customization
-* WhatsApp Notifications
+- Unlimited Users
+- Multi Branch
+- Multi Warehouse
+- AI Business Assistant
+- AI Forecasting
+- AI Recommendations
+- Workflow Approvals
+- Advanced Reports
+- Scheduled Reports
+- Dashboard Customization
+- WhatsApp Notifications
 
 Priority Support.
 
@@ -115,18 +115,18 @@ Designed for large organizations.
 
 Includes:
 
-* Unlimited Everything
-* SSO
-* Custom Roles
-* Audit Center
-* Advanced Security
-* API Access
-* Webhooks
-* Dedicated Account Manager
-* Custom Integrations
-* SLA
-* Private AI Models
-* White Label Options
+- Unlimited Everything
+- SSO
+- Custom Roles
+- Audit Center
+- Advanced Security
+- API Access
+- Webhooks
+- Dedicated Account Manager
+- Custom Integrations
+- SLA
+- Private AI Models
+- White Label Options
 
 24×7 Enterprise Support.
 
@@ -156,11 +156,11 @@ Unlimited or Custom
 
 AI Credits are consumed by:
 
-* OCR
-* AI Assistant
-* Forecasting
-* Recommendations
-* Report Generation
+- OCR
+- AI Assistant
+- Forecasting
+- Recommendations
+- Report Generation
 
 Additional AI credits can be purchased separately.
 
@@ -170,17 +170,17 @@ Additional AI credits can be purchased separately.
 
 Every paid plan includes:
 
-* Business Discovery
-* Supplier Connections
-* Customer Connections
-* Digital Invoice Exchange
-* Purchase Synchronization
+- Business Discovery
+- Supplier Connections
+- Customer Connections
+- Digital Invoice Exchange
+- Purchase Synchronization
 
 Enterprise includes:
 
-* Unlimited Connections
-* Advanced Business Reputation
-* Marketplace Access
+- Unlimited Connections
+- Advanced Business Reputation
+- Marketplace Access
 
 ---
 
@@ -188,9 +188,9 @@ Enterprise includes:
 
 Supported billing frequencies:
 
-* Monthly
-* Quarterly
-* Yearly
+- Monthly
+- Quarterly
+- Yearly
 
 Yearly subscriptions receive discounted pricing.
 
@@ -200,14 +200,14 @@ Yearly subscriptions receive discounted pricing.
 
 New organizations receive:
 
-* 14-Day Free Trial
-* Full Professional Features
-* No Credit Card Required
+- 14-Day Free Trial
+- Full Professional Features
+- No Credit Card Required
 
 After trial:
 
-* Upgrade
-* Continue on Free Plan
+- Upgrade
+- Continue on Free Plan
 
 ---
 
@@ -217,8 +217,8 @@ Users may upgrade at any time.
 
 Benefits:
 
-* Immediate feature activation.
-* Pro-rated billing.
+- Immediate feature activation.
+- Pro-rated billing.
 
 Downgrades take effect after the current billing cycle.
 
@@ -230,13 +230,13 @@ The system validates feature compatibility before downgrading.
 
 Usage limits may include:
 
-* Users
-* Branches
-* Warehouses
-* AI Credits
-* File Storage
-* API Requests
-* Connected Businesses
+- Users
+- Branches
+- Warehouses
+- AI Credits
+- File Storage
+- API Requests
+- Connected Businesses
 
 Users are notified before limits are reached.
 
@@ -246,17 +246,17 @@ Users are notified before limits are reached.
 
 Supported methods:
 
-* Credit Card
-* Debit Card
-* UPI
-* Net Banking
-* Razorpay
-* Bank Transfer (Enterprise)
+- Credit Card
+- Debit Card
+- UPI
+- Net Banking
+- Razorpay
+- Bank Transfer (Enterprise)
 
 Future:
 
-* Stripe
-* PayPal
+- Stripe
+- PayPal
 
 ---
 
@@ -264,11 +264,11 @@ Future:
 
 Automatic billing includes:
 
-* Tax Invoice
-* Payment Receipt
-* Renewal Reminder
-* Failed Payment Notification
-* Subscription History
+- Tax Invoice
+- Payment Receipt
+- Renewal Reminder
+- Failed Payment Notification
+- Subscription History
 
 Invoices comply with applicable tax regulations.
 
@@ -278,14 +278,14 @@ Invoices comply with applicable tax regulations.
 
 Optional paid add-ons:
 
-* Additional AI Credits
-* Extra File Storage
-* SMS Credits
-* WhatsApp Credits
-* Additional API Usage
-* Premium Support
-* Custom Reports
-* Custom Branding
+- Additional AI Credits
+- Extra File Storage
+- SMS Credits
+- WhatsApp Credits
+- Additional API Usage
+- Premium Support
+- Custom Reports
+- Custom Branding
 
 ---
 
@@ -293,13 +293,13 @@ Optional paid add-ons:
 
 Enterprise customers may receive:
 
-* Custom Pricing
-* Volume Discounts
-* Annual Contracts
-* Dedicated Infrastructure
-* White Label Deployment
-* Private AI Deployment
-* Custom Integrations
+- Custom Pricing
+- Volume Discounts
+- Annual Contracts
+- Dedicated Infrastructure
+- White Label Deployment
+- Private AI Deployment
+- Custom Integrations
 
 ---
 
@@ -307,22 +307,22 @@ Enterprise customers may receive:
 
 Primary Revenue
 
-* Subscription Fees
+- Subscription Fees
 
 Secondary Revenue
 
-* AI Credits
-* Add-On Services
-* Marketplace Commission
-* Premium Integrations
-* Enterprise Services
+- AI Credits
+- Add-On Services
+- Marketplace Commission
+- Premium Integrations
+- Enterprise Services
 
 Future Revenue
 
-* B2B Marketplace
-* Logistics Services
-* Digital Payments
-* Financial Services
+- B2B Marketplace
+- Logistics Services
+- Digital Payments
+- Financial Services
 
 ---
 
@@ -330,13 +330,13 @@ Future Revenue
 
 Retention strategies include:
 
-* Free Plan
-* Product Education
-* AI Productivity Features
-* Connected Business Network
-* Loyalty Discounts
-* Referral Rewards
-* Annual Subscription Discounts
+- Free Plan
+- Product Education
+- AI Productivity Features
+- Connected Business Network
+- Loyalty Discounts
+- Referral Rewards
+- Annual Subscription Discounts
 
 ---
 
@@ -344,12 +344,12 @@ Retention strategies include:
 
 Pricing should be reviewed every six months based on:
 
-* Customer Feedback
-* Infrastructure Cost
-* AI Usage Cost
-* Market Competition
-* Customer Growth
-* Feature Adoption
+- Customer Feedback
+- Infrastructure Cost
+- AI Usage Cost
+- Market Competition
+- Customer Growth
+- Feature Adoption
 
 ---
 
@@ -357,14 +357,14 @@ Pricing should be reviewed every six months based on:
 
 Key pricing KPIs:
 
-* Monthly Recurring Revenue (MRR)
-* Annual Recurring Revenue (ARR)
-* Customer Lifetime Value (CLV)
-* Customer Acquisition Cost (CAC)
-* Conversion Rate
-* Churn Rate
-* Average Revenue Per User (ARPU)
-* AI Credit Consumption
+- Monthly Recurring Revenue (MRR)
+- Annual Recurring Revenue (ARR)
+- Customer Lifetime Value (CLV)
+- Customer Acquisition Cost (CAC)
+- Conversion Rate
+- Churn Rate
+- Average Revenue Per User (ARPU)
+- AI Credit Consumption
 
 ---
 
@@ -372,13 +372,13 @@ Key pricing KPIs:
 
 Future enhancements may include:
 
-* Pay-as-you-go AI
-* Marketplace Subscription
-* Industry-Specific Editions
-* Franchise Pricing
-* Multi-Company Licensing
-* Government & Education Plans
-* Regional Pricing
+- Pay-as-you-go AI
+- Marketplace Subscription
+- Industry-Specific Editions
+- Franchise Pricing
+- Multi-Company Licensing
+- Government & Education Plans
+- Regional Pricing
 
 ---
 

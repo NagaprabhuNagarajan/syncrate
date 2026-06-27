@@ -32,8 +32,8 @@ DEVOPS_INFRASTRUCTURE.md
 28. Performance Optimization
 29. Cost Optimization
 30. Production Checklist
-Example Infrastructure
-Developer
+    Example Infrastructure
+    Developer
 
 ↓
 
