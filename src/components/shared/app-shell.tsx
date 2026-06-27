@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
+  Truck,
   Package,
   ShoppingCart,
   FileText,
@@ -38,6 +39,7 @@ interface NavItem {
 const NAV_ITEMS: readonly NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Customers", href: "/customers", icon: Users },
+  { label: "Suppliers", href: "/suppliers", icon: Truck },
   { label: "Products", href: "/products", icon: Package },
   { label: "Purchases", href: "/purchases", icon: ShoppingCart },
   { label: "Sales", href: "/sales", icon: FileText },

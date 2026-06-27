@@ -101,6 +101,112 @@ type BranchesRow = AuditFields & {
   status: "active" | "inactive" | "closed";
 };
 
+type CustomersRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  code: string;
+  name: string;
+  company: string | null;
+  gst_number: string | null;
+  pan_number: string | null;
+  mobile: string | null;
+  email: string | null;
+  website: string | null;
+  billing_address_line1: string | null;
+  billing_address_line2: string | null;
+  billing_city: string | null;
+  billing_state: string | null;
+  billing_pincode: string | null;
+  billing_country: string;
+  shipping_address_line1: string | null;
+  shipping_address_line2: string | null;
+  shipping_city: string | null;
+  shipping_state: string | null;
+  shipping_pincode: string | null;
+  shipping_country: string | null;
+  credit_limit: number;
+  payment_terms_days: number;
+  preferred_payment_method: string | null;
+  opening_balance: number;
+  status: "active" | "inactive" | "blacklisted" | "archived";
+  tags: string[];
+  notes: string | null;
+};
+
+type SuppliersRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  code: string;
+  name: string;
+  contact_person: string | null;
+  gst_number: string | null;
+  pan_number: string | null;
+  mobile: string | null;
+  email: string | null;
+  website: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  country: string;
+  bank_account_name: string | null;
+  bank_account_number: string | null;
+  bank_ifsc: string | null;
+  bank_name: string | null;
+  upi_id: string | null;
+  payment_terms_days: number;
+  opening_balance: number;
+  rating: number | null;
+  status: "active" | "inactive" | "archived";
+  tags: string[];
+  notes: string | null;
+};
+
+type AuditLogsRow = {
+  id: string;
+  organization_id: string;
+  actor_user_id: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  summary: string | null;
+  metadata: Json;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+};
+
+type CustomerLedgerEntriesRow = {
+  id: string;
+  organization_id: string;
+  customer_id: string;
+  entry_date: string;
+  reference_type: string | null;
+  reference_id: string | null;
+  description: string | null;
+  debit: number;
+  credit: number;
+  running_balance: number;
+  created_at: string;
+  created_by: string | null;
+};
+
+type SupplierLedgerEntriesRow = {
+  id: string;
+  organization_id: string;
+  supplier_id: string;
+  entry_date: string;
+  reference_type: string | null;
+  reference_id: string | null;
+  description: string | null;
+  debit: number;
+  credit: number;
+  running_balance: number;
+  created_at: string;
+  created_by: string | null;
+};
+
 type RolesRow = AuditFields & {
   id: string;
   organization_id: string | null;
@@ -257,6 +363,182 @@ export interface Database {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── customers ─────────────────────────────────────────
+      customers: {
+        Row: CustomersRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          code: string;
+          name: string;
+          company?: string | null;
+          gst_number?: string | null;
+          pan_number?: string | null;
+          mobile?: string | null;
+          email?: string | null;
+          website?: string | null;
+          billing_address_line1?: string | null;
+          billing_address_line2?: string | null;
+          billing_city?: string | null;
+          billing_state?: string | null;
+          billing_pincode?: string | null;
+          billing_country?: string;
+          shipping_address_line1?: string | null;
+          shipping_address_line2?: string | null;
+          shipping_city?: string | null;
+          shipping_state?: string | null;
+          shipping_pincode?: string | null;
+          shipping_country?: string | null;
+          credit_limit?: number;
+          payment_terms_days?: number;
+          preferred_payment_method?: string | null;
+          opening_balance?: number;
+          status?: CustomersRow["status"];
+          tags?: string[];
+          notes?: string | null;
+        };
+        Update: Partial<CustomersRow>;
+        Relationships: [
+          {
+            foreignKeyName: "customers_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── suppliers ─────────────────────────────────────────
+      suppliers: {
+        Row: SuppliersRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          code: string;
+          name: string;
+          contact_person?: string | null;
+          gst_number?: string | null;
+          pan_number?: string | null;
+          mobile?: string | null;
+          email?: string | null;
+          website?: string | null;
+          address_line1?: string | null;
+          address_line2?: string | null;
+          city?: string | null;
+          state?: string | null;
+          pincode?: string | null;
+          country?: string;
+          bank_account_name?: string | null;
+          bank_account_number?: string | null;
+          bank_ifsc?: string | null;
+          bank_name?: string | null;
+          upi_id?: string | null;
+          payment_terms_days?: number;
+          opening_balance?: number;
+          rating?: number | null;
+          status?: SuppliersRow["status"];
+          tags?: string[];
+          notes?: string | null;
+        };
+        Update: Partial<SuppliersRow>;
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── audit_logs ────────────────────────────────────────
+      audit_logs: {
+        Row: AuditLogsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          actor_user_id?: string | null;
+          action: string;
+          entity_type: string;
+          entity_id?: string | null;
+          summary?: string | null;
+          metadata?: Json;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<AuditLogsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── customer_ledger_entries ───────────────────────────
+      customer_ledger_entries: {
+        Row: CustomerLedgerEntriesRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          customer_id: string;
+          entry_date?: string;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          description?: string | null;
+          debit?: number;
+          credit?: number;
+          running_balance?: number;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<CustomerLedgerEntriesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "customer_ledger_entries_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── supplier_ledger_entries ───────────────────────────
+      supplier_ledger_entries: {
+        Row: SupplierLedgerEntriesRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          supplier_id: string;
+          entry_date?: string;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          description?: string | null;
+          debit?: number;
+          credit?: number;
+          running_balance?: number;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<SupplierLedgerEntriesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "supplier_ledger_entries_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
             referencedColumns: ["id"];
           },
         ];

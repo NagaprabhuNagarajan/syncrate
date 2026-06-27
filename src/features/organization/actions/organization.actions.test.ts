@@ -29,6 +29,7 @@ const {
   revalidateMock,
   getUserMock,
   createClientMock,
+  logMock,
 } = vi.hoisted(() => ({
   mockService: {
     createOrganization: vi.fn(),
@@ -45,6 +46,7 @@ const {
   revalidateMock: vi.fn(),
   getUserMock: vi.fn(),
   createClientMock: vi.fn(),
+  logMock: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -61,6 +63,10 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/features/organization/services/organization.service", () => ({
   OrganizationService: vi.fn(() => mockService),
+}));
+
+vi.mock("@/features/audit/services/audit.service", () => ({
+  AuditService: vi.fn(() => ({ log: logMock })),
 }));
 
 // ─────────────────────────────────────────────────────────────
@@ -207,6 +213,7 @@ describe("createOrganizationAction", () => {
 
     expect(result).toBe(failure);
     expect(redirectMock).not.toHaveBeenCalled();
+    expect(logMock).not.toHaveBeenCalled();
   });
 
   it("calls the service with parsed data and redirects on success", async () => {
@@ -223,6 +230,18 @@ describe("createOrganizationAction", () => {
       "user-1"
     );
     expect(redirectMock).toHaveBeenCalledWith("/dashboard");
+    expect(logMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "organization.create",
+        entityType: "organization",
+      })
+    );
+  });
+
+  it("does not audit-log on invalid input", async () => {
+    await createOrganizationAction(fd({ name: "A" }));
+
+    expect(logMock).not.toHaveBeenCalled();
   });
 });
 
@@ -275,6 +294,30 @@ describe("updateOrganizationAction", () => {
       "user-1"
     );
     expect(result).toBe(success);
+    expect(logMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "organization.update",
+        entityType: "organization",
+      })
+    );
+  });
+
+  it("does not audit-log when the service fails", async () => {
+    authedAs("user-1");
+    mockService.updateOrganization.mockResolvedValue({
+      success: false,
+      error: { code: "not_found", message: "nope" },
+    });
+
+    await updateOrganizationAction("org-1", fd({ name: "Valid Name" }));
+
+    expect(logMock).not.toHaveBeenCalled();
+  });
+
+  it("does not audit-log on invalid input", async () => {
+    await updateOrganizationAction("org-1", fd({ name: "A" }));
+
+    expect(logMock).not.toHaveBeenCalled();
   });
 });
 
@@ -375,6 +418,31 @@ describe("inviteUserAction", () => {
     );
     expect(result).toBe(success);
     expect(revalidateMock).toHaveBeenCalledWith("/settings/team");
+    expect(logMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "invitation.create",
+        entityType: "invitation",
+      })
+    );
+  });
+
+  it("does not audit-log when forbidden or on invalid input", async () => {
+    const invalid = await inviteUserAction(
+      "org-1",
+      fd({ email: "bad", roleId: "bad" })
+    );
+    expect(invalid.success).toBe(false);
+
+    authedAs("user-1");
+    mockService.getOrganizationContext.mockResolvedValue(
+      buildContext(["invoice.create"])
+    );
+    await inviteUserAction(
+      "org-1",
+      fd({ email: "new@example.com", roleId: ROLE_ID })
+    );
+
+    expect(logMock).not.toHaveBeenCalled();
   });
 });
 
@@ -448,6 +516,23 @@ describe("cancelInvitationAction", () => {
     );
     expect(mockService.cancelInvitation).toHaveBeenCalledWith("inv-1", "user-1");
     expect(result).toBe(success);
+    expect(logMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "invitation.cancel",
+        entityType: "invitation",
+      })
+    );
+  });
+
+  it("does not audit-log when forbidden", async () => {
+    authedAs("user-1");
+    mockService.getOrganizationContext.mockResolvedValue(
+      buildContext(["invoice.create"])
+    );
+
+    await cancelInvitationAction("inv-1", "org-1");
+
+    expect(logMock).not.toHaveBeenCalled();
   });
 });
 
@@ -485,9 +570,15 @@ describe("acceptInvitationAction", () => {
     expect(result).toBe(success);
     expect(revalidateMock).toHaveBeenCalledWith("/dashboard");
     expect(revalidateMock).toHaveBeenCalledWith("/select-organization");
+    expect(logMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "invitation.accept",
+        entityType: "invitation",
+      })
+    );
   });
 
-  it("does not revalidate when the service fails", async () => {
+  it("does not revalidate or audit-log when the service fails", async () => {
     authedAs("user-1");
     const failure: OrganizationActionResult<Organization> = {
       success: false,
@@ -499,6 +590,7 @@ describe("acceptInvitationAction", () => {
 
     expect(result).toBe(failure);
     expect(revalidateMock).not.toHaveBeenCalled();
+    expect(logMock).not.toHaveBeenCalled();
   });
 });
 
@@ -595,6 +687,25 @@ describe("createBranchAction", () => {
     );
     expect(result).toBe(success);
     expect(revalidateMock).toHaveBeenCalledWith("/settings/branches");
+    expect(logMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "branch.create",
+        entityType: "branch",
+      })
+    );
+  });
+
+  it("does not audit-log when forbidden or on invalid input", async () => {
+    const invalid = await createBranchAction("org-1", fd({ name: "A" }));
+    expect(invalid.success).toBe(false);
+
+    authedAs("user-1");
+    mockService.getOrganizationContext.mockResolvedValue(
+      buildContext(["invoice.create"])
+    );
+    await createBranchAction("org-1", fd({ name: "Main Branch", code: "MB01" }));
+
+    expect(logMock).not.toHaveBeenCalled();
   });
 });
 
@@ -680,6 +791,23 @@ describe("updateBranchAction", () => {
     );
     expect(result).toBe(success);
     expect(revalidateMock).toHaveBeenCalledWith("/settings/branches");
+    expect(logMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "branch.update",
+        entityType: "branch",
+      })
+    );
+  });
+
+  it("does not audit-log when forbidden", async () => {
+    authedAs("user-1");
+    mockService.getOrganizationContext.mockResolvedValue(
+      buildContext(["invoice.create"])
+    );
+
+    await updateBranchAction("org-1", "branch-1", fd({ name: "Renamed" }));
+
+    expect(logMock).not.toHaveBeenCalled();
   });
 });
 
@@ -734,9 +862,15 @@ describe("deleteBranchAction", () => {
     expect(mockService.deleteBranch).toHaveBeenCalledWith("branch-1", "user-1");
     expect(result).toBe(success);
     expect(revalidateMock).toHaveBeenCalledWith("/settings/branches");
+    expect(logMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "branch.delete",
+        entityType: "branch",
+      })
+    );
   });
 
-  it("does not revalidate when the service fails", async () => {
+  it("does not revalidate or audit-log when the service fails", async () => {
     authedAs("user-1");
     mockService.getOrganizationContext.mockResolvedValue(
       buildContext(["settings.branches"])
@@ -751,6 +885,7 @@ describe("deleteBranchAction", () => {
 
     expect(result).toBe(failure);
     expect(revalidateMock).not.toHaveBeenCalled();
+    expect(logMock).not.toHaveBeenCalled();
   });
 });
 
