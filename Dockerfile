@@ -36,7 +36,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
 # Stage 3: Runner (minimal production image)
-FROM node:20-alpine AS runner
+FROM node:20-alpine AS runnerw
 WORKDIR /app
 
 RUN apk add --no-cache dumb-init

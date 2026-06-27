@@ -18,6 +18,15 @@ export default defineConfig({
         "**/*.config.*",
         "src/types/database.types.ts",
         ".next",
+        "e2e/**",
+        // Framework glue — exercised by E2E, not unit-tested:
+        "src/app/**", // Next.js pages, layouts, route handlers
+        "src/middleware.ts",
+        "**/providers.tsx",
+        "src/config/env.ts", // env validation runs at import time
+        "src/lib/supabase/**", // thin Supabase client factories (browser/server)
+        "**/types/**", // type-only modules (no executable code)
+        "**/*.types.ts",
       ],
       thresholds: {
         // Target: 90%+ as per testing strategy

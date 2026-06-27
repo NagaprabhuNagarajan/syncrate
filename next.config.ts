@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    typedRoutes: true,
+    // typedRoutes: true,
+    // Disabled until `next build` or `next dev` generates .next/types/app-router.d.ts.
+    // Re-enable after the first build.
   },
   images: {
     remotePatterns: [

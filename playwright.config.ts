@@ -15,10 +15,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter */
-  reporter: [
-    ["html"],
-    process.env.CI ? ["github"] : ["list"],
-  ],
+  reporter: [["html"], process.env.CI ? ["github"] : ["list"]],
   /* Shared settings for all the projects below */
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",

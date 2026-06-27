@@ -1,0 +1,427 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { motion } from "framer-motion";
+import {
+  Eye,
+  EyeOff,
+  UserPlus,
+  AlertCircle,
+  CheckCircle2,
+  Check,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  registerSchema,
+  type RegisterFormValues,
+} from "@/features/identity/schemas/auth.schemas";
+import { signUpAction } from "@/features/identity/actions/auth.actions";
+import { cn } from "@/utils/cn";
+
+// ─────────────────────────────────────────────────────────────
+// Password strength indicator
+// ─────────────────────────────────────────────────────────────
+
+interface PasswordRule {
+  readonly label: string;
+  readonly test: (pw: string) => boolean;
+}
+
+const PASSWORD_RULES: readonly PasswordRule[] = [
+  { label: "At least 8 characters", test: (p) => p.length >= 8 },
+  { label: "One uppercase letter", test: (p) => /[A-Z]/.test(p) },
+  { label: "One lowercase letter", test: (p) => /[a-z]/.test(p) },
+  { label: "One number", test: (p) => /\d/.test(p) },
+];
+
+function PasswordStrengthIndicator({
+  password,
+}: {
+  readonly password: string;
+}) {
+  const passed = PASSWORD_RULES.filter((r) => r.test(password)).length;
+  const strength =
+    passed === 0 ? 0 : passed <= 1 ? 1 : passed <= 2 ? 2 : passed <= 3 ? 3 : 4;
+
+  const colors = [
+    "bg-slate-200",
+    "bg-error-500",
+    "bg-warning-500",
+    "bg-warning-400",
+    "bg-success-500",
+  ];
+  const labels = ["", "Weak", "Fair", "Good", "Strong"];
+
+  return (
+    <div className="mt-2 space-y-2">
+      <div className="flex gap-1">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className={cn(
+              "h-1 flex-1 rounded-full transition-colors duration-300",
+              i <= strength ? colors[strength] : "bg-slate-200"
+            )}
+          />
+        ))}
+      </div>
+      {password.length > 0 && (
+        <p
+          className={cn(
+            "text-xs",
+            strength >= 3 ? "text-success-600" : "text-slate-500"
+          )}
+        >
+          Password strength: {labels[strength]}
+        </p>
+      )}
+      <ul className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+        {PASSWORD_RULES.map((rule) => {
+          const passes = rule.test(password);
+          return (
+            <li key={rule.label} className="flex items-center gap-1.5 text-xs">
+              {passes ? (
+                <Check
+                  className="text-success-500 h-3 w-3"
+                  aria-hidden="true"
+                />
+              ) : (
+                <X className="h-3 w-3 text-slate-300" aria-hidden="true" />
+              )}
+              <span className={passes ? "text-success-700" : "text-slate-500"}>
+                {rule.label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Field error
+// ─────────────────────────────────────────────────────────────
+
+function FieldError({ message }: { readonly message?: string }) {
+  if (!message) {
+    return null;
+  }
+  return (
+    <motion.p
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+      role="alert"
+    >
+      <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {message}
+    </motion.p>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Register Form
+// ─────────────────────────────────────────────────────────────
+
+export function RegisterForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      acceptTerms: undefined,
+    },
+  });
+
+  const password = watch("password") ?? "";
+
+  const onSubmit = handleSubmit((values) => {
+    setServerError(null);
+
+    const fd = new FormData();
+    fd.append("fullName", values.fullName);
+    fd.append("email", values.email);
+    fd.append("password", values.password);
+    fd.append("confirmPassword", values.confirmPassword);
+    fd.append("acceptTerms", "on");
+
+    startTransition(async () => {
+      const result = await signUpAction(fd);
+      if (result && !result.success) {
+        setServerError(result.error.message);
+      }
+    });
+  });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-8 shadow-xl shadow-slate-200/50"
+    >
+      <div className="mb-7">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          Create your account
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Start your free Syncrate account today
+        </p>
+      </div>
+
+      {serverError && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          role="alert"
+        >
+          <AlertCircle
+            className="text-error-500 mt-0.5 h-4 w-4 shrink-0"
+            aria-hidden="true"
+          />
+          <span>{serverError}</span>
+        </motion.div>
+      )}
+
+      <form onSubmit={onSubmit} noValidate className="space-y-5">
+        {/* Full Name */}
+        <div>
+          <label
+            htmlFor="fullName"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
+            Full name
+          </label>
+          <input
+            id="fullName"
+            type="text"
+            autoComplete="name"
+            aria-invalid={errors.fullName ? "true" : "false"}
+            className={cn(
+              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+              "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
+              errors.fullName
+                ? "border-error-400 bg-error-50/30"
+                : "border-slate-300 bg-white hover:border-slate-400"
+            )}
+            placeholder="Priya Sharma"
+            {...register("fullName")}
+          />
+          <FieldError message={errors.fullName?.message} />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label
+            htmlFor="email"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
+            Work email
+          </label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            aria-invalid={errors.email ? "true" : "false"}
+            className={cn(
+              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+              "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
+              errors.email
+                ? "border-error-400 bg-error-50/30"
+                : "border-slate-300 bg-white hover:border-slate-400"
+            )}
+            placeholder="you@company.com"
+            {...register("email")}
+          />
+          <FieldError message={errors.email?.message} />
+        </div>
+
+        {/* Password */}
+        <div>
+          <label
+            htmlFor="password"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
+            Password
+          </label>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              aria-invalid={errors.password ? "true" : "false"}
+              className={cn(
+                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+                "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
+                errors.password
+                  ? "border-error-400 bg-error-50/30"
+                  : "border-slate-300 bg-white hover:border-slate-400"
+              )}
+              placeholder="Create a strong password"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          {password.length > 0 && (
+            <PasswordStrengthIndicator password={password} />
+          )}
+          {errors.password && <FieldError message={errors.password.message} />}
+        </div>
+
+        {/* Confirm Password */}
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
+            Confirm password
+          </label>
+          <div className="relative">
+            <input
+              id="confirmPassword"
+              type={showConfirm ? "text" : "password"}
+              autoComplete="new-password"
+              aria-invalid={errors.confirmPassword ? "true" : "false"}
+              className={cn(
+                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+                "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
+                errors.confirmPassword
+                  ? "border-error-400 bg-error-50/30"
+                  : "border-slate-300 bg-white hover:border-slate-400"
+              )}
+              placeholder="Confirm your password"
+              {...register("confirmPassword")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((p) => !p)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              aria-label={showConfirm ? "Hide password" : "Show password"}
+            >
+              {showConfirm ? (
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          <FieldError message={errors.confirmPassword?.message} />
+        </div>
+
+        {/* Accept Terms */}
+        <div>
+          <div className="flex items-start gap-2.5">
+            <input
+              id="acceptTerms"
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+              {...register("acceptTerms")}
+            />
+            <label htmlFor="acceptTerms" className="text-sm text-slate-600">
+              I agree to the{" "}
+              <Link
+                href="/terms"
+                className="font-medium text-primary-600 hover:text-primary-700"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="font-medium text-primary-600 hover:text-primary-700"
+              >
+                Privacy Policy
+              </Link>
+            </label>
+          </div>
+          <FieldError message={errors.acceptTerms?.message} />
+        </div>
+
+        {/* Submit */}
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          loading={isPending}
+          disabled={isPending}
+        >
+          <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
+          Create account
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-slate-500">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-primary-600 hover:text-primary-700"
+        >
+          Sign in
+        </Link>
+      </p>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Success state (shown after redirect to /verify-email)
+// ─────────────────────────────────────────────────────────────
+
+export function RegistrationSuccess() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-10 text-center shadow-xl shadow-slate-200/50"
+    >
+      <div className="bg-success-50 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full">
+        <CheckCircle2 className="text-success-600 h-8 w-8" aria-hidden="true" />
+      </div>
+      <h2 className="text-xl font-semibold text-slate-900">Check your email</h2>
+      <p className="mt-2 text-sm text-slate-500">
+        We&apos;ve sent a verification link to your email address. Click it to
+        activate your account.
+      </p>
+      <p className="mt-4 text-xs text-slate-400">
+        Didn&apos;t receive it? Check your spam folder or{" "}
+        <Link
+          href="/register"
+          className="font-medium text-primary-600 hover:text-primary-700"
+        >
+          try again
+        </Link>
+        .
+      </p>
+    </motion.div>
+  );
+}

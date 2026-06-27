@@ -30,7 +30,10 @@ export function PageHeader({
       <div className="flex items-center gap-3">
         {Icon && (
           <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted">
-            <Icon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <Icon
+              className="h-5 w-5 text-muted-foreground"
+              aria-hidden="true"
+            />
           </div>
         )}
         <div>
