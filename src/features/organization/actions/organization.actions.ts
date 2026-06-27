@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
+import { AuditService } from "@/features/audit/services/audit.service";
 import {
   createOrganizationSchema,
   updateOrganizationSchema,
@@ -69,6 +70,15 @@ export async function createOrganizationAction(
     return result;
   }
 
+  await new AuditService(supabase).log({
+    organizationId: result.data.id,
+    actorUserId: authData.user.id,
+    action: "organization.create",
+    entityType: "organization",
+    entityId: result.data.id,
+    summary: `Created organization "${parsed.data.name}"`,
+  });
+
   redirect(`/dashboard`);
 }
 
@@ -120,11 +130,24 @@ export async function updateOrganizationAction(
   }
 
   const service = new OrganizationService(supabase);
-  return service.updateOrganization(
+  const result = await service.updateOrganization(
     organizationId,
     parsed.data,
     authData.user.id
   );
+
+  if (result.success) {
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: authData.user.id,
+      action: "organization.update",
+      entityType: "organization",
+      entityId: organizationId,
+      summary: `Updated organization "${result.data.name}"`,
+    });
+  }
+
+  return result;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -197,6 +220,14 @@ export async function inviteUserAction(
 
   if (result.success) {
     revalidatePath("/settings/team");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: authData.user.id,
+      action: "invitation.create",
+      entityType: "invitation",
+      entityId: result.data.id,
+      summary: `Invited ${parsed.data.email}`,
+    });
   }
 
   return result;
@@ -254,6 +285,14 @@ export async function cancelInvitationAction(
 
   if (result.success) {
     revalidatePath("/settings/team");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: authData.user.id,
+      action: "invitation.cancel",
+      entityType: "invitation",
+      entityId: invitationId,
+      summary: "Cancelled invitation",
+    });
   }
 
   return result;
@@ -282,6 +321,14 @@ export async function acceptInvitationAction(
   if (result.success) {
     revalidatePath("/dashboard");
     revalidatePath("/select-organization");
+    await new AuditService(supabase).log({
+      organizationId: result.data.id,
+      actorUserId: authData.user.id,
+      action: "invitation.accept",
+      entityType: "invitation",
+      entityId: null,
+      summary: "Accepted invitation",
+    });
   }
 
   return result;
@@ -376,6 +423,14 @@ export async function createBranchAction(
 
   if (result.success) {
     revalidatePath("/settings/branches");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: authData.user.id,
+      action: "branch.create",
+      entityType: "branch",
+      entityId: result.data.id,
+      summary: `Created branch "${parsed.data.name}" (${parsed.data.code})`,
+    });
   }
 
   return result;
@@ -442,6 +497,14 @@ export async function updateBranchAction(
 
   if (result.success) {
     revalidatePath("/settings/branches");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: authData.user.id,
+      action: "branch.update",
+      entityType: "branch",
+      entityId: branchId,
+      summary: `Updated branch "${result.data.name}"`,
+    });
   }
 
   return result;
@@ -474,6 +537,14 @@ export async function deleteBranchAction(
 
   if (result.success) {
     revalidatePath("/settings/branches");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: authData.user.id,
+      action: "branch.delete",
+      entityType: "branch",
+      entityId: branchId,
+      summary: "Deleted branch",
+    });
   }
 
   return result;
