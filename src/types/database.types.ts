@@ -207,6 +207,147 @@ type SupplierLedgerEntriesRow = {
   created_by: string | null;
 };
 
+type CategoriesRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  parent_id: string | null;
+  name: string;
+  description: string | null;
+  status: "active" | "archived";
+};
+
+type BrandsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  status: "active" | "archived";
+};
+
+type UnitsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  name: string;
+  symbol: string;
+  status: "active" | "archived";
+};
+
+type ProductsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  type: "inventory" | "service" | "digital" | "bundle";
+  status: "draft" | "active" | "discontinued" | "archived";
+  category_id: string | null;
+  brand_id: string | null;
+  unit_id: string | null;
+  manufacturer: string | null;
+  hsn_code: string | null;
+  gst_rate: number;
+  tax_inclusive: boolean;
+  purchase_price: number;
+  selling_price: number;
+  dealer_price: number;
+  wholesale_price: number;
+  retail_price: number;
+  min_selling_price: number;
+  sku: string | null;
+  barcode: string | null;
+  qr_code: string | null;
+  track_inventory: boolean;
+  reorder_level: number;
+  max_stock: number;
+  opening_stock: number;
+  preferred_supplier_id: string | null;
+  is_seasonal: boolean;
+  is_fast_moving: boolean;
+  is_slow_moving: boolean;
+  ai_tags: string[];
+  tags: string[];
+};
+
+type WarehousesRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  code: string;
+  name: string;
+  address_line1: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  capacity: number | null;
+  is_default: boolean;
+  status: "active" | "inactive" | "archived";
+};
+
+type BatchesRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  product_id: string;
+  batch_number: string;
+  manufacturing_date: string | null;
+  expiry_date: string | null;
+  supplier_batch: string | null;
+  received_quantity: number;
+  remaining_quantity: number;
+  status: "active" | "expired" | "depleted";
+};
+
+type InventoryRow = {
+  id: string;
+  organization_id: string;
+  product_id: string;
+  warehouse_id: string;
+  quantity: number;
+  reserved_quantity: number;
+  created_at: string;
+  updated_at: string;
+};
+
+type InventoryTransactionsRow = {
+  id: string;
+  organization_id: string;
+  product_id: string;
+  warehouse_id: string;
+  batch_id: string | null;
+  type:
+    | "opening"
+    | "purchase"
+    | "sale"
+    | "sales_return"
+    | "purchase_return"
+    | "transfer_in"
+    | "transfer_out"
+    | "adjustment"
+    | "damage"
+    | "expiry"
+    | "production"
+    | "consumption";
+  quantity: number;
+  running_balance: number;
+  reference_type: string | null;
+  reference_id: string | null;
+  note: string | null;
+  created_at: string;
+  created_by: string | null;
+};
+
+type SerialNumbersRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  product_id: string;
+  warehouse_id: string | null;
+  batch_id: string | null;
+  serial_number: string;
+  status: "in_stock" | "reserved" | "sold" | "returned" | "damaged";
+  reference_type: string | null;
+  reference_id: string | null;
+  notes: string | null;
+};
+
 type RolesRow = AuditFields & {
   id: string;
   organization_id: string | null;
@@ -453,6 +594,268 @@ export interface Database {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── categories ────────────────────────────────────────
+      categories: {
+        Row: CategoriesRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          parent_id?: string | null;
+          name: string;
+          description?: string | null;
+          status?: CategoriesRow["status"];
+        };
+        Update: Partial<CategoriesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "categories_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── brands ────────────────────────────────────────────
+      brands: {
+        Row: BrandsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          status?: BrandsRow["status"];
+        };
+        Update: Partial<BrandsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "brands_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── units ─────────────────────────────────────────────
+      units: {
+        Row: UnitsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          name: string;
+          symbol: string;
+          status?: UnitsRow["status"];
+        };
+        Update: Partial<UnitsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "units_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── products ──────────────────────────────────────────
+      products: {
+        Row: ProductsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          code: string;
+          name: string;
+          description?: string | null;
+          type?: ProductsRow["type"];
+          status?: ProductsRow["status"];
+          category_id?: string | null;
+          brand_id?: string | null;
+          unit_id?: string | null;
+          manufacturer?: string | null;
+          hsn_code?: string | null;
+          gst_rate?: number;
+          tax_inclusive?: boolean;
+          purchase_price?: number;
+          selling_price?: number;
+          dealer_price?: number;
+          wholesale_price?: number;
+          retail_price?: number;
+          min_selling_price?: number;
+          sku?: string | null;
+          barcode?: string | null;
+          qr_code?: string | null;
+          track_inventory?: boolean;
+          reorder_level?: number;
+          max_stock?: number;
+          opening_stock?: number;
+          preferred_supplier_id?: string | null;
+          is_seasonal?: boolean;
+          is_fast_moving?: boolean;
+          is_slow_moving?: boolean;
+          ai_tags?: string[];
+          tags?: string[];
+        };
+        Update: Partial<ProductsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "products_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── warehouses ────────────────────────────────────────
+      warehouses: {
+        Row: WarehousesRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          branch_id?: string | null;
+          code: string;
+          name: string;
+          address_line1?: string | null;
+          city?: string | null;
+          state?: string | null;
+          pincode?: string | null;
+          capacity?: number | null;
+          is_default?: boolean;
+          status?: WarehousesRow["status"];
+        };
+        Update: Partial<WarehousesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "warehouses_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── batches ───────────────────────────────────────────
+      batches: {
+        Row: BatchesRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          product_id: string;
+          batch_number: string;
+          manufacturing_date?: string | null;
+          expiry_date?: string | null;
+          supplier_batch?: string | null;
+          received_quantity?: number;
+          remaining_quantity?: number;
+          status?: BatchesRow["status"];
+        };
+        Update: Partial<BatchesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "batches_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── inventory ─────────────────────────────────────────
+      inventory: {
+        Row: InventoryRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          product_id: string;
+          warehouse_id: string;
+          quantity?: number;
+          reserved_quantity?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<InventoryRow>;
+        Relationships: [
+          {
+            foreignKeyName: "inventory_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_warehouse_id_fkey";
+            columns: ["warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── inventory_transactions ────────────────────────────
+      inventory_transactions: {
+        Row: InventoryTransactionsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          product_id: string;
+          warehouse_id: string;
+          batch_id?: string | null;
+          type: InventoryTransactionsRow["type"];
+          quantity: number;
+          running_balance?: number;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          note?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<InventoryTransactionsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transactions_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── serial_numbers ────────────────────────────────────
+      serial_numbers: {
+        Row: SerialNumbersRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          product_id: string;
+          warehouse_id?: string | null;
+          batch_id?: string | null;
+          serial_number: string;
+          status?: SerialNumbersRow["status"];
+          reference_type?: string | null;
+          reference_id?: string | null;
+          notes?: string | null;
+        };
+        Update: Partial<SerialNumbersRow>;
+        Relationships: [
+          {
+            foreignKeyName: "serial_numbers_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
         ];
@@ -763,6 +1166,32 @@ export interface Database {
       get_current_financial_year: {
         Args: { p_start_month: number };
         Returns: { fy_name: string; start_date: string; end_date: string }[];
+      };
+      adjust_stock: {
+        Args: {
+          p_organization_id: string;
+          p_product_id: string;
+          p_warehouse_id: string;
+          p_quantity: number;
+          p_type: string;
+          p_note?: string | null;
+          p_reference_type?: string | null;
+          p_reference_id?: string | null;
+          p_batch_id?: string | null;
+        };
+        Returns: number;
+      };
+      transfer_stock: {
+        Args: {
+          p_organization_id: string;
+          p_product_id: string;
+          p_from_warehouse_id: string;
+          p_to_warehouse_id: string;
+          p_quantity: number;
+          p_note?: string | null;
+          p_batch_id?: string | null;
+        };
+        Returns: undefined;
       };
     };
     Enums: Record<string, never>;
