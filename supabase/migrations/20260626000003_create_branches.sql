@@ -52,51 +52,9 @@ CREATE OR REPLACE TRIGGER branches_updated_at
 -- Row Level Security
 ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
 
--- Org members can see their branches
-CREATE POLICY "branches_select_org_members"
-  ON public.branches FOR SELECT
-  TO authenticated
-  USING (
-    organization_id IN (
-      SELECT organization_id
-        FROM public.organization_members
-       WHERE user_id = auth.uid()
-         AND deleted_at IS NULL
-         AND status = 'active'
-    )
-  );
-
--- Admin/Owner can insert branches
-CREATE POLICY "branches_insert_admin"
-  ON public.branches FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    organization_id IN (
-      SELECT om.organization_id
-        FROM public.organization_members om
-        JOIN public.roles r ON r.id = om.role_id
-       WHERE om.user_id = auth.uid()
-         AND om.deleted_at IS NULL
-         AND om.status = 'active'
-         AND r.name IN ('Owner', 'Admin')
-    )
-  );
-
--- Admin/Owner can update branches
-CREATE POLICY "branches_update_admin"
-  ON public.branches FOR UPDATE
-  TO authenticated
-  USING (
-    organization_id IN (
-      SELECT om.organization_id
-        FROM public.organization_members om
-        JOIN public.roles r ON r.id = om.role_id
-       WHERE om.user_id = auth.uid()
-         AND om.deleted_at IS NULL
-         AND om.status = 'active'
-         AND r.name IN ('Owner', 'Admin')
-    )
-  );
+-- NOTE: branch RLS policies depend on public.organization_members + public.roles
+-- (created in 000004/000005) and are defined in 20260627000011, after those
+-- tables exist.
 
 COMMENT ON TABLE public.branches IS
   'Branches of an organization. One HQ branch created automatically on org creation.';

@@ -45,58 +45,13 @@ CREATE OR REPLACE TRIGGER organization_members_updated_at
 -- Row Level Security
 ALTER TABLE public.organization_members ENABLE ROW LEVEL SECURITY;
 
--- Members can see other members in their organization
-CREATE POLICY "org_members_select"
-  ON public.organization_members FOR SELECT
-  TO authenticated
-  USING (
-    -- Can always see your own membership
-    user_id = auth.uid()
-    OR
-    -- Can see members of orgs you belong to
-    organization_id IN (
-      SELECT organization_id
-        FROM public.organization_members
-       WHERE user_id = auth.uid()
-         AND deleted_at IS NULL
-         AND status = 'active'
-    )
-  );
-
--- Only org owner/admin can insert new members
-CREATE POLICY "org_members_insert_admin"
-  ON public.organization_members FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    -- Can always insert yourself as owner during org creation (handled by trigger)
-    user_id = auth.uid()
-    OR
-    organization_id IN (
-      SELECT om.organization_id
-        FROM public.organization_members om
-        JOIN public.roles r ON r.id = om.role_id
-       WHERE om.user_id = auth.uid()
-         AND om.deleted_at IS NULL
-         AND om.status = 'active'
-         AND r.name IN ('Owner', 'Admin')
-    )
-  );
-
--- Owner/admin can update member roles/status
-CREATE POLICY "org_members_update_admin"
-  ON public.organization_members FOR UPDATE
-  TO authenticated
-  USING (
-    organization_id IN (
-      SELECT om.organization_id
-        FROM public.organization_members om
-        JOIN public.roles r ON r.id = om.role_id
-       WHERE om.user_id = auth.uid()
-         AND om.deleted_at IS NULL
-         AND om.status = 'active'
-         AND r.name IN ('Owner', 'Admin')
-    )
-  );
+-- NOTE: organization_members RLS policies are defined in 20260627000011.
+-- They rely on the SECURITY DEFINER helpers (get_user_organization_ids,
+-- get_user_role_in_org) created in 20260626000008 — which in turn require this
+-- table to exist — so they must be created after both. RLS is enabled here;
+-- until the policies are added, only the table owner / SECURITY DEFINER triggers
+-- (e.g. the org-setup trigger) can access the table, which is correct during
+-- migration.
 
 COMMENT ON TABLE public.organization_members IS
   'Maps users to organizations. One user can belong to multiple organizations.';

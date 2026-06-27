@@ -37,44 +37,9 @@ CREATE OR REPLACE TRIGGER roles_updated_at
 
 ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
 
--- All authenticated users can read roles for their org
-CREATE POLICY "roles_select_org_members"
-  ON public.roles FOR SELECT
-  TO authenticated
-  USING (
-    -- Can always read system roles
-    organization_id IS NULL
-    OR
-    -- Can read org-specific roles if member of that org
-    organization_id IN (
-      SELECT organization_id
-        FROM public.organization_members
-       WHERE user_id = auth.uid()
-         AND deleted_at IS NULL
-         AND status = 'active'
-    )
-  );
-
--- Only admins can manage custom roles
-CREATE POLICY "roles_manage_admin"
-  ON public.roles FOR ALL
-  TO authenticated
-  USING (
-    organization_id IS NOT NULL
-    AND organization_id IN (
-      SELECT om.organization_id
-        FROM public.organization_members om
-        JOIN public.roles r ON r.id = om.role_id
-       WHERE om.user_id = auth.uid()
-         AND om.deleted_at IS NULL
-         AND om.status = 'active'
-         AND r.name IN ('Owner', 'Admin')
-    )
-  )
-  WITH CHECK (
-    organization_id IS NOT NULL
-    AND is_system = false
-  );
+-- NOTE: "roles_select_org_members" and "roles_manage_admin" depend on
+-- public.organization_members (created in 000005) and are defined in
+-- 20260627000011, after that table exists.
 
 -- ─────────────────────────────────────────────────────────────
 -- Permissions

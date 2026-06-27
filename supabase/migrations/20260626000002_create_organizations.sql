@@ -62,46 +62,9 @@ CREATE OR REPLACE TRIGGER organizations_updated_at
 -- Row Level Security
 ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 
--- Members can read their organizations
-CREATE POLICY "organizations_select_members"
-  ON public.organizations FOR SELECT
-  TO authenticated
-  USING (
-    id IN (
-      SELECT organization_id
-        FROM public.organization_members
-       WHERE user_id = auth.uid()
-         AND deleted_at IS NULL
-         AND status = 'active'
-    )
-  );
-
--- Only owner/admin can update organization
-CREATE POLICY "organizations_update_admin"
-  ON public.organizations FOR UPDATE
-  TO authenticated
-  USING (
-    id IN (
-      SELECT om.organization_id
-        FROM public.organization_members om
-        JOIN public.roles r ON r.id = om.role_id
-       WHERE om.user_id = auth.uid()
-         AND om.deleted_at IS NULL
-         AND om.status = 'active'
-         AND r.name IN ('Owner', 'Admin')
-    )
-  )
-  WITH CHECK (
-    id IN (
-      SELECT om.organization_id
-        FROM public.organization_members om
-        JOIN public.roles r ON r.id = om.role_id
-       WHERE om.user_id = auth.uid()
-         AND om.deleted_at IS NULL
-         AND om.status = 'active'
-         AND r.name IN ('Owner', 'Admin')
-    )
-  );
+-- NOTE: "organizations_select_members" and "organizations_update_admin" depend
+-- on public.organization_members + public.roles (created in 000004/000005) and
+-- are therefore defined in 20260627000011 (after those tables exist).
 
 -- Any authenticated user can create an organization
 CREATE POLICY "organizations_insert_authenticated"

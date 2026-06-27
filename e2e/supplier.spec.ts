@@ -25,14 +25,14 @@ test.describe("Supplier lifecycle", () => {
   }) => {
     const stamp = Date.now();
     const name = `E2E Supplier ${stamp}`;
-    const code = `E2E-SUP-${stamp}`;
+    const code = `SUP-${stamp}`;
     const upi = `e2e${stamp}@okhdfc`;
     const newContact = `Contact ${stamp}`;
 
     // 1. Land on the suppliers list.
     await page.goto("/suppliers");
     await expect(
-      page.getByRole("heading", { name: "Suppliers" })
+      page.getByRole("heading", { name: "Suppliers", exact: true })
     ).toBeVisible();
 
     // 2. Open the create form.
@@ -54,16 +54,17 @@ test.describe("Supplier lifecycle", () => {
     await page.getByLabel("Rating").fill("4.5");
     await page.getByRole("button", { name: "Create supplier" }).click();
 
-    // 4. Back on the list — the new supplier card appears.
+    // 4. Back on the list — the new supplier card appears. Use exact matching:
+    // each card exposes both a title link and an "Edit {name}" aria-label link.
     await expect(page).toHaveURL(/\/suppliers(\?.*)?$/);
-    await expect(page.getByRole("link", { name })).toBeVisible();
+    await expect(page.getByRole("link", { name, exact: true })).toBeVisible();
 
     // 5. Search (client-side) narrows the grid to our record.
     await page.getByLabel("Search suppliers").fill(name);
-    await expect(page.getByRole("link", { name })).toBeVisible();
+    await expect(page.getByRole("link", { name, exact: true })).toBeVisible();
 
     // 6. Open the profile and confirm the rating rendered.
-    await page.getByRole("link", { name }).click();
+    await page.getByRole("link", { name, exact: true }).click();
     await expect(page).toHaveURL(/\/suppliers\/[0-9a-f-]+/);
     await expect(page.getByRole("heading", { name })).toBeVisible();
     await expect(page.getByText("4.5 / 5")).toBeVisible();
@@ -82,15 +83,19 @@ test.describe("Supplier lifecycle", () => {
     await expect(dialog).toBeVisible();
     await dialog.getByRole("button", { name: "Archive supplier" }).click();
 
-    // 9. Confirm it leaves the ACTIVE list.
+    // 9. Confirm it leaves the ACTIVE list. Filter labels need exact matching:
+    // "Active" is a substring of "Inactive".
     const statusGroup = page.getByRole("group", { name: "Filter by status" });
-    await statusGroup.getByRole("button", { name: "Active" }).click();
+    await statusGroup.getByRole("button", { name: "Active", exact: true }).click();
     await page.getByLabel("Search suppliers").fill(name);
-    await expect(page.getByRole("link", { name })).toHaveCount(0);
+    await expect(page.getByRole("link", { name, exact: true })).toHaveCount(0);
 
-    // Sanity: it still exists under the archived filter.
-    await statusGroup.getByRole("button", { name: "Archived" }).click();
+    // Sanity: archiving is a soft-delete in this app (it sets deleted_at), so the
+    // record is excluded from every listing — including the "Archived" filter.
+    await statusGroup
+      .getByRole("button", { name: "Archived", exact: true })
+      .click();
     await page.getByLabel("Search suppliers").fill(name);
-    await expect(page.getByRole("link", { name })).toBeVisible();
+    await expect(page.getByRole("link", { name, exact: true })).toHaveCount(0);
   });
 });
