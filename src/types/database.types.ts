@@ -515,6 +515,235 @@ type PurchaseRequestItemsRow = {
   created_by: string | null;
 };
 
+// ── Sales domain ─────────────────────────────────────────────
+
+type QuotationStatus = "draft" | "sent" | "viewed" | "accepted" | "rejected" | "expired" | "converted";
+type SalesOrderStatus = "draft" | "submitted" | "approved" | "processing" | "partially_delivered" | "completed" | "cancelled";
+type InvoiceStatus = "draft" | "posted" | "cancelled";
+type InvoiceType = "tax_invoice" | "retail_invoice" | "proforma_invoice" | "commercial_invoice" | "export_invoice";
+type PaymentStatus = "unpaid" | "partial" | "paid" | "overdue";
+type SalesReturnStatus = "draft" | "completed" | "cancelled";
+type SalesReturnReason = "damaged" | "wrong_product" | "expired" | "customer_rejection" | "warranty" | "other";
+type CreditNoteStatus = "active" | "applied" | "cancelled";
+
+type QuotationsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  quotation_number: string;
+  customer_id: string;
+  branch_id: string | null;
+  salesperson_id: string | null;
+  reference_number: string | null;
+  quotation_date: string;
+  expiry_date: string | null;
+  supply_state: string | null;
+  is_interstate: boolean;
+  status: QuotationStatus;
+  subtotal: number;
+  discount_amount: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  igst_amount: number;
+  tax_amount: number;
+  round_off: number;
+  total_amount: number;
+  notes: string | null;
+  terms: string | null;
+  converted_so_id: string | null;
+  converted_inv_id: string | null;
+};
+
+type QuotationItemsRow = {
+  id: string;
+  organization_id: string;
+  quotation_id: string;
+  product_id: string;
+  description: string | null;
+  hsn_code: string | null;
+  quantity: number;
+  unit_price: number;
+  discount_percent: number;
+  discount_amount: number;
+  taxable_amount: number;
+  gst_rate: number;
+  cgst_rate: number;
+  sgst_rate: number;
+  igst_rate: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  igst_amount: number;
+  tax_amount: number;
+  line_total: number;
+  sort_order: number;
+  created_at: string;
+  created_by: string | null;
+};
+
+type SalesOrdersRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  so_number: string;
+  customer_id: string;
+  quotation_id: string | null;
+  branch_id: string | null;
+  warehouse_id: string | null;
+  salesperson_id: string | null;
+  reference_number: string | null;
+  order_date: string;
+  delivery_date: string | null;
+  payment_terms_days: number;
+  supply_state: string | null;
+  is_interstate: boolean;
+  status: SalesOrderStatus;
+  subtotal: number;
+  discount_amount: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  igst_amount: number;
+  tax_amount: number;
+  round_off: number;
+  total_amount: number;
+  notes: string | null;
+  terms: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  converted_inv_id: string | null;
+};
+
+type SalesOrderItemsRow = {
+  id: string;
+  organization_id: string;
+  sales_order_id: string;
+  product_id: string;
+  description: string | null;
+  hsn_code: string | null;
+  quantity: number;
+  delivered_qty: number;
+  unit_price: number;
+  discount_percent: number;
+  discount_amount: number;
+  taxable_amount: number;
+  gst_rate: number;
+  cgst_rate: number;
+  sgst_rate: number;
+  igst_rate: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  igst_amount: number;
+  tax_amount: number;
+  line_total: number;
+  sort_order: number;
+  created_at: string;
+  created_by: string | null;
+};
+
+type InvoicesRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  invoice_number: string;
+  invoice_type: InvoiceType;
+  customer_id: string;
+  sales_order_id: string | null;
+  quotation_id: string | null;
+  branch_id: string | null;
+  warehouse_id: string | null;
+  salesperson_id: string | null;
+  reference_number: string | null;
+  invoice_date: string;
+  due_date: string | null;
+  payment_terms_days: number;
+  supply_state: string | null;
+  is_interstate: boolean;
+  subtotal: number;
+  discount_amount: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  igst_amount: number;
+  tax_amount: number;
+  round_off: number;
+  total_amount: number;
+  amount_paid: number;
+  payment_status: PaymentStatus;
+  status: InvoiceStatus;
+  notes: string | null;
+  terms: string | null;
+  posted_at: string | null;
+  posted_by: string | null;
+};
+
+type InvoiceItemsRow = {
+  id: string;
+  organization_id: string;
+  invoice_id: string;
+  product_id: string;
+  description: string | null;
+  hsn_code: string | null;
+  quantity: number;
+  unit_price: number;
+  discount_percent: number;
+  discount_amount: number;
+  taxable_amount: number;
+  gst_rate: number;
+  cgst_rate: number;
+  sgst_rate: number;
+  igst_rate: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  igst_amount: number;
+  tax_amount: number;
+  line_total: number;
+  sort_order: number;
+  created_at: string;
+  created_by: string | null;
+};
+
+type SalesReturnsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  return_number: string;
+  invoice_id: string | null;
+  customer_id: string;
+  warehouse_id: string | null;
+  return_date: string;
+  reason: SalesReturnReason;
+  status: SalesReturnStatus;
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+  notes: string | null;
+};
+
+type SalesReturnItemsRow = {
+  id: string;
+  organization_id: string;
+  sales_return_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate: number;
+  tax_amount: number;
+  line_total: number;
+  batch_id: string | null;
+  created_at: string;
+  created_by: string | null;
+};
+
+type CreditNotesRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  credit_note_number: string;
+  customer_id: string;
+  invoice_id: string | null;
+  sales_return_id: string | null;
+  issue_date: string;
+  reason: string | null;
+  amount: number;
+  status: CreditNoteStatus;
+  notes: string | null;
+};
+
+// ─────────────────────────────────────────────────────────────
+
 type RolesRow = AuditFields & {
   id: string;
   organization_id: string | null;
@@ -1322,6 +1551,348 @@ export interface Database {
         ];
       };
 
+      // ── quotations ────────────────────────────────────────
+      quotations: {
+        Row: QuotationsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          quotation_number: string;
+          customer_id: string;
+          branch_id?: string | null;
+          salesperson_id?: string | null;
+          reference_number?: string | null;
+          quotation_date?: string;
+          expiry_date?: string | null;
+          supply_state?: string | null;
+          is_interstate?: boolean;
+          status?: QuotationStatus;
+          subtotal?: number;
+          discount_amount?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          tax_amount?: number;
+          round_off?: number;
+          total_amount?: number;
+          notes?: string | null;
+          terms?: string | null;
+          converted_so_id?: string | null;
+          converted_inv_id?: string | null;
+        };
+        Update: Partial<QuotationsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "quotations_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── quotation_items ───────────────────────────────────
+      quotation_items: {
+        Row: QuotationItemsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          quotation_id: string;
+          product_id: string;
+          description?: string | null;
+          hsn_code?: string | null;
+          quantity: number;
+          unit_price?: number;
+          discount_percent?: number;
+          discount_amount?: number;
+          taxable_amount?: number;
+          gst_rate?: number;
+          cgst_rate?: number;
+          sgst_rate?: number;
+          igst_rate?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          tax_amount?: number;
+          line_total?: number;
+          sort_order?: number;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<QuotationItemsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "quotation_items_quotation_id_fkey";
+            columns: ["quotation_id"];
+            isOneToOne: false;
+            referencedRelation: "quotations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── sales_orders ──────────────────────────────────────
+      sales_orders: {
+        Row: SalesOrdersRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          so_number: string;
+          customer_id: string;
+          quotation_id?: string | null;
+          branch_id?: string | null;
+          warehouse_id?: string | null;
+          salesperson_id?: string | null;
+          reference_number?: string | null;
+          order_date?: string;
+          delivery_date?: string | null;
+          payment_terms_days?: number;
+          supply_state?: string | null;
+          is_interstate?: boolean;
+          status?: SalesOrderStatus;
+          subtotal?: number;
+          discount_amount?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          tax_amount?: number;
+          round_off?: number;
+          total_amount?: number;
+          notes?: string | null;
+          terms?: string | null;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          converted_inv_id?: string | null;
+        };
+        Update: Partial<SalesOrdersRow>;
+        Relationships: [
+          {
+            foreignKeyName: "sales_orders_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── sales_order_items ─────────────────────────────────
+      sales_order_items: {
+        Row: SalesOrderItemsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          sales_order_id: string;
+          product_id: string;
+          description?: string | null;
+          hsn_code?: string | null;
+          quantity: number;
+          delivered_qty?: number;
+          unit_price?: number;
+          discount_percent?: number;
+          discount_amount?: number;
+          taxable_amount?: number;
+          gst_rate?: number;
+          cgst_rate?: number;
+          sgst_rate?: number;
+          igst_rate?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          tax_amount?: number;
+          line_total?: number;
+          sort_order?: number;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<SalesOrderItemsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "sales_order_items_sales_order_id_fkey";
+            columns: ["sales_order_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── invoices ──────────────────────────────────────────
+      invoices: {
+        Row: InvoicesRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          invoice_number: string;
+          invoice_type?: InvoiceType;
+          customer_id: string;
+          sales_order_id?: string | null;
+          quotation_id?: string | null;
+          branch_id?: string | null;
+          warehouse_id?: string | null;
+          salesperson_id?: string | null;
+          reference_number?: string | null;
+          invoice_date?: string;
+          due_date?: string | null;
+          payment_terms_days?: number;
+          supply_state?: string | null;
+          is_interstate?: boolean;
+          subtotal?: number;
+          discount_amount?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          tax_amount?: number;
+          round_off?: number;
+          total_amount?: number;
+          amount_paid?: number;
+          payment_status?: PaymentStatus;
+          status?: InvoiceStatus;
+          notes?: string | null;
+          terms?: string | null;
+          posted_at?: string | null;
+          posted_by?: string | null;
+        };
+        Update: Partial<InvoicesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── invoice_items ─────────────────────────────────────
+      invoice_items: {
+        Row: InvoiceItemsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          invoice_id: string;
+          product_id: string;
+          description?: string | null;
+          hsn_code?: string | null;
+          quantity: number;
+          unit_price?: number;
+          discount_percent?: number;
+          discount_amount?: number;
+          taxable_amount?: number;
+          gst_rate?: number;
+          cgst_rate?: number;
+          sgst_rate?: number;
+          igst_rate?: number;
+          cgst_amount?: number;
+          sgst_amount?: number;
+          igst_amount?: number;
+          tax_amount?: number;
+          line_total?: number;
+          sort_order?: number;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<InvoiceItemsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── sales_returns ─────────────────────────────────────
+      sales_returns: {
+        Row: SalesReturnsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          return_number: string;
+          invoice_id?: string | null;
+          customer_id: string;
+          warehouse_id?: string | null;
+          return_date?: string;
+          reason?: SalesReturnReason;
+          status?: SalesReturnStatus;
+          subtotal?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          notes?: string | null;
+        };
+        Update: Partial<SalesReturnsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "sales_returns_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── sales_return_items ────────────────────────────────
+      sales_return_items: {
+        Row: SalesReturnItemsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          sales_return_id: string;
+          product_id: string;
+          quantity: number;
+          unit_price?: number;
+          tax_rate?: number;
+          tax_amount?: number;
+          line_total?: number;
+          batch_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: Partial<SalesReturnItemsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "sales_return_items_sales_return_id_fkey";
+            columns: ["sales_return_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_returns";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── credit_notes ──────────────────────────────────────
+      credit_notes: {
+        Row: CreditNotesRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          credit_note_number: string;
+          customer_id: string;
+          invoice_id?: string | null;
+          sales_return_id?: string | null;
+          issue_date?: string;
+          reason?: string | null;
+          amount: number;
+          status?: CreditNoteStatus;
+          notes?: string | null;
+        };
+        Update: Partial<CreditNotesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       // ── audit_logs ────────────────────────────────────────
       audit_logs: {
         Row: AuditLogsRow;
@@ -1671,6 +2242,14 @@ export interface Database {
         Returns: undefined;
       };
       complete_purchase_return: {
+        Args: { p_return_id: string };
+        Returns: undefined;
+      };
+      post_sales_invoice: {
+        Args: { p_invoice_id: string };
+        Returns: undefined;
+      };
+      complete_sales_return: {
         Args: { p_return_id: string };
         Returns: undefined;
       };
