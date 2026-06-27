@@ -12,15 +12,15 @@ This document defines the end-to-end user journeys across the Syncrate platform.
 
 Each flow specifies:
 
-* Entry Point
-* User Actions
-* System Actions
-* Validation Rules
-* Business Rules
-* Success Path
-* Failure Path
-* Notifications
-* AI Integration
+- Entry Point
+- User Actions
+- System Actions
+- Validation Rules
+- Business Rules
+- Success Path
+- Failure Path
+- Notifications
+- AI Integration
 
 The objective is to ensure every workflow is consistent, predictable, and user-friendly.
 
@@ -30,16 +30,16 @@ The objective is to ensure every workflow is consistent, predictable, and user-f
 
 The following personas interact with the platform:
 
-* Super Admin
-* Organization Owner
-* Branch Manager
-* Accountant
-* Sales Executive
-* Warehouse Manager
-* Cashier
-* Employee
-* Supplier (Connected Business)
-* Customer (Future Portal)
+- Super Admin
+- Organization Owner
+- Branch Manager
+- Accountant
+- Sales Executive
+- Warehouse Manager
+- Cashier
+- Employee
+- Supplier (Connected Business)
+- Customer (Future Portal)
 
 Every flow is permission-aware and follows Role-Based Access Control (RBAC).
 
@@ -49,7 +49,7 @@ Every flow is permission-aware and follows Role-Based Access Control (RBAC).
 
 ### Entry Point
 
-* Login Page
+- Login Page
 
 ### User Flow
 
@@ -77,10 +77,10 @@ Dashboard
 
 ### Failure Flow
 
-* Invalid credentials
-* Inactive account
-* Locked account
-* Session expired
+- Invalid credentials
+- Inactive account
+- Locked account
+- Session expired
 
 ---
 
@@ -118,12 +118,12 @@ Dashboard
 
 System automatically creates:
 
-* Default Branch
-* Financial Year
-* Roles
-* Permissions
-* Settings
-* Numbering Sequences
+- Default Branch
+- Financial Year
+- Roles
+- Permissions
+- Settings
+- Numbering Sequences
 
 ---
 
@@ -153,10 +153,10 @@ Customer Available for Transactions
 
 Validation
 
-* GST
-* Mobile
-* Email
-* Credit Limit
+- GST
+- Mobile
+- Email
+- Credit Limit
 
 ---
 
@@ -658,11 +658,11 @@ Audit Logged
 
 Approval Examples:
 
-* Large Discounts
-* Purchase Orders
-* Inventory Adjustments
-* Payment Reversals
-* Credit Limit Overrides
+- Large Discounts
+- Purchase Orders
+- Inventory Adjustments
+- Payment Reversals
+- Credit Limit Overrides
 
 ---
 
@@ -778,13 +778,13 @@ Cloud Synchronization
 
 All workflows must:
 
-* Validate user permissions.
-* Validate business rules.
-* Create audit logs.
-* Trigger notifications where required.
-* Update dashboards automatically.
-* Support AI recommendations.
-* Maintain transaction consistency.
+- Validate user permissions.
+- Validate business rules.
+- Create audit logs.
+- Trigger notifications where required.
+- Update dashboards automatically.
+- Support AI recommendations.
+- Maintain transaction consistency.
 
 ---
 
@@ -792,15 +792,15 @@ All workflows must:
 
 Future workflows include:
 
-* CRM Lead Management
-* Service Requests
-* Manufacturing
-* Payroll
-* Asset Management
-* Marketplace Orders
-* Customer Self-Service Portal
-* Supplier Self-Service Portal
-* Public API Workflows
+- CRM Lead Management
+- Service Requests
+- Manufacturing
+- Payroll
+- Asset Management
+- Marketplace Orders
+- Customer Self-Service Portal
+- Supplier Self-Service Portal
+- Public API Workflows
 
 ---
 

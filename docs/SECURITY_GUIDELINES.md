@@ -44,7 +44,7 @@ SECURITY_GUIDELINES.md
 38. Security Review Checklist
 39. Release Security Checklist
 40. Production Security Checklist
-It should define rules like
+    It should define rules like
 
 Example:
 

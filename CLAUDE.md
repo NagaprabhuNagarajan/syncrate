@@ -55,16 +55,16 @@ Business logic must never live in pages, route handlers, or components directly.
 
 ## File Naming
 
-| Thing | Convention |
-|---|---|
-| Component | `InvoiceCard.tsx` |
-| Hook | `useInvoice.ts` |
-| Service | `invoice.service.ts` |
-| Repository | `invoice.repository.ts` |
-| Schema | `invoiceSchema.ts` |
-| Utility | `calculateTax.ts` |
-| Constant | `INVOICE_STATUSES.ts` (upper snake) |
-| Type | `InvoiceFilter` (PascalCase) |
+| Thing      | Convention                          |
+| ---------- | ----------------------------------- |
+| Component  | `InvoiceCard.tsx`                   |
+| Hook       | `useInvoice.ts`                     |
+| Service    | `invoice.service.ts`                |
+| Repository | `invoice.repository.ts`             |
+| Schema     | `invoiceSchema.ts`                  |
+| Utility    | `calculateTax.ts`                   |
+| Constant   | `INVOICE_STATUSES.ts` (upper snake) |
+| Type       | `InvoiceFilter` (PascalCase)        |
 
 ---
 
@@ -81,6 +81,7 @@ Business logic must never live in pages, route handlers, or components directly.
 ## Database Rules (Every table)
 
 All tables must have:
+
 ```sql
 id              UUID PRIMARY KEY DEFAULT gen_random_uuid()
 organization_id UUID NOT NULL REFERENCES organizations(id)
@@ -147,6 +148,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 ## Testing Standards
 
 Every feature requires:
+
 1. **Unit tests** — services, utilities, schemas (Vitest)
 2. **Component tests** — rendering, interaction, a11y (Vitest + RTL)
 3. **Integration tests** — module interactions

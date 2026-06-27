@@ -14,7 +14,7 @@ function Skeleton({ className, ...props }: SkeletonProps) {
     <div
       aria-hidden="true"
       className={cn(
-        "animate-pulse rounded-md bg-muted skeleton-shimmer",
+        "skeleton-shimmer animate-pulse rounded-md bg-muted",
         className
       )}
       {...props}

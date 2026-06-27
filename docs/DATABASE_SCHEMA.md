@@ -14,14 +14,14 @@ This document defines the logical and physical database architecture for Syncrat
 
 The database is designed to support:
 
-* Multi-tenancy
-* High performance
-* Horizontal scalability
-* Data integrity
-* Auditability
-* AI capabilities
-* Connected Business Network
-* Enterprise reporting
+- Multi-tenancy
+- High performance
+- Horizontal scalability
+- Data integrity
+- Auditability
+- AI capabilities
+- Connected Business Network
+- Enterprise reporting
 
 PostgreSQL (Supabase) is the primary database.
 
@@ -31,15 +31,15 @@ PostgreSQL (Supabase) is the primary database.
 
 Every table follows these principles:
 
-* UUID Primary Keys
-* Organization Isolation
-* Soft Delete
-* Audit Fields
-* Created By
-* Updated By
-* Optimistic Locking
-* Row Level Security
-* Immutable Financial Records
+- UUID Primary Keys
+- Organization Isolation
+- Soft Delete
+- Audit Fields
+- Created By
+- Updated By
+- Optimistic Locking
+- Row Level Security
+- Immutable Financial Records
 
 ---
 
@@ -145,12 +145,12 @@ Stores authentication users.
 
 Columns:
 
-* id
-* email
-* password_hash (managed by Auth provider)
-* status
-* last_login_at
-* created_at
+- id
+- email
+- password_hash (managed by Auth provider)
+- status
+- last_login_at
+- created_at
 
 ---
 
@@ -542,11 +542,11 @@ Composite indexes for frequently queried combinations.
 
 Every table enforces:
 
-* Row Level Security
-* Tenant Isolation
-* Audit Tracking
-* Soft Deletes
-* Immutable Financial Records
+- Row Level Security
+- Tenant Isolation
+- Audit Tracking
+- Soft Deletes
+- Immutable Financial Records
 
 ---
 

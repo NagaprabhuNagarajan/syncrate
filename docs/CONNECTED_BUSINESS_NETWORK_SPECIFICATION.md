@@ -22,14 +22,14 @@ The Connected Business Network transforms Syncrate from an invoicing application
 
 The Connected Business Network aims to:
 
-* Eliminate duplicate data entry.
-* Connect suppliers and customers digitally.
-* Synchronize business transactions.
-* Improve inventory accuracy.
-* Reduce invoice processing time.
-* Build trusted business relationships.
-* Enable AI-powered collaboration.
-* Create a scalable B2B ecosystem.
+- Eliminate duplicate data entry.
+- Connect suppliers and customers digitally.
+- Synchronize business transactions.
+- Improve inventory accuracy.
+- Reduce invoice processing time.
+- Build trusted business relationships.
+- Enable AI-powered collaboration.
+- Create a scalable B2B ecosystem.
 
 ---
 
@@ -53,16 +53,16 @@ Business IDs remain permanent and unique.
 
 Each organization has a public business profile containing:
 
-* Business Name
-* Logo
-* GST Number
-* Business Category
-* Address
-* Contact Information
-* Website
-* Verification Status
-* Business Rating
-* Years in Business
+- Business Name
+- Logo
+- GST Number
+- Business Category
+- Address
+- Contact Information
+- Website
+- Verification Status
+- Business Rating
+- Years in Business
 
 Private business data is never exposed.
 
@@ -72,13 +72,13 @@ Private business data is never exposed.
 
 Organizations can discover other businesses using:
 
-* Business Name
-* GST Number
-* Business ID
-* QR Code
-* Email
-* Mobile Number
-* Invitation Link
+- Business Name
+- GST Number
+- Business ID
+- QR Code
+- Email
+- Mobile Number
+- Invitation Link
 
 Search results include verified businesses only by default.
 
@@ -90,27 +90,27 @@ Verification Levels
 
 Level 0
 
-* Unverified
+- Unverified
 
 Level 1
 
-* Email Verified
+- Email Verified
 
 Level 2
 
-* Mobile Verified
+- Mobile Verified
 
 Level 3
 
-* GST Verified
+- GST Verified
 
 Level 4
 
-* Document Verified
+- Document Verified
 
 Level 5
 
-* Syncrate Trusted Business
+- Syncrate Trusted Business
 
 Verification improves search ranking and trust score.
 
@@ -158,14 +158,14 @@ Organizations control shared access.
 
 Supported permissions include:
 
-* Receive Purchase Orders
-* Receive Invoices
-* Receive Quotations
-* Share Product Catalog
-* Share Stock Availability
-* Share Delivery Status
-* Receive Payment Updates
-* Exchange Documents
+- Receive Purchase Orders
+- Receive Invoices
+- Receive Quotations
+- Share Product Catalog
+- Share Stock Availability
+- Share Delivery Status
+- Receive Payment Updates
+- Exchange Documents
 
 Permissions can be modified at any time.
 
@@ -177,13 +177,13 @@ Every business has a dynamic Trust Score.
 
 Calculated using:
 
-* Payment History
-* Delivery Performance
-* Customer Ratings
-* Supplier Ratings
-* Dispute History
-* Business Verification
-* Transaction Success Rate
+- Payment History
+- Delivery Performance
+- Customer Ratings
+- Supplier Ratings
+- Dispute History
+- Business Verification
+- Transaction Success Rate
 
 Trust Score assists in supplier selection and business recommendations.
 
@@ -193,13 +193,13 @@ Trust Score assists in supplier selection and business recommendations.
 
 Suppliers may publish product catalogs containing:
 
-* Product Details
-* Images
-* Specifications
-* Pricing
-* MOQ (Minimum Order Quantity)
-* Lead Time
-* Stock Availability
+- Product Details
+- Images
+- Specifications
+- Pricing
+- MOQ (Minimum Order Quantity)
+- Lead Time
+- Stock Availability
 
 Customers can browse catalogs without requesting spreadsheets or PDFs.
 
@@ -291,12 +291,12 @@ Connected businesses can synchronize inventory changes.
 
 Supported events:
 
-* Purchase
-* Sales
-* Returns
-* Transfers
-* Goods Receipt
-* Dispatch
+- Purchase
+- Sales
+- Returns
+- Transfers
+- Goods Receipt
+- Dispatch
 
 Synchronization occurs only after transaction approval.
 
@@ -306,13 +306,13 @@ Synchronization occurs only after transaction approval.
 
 Shipment statuses include:
 
-* Packed
-* Ready for Dispatch
-* In Transit
-* Out for Delivery
-* Delivered
-* Rejected
-* Returned
+- Packed
+- Ready for Dispatch
+- In Transit
+- Out for Delivery
+- Delivered
+- Rejected
+- Returned
 
 Status updates are shared with connected businesses.
 
@@ -322,16 +322,16 @@ Status updates are shared with connected businesses.
 
 Supported document types:
 
-* Purchase Orders
-* Quotations
-* Sales Orders
-* Tax Invoices
-* Delivery Challans
-* Goods Receipt Notes
-* Credit Notes
-* Debit Notes
-* Payment Receipts
-* Return Requests
+- Purchase Orders
+- Quotations
+- Sales Orders
+- Tax Invoices
+- Delivery Challans
+- Goods Receipt Notes
+- Credit Notes
+- Debit Notes
+- Payment Receipts
+- Return Requests
 
 Documents remain synchronized between participating organizations.
 
@@ -373,11 +373,11 @@ Partial and multiple payments are supported.
 
 Future communication features include:
 
-* In-App Messaging
-* Document Comments
-* Order Discussions
-* Mention Users
-* Shared Notes
+- In-App Messaging
+- Document Comments
+- Order Discussions
+- Mention Users
+- Shared Notes
 
 All conversations remain linked to business transactions.
 
@@ -387,12 +387,12 @@ All conversations remain linked to business transactions.
 
 Organizations accumulate reputation based on:
 
-* Successful Transactions
-* Timely Payments
-* Delivery Accuracy
-* Product Quality
-* Customer Feedback
-* Supplier Feedback
+- Successful Transactions
+- Timely Payments
+- Delivery Accuracy
+- Product Quality
+- Customer Feedback
+- Supplier Feedback
 
 Higher reputation increases marketplace visibility.
 
@@ -402,13 +402,13 @@ Higher reputation increases marketplace visibility.
 
 AI enhances the Connected Business Network by:
 
-* Recommending suppliers
-* Predicting stock shortages
-* Identifying alternative suppliers
-* Detecting transaction anomalies
-* Suggesting reorder quantities
-* Forecasting delivery delays
-* Recommending business partners
+- Recommending suppliers
+- Predicting stock shortages
+- Identifying alternative suppliers
+- Detecting transaction anomalies
+- Suggesting reorder quantities
+- Forecasting delivery delays
+- Recommending business partners
 
 ---
 
@@ -416,12 +416,12 @@ AI enhances the Connected Business Network by:
 
 Every synchronized transaction follows:
 
-* End-to-End Encryption
-* Tenant Isolation
-* Permission Validation
-* Audit Logging
-* Data Ownership
-* Digital Approval Workflow
+- End-to-End Encryption
+- Tenant Isolation
+- Permission Validation
+- Audit Logging
+- Data Ownership
+- Digital Approval Workflow
 
 Organizations retain ownership of all private business data.
 
@@ -431,14 +431,14 @@ Organizations retain ownership of all private business data.
 
 Every synchronized event records:
 
-* Request ID
-* Organization ID
-* Connected Business ID
-* User ID
-* Timestamp
-* Transaction Type
-* Status
-* Correlation ID
+- Request ID
+- Organization ID
+- Connected Business ID
+- User ID
+- Timestamp
+- Transaction Type
+- Status
+- Correlation ID
 
 Audit records are immutable.
 
@@ -448,13 +448,13 @@ Audit records are immutable.
 
 Supported failure scenarios:
 
-* Connection Rejected
-* Invoice Rejected
-* Network Failure
-* Duplicate Transaction
-* Version Conflict
-* Permission Denied
-* Synchronization Timeout
+- Connection Rejected
+- Invoice Rejected
+- Network Failure
+- Duplicate Transaction
+- Version Conflict
+- Permission Denied
+- Synchronization Timeout
 
 Automatic retries and reconciliation processes prevent data loss.
 
@@ -492,27 +492,27 @@ Platform Availability
 
 Planned enhancements include:
 
-* B2B Marketplace
-* Digital Supplier Directory
-* AI Procurement Assistant
-* Shared Logistics Tracking
-* Escrow Payments
-* Digital Contracts
-* Purchase Auctions
-* International Trade Support
-* API-based ERP Integration
+- B2B Marketplace
+- Digital Supplier Directory
+- AI Procurement Assistant
+- Shared Logistics Tracking
+- Escrow Payments
+- Digital Contracts
+- Purchase Auctions
+- International Trade Support
+- API-based ERP Integration
 
 ---
 
 # 24. Acceptance Criteria
 
-* Businesses can discover and connect securely.
-* Connected organizations exchange digital transactions without duplicate data entry.
-* Purchase and invoice synchronization occurs automatically after approval.
-* Inventory and financial records remain consistent.
-* Permission controls prevent unauthorized access.
-* All synchronized events are audited.
-* AI recommendations improve supplier and purchasing decisions.
+- Businesses can discover and connect securely.
+- Connected organizations exchange digital transactions without duplicate data entry.
+- Purchase and invoice synchronization occurs automatically after approval.
+- Inventory and financial records remain consistent.
+- Permission controls prevent unauthorized access.
+- All synchronized events are audited.
+- AI recommendations improve supplier and purchasing decisions.
 
 ---
 

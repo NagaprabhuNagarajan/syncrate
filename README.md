@@ -14,14 +14,14 @@ Instead of exchanging PDF invoices through WhatsApp or email, connected business
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
+| Layer    | Technology                                                                            |
+| -------- | ------------------------------------------------------------------------------------- |
 | Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion |
-| State | TanStack Query, React Hook Form, Zod |
-| Backend | Supabase (PostgreSQL, Edge Functions, RLS, Realtime, Storage) |
-| Auth | Supabase Auth (JWT + RBAC) |
-| Infra | Vercel, Cloudflare, GitHub Actions |
-| Testing | Vitest, React Testing Library, Playwright |
+| State    | TanStack Query, React Hook Form, Zod                                                  |
+| Backend  | Supabase (PostgreSQL, Edge Functions, RLS, Realtime, Storage)                         |
+| Auth     | Supabase Auth (JWT + RBAC)                                                            |
+| Infra    | Vercel, Cloudflare, GitHub Actions                                                    |
+| Testing  | Vitest, React Testing Library, Playwright                                             |
 
 ---
 
@@ -79,20 +79,20 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Available Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Production build |
-| `pnpm start` | Start production server |
-| `pnpm lint` | Run ESLint + TypeScript check |
-| `pnpm typecheck` | TypeScript type check only |
-| `pnpm format` | Format all files with Prettier |
-| `pnpm test` | Run unit tests |
-| `pnpm test:watch` | Run tests in watch mode |
-| `pnpm test:coverage` | Run tests with coverage report |
-| `pnpm test:e2e` | Run Playwright E2E tests |
+| Command                  | Description                          |
+| ------------------------ | ------------------------------------ |
+| `pnpm dev`               | Start development server             |
+| `pnpm build`             | Production build                     |
+| `pnpm start`             | Start production server              |
+| `pnpm lint`              | Run ESLint + TypeScript check        |
+| `pnpm typecheck`         | TypeScript type check only           |
+| `pnpm format`            | Format all files with Prettier       |
+| `pnpm test`              | Run unit tests                       |
+| `pnpm test:watch`        | Run tests in watch mode              |
+| `pnpm test:coverage`     | Run tests with coverage report       |
+| `pnpm test:e2e`          | Run Playwright E2E tests             |
 | `pnpm db:generate-types` | Regenerate Supabase TypeScript types |
-| `pnpm db:migration:new` | Create a new migration file |
+| `pnpm db:migration:new`  | Create a new migration file          |
 
 ---
 

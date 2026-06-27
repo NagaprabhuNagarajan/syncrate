@@ -61,7 +61,11 @@ export function EmptyState({
             </Button>
           )}
           {secondaryAction && (
-            <Button variant="outline" onClick={secondaryAction.onClick} size="sm">
+            <Button
+              variant="outline"
+              onClick={secondaryAction.onClick}
+              size="sm"
+            >
               {secondaryAction.icon && (
                 <secondaryAction.icon
                   className="mr-1.5 h-4 w-4"

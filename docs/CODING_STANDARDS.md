@@ -36,8 +36,8 @@ CODING_STANDARDS.md
 28. Refactoring
 29. Anti-patterns
 30. Definition of Done
-React Rules
-✅ Functional Components
+    React Rules
+    ✅ Functional Components
 
 ✅ Hooks
 

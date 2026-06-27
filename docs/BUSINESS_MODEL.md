@@ -30,38 +30,38 @@ Help businesses spend less time managing operations and more time growing their 
 
 ## For Business Owners
 
-* Complete visibility into business performance.
-* Faster decision-making.
-* Reduced operational costs.
-* AI-powered business insights.
-* Connected supplier and customer network.
+- Complete visibility into business performance.
+- Faster decision-making.
+- Reduced operational costs.
+- AI-powered business insights.
+- Connected supplier and customer network.
 
 ---
 
 ## For Employees
 
-* Simplified daily operations.
-* Reduced manual data entry.
-* Faster transaction processing.
-* Standardized workflows.
+- Simplified daily operations.
+- Reduced manual data entry.
+- Faster transaction processing.
+- Standardized workflows.
 
 ---
 
 ## For Suppliers
 
-* Faster order processing.
-* Digital invoice exchange.
-* Improved payment visibility.
-* Better customer relationships.
+- Faster order processing.
+- Digital invoice exchange.
+- Improved payment visibility.
+- Better customer relationships.
 
 ---
 
 ## For Customers
 
-* Automatic purchase synchronization.
-* Faster order processing.
-* Accurate inventory updates.
-* Complete digital transaction history.
+- Automatic purchase synchronization.
+- Faster order processing.
+- Accurate inventory updates.
+- Complete digital transaction history.
 
 ---
 
@@ -69,19 +69,19 @@ Help businesses spend less time managing operations and more time growing their 
 
 Primary Customers
 
-* Retail Stores
-* Wholesalers
-* Distributors
-* Manufacturers
-* Trading Companies
+- Retail Stores
+- Wholesalers
+- Distributors
+- Manufacturers
+- Trading Companies
 
 Secondary Customers
 
-* Restaurants
-* Pharmacies
-* Service Businesses
-* Construction Companies
-* Educational Institutions
+- Restaurants
+- Pharmacies
+- Service Businesses
+- Construction Companies
+- Educational Institutions
 
 ---
 
@@ -91,9 +91,9 @@ Secondary Customers
 
 Needs
 
-* GST Billing
-* Inventory
-* Reports
+- GST Billing
+- Inventory
+- Reports
 
 ---
 
@@ -101,9 +101,9 @@ Needs
 
 Needs
 
-* Multi-Branch
-* AI
-* Connected Business Network
+- Multi-Branch
+- AI
+- Connected Business Network
 
 ---
 
@@ -111,11 +111,11 @@ Needs
 
 Needs
 
-* Advanced Security
-* Workflow Automation
-* API Integrations
-* SSO
-* Dedicated Support
+- Advanced Security
+- Workflow Automation
+- API Integrations
+- SSO
+- Dedicated Support
 
 ---
 
@@ -141,21 +141,21 @@ Commission from future supplier marketplace transactions.
 
 ## Premium Add-ons
 
-* Additional Storage
-* Advanced Reports
-* Extra AI Credits
-* WhatsApp Credits
-* API Access
+- Additional Storage
+- Advanced Reports
+- Extra AI Credits
+- WhatsApp Credits
+- API Access
 
 ---
 
 ## Professional Services
 
-* Data Migration
-* Custom Integrations
-* Enterprise Onboarding
-* Training
-* Consulting
+- Data Migration
+- Custom Integrations
+- Enterprise Onboarding
+- Training
+- Consulting
 
 ---
 
@@ -163,14 +163,14 @@ Commission from future supplier marketplace transactions.
 
 Channels
 
-* SEO
-* Content Marketing
-* YouTube Tutorials
-* Social Media
-* Referral Program
-* Partner Network
-* Direct Sales
-* App Marketplace Listings
+- SEO
+- Content Marketing
+- YouTube Tutorials
+- Social Media
+- Referral Program
+- Partner Network
+- Direct Sales
+- App Marketplace Listings
 
 ---
 
@@ -178,12 +178,12 @@ Channels
 
 Strategies
 
-* Continuous Product Improvements
-* AI Productivity Features
-* Connected Business Network
-* Loyalty Rewards
-* Annual Subscription Discounts
-* Dedicated Customer Success
+- Continuous Product Improvements
+- AI Productivity Features
+- Connected Business Network
+- Loyalty Rewards
+- Annual Subscription Discounts
+- Dedicated Customer Success
 
 ---
 
@@ -191,39 +191,39 @@ Strategies
 
 Major Costs
 
-* Cloud Infrastructure
-* AI Processing
-* Engineering
-* Customer Support
-* Sales & Marketing
-* Compliance
-* Security
-* Research & Development
+- Cloud Infrastructure
+- AI Processing
+- Engineering
+- Customer Support
+- Sales & Marketing
+- Compliance
+- Security
+- Research & Development
 
 ---
 
 # 11. Key Activities
 
-* Product Development
-* AI Model Integration
-* Customer Support
-* Sales
-* Infrastructure Management
-* Security Monitoring
-* Partner Management
-* Product Innovation
+- Product Development
+- AI Model Integration
+- Customer Support
+- Sales
+- Infrastructure Management
+- Security Monitoring
+- Partner Management
+- Product Innovation
 
 ---
 
 # 12. Key Resources
 
-* Engineering Team
-* Product Team
-* AI Platform
-* Cloud Infrastructure
-* Brand
-* Customer Community
-* Intellectual Property
+- Engineering Team
+- Product Team
+- AI Platform
+- Cloud Infrastructure
+- Brand
+- Customer Community
+- Intellectual Property
 
 ---
 
@@ -231,18 +231,18 @@ Major Costs
 
 Technology Partners
 
-* Cloud Providers
-* AI Providers
-* Payment Gateway
-* Email Services
-* Messaging Providers
+- Cloud Providers
+- AI Providers
+- Payment Gateway
+- Email Services
+- Messaging Providers
 
 Business Partners
 
-* GST Consultants
-* Chartered Accountants
-* ERP Consultants
-* Channel Partners
+- GST Consultants
+- Chartered Accountants
+- ERP Consultants
+- Channel Partners
 
 ---
 
@@ -250,17 +250,17 @@ Business Partners
 
 Traditional Software
 
-* Standalone applications
-* Manual document exchange
-* Limited automation
+- Standalone applications
+- Manual document exchange
+- Limited automation
 
 Syncrate
 
-* Connected Business Network
-* AI-first platform
-* Business collaboration
-* Automated synchronization
-* Intelligent recommendations
+- Connected Business Network
+- AI-first platform
+- Business collaboration
+- Automated synchronization
+- Intelligent recommendations
 
 ---
 
@@ -294,32 +294,32 @@ Expand internationally with multi-country support.
 
 Business KPIs
 
-* Monthly Recurring Revenue (MRR)
-* Annual Recurring Revenue (ARR)
-* Customer Acquisition Cost (CAC)
-* Customer Lifetime Value (CLV)
-* Churn Rate
-* Net Revenue Retention (NRR)
+- Monthly Recurring Revenue (MRR)
+- Annual Recurring Revenue (ARR)
+- Customer Acquisition Cost (CAC)
+- Customer Lifetime Value (CLV)
+- Churn Rate
+- Net Revenue Retention (NRR)
 
 Product KPIs
 
-* Active Businesses
-* Connected Businesses
-* AI Usage
-* Invoice Synchronization Rate
-* Customer Satisfaction (CSAT)
-* Net Promoter Score (NPS)
+- Active Businesses
+- Connected Businesses
+- AI Usage
+- Invoice Synchronization Rate
+- Customer Satisfaction (CSAT)
+- Net Promoter Score (NPS)
 
 ---
 
 # 17. Risks
 
-* Slow market adoption.
-* Strong competition.
-* Regulatory changes.
-* AI service costs.
-* Infrastructure scaling.
-* Cybersecurity threats.
+- Slow market adoption.
+- Strong competition.
+- Regulatory changes.
+- AI service costs.
+- Infrastructure scaling.
+- Cybersecurity threats.
 
 Mitigation plans should be reviewed regularly.
 
@@ -327,15 +327,15 @@ Mitigation plans should be reviewed regularly.
 
 # 18. Future Opportunities
 
-* B2B Marketplace
-* Embedded Finance
-* Lending Services
-* Insurance Integrations
-* Logistics Integrations
-* Manufacturing Module
-* Payroll Module
-* Public API Marketplace
-* Industry-specific editions
+- B2B Marketplace
+- Embedded Finance
+- Lending Services
+- Insurance Integrations
+- Logistics Integrations
+- Manufacturing Module
+- Payroll Module
+- Public API Marketplace
+- Industry-specific editions
 
 ---
 

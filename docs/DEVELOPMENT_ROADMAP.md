@@ -20,16 +20,16 @@ Development follows an **Agile Scrum** methodology with **2-week sprints**, cont
 
 The engineering team shall follow:
 
-* Domain-Driven Design (DDD)
-* Clean Architecture
-* SOLID Principles
-* Test-Driven Development (TDD) where applicable
-* API-First Development
-* Component-Driven UI
-* CI/CD
-* Feature Flags
-* Security by Design
-* Performance by Default
+- Domain-Driven Design (DDD)
+- Clean Architecture
+- SOLID Principles
+- Test-Driven Development (TDD) where applicable
+- API-First Development
+- Component-Driven UI
+- CI/CD
+- Feature Flags
+- Security by Design
+- Performance by Default
 
 ---
 
@@ -37,35 +37,35 @@ The engineering team shall follow:
 
 ### Frontend
 
-* Next.js (App Router)
-* React
-* TypeScript
-* Tailwind CSS
-* shadcn/ui
-* TanStack Query
-* React Hook Form
-* Zod
+- Next.js (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- TanStack Query
+- React Hook Form
+- Zod
 
 ---
 
 ### Backend
 
-* Supabase
-* PostgreSQL
-* Edge Functions
-* Storage
-* Realtime
+- Supabase
+- PostgreSQL
+- Edge Functions
+- Storage
+- Realtime
 
 ---
 
 ### Infrastructure
 
-* Vercel
-* GitHub Actions
-* Docker
-* Cloudflare
-* Resend
-* Razorpay
+- Vercel
+- GitHub Actions
+- Docker
+- Cloudflare
+- Resend
+- Razorpay
 
 ---
 
@@ -75,22 +75,22 @@ Duration: 2 Weeks
 
 Objectives:
 
-* Repository Setup
-* Monorepo Configuration
-* CI/CD Pipeline
-* Environment Configuration
-* Code Standards
-* Linting
-* Formatting
-* Testing Framework
-* Shared UI Library
+- Repository Setup
+- Monorepo Configuration
+- CI/CD Pipeline
+- Environment Configuration
+- Code Standards
+- Linting
+- Formatting
+- Testing Framework
+- Shared UI Library
 
 Deliverables:
 
-* Development Environment
-* Deployment Pipeline
-* Coding Standards
-* Documentation
+- Development Environment
+- Deployment Pipeline
+- Coding Standards
+- Documentation
 
 ---
 
@@ -100,29 +100,29 @@ Duration: 8–10 Weeks
 
 Modules:
 
-* Authentication
-* Organization
-* Dashboard
-* Customer Management
-* Supplier Management
-* Product Management
-* Categories
-* Brands
-* Inventory
-* Warehouse
-* Purchase Management
-* Sales
-* Invoice Generation
-* Payments
-* Reports
+- Authentication
+- Organization
+- Dashboard
+- Customer Management
+- Supplier Management
+- Product Management
+- Categories
+- Brands
+- Inventory
+- Warehouse
+- Purchase Management
+- Sales
+- Invoice Generation
+- Payments
+- Reports
 
 Deliverables:
 
-* Fully functional invoicing platform
-* Inventory management
-* GST billing
-* Dashboard
-* Reporting
+- Fully functional invoicing platform
+- Inventory management
+- GST billing
+- Dashboard
+- Reporting
 
 ---
 
@@ -132,19 +132,19 @@ Duration: 6 Weeks
 
 Modules:
 
-* Business Discovery
-* Connection Requests
-* Supplier Network
-* Customer Network
-* Purchase Synchronization
-* Invoice Synchronization
-* Shared Documents
-* Business Trust Score
+- Business Discovery
+- Connection Requests
+- Supplier Network
+- Customer Network
+- Purchase Synchronization
+- Invoice Synchronization
+- Shared Documents
+- Business Trust Score
 
 Deliverables:
 
-* Connected Business Platform
-* Digital transaction synchronization
+- Connected Business Platform
+- Digital transaction synchronization
 
 ---
 
@@ -154,18 +154,18 @@ Duration: 8 Weeks
 
 Modules:
 
-* OCR Engine
-* AI Assistant
-* AI Search
-* AI Forecasting
-* AI Recommendations
-* AI Reports
-* AI Business Insights
+- OCR Engine
+- AI Assistant
+- AI Search
+- AI Forecasting
+- AI Recommendations
+- AI Reports
+- AI Business Insights
 
 Deliverables:
 
-* AI-powered automation
-* Intelligent business assistance
+- AI-powered automation
+- Intelligent business assistance
 
 ---
 
@@ -175,18 +175,18 @@ Duration: 6 Weeks
 
 Modules:
 
-* Approval Workflows
-* Advanced Permissions
-* Multi-Branch
-* Multi-Warehouse
-* Audit Center
-* Workflow Engine
-* API Platform
-* Webhooks
+- Approval Workflows
+- Advanced Permissions
+- Multi-Branch
+- Multi-Warehouse
+- Audit Center
+- Workflow Engine
+- API Platform
+- Webhooks
 
 Deliverables:
 
-* Enterprise-ready platform
+- Enterprise-ready platform
 
 ---
 
@@ -196,16 +196,16 @@ Duration: 8 Weeks
 
 Modules:
 
-* Supplier Marketplace
-* Product Marketplace
-* Business Reputation
-* Logistics Integration
-* Digital Contracts
-* Marketplace Payments
+- Supplier Marketplace
+- Product Marketplace
+- Business Reputation
+- Logistics Integration
+- Digital Contracts
+- Marketplace Payments
 
 Deliverables:
 
-* Complete B2B Marketplace
+- Complete B2B Marketplace
 
 ---
 
@@ -274,14 +274,14 @@ Marketplace Launch
 
 Each phase must satisfy:
 
-* Code Review Completed
-* Unit Tests ≥ 90%
-* Integration Tests Passed
-* E2E Tests Passed
-* Security Review
-* Performance Validation
-* Accessibility Review
-* Documentation Updated
+- Code Review Completed
+- Unit Tests ≥ 90%
+- Integration Tests Passed
+- E2E Tests Passed
+- Security Review
+- Performance Validation
+- Accessibility Review
+- Documentation Updated
 
 No phase proceeds without meeting all quality gates.
 
@@ -315,19 +315,19 @@ Deployment follows **Continuous Delivery** with **Semantic Versioning**.
 
 Potential Risks:
 
-* Requirement changes
-* Performance bottlenecks
-* AI provider limitations
-* Integration delays
-* Security vulnerabilities
-* Resource availability
+- Requirement changes
+- Performance bottlenecks
+- AI provider limitations
+- Integration delays
+- Security vulnerabilities
+- Resource availability
 
 Mitigation:
 
-* Modular architecture
-* Automated testing
-* Incremental delivery
-* Regular stakeholder reviews
+- Modular architecture
+- Automated testing
+- Incremental delivery
+- Regular stakeholder reviews
 
 ---
 
@@ -335,15 +335,15 @@ Mitigation:
 
 Recommended Team
 
-* Product Manager
-* Solution Architect
-* UI/UX Designer
-* Frontend Engineers
-* Backend Engineers
-* QA Engineers
-* DevOps Engineer
-* AI Engineer
-* Security Engineer
+- Product Manager
+- Solution Architect
+- UI/UX Designer
+- Frontend Engineers
+- Backend Engineers
+- QA Engineers
+- DevOps Engineer
+- AI Engineer
+- Security Engineer
 
 For a solo founder, these roles are fulfilled sequentially with AI-assisted development and automation.
 
@@ -353,12 +353,12 @@ For a solo founder, these roles are fulfilled sequentially with AI-assisted deve
 
 The roadmap is considered successful when:
 
-* MVP is released on schedule.
-* Platform achieves 99.9% uptime.
-* Automated testing exceeds 90% coverage.
-* Connected Business Network functions reliably.
-* AI platform integrates with all major modules.
-* Customer feedback validates usability and performance.
+- MVP is released on schedule.
+- Platform achieves 99.9% uptime.
+- Automated testing exceeds 90% coverage.
+- Connected Business Network functions reliably.
+- AI platform integrates with all major modules.
+- Customer feedback validates usability and performance.
 
 ---
 

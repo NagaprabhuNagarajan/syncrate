@@ -22,16 +22,16 @@ It establishes the architectural principles, technology choices, module boundari
 
 The architecture must satisfy the following goals:
 
-* Enterprise-grade maintainability
-* Horizontal scalability
-* High availability
-* Multi-tenancy
-* Security by design
-* Domain-driven architecture
-* Testability
-* Observability
-* Performance
-* Future microservice readiness
+- Enterprise-grade maintainability
+- Horizontal scalability
+- High availability
+- Multi-tenancy
+- Security by design
+- Domain-driven architecture
+- Testability
+- Observability
+- Performance
+- Future microservice readiness
 
 ---
 
@@ -45,18 +45,18 @@ Business logic is organized around business domains rather than technical layers
 
 Examples of domains:
 
-* Identity
-* Organization
-* Customer
-* Supplier
-* Product
-* Inventory
-* Sales
-* Purchase
-* Finance
-* Reports
-* AI Platform
-* Connected Business Network
+- Identity
+- Organization
+- Customer
+- Supplier
+- Product
+- Inventory
+- Sales
+- Purchase
+- Finance
+- Reports
+- AI Platform
+- Connected Business Network
 
 ---
 
@@ -66,11 +66,11 @@ The initial release will use a **Modular Monolith**.
 
 Why?
 
-* Faster development
-* Easier deployment
-* Lower operational cost
-* Strong module boundaries
-* Easier testing
+- Faster development
+- Easier deployment
+- Lower operational cost
+- Strong module boundaries
+- Easier testing
 
 Each module remains independently deployable in the future if migration to microservices becomes necessary.
 
@@ -102,11 +102,11 @@ Business logic must never depend on infrastructure.
 
 Every component follows:
 
-* Single Responsibility Principle
-* Open/Closed Principle
-* Liskov Substitution Principle
-* Interface Segregation Principle
-* Dependency Inversion Principle
+- Single Responsibility Principle
+- Open/Closed Principle
+- Liskov Substitution Principle
+- Interface Segregation Principle
+- Dependency Inversion Principle
 
 ---
 
@@ -179,64 +179,64 @@ Modules communicate through domain events rather than direct dependencies whenev
 
 ## Frontend
 
-* Next.js (App Router)
-* React
-* TypeScript
-* Tailwind CSS
-* shadcn/ui
-* TanStack Query
-* React Hook Form
-* Zod
+- Next.js (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- TanStack Query
+- React Hook Form
+- Zod
 
 ---
 
 ## Backend
 
-* Supabase
-* PostgreSQL
-* Edge Functions
-* Row Level Security
-* Realtime
-* Storage
+- Supabase
+- PostgreSQL
+- Edge Functions
+- Row Level Security
+- Realtime
+- Storage
 
 ---
 
 ## AI Platform
 
-* Provider abstraction layer
-* OpenAI
-* Anthropic
-* Gemini
-* Self-hosted models
+- Provider abstraction layer
+- OpenAI
+- Anthropic
+- Gemini
+- Self-hosted models
 
 ---
 
 ## Infrastructure
 
-* Vercel
-* Cloudflare
-* GitHub Actions
-* Docker
-* Resend
-* Razorpay
+- Vercel
+- Cloudflare
+- GitHub Actions
+- Docker
+- Resend
+- Razorpay
 
 ---
 
 # 6. Core Modules
 
-* Identity
-* Organization
-* Customer
-* Supplier
-* Product
-* Inventory
-* Purchase
-* Sales
-* Finance
-* Reports
-* AI
-* Connected Business Network
-* Notifications
+- Identity
+- Organization
+- Customer
+- Supplier
+- Product
+- Inventory
+- Purchase
+- Sales
+- Finance
+- Reports
+- AI
+- Connected Business Network
+- Notifications
 
 Each module owns its data and business rules.
 
@@ -244,27 +244,27 @@ Each module owns its data and business rules.
 
 # 7. Security Architecture
 
-* Supabase Auth
-* RBAC
-* Row Level Security
-* JWT Authentication
-* API Authorization
-* Audit Logging
-* Secure Secrets Management
-* Encryption in Transit
-* Encryption at Rest
+- Supabase Auth
+- RBAC
+- Row Level Security
+- JWT Authentication
+- API Authorization
+- Audit Logging
+- Secure Secrets Management
+- Encryption in Transit
+- Encryption at Rest
 
 ---
 
 # 8. Data Architecture
 
-* PostgreSQL as the primary database
-* UUID primary keys
-* Soft deletes
-* Immutable financial records
-* Event logs
-* Audit tables
-* Multi-tenant schema using organization_id isolation
+- PostgreSQL as the primary database
+- UUID primary keys
+- Soft deletes
+- Immutable financial records
+- Event logs
+- Audit tables
+- Multi-tenant schema using organization_id isolation
 
 ---
 
@@ -272,13 +272,13 @@ Each module owns its data and business rules.
 
 Supported integrations:
 
-* Razorpay
-* Email Provider
-* WhatsApp
-* OCR Services
-* AI Providers
-* Barcode Scanners
-* Future Public API
+- Razorpay
+- Email Provider
+- WhatsApp
+- OCR Services
+- AI Providers
+- Barcode Scanners
+- Future Public API
 
 ---
 
@@ -286,11 +286,11 @@ Supported integrations:
 
 Environments:
 
-* Local Development
-* Development
-* QA
-* Staging
-* Production
+- Local Development
+- Development
+- QA
+- Staging
+- Production
 
 Deployment Pipeline:
 
@@ -330,24 +330,24 @@ Production
 
 The platform must support:
 
-* Structured Logging
-* Metrics
-* Distributed Tracing
-* Error Tracking
-* Health Checks
-* Audit Logs
-* Performance Monitoring
+- Structured Logging
+- Metrics
+- Distributed Tracing
+- Error Tracking
+- Health Checks
+- Audit Logs
+- Performance Monitoring
 
 ---
 
 # 12. Performance Targets
 
-* Login < 2 seconds
-* Dashboard < 3 seconds
-* Product Search < 300 ms
-* Invoice Creation < 2 seconds
-* AI Response < 5 seconds
-* 99.9% Availability
+- Login < 2 seconds
+- Dashboard < 3 seconds
+- Product Search < 300 ms
+- Invoice Creation < 2 seconds
+- AI Response < 5 seconds
+- 99.9% Availability
 
 ---
 
@@ -355,14 +355,14 @@ The platform must support:
 
 The architecture is designed to evolve toward:
 
-* Microservices
-* Event Streaming
-* Workflow Engine
-* Public APIs
-* Marketplace
-* AI Copilot
-* Multi-region deployment
-* Multi-country support
+- Microservices
+- Event Streaming
+- Workflow Engine
+- Public APIs
+- Marketplace
+- AI Copilot
+- Multi-region deployment
+- Multi-country support
 
 ---
 

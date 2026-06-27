@@ -32,10 +32,7 @@ export function ErrorState({
       aria-live="assertive"
     >
       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-error/10">
-        <AlertCircle
-          className="h-6 w-6 text-error"
-          aria-hidden="true"
-        />
+        <AlertCircle className="h-6 w-6 text-error" aria-hidden="true" />
       </div>
       <h3 className="mb-1 text-base font-semibold text-foreground">{title}</h3>
       <p className="mb-6 max-w-sm text-sm text-muted-foreground">{message}</p>

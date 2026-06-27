@@ -6,12 +6,14 @@ metadata:
 ---
 
 **TypeScript rules (enforced):**
+
 - `strict: true` always
 - Never use `any` — use `unknown` instead
 - Use `Readonly` types
 - `type` for unions, `interface` for object contracts
 
 **React rules:**
+
 - Functional components only (no class components)
 - Hooks over everything
 - Composition over inheritance
@@ -19,6 +21,7 @@ metadata:
 - No anonymous functions in JSX
 
 **File naming conventions:**
+
 - Component: `InvoiceCard.tsx`
 - Hook: `useInvoice.ts`
 - Utility: `calculateTax.ts`
@@ -31,6 +34,7 @@ metadata:
 - Zod schema: `invoiceSchema`
 
 **Folder structure:**
+
 ```
 src/
   app/
@@ -50,6 +54,7 @@ src/
 ```
 
 **Separation of concerns (non-negotiable):**
+
 - UI, business logic, API access, validation, and state in distinct layers
 - Backend: services and repositories, never business logic in pages/routes
 - Validate every input with Zod; never trust client input

@@ -11,6 +11,7 @@ metadata:
 Future: Google, Microsoft Entra, GitHub, Apple, SAML SSO, OAuth 2.0, LDAP.
 
 **User types:**
+
 - Platform: Super Admin, Platform Support
 - Organization: Owner, Admin, Branch Manager, Accountant, Sales Executive, Warehouse Manager, Cashier, Employee
 - External: Connected Supplier, Auditor (read-only)
@@ -22,6 +23,7 @@ Future: Google, Microsoft Entra, GitHub, Apple, SAML SSO, OAuth 2.0, LDAP.
 **Default roles:** Super Admin, Owner, Admin, Branch Manager, Accountant, Sales Executive, Warehouse Manager, Cashier, Employee, Viewer. Custom roles are org-configurable.
 
 **Multi-tenant rules (every request must validate):**
+
 - User ID
 - Organization ID
 - Branch ID (where applicable)

@@ -8,12 +8,14 @@ metadata:
 **Design philosophy:** Minimal UI, Maximum Information Density, Progressive Disclosure, Mobile-First, Accessibility First. Think Linear/Stripe Dashboard/Notion/Vercel quality.
 
 **Color palette:**
+
 - Primary: `#2563EB` (blue), Hover: `#1D4ED8`, Light: `#DBEAFE`
 - Secondary: `#0F172A` (dark slate), Light: `#334155`
 - Success: `#16A34A`, Warning: `#F59E0B`, Error: `#DC2626`, Info: `#0EA5E9`
 - Neutral: Tailwind neutral palette (gray-50 → gray-900)
 
 **Typography:**
+
 - Font: Inter (fallback: System UI)
 - H1: 36px, H2: 30px, H3: 24px, H4: 20px, H5: 18px, Body: 16px, Small: 14px, Caption: 12px
 

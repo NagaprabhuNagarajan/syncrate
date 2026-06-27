@@ -20,14 +20,14 @@ The AI Platform must remain provider-independent, secure, explainable, and scala
 
 The AI Platform shall:
 
-* Reduce manual effort.
-* Improve business productivity.
-* Automate repetitive tasks.
-* Assist decision making.
-* Improve reporting.
-* Increase business intelligence.
-* Enable conversational workflows.
-* Continuously learn from business data.
+- Reduce manual effort.
+- Improve business productivity.
+- Automate repetitive tasks.
+- Assist decision making.
+- Improve reporting.
+- Increase business intelligence.
+- Enable conversational workflows.
+- Continuously learn from business data.
 
 ---
 
@@ -35,14 +35,14 @@ The AI Platform shall:
 
 The AI platform follows these principles:
 
-* Human Approval First
-* Explainable AI
-* Organization Isolation
-* Confidence-Based Decisions
-* Continuous Learning
-* Provider Independence
-* Auditability
-* Responsible AI
+- Human Approval First
+- Explainable AI
+- Organization Isolation
+- Confidence-Based Decisions
+- Continuous Learning
+- Provider Independence
+- Auditability
+- Responsible AI
 
 ---
 
@@ -92,19 +92,19 @@ Every AI request passes through the AI Gateway before reaching external provider
 
 The platform consists of:
 
-* AI Gateway
-* AI Orchestrator
-* Prompt Engine
-* Context Engine
-* Tool Calling Engine
-* Memory Engine
-* OCR Engine
-* Recommendation Engine
-* Forecast Engine
-* Search Engine
-* Analytics Engine
-* Learning Engine
-* Audit Engine
+- AI Gateway
+- AI Orchestrator
+- Prompt Engine
+- Context Engine
+- Tool Calling Engine
+- Memory Engine
+- OCR Engine
+- Recommendation Engine
+- Forecast Engine
+- Search Engine
+- Analytics Engine
+- Learning Engine
+- Audit Engine
 
 Each component can evolve independently.
 
@@ -116,14 +116,14 @@ The AI Assistant provides conversational interaction with Syncrate.
 
 Supported actions include:
 
-* Create invoices
-* Generate quotations
-* Search customers
-* Search suppliers
-* Generate reports
-* Analyze business performance
-* Explain financial data
-* Answer business questions
+- Create invoices
+- Generate quotations
+- Search customers
+- Search suppliers
+- Generate reports
+- Analyze business performance
+- Explain financial data
+- Answer business questions
 
 Example
 
@@ -137,23 +137,23 @@ The AI prepares the invoice for review before submission.
 
 Supported Documents
 
-* Purchase Bills
-* Tax Invoices
-* Receipts
-* Delivery Challans
-* Product Labels
+- Purchase Bills
+- Tax Invoices
+- Receipts
+- Delivery Challans
+- Product Labels
 
 Extracted Fields
 
-* Supplier
-* Invoice Number
-* Invoice Date
-* GST
-* Products
-* Quantities
-* Prices
-* Tax
-* Total Amount
+- Supplier
+- Invoice Number
+- Invoice Date
+- GST
+- Products
+- Quantities
+- Prices
+- Tax
+- Total Amount
 
 Users verify extracted information before saving.
 
@@ -163,12 +163,12 @@ Users verify extracted information before saving.
 
 Forecast Types
 
-* Sales Forecast
-* Inventory Forecast
-* Purchase Forecast
-* Revenue Forecast
-* Cash Flow Forecast
-* Seasonal Demand Forecast
+- Sales Forecast
+- Inventory Forecast
+- Purchase Forecast
+- Revenue Forecast
+- Cash Flow Forecast
+- Seasonal Demand Forecast
 
 Forecasts are generated using historical business data and updated regularly.
 
@@ -178,19 +178,19 @@ Forecasts are generated using historical business data and updated regularly.
 
 Recommendations include:
 
-* Products to reorder
-* Best supplier
-* Customer follow-up
-* Discount suggestions
-* Inventory optimization
-* Cross-sell opportunities
-* Upsell opportunities
+- Products to reorder
+- Best supplier
+- Customer follow-up
+- Discount suggestions
+- Inventory optimization
+- Cross-sell opportunities
+- Upsell opportunities
 
 Every recommendation includes:
 
-* Confidence Score
-* Reason
-* Supporting Data
+- Confidence Score
+- Reason
+- Supporting Data
 
 ---
 
@@ -200,10 +200,10 @@ Users may search using natural language.
 
 Examples:
 
-* Show unpaid invoices.
-* Products below reorder level.
-* Customers with overdue payments.
-* Sales this month.
+- Show unpaid invoices.
+- Products below reorder level.
+- Customers with overdue payments.
+- Sales this month.
 
 AI converts conversational queries into structured business searches.
 
@@ -213,12 +213,12 @@ AI converts conversational queries into structured business searches.
 
 The AI platform generates intelligent reports such as:
 
-* Business Health Report
-* Profit Analysis
-* Inventory Summary
-* Cash Flow Insights
-* Customer Analysis
-* Supplier Performance
+- Business Health Report
+- Profit Analysis
+- Inventory Summary
+- Cash Flow Insights
+- Customer Analysis
+- Supplier Performance
 
 Reports include charts, trends, and actionable recommendations.
 
@@ -228,12 +228,12 @@ Reports include charts, trends, and actionable recommendations.
 
 The platform detects:
 
-* Duplicate invoices
-* Suspicious discounts
-* Unusual payments
-* Inventory anomalies
-* Pricing inconsistencies
-* Abnormal purchasing patterns
+- Duplicate invoices
+- Suspicious discounts
+- Unusual payments
+- Inventory anomalies
+- Pricing inconsistencies
+- Abnormal purchasing patterns
 
 High-risk activities generate alerts.
 
@@ -245,12 +245,12 @@ AI continuously analyzes business activities.
 
 Insights include:
 
-* Revenue Growth
-* Declining Sales
-* Slow Moving Inventory
-* Customer Churn Risk
-* Supplier Performance
-* Profitability Trends
+- Revenue Growth
+- Declining Sales
+- Slow Moving Inventory
+- Customer Churn Risk
+- Supplier Performance
+- Profitability Trends
 
 Insights appear on dashboards and reports.
 
@@ -262,15 +262,15 @@ Every AI request includes business context.
 
 Context includes:
 
-* Organization
-* Branch
-* User Role
-* Financial Year
-* Current Customer
-* Current Supplier
-* Recent Transactions
-* Inventory Status
-* User Preferences
+- Organization
+- Branch
+- User Role
+- Financial Year
+- Current Customer
+- Current Supplier
+- Recent Transactions
+- Inventory Status
+- User Preferences
 
 This ensures accurate and relevant responses.
 
@@ -282,15 +282,15 @@ The platform supports:
 
 Short-Term Memory
 
-* Current Conversation
-* Current Workflow
+- Current Conversation
+- Current Workflow
 
 Long-Term Memory
 
-* Business Preferences
-* Frequently Purchased Products
-* Supplier Preferences
-* User Behavior
+- Business Preferences
+- Frequently Purchased Products
+- Supplier Preferences
+- User Behavior
 
 Memory is isolated per organization.
 
@@ -302,13 +302,13 @@ Every AI capability uses managed prompts.
 
 Prompt categories:
 
-* Invoice Generation
-* OCR
-* Search
-* Forecasting
-* Reports
-* Recommendations
-* Business Chat
+- Invoice Generation
+- OCR
+- Search
+- Forecasting
+- Reports
+- Recommendations
+- Business Chat
 
 Prompt versions are tracked and auditable.
 
@@ -320,12 +320,12 @@ The AI platform may invoke internal business services.
 
 Examples:
 
-* Create Invoice
-* Search Customer
-* Generate Report
-* Fetch Inventory
-* Calculate GST
-* Create Purchase Order
+- Create Invoice
+- Search Customer
+- Generate Report
+- Fetch Inventory
+- Calculate GST
+- Create Purchase Order
 
 AI never accesses the database directly.
 
@@ -335,11 +335,11 @@ AI never accesses the database directly.
 
 AI must:
 
-* Respect RBAC permissions.
-* Respect tenant isolation.
-* Never expose confidential information.
-* Never execute unauthorized actions.
-* Encrypt AI communications.
+- Respect RBAC permissions.
+- Respect tenant isolation.
+- Never expose confidential information.
+- Never execute unauthorized actions.
+- Encrypt AI communications.
 
 ---
 
@@ -347,11 +347,11 @@ AI must:
 
 All AI-generated actions must:
 
-* Be reviewable.
-* Be explainable.
-* Be auditable.
-* Include confidence scores.
-* Follow organization policies.
+- Be reviewable.
+- Be explainable.
+- Be auditable.
+- Include confidence scores.
+- Follow organization policies.
 
 Critical actions always require user approval.
 
@@ -361,16 +361,16 @@ Critical actions always require user approval.
 
 Every AI interaction records:
 
-* User
-* Organization
-* Prompt
-* Context
-* Model
-* Response
-* Confidence Score
-* Execution Time
-* Approval Status
-* Timestamp
+- User
+- Organization
+- Prompt
+- Context
+- Model
+- Response
+- Confidence Score
+- Execution Time
+- Approval Status
+- Timestamp
 
 Audit logs are immutable.
 
@@ -404,14 +404,14 @@ Availability
 
 Future AI capabilities include:
 
-* Voice Assistant
-* WhatsApp AI Assistant
-* Email Assistant
-* AI Financial Advisor
-* AI Procurement Agent
-* AI Meeting Assistant
-* Autonomous Workflow Suggestions
-* AI Business Copilot
+- Voice Assistant
+- WhatsApp AI Assistant
+- Email Assistant
+- AI Financial Advisor
+- AI Procurement Agent
+- AI Meeting Assistant
+- Autonomous Workflow Suggestions
+- AI Business Copilot
 
 ---
 
@@ -419,13 +419,13 @@ Future AI capabilities include:
 
 The AI Platform is considered complete when:
 
-* AI integrates with all business modules.
-* Every AI recommendation includes an explanation.
-* OCR accuracy exceeds 95%.
-* AI respects organization boundaries.
-* Critical actions require approval.
-* AI interactions are fully audited.
-* AI services meet defined performance targets.
+- AI integrates with all business modules.
+- Every AI recommendation includes an explanation.
+- OCR accuracy exceeds 95%.
+- AI respects organization boundaries.
+- Critical actions require approval.
+- AI interactions are fully audited.
+- AI services meet defined performance targets.
 
 ---
 
