@@ -24,6 +24,7 @@ import {
   Bell,
   Sparkles,
   Network,
+  Store,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { signOutAction } from "@/features/identity/actions/auth.actions";
@@ -52,6 +53,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: "Invoices", href: "/sales/invoices", icon: FileText },
   { label: "Payments", href: "/payments", icon: CreditCard },
   { label: "Network", href: "/cbn", icon: Network, activePrefix: "/cbn" },
+  { label: "Marketplace", href: "/marketplace", icon: Store, activePrefix: "/marketplace" },
   { label: "Reports", href: "/reports", icon: BarChart2 },
   { label: "AI Insights", href: "/ai", icon: Sparkles, badge: "Beta" },
 ];

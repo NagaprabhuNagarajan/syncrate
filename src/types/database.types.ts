@@ -493,6 +493,102 @@ type WorkflowStepExecutionsRow = {
   created_at: string;
 };
 
+type MarketplaceListingsRow = {
+  id: string;
+  organization_id: string;
+  listing_type: "product" | "supplier";
+  product_id: string | null;
+  title: string;
+  description: string | null;
+  category: string | null;
+  price: number | null;
+  currency: string;
+  unit: string | null;
+  min_order_qty: number | null;
+  is_published: boolean;
+  status: "active" | "paused" | "archived";
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
+  version: number;
+};
+
+type MarketplaceReviewsRow = {
+  id: string;
+  organization_id: string;
+  subject_organization_id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  is_recommended: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
+  version: number;
+};
+
+type MarketplaceOrdersRow = {
+  id: string;
+  organization_id: string;
+  seller_organization_id: string;
+  listing_id: string | null;
+  status: "pending" | "confirmed" | "cancelled" | "fulfilled" | "completed";
+  quantity: number;
+  total_amount: number;
+  currency: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  version: number;
+};
+
+type MarketplacePaymentsRow = {
+  id: string;
+  organization_id: string;
+  counterparty_organization_id: string;
+  order_id: string;
+  provider: string;
+  status: "pending" | "held" | "released" | "refunded" | "failed";
+  amount: number;
+  currency: string;
+  external_reference: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  version: number;
+};
+
+type MarketplaceShipmentsRow = {
+  id: string;
+  organization_id: string;
+  counterparty_organization_id: string;
+  order_id: string;
+  provider: string;
+  carrier: string | null;
+  tracking_number: string | null;
+  status: "pending" | "in_transit" | "delivered" | "cancelled";
+  shipped_at: string | null;
+  delivered_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  version: number;
+};
+
 // ─── end Enterprise Row types ─────────────────────────────────────────────────
 
 type CustomerLedgerEntriesRow = {
@@ -3124,6 +3220,172 @@ export interface Database {
         ];
       };
 
+      // ── marketplace_listings ──────────────────────────────
+      marketplace_listings: {
+        Row: MarketplaceListingsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          listing_type: MarketplaceListingsRow["listing_type"];
+          product_id?: string | null;
+          title: string;
+          description?: string | null;
+          category?: string | null;
+          price?: number | null;
+          currency?: string;
+          unit?: string | null;
+          min_order_qty?: number | null;
+          is_published?: boolean;
+          status?: MarketplaceListingsRow["status"];
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<MarketplaceListingsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── marketplace_reviews ───────────────────────────────
+      marketplace_reviews: {
+        Row: MarketplaceReviewsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          subject_organization_id: string;
+          rating: number;
+          title?: string | null;
+          comment?: string | null;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          is_recommended?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<MarketplaceReviewsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_reviews_subject_organization_id_fkey";
+            columns: ["subject_organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── marketplace_orders ────────────────────────────────
+      marketplace_orders: {
+        Row: MarketplaceOrdersRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          seller_organization_id: string;
+          listing_id?: string | null;
+          status?: MarketplaceOrdersRow["status"];
+          quantity?: number;
+          total_amount?: number;
+          currency?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<MarketplaceOrdersRow>;
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_orders_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── marketplace_payments ──────────────────────────────
+      marketplace_payments: {
+        Row: MarketplacePaymentsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          counterparty_organization_id: string;
+          order_id: string;
+          provider?: string;
+          status?: MarketplacePaymentsRow["status"];
+          amount?: number;
+          currency?: string;
+          external_reference?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<MarketplacePaymentsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_payments_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "marketplace_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── marketplace_shipments ─────────────────────────────
+      marketplace_shipments: {
+        Row: MarketplaceShipmentsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          counterparty_organization_id: string;
+          order_id: string;
+          provider?: string;
+          carrier?: string | null;
+          tracking_number?: string | null;
+          status?: MarketplaceShipmentsRow["status"];
+          shipped_at?: string | null;
+          delivered_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<MarketplaceShipmentsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_shipments_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "marketplace_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       // ── ai_interactions ───────────────────────────────────
       ai_interactions: {
         Row: AiInteractionsRow;
@@ -3442,6 +3704,66 @@ export interface Database {
       compute_trust_score: {
         Args: { p_org_id: string };
         Returns: number;
+      };
+      // ── Marketplace functions ──────────────────────────────
+      search_marketplace_listings: {
+        Args: {
+          p_query?: string;
+          p_listing_type?: string;
+          p_category?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          id: string;
+          organization_id: string;
+          seller_name: string;
+          listing_type: string;
+          product_id: string | null;
+          title: string;
+          description: string | null;
+          category: string | null;
+          price: number | null;
+          currency: string;
+          unit: string | null;
+          min_order_qty: number | null;
+          created_at: string;
+        }[];
+      };
+      get_organization_reputation: {
+        Args: { p_org_id: string };
+        Returns: {
+          review_count: number;
+          average_rating: number;
+          recommended_count: number;
+          recommend_percent: number;
+        }[];
+      };
+      list_organization_reviews: {
+        Args: { p_org_id: string; p_limit?: number; p_offset?: number };
+        Returns: {
+          id: string;
+          reviewer_name: string;
+          rating: number;
+          title: string | null;
+          comment: string | null;
+          is_recommended: boolean;
+          created_at: string;
+        }[];
+      };
+      get_marketplace_listing: {
+        Args: { p_id: string };
+        Returns: {
+          id: string;
+          organization_id: string;
+          title: string;
+          listing_type: string;
+          price: number | null;
+          currency: string;
+          min_order_qty: number | null;
+          is_published: boolean;
+          status: string;
+        }[];
       };
     };
     Enums: Record<string, never>;
