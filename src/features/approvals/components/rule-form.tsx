@@ -35,7 +35,7 @@ const OPERATOR_OPTIONS: readonly { value: ApprovalOperator; label: string }[] =
   ];
 
 const INPUT_CLASS =
-  "block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40";
 
 const LABEL_CLASS = "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
@@ -233,11 +233,11 @@ export function RuleForm({
         </label>
       </div>
 
-      <div className="mt-5 flex items-center justify-end gap-2">
+      <div className="mt-4 flex items-center justify-end gap-2">
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" loading={isSaving}>
+        <Button type="submit" variant="gradient" loading={isSaving}>
           {isEdit ? "Save changes" : "Create rule"}
         </Button>
       </div>

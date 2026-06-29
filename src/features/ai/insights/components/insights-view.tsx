@@ -83,7 +83,7 @@ function InsightCard({ item, index }: InsightCardProps) {
       <Card className="h-full">
         <CardHeader className="space-y-2 pb-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={SEVERITY_VARIANT[item.severity]}>
+            <Badge dot variant={SEVERITY_VARIANT[item.severity]}>
               {CATEGORY_LABELS[item.category]}
             </Badge>
             <Badge variant="muted">{confidenceLabel(item.confidence)}</Badge>
@@ -102,7 +102,7 @@ function InsightCard({ item, index }: InsightCardProps) {
           <div className="rounded-lg border bg-muted/30 px-3 py-2">
             <p className="text-xs text-muted-foreground">{item.metric.label}</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-semibold tabular-nums text-foreground">
+              <span className="nums text-xl font-semibold text-foreground">
                 {item.metric.value}
               </span>
               {change !== null && (
@@ -154,14 +154,14 @@ export function InsightsView({
   }, [handleGenerate]);
 
   return (
-    <div className="space-y-6 p-6 lg:p-8">
+    <div className="space-y-4 p-4 lg:p-6">
       <PageHeader
         title="AI Insights"
         description="Continuously-analyzed intelligence about your business health"
         icon={BarChart3}
       >
         {canGenerate && (
-          <Button onClick={onGenerateClick} loading={isLoading}>
+          <Button variant="gradient" onClick={onGenerateClick} loading={isLoading}>
             <BarChart3 className="mr-1.5 h-4 w-4" aria-hidden="true" />
             {data ? "Refresh insights" : "Analyze"}
           </Button>

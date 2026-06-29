@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import {
@@ -94,7 +95,7 @@ function SecretRevealPanel({ secret, onDismiss }: SecretRevealPanelProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       role="alert"
-      className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
+      className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
     >
       <div className="flex items-start gap-3">
         <ShieldAlert
@@ -257,7 +258,7 @@ function EndpointForm({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       onSubmit={handleSubmit}
-      className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900"
       aria-label={isEdit ? "Edit webhook endpoint" : "Create webhook endpoint"}
     >
       {formError && (
@@ -277,7 +278,7 @@ function EndpointForm({
           >
             Endpoint URL
           </label>
-          <input
+          <Input
             id="webhook-url"
             name="url"
             type="url"
@@ -286,7 +287,6 @@ function EndpointForm({
             onChange={handleUrlChange}
             placeholder="https://example.com/webhooks/syncrate"
             required
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
           />
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Must be an HTTPS URL. We will POST signed JSON payloads here.
@@ -300,14 +300,13 @@ function EndpointForm({
           >
             Description (optional)
           </label>
-          <input
+          <Input
             id="webhook-description"
             name="description"
             type="text"
             value={description}
             onChange={handleDescriptionChange}
             placeholder="e.g. Sync invoices to accounting system"
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
           />
         </div>
       </div>
@@ -379,21 +378,21 @@ function DeliveriesLog({ deliveries }: DeliveriesLogProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="border-y border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+        <thead className="border-y border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
           <tr>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Event
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Status
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Response
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Attempts
             </th>
-            <th scope="col" className="px-4 py-2.5 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Time
             </th>
           </tr>
@@ -401,21 +400,21 @@ function DeliveriesLog({ deliveries }: DeliveriesLogProps) {
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
           {deliveries.map((delivery) => (
             <tr key={delivery.id}>
-              <td className="px-4 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">
+              <td className="px-3 py-2 font-mono text-xs text-slate-700 dark:text-slate-300">
                 {delivery.eventType}
               </td>
-              <td className="px-4 py-2.5">
-                <Badge variant={STATUS_VARIANT[delivery.status]}>
+              <td className="px-3 py-2">
+                <Badge dot variant={STATUS_VARIANT[delivery.status]}>
                   {STATUS_LABEL[delivery.status]}
                 </Badge>
               </td>
-              <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400">
+              <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">
                 {delivery.responseStatus ?? "—"}
               </td>
-              <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400">
+              <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">
                 {delivery.attempts}
               </td>
-              <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400">
+              <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">
                 {formatDateTime(delivery.createdAt)}
               </td>
             </tr>
@@ -469,14 +468,14 @@ function EndpointCard({
   }, [endpoint, onSendTest]);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="break-all font-mono text-sm font-medium text-slate-900 dark:text-slate-100">
               {endpoint.url}
             </span>
-            <Badge variant={endpoint.isActive ? "success" : "muted"}>
+            <Badge dot variant={endpoint.isActive ? "success" : "muted"}>
               {endpoint.isActive ? "Active" : "Inactive"}
             </Badge>
           </div>
@@ -686,14 +685,14 @@ export function WebhooksView({
   );
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Webhooks"
         description="Register HTTPS endpoints to receive signed event notifications"
         icon={Webhook}
       >
         {canManage && (
-          <Button type="button" onClick={handleShowCreate}>
+          <Button type="button" variant="gradient" onClick={handleShowCreate}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Add endpoint
           </Button>
@@ -722,7 +721,7 @@ export function WebhooksView({
         <div
           role="alertdialog"
           aria-label="Delete webhook endpoint"
-          className="mt-6 rounded-xl border border-error-200 bg-error-50 p-4 dark:border-error-500/30 dark:bg-error-500/10"
+          className="mt-4 rounded-xl border border-error-200 bg-error-50 p-4 dark:border-error-500/30 dark:bg-error-500/10"
         >
           <p className="text-sm text-error-800 dark:text-error-300">
             Delete{" "}
@@ -746,7 +745,7 @@ export function WebhooksView({
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-4">
         {endpoints.length === 0 ? (
           <EmptyState
             icon={Webhook}

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ListingForm } from "@/features/marketplace/components/listing-form";
@@ -137,7 +138,7 @@ function ListingRow({
 
   return (
     <tr className="align-top transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         <div className="font-medium text-slate-900 dark:text-slate-100">{listing.title}</div>
         {listing.category && (
           <div className="text-xs text-slate-500 dark:text-slate-400">{listing.category}</div>
@@ -148,23 +149,23 @@ function ListingRow({
           </div>
         )}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         <Badge variant="info">{TYPE_LABEL[listing.listingType]}</Badge>
       </td>
-      <td className="px-4 py-3 tabular-nums text-slate-700 dark:text-slate-300">
+      <td className="nums px-3 py-2 text-slate-700 dark:text-slate-300">
         {formatPrice(listing)}
       </td>
-      <td className="px-4 py-3">
-        <Badge variant={listing.isPublished ? "success" : "muted"}>
+      <td className="px-3 py-2">
+        <Badge dot variant={listing.isPublished ? "success" : "muted"}>
           {listing.isPublished ? "Published" : "Hidden"}
         </Badge>
       </td>
-      <td className="px-4 py-3">
-        <Badge variant={STATUS_VARIANT[listing.status]}>
+      <td className="px-3 py-2">
+        <Badge dot variant={STATUS_VARIANT[listing.status]}>
           {STATUS_LABEL[listing.status]}
         </Badge>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         {canManage && !archived && (
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             <Button
@@ -337,14 +338,14 @@ export function MyListingsView({
   }, [page, pushWith]);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="My listings"
         description="Create and manage your marketplace listings"
         icon={Store}
       >
         {canManage && (
-          <Button type="button" onClick={openCreate}>
+          <Button type="button" variant="gradient" onClick={openCreate}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Add listing
           </Button>
@@ -352,7 +353,7 @@ export function MyListingsView({
       </PageHeader>
 
       {formOpen && canManage && (
-        <div className="mt-6">
+        <div className="mt-4">
           <ListingForm
             organizationId={organizationId}
             listing={editing ?? undefined}
@@ -363,7 +364,7 @@ export function MyListingsView({
       )}
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
@@ -373,20 +374,20 @@ export function MyListingsView({
             className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             aria-label="Search listings"
             placeholder="Search by title, description or category"
             value={searchInput}
             onChange={handleSearchChange}
-            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
+            className="pl-9"
           />
         </form>
         <select
           aria-label="Filter by type"
           value={filters.listingType ?? ""}
           onChange={handleTypeChange}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {TYPE_OPTIONS.map((option) => (
             <option key={option.value || "all-types"} value={option.value}>
@@ -398,7 +399,7 @@ export function MyListingsView({
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusChange}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all-status"} value={option.value}>
@@ -409,7 +410,7 @@ export function MyListingsView({
       </div>
 
       {/* Table / empty state */}
-      <div className="mt-6">
+      <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={Store}
@@ -430,30 +431,30 @@ export function MyListingsView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+                <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Listing
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Type
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Price
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Visibility
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Status
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right font-medium"
+                      className="px-3 py-2 text-right font-medium"
                     >
                       Actions
                     </th>

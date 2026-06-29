@@ -37,7 +37,7 @@ const STEP_TYPE_OPTIONS: readonly { value: WorkflowStepType; label: string }[] =
   ];
 
 const INPUT_CLASS =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
+  "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:border-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:text-slate-100 dark:hover:border-slate-600";
 
 const LABEL_CLASS =
   "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
@@ -289,7 +289,7 @@ export function WorkflowForm({
         </div>
       </div>
 
-      <fieldset className="mt-5 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+      <fieldset className="mt-4 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
         <legend className="px-1 text-sm font-medium text-slate-700 dark:text-slate-300">
           Steps
         </legend>
@@ -486,11 +486,11 @@ export function WorkflowForm({
         </label>
       </div>
 
-      <div className="mt-5 flex items-center justify-end gap-2">
+      <div className="mt-4 flex items-center justify-end gap-2">
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" loading={isSaving}>
+        <Button type="submit" variant="gradient" loading={isSaving}>
           {isEdit ? "Save changes" : "Create workflow"}
         </Button>
       </div>

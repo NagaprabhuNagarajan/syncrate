@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { CreditCard, AlertCircle, X, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { recordSupplierPaymentAction } from "@/features/payment/actions/supplier-payment.actions";
 import type { PaymentMethod } from "@/features/payment/types/payment.types";
 import { cn } from "@/utils/cn";
@@ -29,7 +31,7 @@ const PAYMENT_METHODS = Object.entries(PAYMENT_METHOD_LABELS) as [
 ][];
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
+  "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 shadow-sm transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-muted-foreground hover:border-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:text-slate-100 dark:hover:border-slate-600";
 
 const labelClass = "block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300";
 
@@ -180,9 +182,9 @@ export function RecordSupplierPaymentDialog({
       >
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-5 dark:border-slate-800">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-500/10">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
             <CreditCard
-              className="h-5 w-5 text-blue-600 dark:text-blue-400"
+              className="h-5 w-5 text-white"
               aria-hidden="true"
             />
           </div>
@@ -211,7 +213,7 @@ export function RecordSupplierPaymentDialog({
                 <label htmlFor="spay-amount" className={labelClass}>
                   Payment Amount <span className="text-red-500">*</span>
                 </label>
-                <input
+                <Input
                   id="spay-amount"
                   type="number"
                   min="0.01"
@@ -220,7 +222,7 @@ export function RecordSupplierPaymentDialog({
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
                   required
-                  className={inputClass}
+                  className="nums"
                   aria-required="true"
                 />
               </div>
@@ -230,12 +232,11 @@ export function RecordSupplierPaymentDialog({
                 <label htmlFor="spay-date" className={labelClass}>
                   Payment Date
                 </label>
-                <input
+                <Input
                   id="spay-date"
                   type="date"
                   value={paymentDate}
                   onChange={(e) => setPaymentDate(e.target.value)}
-                  className={inputClass}
                 />
               </div>
 
@@ -267,13 +268,12 @@ export function RecordSupplierPaymentDialog({
                 <label htmlFor="spay-ref" className={labelClass}>
                   Reference Number
                 </label>
-                <input
+                <Input
                   id="spay-ref"
                   type="text"
                   value={referenceNumber}
                   onChange={(e) => setReferenceNumber(e.target.value)}
                   placeholder="UTR, cheque no., etc."
-                  className={inputClass}
                 />
               </div>
 
@@ -282,13 +282,13 @@ export function RecordSupplierPaymentDialog({
                 <label htmlFor="spay-notes" className={labelClass}>
                   Notes
                 </label>
-                <textarea
+                <Textarea
                   id="spay-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Internal notes (optional)"
                   rows={2}
-                  className={cn(inputClass, "resize-none")}
+                  className="resize-none"
                 />
               </div>
             </div>
@@ -345,7 +345,7 @@ export function RecordSupplierPaymentDialog({
                             ))}
                           </select>
                         ) : (
-                          <input
+                          <Input
                             type="text"
                             value={row.purchaseInvoiceId}
                             onChange={(e) =>
@@ -356,13 +356,12 @@ export function RecordSupplierPaymentDialog({
                               )
                             }
                             placeholder="Purchase Invoice ID (UUID)"
-                            className={inputClass}
                             aria-label={`Purchase invoice ID for allocation ${index + 1}`}
                           />
                         )}
                       </div>
                       <div className="w-36">
-                        <input
+                        <Input
                           type="number"
                           value={row.amount}
                           onChange={(e) =>
@@ -371,7 +370,7 @@ export function RecordSupplierPaymentDialog({
                           placeholder="Amount"
                           min="0.01"
                           step="0.01"
-                          className={inputClass}
+                          className="nums"
                           aria-label={`Amount for allocation ${index + 1}`}
                         />
                       </div>
@@ -391,13 +390,13 @@ export function RecordSupplierPaymentDialog({
               {/* Running total */}
               {totalAmount > 0 && allocations.length > 0 && (
                 <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                  <span className="nums text-sm text-slate-600 dark:text-slate-400">
                     Allocated: ₹{totalAllocated.toFixed(2)} of ₹
                     {totalAmount.toFixed(2)}
                   </span>
                   <span
                     className={cn(
-                      "text-sm font-medium",
+                      "nums text-sm font-medium",
                       remaining < 0
                         ? "text-red-600 dark:text-red-400"
                         : "text-blue-600 dark:text-blue-400"
@@ -438,7 +437,7 @@ export function RecordSupplierPaymentDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" variant="gradient" disabled={isPending}>
               {isPending ? "Processing…" : "Make Payment"}
             </Button>
           </div>

@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { DollarSign, AlertCircle, X, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { recordCustomerPaymentAction } from "@/features/payment/actions/customer-payment.actions";
 import type { PaymentMethod } from "@/features/payment/types/payment.types";
 import { cn } from "@/utils/cn";
@@ -29,7 +31,7 @@ const PAYMENT_METHODS = Object.entries(PAYMENT_METHOD_LABELS) as [
 ][];
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
+  "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 shadow-sm transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-muted-foreground hover:border-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:text-slate-100 dark:hover:border-slate-600";
 
 const labelClass = "block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300";
 
@@ -177,9 +179,9 @@ export function RecordCustomerPaymentDialog({
       >
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-5 dark:border-slate-800">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 dark:bg-green-500/10">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
             <DollarSign
-              className="h-5 w-5 text-green-600 dark:text-green-400"
+              className="h-5 w-5 text-white"
               aria-hidden="true"
             />
           </div>
@@ -208,7 +210,7 @@ export function RecordCustomerPaymentDialog({
                 <label htmlFor="pay-amount" className={labelClass}>
                   Payment Amount <span className="text-red-500">*</span>
                 </label>
-                <input
+                <Input
                   id="pay-amount"
                   type="number"
                   min="0.01"
@@ -217,7 +219,7 @@ export function RecordCustomerPaymentDialog({
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
                   required
-                  className={inputClass}
+                  className="nums"
                   aria-required="true"
                 />
               </div>
@@ -227,12 +229,11 @@ export function RecordCustomerPaymentDialog({
                 <label htmlFor="pay-date" className={labelClass}>
                   Payment Date
                 </label>
-                <input
+                <Input
                   id="pay-date"
                   type="date"
                   value={paymentDate}
                   onChange={(e) => setPaymentDate(e.target.value)}
-                  className={inputClass}
                 />
               </div>
 
@@ -264,13 +265,12 @@ export function RecordCustomerPaymentDialog({
                 <label htmlFor="pay-ref" className={labelClass}>
                   Reference Number
                 </label>
-                <input
+                <Input
                   id="pay-ref"
                   type="text"
                   value={referenceNumber}
                   onChange={(e) => setReferenceNumber(e.target.value)}
                   placeholder="Cheque no., UTR, etc."
-                  className={inputClass}
                 />
               </div>
 
@@ -279,13 +279,13 @@ export function RecordCustomerPaymentDialog({
                 <label htmlFor="pay-notes" className={labelClass}>
                   Notes
                 </label>
-                <textarea
+                <Textarea
                   id="pay-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Internal notes (optional)"
                   rows={2}
-                  className={cn(inputClass, "resize-none")}
+                  className="resize-none"
                 />
               </div>
             </div>
@@ -337,7 +337,7 @@ export function RecordCustomerPaymentDialog({
                             ))}
                           </select>
                         ) : (
-                          <input
+                          <Input
                             type="text"
                             value={row.invoiceId}
                             onChange={(e) =>
@@ -348,13 +348,12 @@ export function RecordCustomerPaymentDialog({
                               )
                             }
                             placeholder="Invoice ID (UUID)"
-                            className={inputClass}
                             aria-label={`Invoice ID for allocation ${index + 1}`}
                           />
                         )}
                       </div>
                       <div className="w-36">
-                        <input
+                        <Input
                           type="number"
                           value={row.amount}
                           onChange={(e) =>
@@ -363,7 +362,7 @@ export function RecordCustomerPaymentDialog({
                           placeholder="Amount"
                           min="0.01"
                           step="0.01"
-                          className={inputClass}
+                          className="nums"
                           aria-label={`Amount for allocation ${index + 1}`}
                         />
                       </div>
@@ -383,13 +382,13 @@ export function RecordCustomerPaymentDialog({
               {/* Running total */}
               {totalAmount > 0 && allocations.length > 0 && (
                 <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                  <span className="nums text-sm text-slate-600 dark:text-slate-400">
                     Allocated: ₹{totalAllocated.toFixed(2)} of ₹
                     {totalAmount.toFixed(2)}
                   </span>
                   <span
                     className={cn(
-                      "text-sm font-medium",
+                      "nums text-sm font-medium",
                       remaining < 0
                         ? "text-red-600 dark:text-red-400"
                         : "text-green-600 dark:text-green-400"
@@ -430,7 +429,7 @@ export function RecordCustomerPaymentDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" variant="gradient" disabled={isPending}>
               {isPending ? "Recording…" : "Record Payment"}
             </Button>
           </div>

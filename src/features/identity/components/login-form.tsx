@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, LogIn, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   loginSchema,
   type LoginFormValues,
@@ -128,10 +129,10 @@ export function LoginForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 px-8 py-8 shadow-xl shadow-slate-200/50"
+      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 shadow-lg shadow-slate-200/50 dark:shadow-none"
     >
       {/* Heading */}
-      <div className="mb-7">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Welcome back
         </h1>
@@ -141,14 +142,14 @@ export function LoginForm() {
       </div>
 
       {/* Alerts */}
-      <div className="mb-5 space-y-3">
+      <div className="mb-4 space-y-3">
         {successMessage && (
           <AlertBanner type="success" message={successMessage} />
         )}
         {serverError && <AlertBanner type="error" message={serverError} />}
       </div>
 
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
         {/* Email */}
         <div>
           <label
@@ -157,19 +158,12 @@ export function LoginForm() {
           >
             Email address
           </label>
-          <input
+          <Input
             id="email"
             type="email"
             autoComplete="email"
             aria-invalid={errors.email ? "true" : "false"}
             aria-describedby={errors.email ? "email-error" : undefined}
-            className={cn(
-              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
-              "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
-              errors.email
-                ? "border-error-400 bg-error-50/30 focus:ring-error-500 focus:border-error-500"
-                : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
-            )}
             placeholder="you@company.com"
             {...register("email")}
           />
@@ -193,19 +187,13 @@ export function LoginForm() {
             </Link>
           </div>
           <div className="relative">
-            <input
+            <Input
               id="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               aria-invalid={errors.password ? "true" : "false"}
               aria-describedby={errors.password ? "password-error" : undefined}
-              className={cn(
-                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
-                "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
-                errors.password
-                  ? "border-error-400 bg-error-50/30 focus:ring-error-500 focus:border-error-500"
-                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
-              )}
+              className="pr-10"
               placeholder="Enter your password"
               {...register("password")}
             />
@@ -242,6 +230,7 @@ export function LoginForm() {
         <Button
           type="submit"
           size="lg"
+          variant="gradient"
           className="w-full"
           loading={isPending}
           disabled={isPending}

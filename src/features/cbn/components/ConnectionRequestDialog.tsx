@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { sendConnectionRequest } from "@/features/cbn/actions/connection.actions";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import type { CbnActionResult } from "@/features/cbn/types/cbn.types";
 
 // Simple dialog built with a native dialog element pattern to avoid extra deps.
@@ -94,14 +95,14 @@ export function ConnectionRequestDialog({
             Message{" "}
             <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
           </label>
-          <textarea
+          <Textarea
             id="conn-message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             maxLength={500}
             rows={3}
             placeholder={`Hi ${recipientName}, I'd like to connect on Syncrate CBN…`}
-            className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="resize-none"
           />
           <p className="mt-1 text-right text-[11px] text-slate-400 dark:text-slate-500">
             {message.length}/500
@@ -127,8 +128,8 @@ export function ConnectionRequestDialog({
             </Button>
             <Button
               type="submit"
+              variant="gradient"
               disabled={isPending}
-              className="bg-teal-600 hover:bg-teal-700 focus-visible:ring-teal-500"
             >
               {isPending ? "Sending…" : "Send Request"}
             </Button>

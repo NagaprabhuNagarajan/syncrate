@@ -28,7 +28,7 @@ import type {
 // ─────────────────────────────────────────────────────────────
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
+  "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:border-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:text-slate-100 dark:hover:border-slate-600";
 
 const labelClass = "mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400";
 
@@ -60,7 +60,7 @@ function ConfidenceBadge({ value }: { readonly value: number | null }) {
     return null;
   }
   return (
-    <Badge variant={confidenceVariant(value)}>
+    <Badge dot variant={confidenceVariant(value)}>
       {confidenceLabel(value)} confident
     </Badge>
   );
@@ -335,7 +335,7 @@ export function OcrVerificationForm({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       {/* Summary / confidence banner */}
       <Card>
@@ -348,7 +348,7 @@ export function OcrVerificationForm({
             </CardDescription>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <Badge variant={confidenceVariant(extraction.confidence)}>
+            <Badge dot variant={confidenceVariant(extraction.confidence)}>
               {overallPercent} overall confidence
             </Badge>
             <span className="text-xs text-muted-foreground">{model}</span>

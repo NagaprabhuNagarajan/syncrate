@@ -39,7 +39,7 @@ function describeCondition(condition: ApprovalCondition): string {
 }
 
 const INPUT_CLASS =
-  "block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40";
 
 type TabKey = "rules" | "pending";
 
@@ -135,14 +135,14 @@ export function ApprovalsView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Approvals"
         description="Configure rules that require sign-off, and decide pending requests"
         icon={ShieldCheck}
       >
         {canManage && tab === "rules" && !formOpen && (
-          <Button type="button" onClick={openCreate}>
+          <Button type="button" variant="gradient" onClick={openCreate}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             New rule
           </Button>
@@ -153,7 +153,7 @@ export function ApprovalsView({
       <div
         role="tablist"
         aria-label="Approvals sections"
-        className="mt-6 flex gap-1 border-b border-slate-200 dark:border-slate-800"
+        className="mt-4 flex gap-1 border-b border-slate-200 dark:border-slate-800"
       >
         <button
           type="button"
@@ -192,7 +192,7 @@ export function ApprovalsView({
 
       {/* Rules tab */}
       {tab === "rules" && (
-        <div className="mt-6">
+        <div className="mt-4">
           {formOpen && (
             <RuleForm
               organizationId={organizationId}
@@ -220,31 +220,31 @@ export function ApprovalsView({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+                className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
               >
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       <tr>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Name
                         </th>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Entity
                         </th>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Condition
                         </th>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Approver
                         </th>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Status
                         </th>
                         {canManage && (
                           <th
                             scope="col"
-                            className="px-4 py-3 text-right font-medium"
+                            className="px-3 py-2 text-right font-medium"
                           >
                             Actions
                           </th>
@@ -253,8 +253,8 @@ export function ApprovalsView({
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {rules.map((rule) => (
-                        <tr key={rule.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                        <tr key={rule.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100">
                             {rule.name}
                             {rule.description && (
                               <p className="text-xs font-normal text-slate-500 dark:text-slate-400">
@@ -262,27 +262,28 @@ export function ApprovalsView({
                               </p>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                          <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                             {rule.entityType}
                           </td>
-                          <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
+                          <td className="px-3 py-2 font-mono text-xs text-slate-600 dark:text-slate-400">
                             {describeCondition(rule.condition)}
                           </td>
-                          <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                          <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                             {rule.approverRoleId
                               ? (roleNameById.get(rule.approverRoleId) ??
                                 "Unknown role")
                               : "Any approver"}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-2">
                             <Badge
+                              dot
                               variant={rule.isActive ? "success" : "muted"}
                             >
                               {rule.isActive ? "Active" : "Inactive"}
                             </Badge>
                           </td>
                           {canManage && (
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-2">
                               <div className="flex items-center justify-end gap-1">
                                 <Button
                                   type="button"
@@ -325,7 +326,7 @@ export function ApprovalsView({
 
       {/* Pending approvals tab */}
       {tab === "pending" && (
-        <div className="mt-6">
+        <div className="mt-4">
           {pendingRequests.length === 0 ? (
             <EmptyState
               icon={Inbox}
@@ -340,7 +341,7 @@ export function ApprovalsView({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-card"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -354,7 +355,7 @@ export function ApprovalsView({
                         Raised {request.createdAt.toLocaleString()}
                       </p>
                     </div>
-                    <Badge variant="warning">Pending</Badge>
+                    <Badge dot variant="warning">Pending</Badge>
                   </div>
 
                   {canDecide ? (

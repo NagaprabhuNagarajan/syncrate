@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { exportProductsAction } from "@/features/product/actions/product.actions";
@@ -178,7 +179,7 @@ export function ProductsView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Products"
         description="Manage your product catalog, pricing and inventory"
@@ -203,7 +204,7 @@ export function ProductsView({
               <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" />
               Import
             </Button>
-            <Button asChild>
+            <Button asChild variant="gradient">
               <Link href={newHref()}>
                 <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
                 Add product
@@ -231,30 +232,30 @@ export function ProductsView({
       )}
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
           className="relative flex-1"
         >
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             aria-label="Search products"
             placeholder="Search by name, code, SKU or barcode"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="pl-9"
           />
         </form>
         <select
           aria-label="Filter by type"
           value={filters.type ?? ""}
           onChange={handleTypeChange}
-          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {TYPE_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -266,7 +267,7 @@ export function ProductsView({
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusChange}
-          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -277,7 +278,7 @@ export function ProductsView({
       </div>
 
       {/* Table / empty state */}
-      <div className="mt-6">
+      <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={Package}
@@ -302,30 +303,30 @@ export function ProductsView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Code
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Name
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Type
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Status
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       SKU
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right font-medium"
+                      className="px-3 py-2 text-right font-medium"
                     >
                       Selling price
                     </th>
@@ -336,12 +337,12 @@ export function ProductsView({
                     <tr
                       key={product.id}
                       onClick={() => router.push(detailHref(product.id))}
-                      className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-900"
+                      className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
-                      <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">
+                      <td className="px-3 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">
                         {product.code}
                       </td>
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                      <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100">
                         <Link
                           href={detailHref(product.id)}
                           onClick={(e) => e.stopPropagation()}
@@ -350,18 +351,18 @@ export function ProductsView({
                           {product.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {TYPE_LABEL[product.type]}
                       </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={STATUS_VARIANT[product.status]}>
+                      <td className="px-3 py-2">
+                        <Badge dot variant={STATUS_VARIANT[product.status]}>
                           {STATUS_LABEL[product.status]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {product.sku ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                      <td className="nums px-3 py-2 text-right text-slate-700 dark:text-slate-300">
                         {formatCurrency(product.sellingPrice)}
                       </td>
                     </tr>

@@ -105,11 +105,11 @@ function FormField({
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors",
-    "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
+    "block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out",
+    "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary",
     hasError
-      ? "border-error-400 bg-error-50/30"
-      : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600"
+      ? "border-destructive bg-destructive/5"
+      : "border-input bg-background hover:border-slate-400 dark:hover:border-slate-600"
   );
 
 // ─────────────────────────────────────────────────────────────
@@ -201,11 +201,11 @@ export function WarehouseForm({
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-5">
+    <form onSubmit={onSubmit} noValidate className="space-y-4">
       <div className="flex items-start gap-3">
-        <div className="bg-primary-50 dark:bg-primary-500/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+        <div className="bg-gradient-brand shadow-glow-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
           <WarehouseIcon
-            className="text-primary-600 dark:text-primary-400 h-5 w-5"
+            className="h-5 w-5 text-white"
             aria-hidden="true"
           />
         </div>
@@ -234,7 +234,7 @@ export function WarehouseForm({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField
           label="Warehouse name"
           htmlFor="name"
@@ -283,7 +283,7 @@ export function WarehouseForm({
         />
       </FormField>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <FormField label="City" htmlFor="city" error={errors.city?.message}>
           <input
             id="city"
@@ -319,7 +319,7 @@ export function WarehouseForm({
         </FormField>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField
           label="Capacity (units)"
           htmlFor="capacity"
@@ -373,7 +373,12 @@ export function WarehouseForm({
         >
           Cancel
         </Button>
-        <Button type="submit" loading={isPending} disabled={isPending}>
+        <Button
+          type="submit"
+          variant="gradient"
+          loading={isPending}
+          disabled={isPending}
+        >
           {isEdit ? "Save changes" : "Create warehouse"}
         </Button>
       </div>
@@ -407,7 +412,7 @@ export function WarehouseFormDialog({
         initial={{ opacity: 0, scale: 0.97, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-6 shadow-xl sm:px-8"
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xl sm:p-6"
         onClick={(event) => event.stopPropagation()}
       >
         <WarehouseForm

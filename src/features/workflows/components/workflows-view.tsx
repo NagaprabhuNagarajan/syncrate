@@ -141,14 +141,14 @@ export function WorkflowsView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Workflows"
         description="Automate multi-step actions triggered by business events"
         icon={WorkflowIcon}
       >
         {canManage && tab === "workflows" && !formOpen && (
-          <Button type="button" onClick={openCreate}>
+          <Button type="button" variant="gradient" onClick={openCreate}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             New workflow
           </Button>
@@ -159,7 +159,7 @@ export function WorkflowsView({
       <div
         role="tablist"
         aria-label="Workflow sections"
-        className="mt-6 flex gap-1 border-b border-slate-200 dark:border-slate-800"
+        className="mt-4 flex gap-1 border-b border-slate-200 dark:border-slate-800"
       >
         <button
           type="button"
@@ -198,7 +198,7 @@ export function WorkflowsView({
 
       {/* Workflows tab */}
       {tab === "workflows" && (
-        <div className="mt-6">
+        <div className="mt-4">
           {formOpen && (
             <WorkflowForm
               organizationId={organizationId}
@@ -225,60 +225,64 @@ export function WorkflowsView({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
               >
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                       <tr>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Name
                         </th>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Trigger
                         </th>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Steps
                         </th>
-                        <th scope="col" className="px-4 py-3 font-medium">
+                        <th scope="col" className="px-3 py-2 font-medium">
                           Status
                         </th>
                         {canManage && (
                           <th
                             scope="col"
-                            className="px-4 py-3 text-right font-medium"
+                            className="px-3 py-2 text-right font-medium"
                           >
                             Actions
                           </th>
                         )}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {workflows.map((workflow) => (
-                        <tr key={workflow.id} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium text-slate-900">
+                        <tr
+                          key={workflow.id}
+                          className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        >
+                          <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100">
                             {workflow.name}
                             {workflow.description && (
-                              <p className="text-xs font-normal text-slate-500">
+                              <p className="text-xs font-normal text-slate-500 dark:text-slate-400">
                                 {workflow.description}
                               </p>
                             )}
                           </td>
-                          <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                          <td className="px-3 py-2 font-mono text-xs text-slate-600 dark:text-slate-400">
                             {workflow.triggerEvent}
                           </td>
-                          <td className="px-4 py-3 text-slate-600">
+                          <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">
                             {workflow.steps.length}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-2">
                             <Badge
+                              dot
                               variant={workflow.isActive ? "success" : "muted"}
                             >
                               {workflow.isActive ? "Active" : "Inactive"}
                             </Badge>
                           </td>
                           {canManage && (
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-2">
                               <div className="flex items-center justify-end gap-1">
                                 <Button
                                   type="button"
@@ -331,7 +335,7 @@ export function WorkflowsView({
 
       {/* Run history tab */}
       {tab === "history" && (
-        <div className="mt-6">
+        <div className="mt-4">
           {runs.length === 0 ? (
             <EmptyState
               icon={History}
@@ -349,13 +353,13 @@ export function WorkflowsView({
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                    className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
                   >
                     <button
                       type="button"
                       aria-expanded={isOpen}
                       onClick={() => toggleExpanded(run.instance.id)}
-                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50"
+                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
                       <div className="flex items-center gap-2">
                         <Chevron
@@ -363,11 +367,11 @@ export function WorkflowsView({
                           aria-hidden="true"
                         />
                         <div>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium text-slate-900 dark:text-slate-100">
                             {workflowNameById.get(run.instance.workflowId) ??
                               "Workflow"}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             Started{" "}
                             {(
                               run.instance.startedAt ?? run.instance.createdAt
@@ -376,6 +380,7 @@ export function WorkflowsView({
                         </div>
                       </div>
                       <Badge
+                        dot
                         variant={
                           INSTANCE_STATUS_VARIANT[run.instance.status]
                         }
@@ -385,14 +390,14 @@ export function WorkflowsView({
                     </button>
 
                     {isOpen && (
-                      <div className="border-t border-slate-100 px-4 py-3">
+                      <div className="border-t border-slate-100 px-4 py-3 dark:border-slate-800">
                         {run.instance.error && (
-                          <p className="text-error-700 mb-3 text-sm">
+                          <p className="text-error-700 dark:text-error-300 mb-3 text-sm">
                             {run.instance.error}
                           </p>
                         )}
                         {run.steps.length === 0 ? (
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
                             No step executions recorded.
                           </p>
                         ) : (
@@ -400,22 +405,23 @@ export function WorkflowsView({
                             {run.steps.map((step) => (
                               <li
                                 key={step.id}
-                                className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
+                                className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800/50"
                               >
                                 <div>
-                                  <p className="text-sm font-medium text-slate-800">
+                                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
                                     {step.stepIndex + 1}. {step.stepType}
-                                    <span className="ml-2 font-mono text-xs text-slate-400">
+                                    <span className="ml-2 font-mono text-xs text-slate-400 dark:text-slate-500">
                                       {step.stepId}
                                     </span>
                                   </p>
                                   {step.error && (
-                                    <p className="text-error-700 text-xs">
+                                    <p className="text-error-700 dark:text-error-300 text-xs">
                                       {step.error}
                                     </p>
                                   )}
                                 </div>
                                 <Badge
+                                  dot
                                   variant={STEP_STATUS_VARIANT[step.status]}
                                 >
                                   {step.status}

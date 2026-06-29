@@ -181,11 +181,11 @@ function SectionTitle({ children }: { readonly children: React.ReactNode }) {
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors",
-    "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
+    "block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out",
+    "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary",
     hasError
-      ? "border-error-400 dark:border-error-500/40 bg-error-50/30 dark:bg-error-500/10"
-      : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600"
+      ? "border-destructive bg-destructive/5"
+      : "border-input bg-background hover:border-slate-400 dark:hover:border-slate-600"
   );
 
 // ─────────────────────────────────────────────────────────────
@@ -325,12 +325,12 @@ export function ProductForm({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8"
+      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-lg shadow-slate-200/50 dark:shadow-none sm:p-6"
     >
       {/* Header */}
-      <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
-          <Package className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+      <div className="mb-5 flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+          <Package className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
@@ -359,10 +359,10 @@ export function ProductForm({
         </motion.div>
       )}
 
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
         {/* Basic */}
         <SectionTitle>Basic</SectionTitle>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             label="Product name"
             htmlFor="name"
@@ -425,7 +425,7 @@ export function ProductForm({
 
         {/* Classification */}
         <SectionTitle>Classification</SectionTitle>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField
             label="Category"
             htmlFor="categoryId"
@@ -497,7 +497,7 @@ export function ProductForm({
 
         {/* Tax */}
         <SectionTitle>Tax</SectionTitle>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             label="HSN code"
             htmlFor="hsnCode"
@@ -542,7 +542,7 @@ export function ProductForm({
 
         {/* Pricing */}
         <SectionTitle>Pricing</SectionTitle>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField
             label="Purchase price (₹)"
             htmlFor="purchasePrice"
@@ -637,7 +637,7 @@ export function ProductForm({
 
         {/* Inventory */}
         <SectionTitle>Inventory</SectionTitle>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField label="SKU" htmlFor="sku" error={errors.sku?.message}>
             <input
               id="sku"
@@ -671,7 +671,7 @@ export function ProductForm({
           />
           Track inventory for this product
         </label>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField
             label="Reorder level"
             htmlFor="reorderLevel"
@@ -776,7 +776,12 @@ export function ProductForm({
           >
             Cancel
           </Button>
-          <Button type="submit" loading={isPending} disabled={isPending}>
+          <Button
+            type="submit"
+            variant="gradient"
+            loading={isPending}
+            disabled={isPending}
+          >
             {isEdit ? "Save changes" : "Create product"}
           </Button>
         </div>

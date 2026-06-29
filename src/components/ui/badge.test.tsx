@@ -44,4 +44,24 @@ describe("Badge", () => {
     expect(typeof badgeVariants).toBe("function");
     expect(badgeVariants({ variant: "success" })).toContain("text-success");
   });
+
+  it("renders a leading status dot when dot is set", () => {
+    render(<Badge dot>Online</Badge>);
+    const badge = screen.getByText("Online");
+    const dot = badge.querySelector("span[aria-hidden='true']");
+    expect(dot).not.toBeNull();
+    expect(dot).toHaveClass("rounded-full");
+  });
+
+  it("does not render a dot by default", () => {
+    render(<Badge>Plain</Badge>);
+    expect(
+      screen.getByText("Plain").querySelector("span[aria-hidden='true']")
+    ).toBeNull();
+  });
+
+  it("applies the sm size classes", () => {
+    render(<Badge size="sm">Small</Badge>);
+    expect(screen.getByText("Small")).toHaveClass("px-2");
+  });
 });

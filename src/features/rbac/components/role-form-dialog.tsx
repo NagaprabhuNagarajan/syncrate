@@ -3,6 +3,8 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { AlertCircle, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -328,14 +330,13 @@ export function RoleFormDialog({
               >
                 Role name
               </label>
-              <input
+              <Input
                 id="role-name"
                 type="text"
                 required
                 value={name}
                 onChange={handleNameChange}
                 placeholder="e.g. Sales Manager"
-                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -346,13 +347,12 @@ export function RoleFormDialog({
               >
                 Description
               </label>
-              <textarea
+              <Textarea
                 id="role-description"
                 rows={2}
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="What this role is for"
-                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -398,7 +398,7 @@ export function RoleFormDialog({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" loading={isPending}>
+            <Button type="submit" variant="gradient" loading={isPending}>
               {isEdit ? "Save changes" : "Create role"}
             </Button>
           </CardFooter>

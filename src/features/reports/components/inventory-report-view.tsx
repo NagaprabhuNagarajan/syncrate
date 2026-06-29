@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AnimatedNumber } from '@/components/shared/animated-number';
 import { createClient } from '@/lib/supabase/client';
 import { getInventoryReport } from '../services/inventory-report.service';
 import { objectsToCsv } from '@/utils/csv';
@@ -27,16 +28,16 @@ function downloadCsv(filename: string, csv: string) {
 function StatusBadge({ status }: { readonly status: InventoryRow['status'] }) {
   if (status === 'in_stock') {
     return (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">In Stock</Badge>
+      <Badge dot variant="success">In Stock</Badge>
     );
   }
   if (status === 'low_stock') {
     return (
-      <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Low Stock</Badge>
+      <Badge dot variant="warning">Low Stock</Badge>
     );
   }
   return (
-    <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Out of Stock</Badge>
+    <Badge dot variant="destructive">Out of Stock</Badge>
   );
 }
 
@@ -98,7 +99,7 @@ export function InventoryReportView({ initialData, orgId }: InventoryReportViewP
 
   return (
     <motion.div
-      className="space-y-6 p-6"
+      className="space-y-4 p-4 lg:p-6"
       variants={fadeIn}
       initial="hidden"
       animate="visible"
@@ -106,8 +107,8 @@ export function InventoryReportView({ initialData, orgId }: InventoryReportViewP
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventory Report</h1>
-          <p className="mt-1 text-sm text-gray-500">Current stock levels across all warehouses</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Inventory Report</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Current stock levels across all warehouses</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void fetchReport()} disabled={isLoading}>
           <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -118,22 +119,24 @@ export function InventoryReportView({ initialData, orgId }: InventoryReportViewP
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: 'Total Products', value: data.totals.totalProducts, color: 'text-gray-900' },
-          { label: 'In Stock', value: data.totals.inStock, color: 'text-green-700' },
-          { label: 'Low Stock', value: data.totals.lowStock, color: 'text-orange-700' },
-          { label: 'Out of Stock', value: data.totals.outOfStock, color: 'text-red-700' },
+          { label: 'Total Products', value: data.totals.totalProducts, color: 'text-gray-900 dark:text-slate-100' },
+          { label: 'In Stock', value: data.totals.inStock, color: 'text-green-700 dark:text-green-400' },
+          { label: 'Low Stock', value: data.totals.lowStock, color: 'text-orange-700 dark:text-orange-400' },
+          { label: 'Out of Stock', value: data.totals.outOfStock, color: 'text-red-700 dark:text-red-400' },
         ].map((card) => (
-          <Card key={card.label}>
+          <Card key={card.label} hover>
             <CardContent className="pt-4">
-              <p className="text-xs text-gray-500">{card.label}</p>
-              <p className={`mt-1 text-2xl font-bold ${card.color}`}>{card.value}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{card.label}</p>
+              <p className={`mt-1 text-2xl font-bold ${card.color}`}>
+                <AnimatedNumber value={card.value} />
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {error !== null && (
-        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
           {error}
         </div>
       )}
@@ -150,7 +153,7 @@ export function InventoryReportView({ initialData, orgId }: InventoryReportViewP
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   activeTab === tab.value
                     ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : 'text-gray-600 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800'
                 }`}
               >
                 {tab.label}
@@ -172,12 +175,12 @@ export function InventoryReportView({ initialData, orgId }: InventoryReportViewP
           {isLoading ? (
             <TableSkeleton />
           ) : filteredItems.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500">No products found.</p>
+            <p className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">No products found.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm" aria-label="Inventory stock levels">
                 <thead>
-                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500">
+                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:border-slate-800 dark:text-slate-400">
                     <th className="pb-2 pr-4">Code</th>
                     <th className="pb-2 pr-4">Product</th>
                     <th className="pb-2 pr-4 text-right">Stock</th>
@@ -185,15 +188,15 @@ export function InventoryReportView({ initialData, orgId }: InventoryReportViewP
                     <th className="pb-2">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y dark:divide-slate-800">
                   {filteredItems.map((row) => (
-                    <tr key={row.productId} className="hover:bg-gray-50">
-                      <td className="py-2.5 pr-4 font-mono text-xs text-gray-500">
+                    <tr key={row.productId} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                      <td className="nums py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
                         {row.productCode}
                       </td>
                       <td className="py-2.5 pr-4 font-medium">{row.productName}</td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums">{row.currentStock}</td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums">{row.reorderLevel}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{row.currentStock}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{row.reorderLevel}</td>
                       <td className="py-2.5">
                         <StatusBadge status={row.status} />
                       </td>

@@ -68,7 +68,7 @@ function RecommendationCard({ item, index }: RecommendationCardProps) {
         <CardHeader className="space-y-2 pb-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="info">{CATEGORY_LABELS[item.category]}</Badge>
-            <Badge variant={PRIORITY_VARIANT[item.priority]}>
+            <Badge dot variant={PRIORITY_VARIANT[item.priority]}>
               {item.priority} priority
             </Badge>
             <Badge variant={confidenceVariant(item.confidence)}>
@@ -94,7 +94,7 @@ function RecommendationCard({ item, index }: RecommendationCardProps) {
                   <dt className="text-xs text-muted-foreground">
                     {datum.label}
                   </dt>
-                  <dd className="text-sm font-medium tabular-nums text-foreground">
+                  <dd className="nums text-sm font-medium text-foreground">
                     {datum.value}
                   </dd>
                 </div>
@@ -142,14 +142,14 @@ export function RecommendationsView({
   }, [handleGenerate]);
 
   return (
-    <div className="space-y-6 p-6 lg:p-8">
+    <div className="space-y-4 p-4 lg:p-6">
       <PageHeader
         title="AI Recommendations"
         description="Actionable suggestions grounded in your live business data"
         icon={Sparkles}
       >
         {canGenerate && (
-          <Button onClick={onGenerateClick} loading={isLoading}>
+          <Button variant="gradient" onClick={onGenerateClick} loading={isLoading}>
             <Sparkles className="mr-1.5 h-4 w-4" aria-hidden="true" />
             {data ? "Regenerate" : "Generate"}
           </Button>

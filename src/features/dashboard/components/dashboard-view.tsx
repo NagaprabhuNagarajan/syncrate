@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { AnimatedNumber } from "@/components/shared/animated-number";
 import type { Organization } from "@/features/organization/types/organization.types";
 import type { DashboardKpis, RecentActivityItem } from "@/features/dashboard/services/dashboard.service";
 import { cn } from "@/utils/cn";
@@ -41,12 +42,14 @@ function formatINR(value: number): string {
 
 interface KpiCardProps {
   readonly label: string;
-  readonly value: string;
+  readonly value: number;
+  /** Currency formats with a ₹ prefix + thousands grouping; count is plain. */
+  readonly kind?: "currency" | "count";
   readonly sub?: string;
   readonly subPositive?: boolean;
   readonly icon: React.ComponentType<{ className?: string }>;
-  readonly iconBg: string;
-  readonly iconColor: string;
+  readonly gradient: string;
+  readonly tint: string;
   readonly index: number;
   readonly badge?: string;
 }
@@ -54,11 +57,12 @@ interface KpiCardProps {
 function KpiCard({
   label,
   value,
+  kind = "currency",
   sub,
   subPositive,
   icon: Icon,
-  iconBg,
-  iconColor,
+  gradient,
+  tint,
   index,
   badge,
 }: KpiCardProps) {
@@ -68,29 +72,45 @@ function KpiCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.05 }}
     >
-      <Card className="p-5">
-        <div className="flex items-start justify-between">
+      <Card hover className="relative overflow-hidden p-4">
+        {/* Faint gradient tint accent */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+        />
+        <div className="relative flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
               {label}
             </p>
             <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              {value}
+              <AnimatedNumber
+                value={value}
+                prefix={kind === "currency" ? "₹" : ""}
+              />
             </p>
           </div>
           <div className="relative">
-            <div className={cn("rounded-lg p-2.5", iconBg)}>
-              <Icon className={cn("h-5 w-5", iconColor)} aria-hidden="true" />
+            <div
+              className={cn(
+                "rounded-xl p-2.5 shadow-sm",
+                gradient
+              )}
+            >
+              <Icon className="h-5 w-5 text-white" aria-hidden="true" />
             </div>
             {badge !== undefined && (
-              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white">
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gradient-error px-1 text-[10px] font-semibold text-white shadow-sm">
                 {badge}
               </span>
             )}
           </div>
         </div>
         {sub !== undefined && (
-          <div className="mt-3 flex items-center gap-1.5">
+          <div className="relative mt-3 flex items-center gap-1.5">
             {subPositive === true ? (
               <TrendingUp className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
             ) : subPositive === false ? (
@@ -155,21 +175,21 @@ function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+        <thead className="border-b border-slate-100 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
           <tr>
-            <th scope="col" className="px-4 py-3 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Type
             </th>
-            <th scope="col" className="px-4 py-3 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Reference
             </th>
-            <th scope="col" className="px-4 py-3 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Party
             </th>
-            <th scope="col" className="px-4 py-3 font-medium">
+            <th scope="col" className="px-3 py-2 font-medium">
               Date
             </th>
-            <th scope="col" className="px-4 py-3 text-right font-medium">
+            <th scope="col" className="px-3 py-2 text-right font-medium">
               Amount
             </th>
           </tr>
@@ -178,8 +198,8 @@ function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
           {items.map((item) => {
             const colors = ACTIVITY_COLORS[item.type];
             return (
-              <tr key={`${item.type}-${item.id}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <td className="px-4 py-3">
+              <tr key={`${item.type}-${item.id}`} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                <td className="px-3 py-2">
                   <span
                     className={cn(
                       "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
@@ -190,19 +210,19 @@ function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
                     {ACTIVITY_LABELS[item.type]}
                   </span>
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
+                <td className="px-3 py-2 font-mono text-xs text-slate-600 dark:text-slate-400">
                   {item.reference}
                 </td>
-                <td className="max-w-[180px] truncate px-4 py-3 text-slate-700 dark:text-slate-300">
+                <td className="max-w-[180px] truncate px-3 py-2 text-slate-700 dark:text-slate-300">
                   {item.partyName}
                 </td>
-                <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                <td className="px-3 py-2 text-slate-500 dark:text-slate-400">
                   {new Date(item.date).toLocaleDateString("en-IN", {
                     day: "numeric",
                     month: "short",
                   })}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
                   {formatINR(item.amount)}
                 </td>
               </tr>
@@ -230,11 +250,11 @@ function QuickAction({ label, description, icon: Icon, href, color }: QuickActio
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-all duration-150 hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-500/30"
+      className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-500/30"
     >
       <div
         className={cn(
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg shadow-sm",
           color
         )}
       >
@@ -247,7 +267,7 @@ function QuickAction({ label, description, icon: Icon, href, color }: QuickActio
         <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{description}</p>
       </div>
       <ArrowUpRight
-        className="ml-auto h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-blue-500 dark:text-slate-600"
+        className="ml-auto h-4 w-4 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-blue-500 dark:text-slate-600"
         aria-hidden="true"
       />
     </Link>
@@ -260,28 +280,28 @@ const QUICK_ACTIONS: QuickActionProps[] = [
     description: "Create and send an invoice",
     icon: FileText,
     href: "/sales/invoices/new",
-    color: "bg-blue-600",
+    color: "bg-gradient-info",
   },
   {
     label: "New Purchase Invoice",
     description: "Record a supplier bill",
     icon: ShoppingCart,
     href: "/purchases/invoices/new",
-    color: "bg-purple-600",
+    color: "bg-gradient-violet",
   },
   {
     label: "Record Payment",
     description: "Log a received payment",
     icon: CreditCard,
     href: "/payments/new",
-    color: "bg-emerald-600",
+    color: "bg-gradient-success",
   },
   {
     label: "View Inventory",
     description: "Check stock levels",
     icon: Package,
     href: "/inventory",
-    color: "bg-orange-600",
+    color: "bg-gradient-warning",
   },
 ];
 
@@ -306,16 +326,16 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
       : `${growthPositive ? "+" : ""}${growthPct.toFixed(1)}%`;
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="mb-8 flex items-center gap-3"
+        className="mb-6 flex items-center gap-3"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
-          <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+          <Building2 className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
           <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -328,29 +348,29 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
       </motion.div>
 
       {/* KPI Grid */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           index={0}
           label="Sales This Month"
-          value={formatINR(kpis.salesThisMonth)}
+          value={kpis.salesThisMonth}
           sub={growthText}
           subPositive={kpis.salesLastMonth === 0 ? undefined : growthPositive}
           icon={TrendingUp}
-          iconBg="bg-blue-50 dark:bg-blue-500/10"
-          iconColor="text-blue-600 dark:text-blue-400"
+          gradient="bg-gradient-info"
+          tint="bg-sky-400"
         />
         <KpiCard
           index={1}
           label="Outstanding Receivable"
-          value={formatINR(kpis.outstandingReceivable)}
+          value={kpis.outstandingReceivable}
           sub={
             kpis.openInvoiceCount > 0
               ? `${kpis.openInvoiceCount} open invoice${kpis.openInvoiceCount === 1 ? "" : "s"}`
               : "All invoices paid"
           }
           icon={Receipt}
-          iconBg="bg-amber-50 dark:bg-amber-500/10"
-          iconColor="text-amber-600 dark:text-amber-400"
+          gradient="bg-gradient-warning"
+          tint="bg-amber-400"
           badge={
             kpis.openInvoiceCount > 0
               ? String(kpis.openInvoiceCount)
@@ -360,16 +380,17 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
         <KpiCard
           index={2}
           label="Outstanding Payable"
-          value={formatINR(kpis.outstandingPayable)}
+          value={kpis.outstandingPayable}
           sub={`${formatINR(kpis.purchasesThisMonth)} purchased this month`}
           icon={ShoppingCart}
-          iconBg="bg-purple-50 dark:bg-purple-500/10"
-          iconColor="text-purple-600 dark:text-purple-400"
+          gradient="bg-gradient-violet"
+          tint="bg-violet-400"
         />
         <KpiCard
           index={3}
           label="Low Stock Items"
-          value={String(kpis.lowStockCount)}
+          value={kpis.lowStockCount}
+          kind="count"
           sub={
             kpis.outOfStockCount > 0
               ? `${kpis.outOfStockCount} out of stock`
@@ -377,21 +398,21 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
           }
           subPositive={kpis.outOfStockCount === 0 ? true : false}
           icon={AlertCircle}
-          iconBg="bg-red-50 dark:bg-red-500/10"
-          iconColor="text-red-600 dark:text-red-400"
+          gradient="bg-gradient-error"
+          tint="bg-rose-400"
         />
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Recent Activity */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.2 }}
-          className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Recent Activity
             </h2>
@@ -407,14 +428,14 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.25 }}
-          className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+          <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Quick Actions
             </h2>
           </div>
-          <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
             {QUICK_ACTIONS.map((action) => (
               <QuickAction key={action.label} {...action} />
             ))}

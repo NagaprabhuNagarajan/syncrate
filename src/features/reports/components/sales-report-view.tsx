@@ -91,7 +91,7 @@ export function SalesReportView({ initialData, orgId }: SalesReportViewProps) {
 
   return (
     <motion.div
-      className="space-y-6 p-6"
+      className="space-y-4 p-4 lg:p-6"
       variants={fadeIn}
       initial="hidden"
       animate="visible"
@@ -99,14 +99,14 @@ export function SalesReportView({ initialData, orgId }: SalesReportViewProps) {
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sales Report</h1>
-          <p className="mt-1 text-sm text-gray-500">Sales totals and customer breakdown</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Sales Report</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Sales totals and customer breakdown</p>
         </div>
         <ReportDateFilter value={dateRange} onChange={handleDateChange} />
       </div>
 
       {error !== null && (
-        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
           {error}
         </div>
       )}
@@ -130,14 +130,14 @@ export function SalesReportView({ initialData, orgId }: SalesReportViewProps) {
           {isLoading ? (
             <TableSkeleton />
           ) : data.summary.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500">
+            <p className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">
               No sales data found for the selected period.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm" aria-label="Monthly sales summary">
                 <thead>
-                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500">
+                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:border-slate-800 dark:text-slate-400">
                     <th className="pb-2 pr-4">Month</th>
                     <th className="pb-2 pr-4 text-right">Invoices</th>
                     <th className="pb-2 pr-4 text-right">Subtotal</th>
@@ -147,28 +147,28 @@ export function SalesReportView({ initialData, orgId }: SalesReportViewProps) {
                     <th className="pb-2 text-right">Outstanding</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y dark:divide-slate-800">
                   {data.summary.map((row) => (
-                    <tr key={row.period} className="hover:bg-gray-50">
+                    <tr key={row.period} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
                       <td className="py-2.5 pr-4 font-medium">{row.period}</td>
-                      <td className="py-2.5 pr-4 text-right">{row.invoiceCount}</td>
-                      <td className="py-2.5 pr-4 text-right">{fmt(row.subtotal)}</td>
-                      <td className="py-2.5 pr-4 text-right">{fmt(row.taxAmount)}</td>
-                      <td className="py-2.5 pr-4 text-right font-medium">{fmt(row.totalAmount)}</td>
-                      <td className="py-2.5 pr-4 text-right text-green-700">{fmt(row.amountPaid)}</td>
-                      <td className="py-2.5 text-right text-orange-700">{fmt(row.outstanding)}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{row.invoiceCount}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{fmt(row.subtotal)}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{fmt(row.taxAmount)}</td>
+                      <td className="nums py-2.5 pr-4 text-right font-medium">{fmt(row.totalAmount)}</td>
+                      <td className="nums py-2.5 pr-4 text-right text-green-700 dark:text-green-400">{fmt(row.amountPaid)}</td>
+                      <td className="nums py-2.5 text-right text-orange-700 dark:text-orange-400">{fmt(row.outstanding)}</td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="border-t-2">
+                <tfoot className="border-t-2 dark:border-slate-700">
                   <tr className="font-semibold">
                     <td className="pt-2.5 pr-4">Total</td>
                     <td className="pt-2.5 pr-4" />
-                    <td className="pt-2.5 pr-4 text-right">{fmt(data.totals.subtotal)}</td>
-                    <td className="pt-2.5 pr-4 text-right">{fmt(data.totals.taxAmount)}</td>
-                    <td className="pt-2.5 pr-4 text-right">{fmt(data.totals.totalAmount)}</td>
-                    <td className="pt-2.5 pr-4 text-right text-green-700">{fmt(data.totals.amountPaid)}</td>
-                    <td className="pt-2.5 text-right text-orange-700">{fmt(data.totals.outstanding)}</td>
+                    <td className="nums pt-2.5 pr-4 text-right">{fmt(data.totals.subtotal)}</td>
+                    <td className="nums pt-2.5 pr-4 text-right">{fmt(data.totals.taxAmount)}</td>
+                    <td className="nums pt-2.5 pr-4 text-right">{fmt(data.totals.totalAmount)}</td>
+                    <td className="nums pt-2.5 pr-4 text-right text-green-700 dark:text-green-400">{fmt(data.totals.amountPaid)}</td>
+                    <td className="nums pt-2.5 text-right text-orange-700 dark:text-orange-400">{fmt(data.totals.outstanding)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -196,12 +196,12 @@ export function SalesReportView({ initialData, orgId }: SalesReportViewProps) {
           {isLoading ? (
             <TableSkeleton />
           ) : data.byCustomer.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500">No customer data found.</p>
+            <p className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">No customer data found.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm" aria-label="Sales by customer">
                 <thead>
-                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500">
+                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:border-slate-800 dark:text-slate-400">
                     <th className="pb-2 pr-4">Code</th>
                     <th className="pb-2 pr-4">Customer</th>
                     <th className="pb-2 pr-4 text-right">Invoices</th>
@@ -210,17 +210,17 @@ export function SalesReportView({ initialData, orgId }: SalesReportViewProps) {
                     <th className="pb-2 text-right">Outstanding</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y dark:divide-slate-800">
                   {data.byCustomer.map((row) => (
-                    <tr key={row.customerId} className="hover:bg-gray-50">
-                      <td className="py-2.5 pr-4 font-mono text-xs text-gray-500">
+                    <tr key={row.customerId} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                      <td className="nums py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
                         {row.customerCode}
                       </td>
                       <td className="py-2.5 pr-4 font-medium">{row.customerName}</td>
-                      <td className="py-2.5 pr-4 text-right">{row.invoiceCount}</td>
-                      <td className="py-2.5 pr-4 text-right font-medium">{fmt(row.totalAmount)}</td>
-                      <td className="py-2.5 pr-4 text-right text-green-700">{fmt(row.amountPaid)}</td>
-                      <td className="py-2.5 text-right text-orange-700">{fmt(row.outstanding)}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{row.invoiceCount}</td>
+                      <td className="nums py-2.5 pr-4 text-right font-medium">{fmt(row.totalAmount)}</td>
+                      <td className="nums py-2.5 pr-4 text-right text-green-700 dark:text-green-400">{fmt(row.amountPaid)}</td>
+                      <td className="nums py-2.5 text-right text-orange-700 dark:text-orange-400">{fmt(row.outstanding)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -231,7 +231,7 @@ export function SalesReportView({ initialData, orgId }: SalesReportViewProps) {
       </Card>
 
       {isLoading && (
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-500" aria-live="polite">
+        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-slate-400" aria-live="polite">
           <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
           Loading report…
         </div>

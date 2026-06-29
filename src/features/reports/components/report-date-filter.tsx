@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import type { DateRangeFilter } from '../types/report.types';
 
 function getThisMonth(): DateRangeFilter {
@@ -80,28 +81,28 @@ export function ReportDateFilter({ value, onChange }: ReportDateFilterProps) {
       </div>
       <div className="flex items-end gap-2">
         <div className="space-y-1">
-          <label htmlFor="date-from" className="block text-xs font-medium text-gray-600">
+          <label htmlFor="date-from" className="block text-xs font-medium text-gray-600 dark:text-slate-400">
             From
           </label>
-          <input
+          <Input
             id="date-from"
             type="date"
             value={value.from}
             onChange={handleFromChange}
-            className="h-8 rounded-md border border-gray-300 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-9 w-auto"
             aria-label="Start date"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="date-to" className="block text-xs font-medium text-gray-600">
+          <label htmlFor="date-to" className="block text-xs font-medium text-gray-600 dark:text-slate-400">
             To
           </label>
-          <input
+          <Input
             id="date-to"
             type="date"
             value={value.to}
             onChange={handleToChange}
-            className="h-8 rounded-md border border-gray-300 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-9 w-auto"
             aria-label="End date"
           />
         </div>

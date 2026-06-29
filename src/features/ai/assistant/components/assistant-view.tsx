@@ -105,7 +105,7 @@ export function AssistantView({ organizationId }: AssistantViewProps) {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col p-6 lg:p-8">
+    <div className="flex h-[calc(100vh-4rem)] flex-col p-4 lg:p-6">
       <PageHeader
         title="AI Assistant"
         description="Ask about your business or prepare invoices and quotations — you approve every action."
@@ -114,12 +114,12 @@ export function AssistantView({ organizationId }: AssistantViewProps) {
 
       <div
         ref={scrollRef}
-        className="mt-6 flex-1 space-y-5 overflow-y-auto pr-1"
+        className="mt-4 flex-1 space-y-4 overflow-y-auto pr-1"
         aria-live="polite"
       >
         {isEmpty ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 flex h-12 w-12 items-center justify-center rounded-full">
+            <div className="bg-gradient-brand shadow-glow-primary flex h-12 w-12 items-center justify-center rounded-full text-white">
               <Sparkles className="h-6 w-6" aria-hidden="true" />
             </div>
             <h2 className="mt-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -188,6 +188,7 @@ export function AssistantView({ organizationId }: AssistantViewProps) {
         />
         <Button
           type="submit"
+          variant="gradient"
           size="sm"
           loading={isSending}
           disabled={input.trim() === ""}

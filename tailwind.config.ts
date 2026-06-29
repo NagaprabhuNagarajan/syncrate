@@ -126,6 +126,26 @@ const config: Config = {
         lg: "0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.06)",
         xl: "0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05)",
         card: "0 2px 8px 0 rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04)",
+        // Colored glows for vibrant CTAs / KPI tiles
+        "glow-primary":
+          "0 6px 20px -6px rgb(37 99 235 / 0.45), 0 2px 6px -2px rgb(37 99 235 / 0.30)",
+        "glow-success":
+          "0 6px 20px -6px rgb(22 163 74 / 0.45), 0 2px 6px -2px rgb(22 163 74 / 0.30)",
+        "glow-error":
+          "0 6px 20px -6px rgb(220 38 38 / 0.45), 0 2px 6px -2px rgb(220 38 38 / 0.30)",
+      },
+      backgroundImage: {
+        // Brand + semantic gradients (vibrant direction). Driven by CSS vars so
+        // each can be tuned per theme in globals.css.
+        "gradient-brand": "var(--gradient-brand)",
+        "gradient-brand-soft": "var(--gradient-brand-soft)",
+        "gradient-success": "var(--gradient-success)",
+        "gradient-warning": "var(--gradient-warning)",
+        "gradient-error": "var(--gradient-error)",
+        "gradient-info": "var(--gradient-info)",
+        "gradient-violet": "var(--gradient-violet)",
+        // Ambient page backdrop (radial accents)
+        "app-backdrop": "var(--app-backdrop)",
       },
       keyframes: {
         "accordion-down": {

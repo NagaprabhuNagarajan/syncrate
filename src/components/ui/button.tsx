@@ -4,12 +4,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/utils/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[color,background-color,box-shadow,transform,opacity] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90 active:scale-[0.98]",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
+        gradient:
+          "bg-gradient-brand text-white shadow-glow-primary hover:brightness-[1.05] hover:shadow-glow-primary",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
@@ -19,9 +21,8 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         success:
-          "bg-success text-white shadow-sm hover:bg-success-dark active:scale-[0.98]",
-        warning:
-          "bg-warning text-white shadow-sm hover:bg-warning-dark active:scale-[0.98]",
+          "bg-success text-white shadow-sm hover:bg-success-dark",
+        warning: "bg-warning text-white shadow-sm hover:bg-warning-dark",
       },
       size: {
         default: "h-9 px-4 py-2",

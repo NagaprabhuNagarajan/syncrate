@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -142,12 +143,12 @@ function CustomerPaymentsTab({
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
               aria-hidden="true"
             />
-            <input
+            <Input
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by payment no., reference…"
-              className="w-72 rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+              className="w-72 pl-9"
               aria-label="Search customer payments"
             />
           </div>
@@ -158,6 +159,7 @@ function CustomerPaymentsTab({
 
         <Button
           onClick={() => setShowDialog(true)}
+          variant="gradient"
           size="sm"
           className="gap-2"
         >
@@ -180,49 +182,49 @@ function CustomerPaymentsTab({
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-card dark:border-slate-800">
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-              <thead className="bg-slate-50 dark:bg-slate-900">
+              <thead className="bg-slate-50/70 dark:bg-slate-800/40">
                 <tr>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Payment #
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Customer
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Date
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Method
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Amount
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Status
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Actions
                   </th>
@@ -238,39 +240,39 @@ function CustomerPaymentsTab({
                       variants={rowVariants}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <span className="font-mono text-sm font-medium text-slate-900 dark:text-slate-100">
                           {payment.paymentNumber}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <span className="text-sm text-slate-700 dark:text-slate-300">
                           {payment.customerName ?? payment.customerId}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <span className="text-sm text-slate-600 dark:text-slate-400">
                           {formatDate(payment.paymentDate)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <span className="text-sm text-slate-600 dark:text-slate-400">
                           {METHOD_LABELS[payment.paymentMethod]}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <td className="px-3 py-2 text-right">
+                        <span className="nums text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {formatCurrency(payment.amount)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={STATUS_VARIANT[payment.status]}>
+                      <td className="px-3 py-2">
+                        <Badge dot variant={STATUS_VARIANT[payment.status]}>
                           {payment.status === "completed"
                             ? "Completed"
                             : "Voided"}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-3 py-2 text-right">
                         <Link
                           href={`/payments/${payment.id}`}
                           className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
@@ -390,12 +392,12 @@ function SupplierPaymentsTab({
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
               aria-hidden="true"
             />
-            <input
+            <Input
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by payment no., reference…"
-              className="w-72 rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+              className="w-72 pl-9"
               aria-label="Search supplier payments"
             />
           </div>
@@ -406,6 +408,7 @@ function SupplierPaymentsTab({
 
         <Button
           onClick={() => setShowDialog(true)}
+          variant="gradient"
           size="sm"
           className="gap-2"
         >
@@ -428,49 +431,49 @@ function SupplierPaymentsTab({
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-card dark:border-slate-800">
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-              <thead className="bg-slate-50 dark:bg-slate-900">
+              <thead className="bg-slate-50/70 dark:bg-slate-800/40">
                 <tr>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Payment #
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Supplier
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Date
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Method
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Amount
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Status
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Actions
                   </th>
@@ -487,39 +490,39 @@ function SupplierPaymentsTab({
                       variants={rowVariants}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <span className="font-mono text-sm font-medium text-slate-900 dark:text-slate-100">
                           {payment.paymentNumber}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <span className="text-sm text-slate-700 dark:text-slate-300">
                           {payment.supplierName ?? payment.supplierId}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <span className="text-sm text-slate-600 dark:text-slate-400">
                           {formatDate(payment.paymentDate)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <span className="text-sm text-slate-600 dark:text-slate-400">
                           {METHOD_LABELS[payment.paymentMethod]}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <td className="px-3 py-2 text-right">
+                        <span className="nums text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {formatCurrency(payment.amount)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={STATUS_VARIANT[payment.status]}>
+                      <td className="px-3 py-2">
+                        <Badge dot variant={STATUS_VARIANT[payment.status]}>
                           {payment.status === "completed"
                             ? "Completed"
                             : "Voided"}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-3 py-2 text-right">
                         <Link
                           href={`/payments/${payment.id}`}
                           className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
@@ -611,12 +614,12 @@ const SKELETON_ROW_KEYS = [
 
 function PaymentsTableSkeleton() {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-card dark:border-slate-800">
       <table className="min-w-full">
-        <thead className="bg-slate-50 dark:bg-slate-900">
+        <thead className="bg-slate-50/70 dark:bg-slate-800/40">
           <tr>
             {SKELETON_COLUMN_KEYS.map((columnKey) => (
-              <th key={columnKey} className="px-4 py-3">
+              <th key={columnKey} className="px-3 py-2">
                 <Skeleton className="h-4 w-20" />
               </th>
             ))}
@@ -626,7 +629,7 @@ function PaymentsTableSkeleton() {
           {SKELETON_ROW_KEYS.map((rowKey) => (
             <tr key={rowKey}>
               {SKELETON_COLUMN_KEYS.map((columnKey) => (
-                <td key={`${rowKey}-${columnKey}`} className="px-4 py-3">
+                <td key={`${rowKey}-${columnKey}`} className="px-3 py-2">
                   <Skeleton className="h-4 w-full" />
                 </td>
               ))}
@@ -656,7 +659,7 @@ export function PaymentsView({
   const [activeTab, setActiveTab] = useState<ActiveTab>("customer");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Payments"
         description="Manage customer receipts and supplier disbursements"

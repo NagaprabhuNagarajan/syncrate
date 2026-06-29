@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/shared/page-header";
 import {
   PR_STATUS_LABEL,
@@ -230,12 +231,11 @@ function RejectDialog({
           >
             Reason
           </label>
-          <textarea
+          <Textarea
             id="reject-reason"
             rows={3}
             value={reason}
             onChange={(e) => onReasonChange(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             placeholder="e.g. Budget not approved this quarter"
           />
         </div>
@@ -337,7 +337,7 @@ function ConvertDialog({
             id="convert-supplier"
             value={supplierId}
             onChange={(e) => onSupplierChange(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             <option value="">— Select supplier —</option>
             {suppliers.map((supplier) => (
@@ -482,7 +482,7 @@ export function PurchaseRequestDetail({
     );
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title={purchaseRequest.requestNumber}
         description={warehouseName ?? undefined}
@@ -497,13 +497,13 @@ export function PurchaseRequestDetail({
           </Button>
         )}
         {isDraft && canManage && (
-          <Button type="button" onClick={handleSubmit} loading={isPending}>
+          <Button type="button" variant="gradient" onClick={handleSubmit} loading={isPending}>
             <Send className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Submit
           </Button>
         )}
         {isSubmitted && canApprove && (
-          <Button type="button" onClick={handleApprove} loading={isPending}>
+          <Button type="button" variant="gradient" onClick={handleApprove} loading={isPending}>
             <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Approve
           </Button>
@@ -525,6 +525,7 @@ export function PurchaseRequestDetail({
         {isApproved && canManage && (
           <Button
             type="button"
+            variant="gradient"
             onClick={() => {
               setActionError(null);
               setShowConvert(true);
@@ -558,8 +559,8 @@ export function PurchaseRequestDetail({
         )}
       </PageHeader>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <Badge variant={PR_STATUS_VARIANT[status]}>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Badge dot variant={PR_STATUS_VARIANT[status]}>
           {PR_STATUS_LABEL[status]}
         </Badge>
       </div>
@@ -573,9 +574,9 @@ export function PurchaseRequestDetail({
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Details */}
-        <Card className="p-6 lg:col-span-2">
+        <Card className="p-5 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Request details
           </h2>
@@ -611,12 +612,12 @@ export function PurchaseRequestDetail({
         </Card>
 
         {/* Estimated total */}
-        <Card className="p-6">
+        <Card className="p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
           <dl className="space-y-4">
             <div className="flex justify-between text-sm">
               <dt className="text-muted-foreground">Line items</dt>
-              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
+              <dd className="nums text-slate-700 dark:text-slate-300">
                 {purchaseRequest.items.length}
               </dd>
             </div>
@@ -624,7 +625,7 @@ export function PurchaseRequestDetail({
               <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">
                 Estimated total
               </dt>
-              <dd className="text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+              <dd className="text-xl font-semibold nums text-slate-900 dark:text-slate-100">
                 {formatCurrency(estimatedTotal)}
               </dd>
             </div>
@@ -633,40 +634,40 @@ export function PurchaseRequestDetail({
       </div>
 
       {/* Items */}
-      <div className="mt-6">
+      <div className="mt-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Line items</h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+              <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-medium">
+                  <th scope="col" className="px-3 py-2 font-medium">
                     Product
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Qty
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Est. price
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Est. total
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {purchaseRequest.items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                  <tr key={item.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
                       {productNames[item.productId] ?? item.description ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
                       {item.quantity}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.estimatedPrice)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                    <td className="px-3 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(item.quantity * item.estimatedPrice)}
                     </td>
                   </tr>

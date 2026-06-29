@@ -2,6 +2,8 @@
 
 import { useCallback, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { placeOrderAction } from "@/features/marketplace-orders/actions/marketplace-orders.actions";
 
 interface PlaceOrderFormProps {
@@ -9,9 +11,6 @@ interface PlaceOrderFormProps {
   readonly onPlaced: () => void;
   readonly onCancel: () => void;
 }
-
-const FIELD_CLASS =
-  "focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
 
 const LABEL_CLASS = "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
@@ -60,12 +59,11 @@ export function PlaceOrderForm({
           <label htmlFor="po-listing" className={LABEL_CLASS}>
             Listing ID
           </label>
-          <input
+          <Input
             id="po-listing"
             name="listingId"
             required
             placeholder="Listing reference from the marketplace"
-            className={FIELD_CLASS}
           />
         </div>
 
@@ -73,14 +71,14 @@ export function PlaceOrderForm({
           <label htmlFor="po-qty" className={LABEL_CLASS}>
             Quantity
           </label>
-          <input
+          <Input
             id="po-qty"
             name="quantity"
             type="number"
             min={1}
             defaultValue={1}
             required
-            className={FIELD_CLASS}
+            className="nums"
           />
         </div>
 
@@ -88,12 +86,7 @@ export function PlaceOrderForm({
           <label htmlFor="po-notes" className={LABEL_CLASS}>
             Notes <span className="text-slate-400 dark:text-slate-500">(optional)</span>
           </label>
-          <textarea
-            id="po-notes"
-            name="notes"
-            rows={2}
-            className={FIELD_CLASS}
-          />
+          <Textarea id="po-notes" name="notes" rows={2} />
         </div>
       </div>
 
@@ -112,7 +105,7 @@ export function PlaceOrderForm({
         >
           Cancel
         </Button>
-        <Button type="submit" loading={isPending}>
+        <Button type="submit" variant="gradient" loading={isPending}>
           Place order
         </Button>
       </div>

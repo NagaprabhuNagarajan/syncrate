@@ -135,7 +135,7 @@ export function SelectOrganizationView({
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 mb-8 flex flex-col items-center"
+        className="relative z-10 mb-6 flex flex-col items-center"
       >
         <BrandLogo size={140} priority />
       </motion.div>
@@ -147,7 +147,7 @@ export function SelectOrganizationView({
         transition={{ duration: 0.25 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="rounded-2xl border border-slate-200/60 bg-white px-6 py-7 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none sm:p-6">
           <div className="mb-6">
             <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
               Select organization

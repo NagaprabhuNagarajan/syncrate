@@ -84,11 +84,11 @@ function AlertBanner({ type, message }: AlertBannerProps) {
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors dark:text-slate-100 dark:placeholder-slate-500",
-    "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
+    "block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out",
+    "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary",
     hasError
-      ? "border-error-400 bg-error-50/30 focus:ring-error-500 focus:border-error-500 dark:bg-error-500/10"
-      : "border-slate-300 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
+      ? "border-destructive bg-destructive/5"
+      : "border-input bg-background hover:border-slate-400 dark:hover:border-slate-600"
   );
 
 interface InviteUserFormProps {
@@ -269,6 +269,7 @@ export function InviteUserForm({
 
         <Button
           type="submit"
+          variant="gradient"
           className="w-full"
           loading={isPending}
           disabled={isPending}

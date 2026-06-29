@@ -55,6 +55,31 @@
     --sidebar-accent-foreground: 210 40% 96.1%;
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 221.2 83.2% 53.3%;
+
+    /* Vibrant gradients — light theme */
+    --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #2563eb 45%, #6366f1 100%);
+    --gradient-brand-soft: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+    --gradient-violet: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --gradient-success: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    --gradient-warning: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    --gradient-error: linear-gradient(135deg, #f43f5e 0%, #dc2626 100%);
+    --gradient-info: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+
+    /* Glass surface — light theme */
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.6);
+
+    /* Ambient page backdrop — light theme */
+    --app-backdrop: radial-gradient(
+        900px circle at 0% 0%,
+        rgba(37, 99, 235, 0.06),
+        transparent 45%
+      ),
+      radial-gradient(
+        800px circle at 100% 0%,
+        rgba(139, 92, 246, 0.05),
+        transparent 40%
+      );
   }
 
   .dark {
@@ -95,6 +120,35 @@
     --sidebar-accent-foreground: 210 40% 96.1%;
     --sidebar-border: 217.2 32.6% 14%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Vibrant gradients — dark theme (slightly brighter stops for contrast) */
+    --gradient-brand: linear-gradient(135deg, #60a5fa 0%, #3b82f6 45%, #818cf8 100%);
+    --gradient-brand-soft: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.18) 0%,
+      rgba(99, 102, 241, 0.18) 100%
+    );
+    --gradient-violet: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+    --gradient-success: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    --gradient-warning: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+    --gradient-error: linear-gradient(135deg, #fb7185 0%, #ef4444 100%);
+    --gradient-info: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+
+    /* Glass surface — dark theme */
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-border: rgba(148, 163, 184, 0.12);
+
+    /* Ambient page backdrop — dark theme */
+    --app-backdrop: radial-gradient(
+        900px circle at 0% 0%,
+        rgba(59, 130, 246, 0.10),
+        transparent 45%
+      ),
+      radial-gradient(
+        800px circle at 100% 0%,
+        rgba(139, 92, 246, 0.10),
+        transparent 40%
+      );
   }
 }
 
@@ -134,6 +188,49 @@
 }
 
 @layer utilities {
+  /* Tabular numerals — for financial / quantity figures */
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Glass surface — translucent panel with blur + hairline + top highlight.
+     Use sparingly (top bar, modals, feature panels) — backdrop-blur is costly. */
+  .glass {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-panel {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      0 8px 30px -12px rgb(15 23 42 / 0.25),
+      inset 0 1px 0 0 rgb(255 255 255 / 0.18);
+  }
+
+  /* Gradient text — for vibrant headings / brand wordmarks */
+  .text-gradient-brand {
+    background-image: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Ambient backdrop helper for the app content area */
+  .app-backdrop {
+    background-image: var(--app-backdrop);
+  }
+
+  /* Hairline border at low alpha (premium thin separators) */
+  .border-hairline {
+    border-color: hsl(var(--border) / 0.7);
+  }
+
   /* Skeleton shimmer effect */
   .skeleton-shimmer {
     background: linear-gradient(
@@ -174,5 +271,17 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: hsl(var(--border));
     border-radius: 3px;
+  }
+}
+
+/* Respect reduced-motion: neutralize animations & transitions globally. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

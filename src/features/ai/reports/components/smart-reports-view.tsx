@@ -70,7 +70,7 @@ function SectionCard({ section }: { readonly section: ReportSection }) {
           <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
             {section.title}
           </h3>
-          <Badge variant={trendBadgeVariant(section.trend)}>
+          <Badge dot variant={trendBadgeVariant(section.trend)}>
             <TrendIcon className="mr-1 h-3 w-3" aria-hidden="true" />
             {section.trend}
           </Badge>
@@ -86,7 +86,7 @@ function SectionCard({ section }: { readonly section: ReportSection }) {
                 className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
               >
                 <dt className="text-xs text-slate-500 dark:text-slate-400">{metric.label}</dt>
-                <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                <dd className="nums mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {metric.value}
                   {metric.changePercent !== null && (
                     <span
@@ -161,20 +161,20 @@ export function SmartReportsView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Smart Reports"
         description="AI-generated, explainable reports across sales, cash, inventory and partners"
         icon={FileBarChart}
       />
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <select
           aria-label="Report type"
           value={reportType}
           onChange={handleTypeChange}
           disabled={!canGenerate || isPending}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
         >
           {REPORT_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -184,6 +184,7 @@ export function SmartReportsView({
         </select>
         <Button
           type="button"
+          variant="gradient"
           onClick={handleGenerate}
           loading={isPending}
           disabled={!canGenerate}
@@ -211,7 +212,7 @@ export function SmartReportsView({
       )}
 
       {!report && !error && !isPending && (
-        <div className="mt-6">
+        <div className="mt-4">
           <EmptyState
             icon={FileBarChart}
             title="No report yet"
@@ -225,9 +226,9 @@ export function SmartReportsView({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="mt-6 space-y-4"
+          className="mt-4 space-y-4"
         >
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {report.title}

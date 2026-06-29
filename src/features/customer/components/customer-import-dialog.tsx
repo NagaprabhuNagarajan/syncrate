@@ -164,7 +164,12 @@ export function CustomerImportDialog({
             {result ? "Done" : "Cancel"}
           </Button>
           {!result && (
-            <Button type="button" onClick={handleImport} loading={isPending}>
+            <Button
+              type="button"
+              variant="gradient"
+              onClick={handleImport}
+              loading={isPending}
+            >
               <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" />
               Import
             </Button>

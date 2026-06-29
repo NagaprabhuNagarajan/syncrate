@@ -151,11 +151,11 @@ function SectionTitle({ children }: { readonly children: React.ReactNode }) {
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors",
-    "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
+    "block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out",
+    "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary",
     hasError
-      ? "border-error-400 bg-error-50/30 dark:bg-error-500/10"
-      : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600"
+      ? "border-destructive bg-destructive/5"
+      : "border-input bg-background hover:border-slate-400 dark:hover:border-slate-600"
   );
 
 const cellClass = cn(
@@ -301,11 +301,11 @@ export function SalesReturnForm({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8"
+      className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 p-5 shadow-lg shadow-slate-200/50 dark:shadow-none sm:p-6"
     >
-      <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
-          <RotateCcw className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+      <div className="mb-5 flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+          <RotateCcw className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
@@ -331,13 +331,13 @@ export function SalesReturnForm({
         </motion.div>
       )}
 
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
         {isEdit && salesReturn && (
           <input type="hidden" name="version" value={String(salesReturn.version ?? 1)} readOnly />
         )}
 
         {/* Header fields */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             label="Customer"
             htmlFor="customerId"
@@ -373,7 +373,7 @@ export function SalesReturnForm({
           </FormField>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField
             label="Return date"
             htmlFor="returnDate"
@@ -505,7 +505,7 @@ export function SalesReturnForm({
                       </select>
                       <FieldError message={rowErrors?.taxRate?.message} />
                     </td>
-                    <td className="px-2 py-2 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                    <td className="px-2 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(lines[index]?.lineTotal ?? 0)}
                     </td>
                     <td className="px-2 py-2 text-right">
@@ -543,15 +543,15 @@ export function SalesReturnForm({
           <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-slate-500 dark:text-slate-400 dark:text-slate-500">Subtotal</dt>
-              <dd className="tabular-nums text-slate-700 dark:text-slate-300">{formatCurrency(subtotal)}</dd>
+              <dd className="nums text-slate-700 dark:text-slate-300">{formatCurrency(subtotal)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-slate-500 dark:text-slate-400 dark:text-slate-500">Tax</dt>
-              <dd className="tabular-nums text-slate-700 dark:text-slate-300">{formatCurrency(taxTotal)}</dd>
+              <dd className="nums text-slate-700 dark:text-slate-300">{formatCurrency(taxTotal)}</dd>
             </div>
             <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 text-base font-bold text-slate-900 dark:text-slate-100">
               <dt>Total credit</dt>
-              <dd className="tabular-nums">{formatCurrency(grandTotal)}</dd>
+              <dd className="nums">{formatCurrency(grandTotal)}</dd>
             </div>
           </dl>
         </div>
@@ -578,7 +578,12 @@ export function SalesReturnForm({
           >
             Cancel
           </Button>
-          <Button type="submit" loading={isPending} disabled={isPending}>
+          <Button
+            type="submit"
+            variant="gradient"
+            loading={isPending}
+            disabled={isPending}
+          >
             {isEdit ? "Save changes" : "Create return"}
           </Button>
         </div>

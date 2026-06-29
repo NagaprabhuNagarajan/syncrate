@@ -169,16 +169,16 @@ function PaymentPanel({
         <dt className="text-slate-500 dark:text-slate-400">Status</dt>
         <dd>
           {payment ? (
-            <Badge variant={PAYMENT_STATUS_VARIANT[payment.status]}>
+            <Badge dot variant={PAYMENT_STATUS_VARIANT[payment.status]}>
               {PAYMENT_STATUS_LABEL[payment.status]}
             </Badge>
           ) : (
-            <Badge variant="muted">Not started</Badge>
+            <Badge dot variant="muted">Not started</Badge>
           )}
         </dd>
 
         <dt className="text-slate-500 dark:text-slate-400">Amount</dt>
-        <dd className="tabular-nums text-slate-800 dark:text-slate-100">
+        <dd className="nums text-slate-800 dark:text-slate-100">
           {formatMoney(
             payment?.amount ?? order.totalAmount,
             payment?.currency ?? order.currency
@@ -248,7 +248,7 @@ export function OrderDetailView({
   const unitPrice = order.quantity > 0 ? order.totalAmount / order.quantity : 0;
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <Link
         href="/marketplace/orders"
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -268,12 +268,12 @@ export function OrderDetailView({
         }
         icon={Package}
       >
-        <Badge variant={ORDER_STATUS_VARIANT[order.status]}>
+        <Badge dot variant={ORDER_STATUS_VARIANT[order.status]}>
           {ORDER_STATUS_LABEL[order.status]}
         </Badge>
       </PageHeader>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Summary */}
         <section
           aria-label="Order summary"
@@ -294,17 +294,17 @@ export function OrderDetailView({
             </dd>
 
             <dt className="text-slate-500 dark:text-slate-400">Quantity</dt>
-            <dd className="col-span-1 tabular-nums text-slate-800 sm:col-span-2 dark:text-slate-100">
+            <dd className="nums col-span-1 text-slate-800 sm:col-span-2 dark:text-slate-100">
               {order.quantity}
             </dd>
 
             <dt className="text-slate-500 dark:text-slate-400">Unit price</dt>
-            <dd className="col-span-1 tabular-nums text-slate-800 sm:col-span-2 dark:text-slate-100">
+            <dd className="nums col-span-1 text-slate-800 sm:col-span-2 dark:text-slate-100">
               {formatMoney(unitPrice, order.currency)}
             </dd>
 
             <dt className="text-slate-500 dark:text-slate-400">Total</dt>
-            <dd className="col-span-1 font-semibold tabular-nums text-slate-900 sm:col-span-2 dark:text-slate-100">
+            <dd className="nums col-span-1 font-semibold text-slate-900 sm:col-span-2 dark:text-slate-100">
               {formatMoney(order.totalAmount, order.currency)}
             </dd>
 
@@ -319,7 +319,7 @@ export function OrderDetailView({
           </dl>
 
           {canTransact && role && (
-            <div className="mt-6 border-t border-slate-100 pt-5 dark:border-slate-800">
+            <div className="mt-4 border-t border-slate-100 pt-5 dark:border-slate-800">
               <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Actions
               </h3>

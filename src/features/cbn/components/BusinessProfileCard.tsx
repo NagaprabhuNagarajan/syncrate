@@ -40,7 +40,7 @@ function ConnectionStatusBadge({ status }: { readonly status: string | null }) {
     disconnected: "Disconnected",
   };
   return (
-    <Badge variant={variants[status] ?? "muted"}>
+    <Badge dot variant={variants[status] ?? "muted"}>
       {labels[status] ?? status}
     </Badge>
   );

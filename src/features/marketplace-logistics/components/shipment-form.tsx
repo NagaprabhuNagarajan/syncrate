@@ -2,6 +2,8 @@
 
 import { useCallback, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { createShipmentAction } from "@/features/marketplace-logistics/actions/shipment.actions";
 
 interface ShipmentFormProps {
@@ -11,9 +13,6 @@ interface ShipmentFormProps {
   readonly onSaved: () => void;
   readonly onCancel: () => void;
 }
-
-const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
 
 const labelClass = "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
@@ -57,14 +56,13 @@ export function ShipmentForm({
         <label htmlFor="orderId" className={labelClass}>
           Order ID
         </label>
-        <input
+        <Input
           id="orderId"
           name="orderId"
           type="text"
           required
           defaultValue={defaultOrderId ?? ""}
           placeholder="Paste the marketplace order ID you are shipping"
-          className={inputClass}
         />
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           You must be the seller on this order to create its shipment.
@@ -76,24 +74,22 @@ export function ShipmentForm({
           <label htmlFor="carrier" className={labelClass}>
             Carrier
           </label>
-          <input
+          <Input
             id="carrier"
             name="carrier"
             type="text"
             placeholder="e.g. Blue Dart, DHL"
-            className={inputClass}
           />
         </div>
         <div>
           <label htmlFor="trackingNumber" className={labelClass}>
             Tracking number
           </label>
-          <input
+          <Input
             id="trackingNumber"
             name="trackingNumber"
             type="text"
             placeholder="Carrier-issued tracking number"
-            className={inputClass}
           />
         </div>
       </div>
@@ -102,12 +98,11 @@ export function ShipmentForm({
         <label htmlFor="notes" className={labelClass}>
           Notes
         </label>
-        <textarea
+        <Textarea
           id="notes"
           name="notes"
           rows={3}
           placeholder="Optional dispatch notes"
-          className={inputClass}
         />
       </div>
 
@@ -126,7 +121,7 @@ export function ShipmentForm({
         >
           Cancel
         </Button>
-        <Button type="submit" loading={isPending}>
+        <Button type="submit" variant="gradient" loading={isPending}>
           Create shipment
         </Button>
       </div>
