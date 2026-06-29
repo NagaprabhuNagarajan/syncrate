@@ -346,9 +346,19 @@ export class AiGatewayService {
         const results: ToolResultBlockParam[] = [];
         for (const tu of toolUses) {
           toolCalls.push({ name: tu.name, input: tu.input });
-          const tool = toolMap.get(tu.name);
+          const execute = toolMap.get(tu.name)?.execute;
+          if (!execute) {
+            // Unknown / non-executable tool — report back so the model recovers.
+            results.push({
+              type: "tool_result",
+              tool_use_id: tu.id,
+              content: `Unknown tool: ${tu.name}`,
+              is_error: true,
+            });
+            continue;
+          }
           try {
-            const out = await tool!.execute!(tu.input);
+            const out = await execute(tu.input);
             results.push({
               type: "tool_result",
               tool_use_id: tu.id,
