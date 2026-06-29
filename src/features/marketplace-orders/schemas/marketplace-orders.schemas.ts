@@ -4,28 +4,11 @@ import { z } from "zod";
 // Reusable validators
 // ─────────────────────────────────────────────────────────────
 
-const orgId = z
-  .string({ required_error: "Organization is required" })
-  .uuid("Invalid organization reference");
-
 const quantity = z.coerce
   .number({ invalid_type_error: "Quantity must be a number" })
   .int("Quantity must be a whole number")
   .min(1, "Quantity must be at least 1")
   .max(9_999_999, "Quantity is too large");
-
-const unitPrice = z.coerce
-  .number({ invalid_type_error: "Price must be a number" })
-  .min(0, "Price cannot be negative")
-  .max(99_999_999_999, "Price is too large");
-
-const currency = z
-  .string()
-  .trim()
-  .toUpperCase()
-  .pipe(z.string().length(3, "Currency must be a 3-letter ISO code"))
-  .optional()
-  .or(z.literal(""));
 
 const notes = z
   .string()
@@ -39,11 +22,10 @@ const notes = z
 // ─────────────────────────────────────────────────────────────
 
 export const placeOrderSchema = z.object({
-  sellerOrganizationId: orgId,
-  listingId: z.string().uuid("Invalid listing reference").optional().or(z.literal("")),
+  // Seller, price, and currency are derived server-side from the listing —
+  // never trusted from the client.
+  listingId: z.string().uuid("A valid listing is required to order"),
   quantity,
-  unitPrice,
-  currency,
   notes,
 });
 

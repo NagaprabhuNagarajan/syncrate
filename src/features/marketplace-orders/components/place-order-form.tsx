@@ -50,28 +50,21 @@ export function PlaceOrderForm({
         Place a new order
       </h2>
 
+      <p className="mb-4 text-sm text-slate-500">
+        Paste a listing reference from the marketplace. The seller and price are
+        taken from the listing itself.
+      </p>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label htmlFor="po-seller" className={LABEL_CLASS}>
-            Seller organization ID
-          </label>
-          <input
-            id="po-seller"
-            name="sellerOrganizationId"
-            required
-            placeholder="00000000-0000-0000-0000-000000000000"
-            className={FIELD_CLASS}
-          />
-        </div>
-
-        <div className="sm:col-span-2">
           <label htmlFor="po-listing" className={LABEL_CLASS}>
-            Listing ID <span className="text-slate-400">(optional)</span>
+            Listing ID
           </label>
           <input
             id="po-listing"
             name="listingId"
-            placeholder="Listing reference"
+            required
+            placeholder="Listing reference from the marketplace"
             className={FIELD_CLASS}
           />
         </div>
@@ -87,34 +80,6 @@ export function PlaceOrderForm({
             min={1}
             defaultValue={1}
             required
-            className={FIELD_CLASS}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="po-price" className={LABEL_CLASS}>
-            Unit price
-          </label>
-          <input
-            id="po-price"
-            name="unitPrice"
-            type="number"
-            min={0}
-            step="0.01"
-            required
-            className={FIELD_CLASS}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="po-currency" className={LABEL_CLASS}>
-            Currency
-          </label>
-          <input
-            id="po-currency"
-            name="currency"
-            maxLength={3}
-            defaultValue="INR"
             className={FIELD_CLASS}
           />
         </div>

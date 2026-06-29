@@ -7,6 +7,7 @@ const { mockRepo } = vi.hoisted(() => ({
   mockRepo: {
     findOrderById: vi.fn(),
     listOrders: vi.fn(),
+    findListingForOrder: vi.fn(),
     createOrder: vi.fn(),
     updateOrderStatus: vi.fn(),
     findPaymentByOrderId: vi.fn(),
@@ -49,10 +50,66 @@ beforeEach(() => {
 });
 
 describe("placeOrder", () => {
-  it("rejects ordering from your own organization", async () => {
+  function buildListing(over: Record<string, unknown> = {}) {
+    return {
+      id: "listing-1",
+      sellerOrganizationId: "seller-org",
+      title: "Cement",
+      price: 25,
+      currency: "INR",
+      minOrderQty: null as number | null,
+      ...over,
+    };
+  }
+
+  it("derives seller + price from the listing and creates a pending order", async () => {
+    mockRepo.findListingForOrder.mockResolvedValue(buildListing());
+    mockRepo.createOrder.mockResolvedValue(
+      buildOrder({ quantity: 3, totalAmount: 75 })
+    );
     const service = new MarketplaceOrdersService(supabase);
     const result = await service.placeOrder(
-      { sellerOrganizationId: "buyer-org", quantity: 1, unitPrice: 10 },
+      { listingId: "listing-1", quantity: 3 },
+      "buyer-org",
+      "user-1"
+    );
+    expect(result.success).toBe(true);
+    // Price comes from the listing (25), NOT from any client input.
+    expect(mockRepo.createOrder).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organization_id: "buyer-org",
+        seller_organization_id: "seller-org",
+        listing_id: "listing-1",
+        status: "pending",
+        quantity: 3,
+        total_amount: 75,
+        currency: "INR",
+      })
+    );
+  });
+
+  it("rejects when the listing does not exist / is unavailable", async () => {
+    mockRepo.findListingForOrder.mockResolvedValue(null);
+    const service = new MarketplaceOrdersService(supabase);
+    const result = await service.placeOrder(
+      { listingId: "missing", quantity: 1 },
+      "buyer-org",
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+    expect(mockRepo.createOrder).not.toHaveBeenCalled();
+  });
+
+  it("rejects ordering against your own listing (no spoofing the seller)", async () => {
+    mockRepo.findListingForOrder.mockResolvedValue(
+      buildListing({ sellerOrganizationId: "buyer-org" })
+    );
+    const service = new MarketplaceOrdersService(supabase);
+    const result = await service.placeOrder(
+      { listingId: "listing-1", quantity: 1 },
       "buyer-org",
       "user-1"
     );
@@ -63,32 +120,40 @@ describe("placeOrder", () => {
     expect(mockRepo.createOrder).not.toHaveBeenCalled();
   });
 
-  it("computes total = quantity × unit price and creates a pending order", async () => {
-    mockRepo.createOrder.mockResolvedValue(
-      buildOrder({ quantity: 3, totalAmount: 75 })
-    );
+  it("rejects a quote-on-request listing (null price)", async () => {
+    mockRepo.findListingForOrder.mockResolvedValue(buildListing({ price: null }));
     const service = new MarketplaceOrdersService(supabase);
     const result = await service.placeOrder(
-      { sellerOrganizationId: "seller-org", quantity: 3, unitPrice: 25 },
+      { listingId: "listing-1", quantity: 1 },
       "buyer-org",
       "user-1"
     );
-    expect(result.success).toBe(true);
-    expect(mockRepo.createOrder).toHaveBeenCalledWith(
-      expect.objectContaining({
-        organization_id: "buyer-org",
-        seller_organization_id: "seller-org",
-        status: "pending",
-        quantity: 3,
-        total_amount: 75,
-      })
-    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+    }
   });
 
-  it("rejects an invalid quantity", async () => {
+  it("enforces the listing's minimum order quantity", async () => {
+    mockRepo.findListingForOrder.mockResolvedValue(
+      buildListing({ minOrderQty: 10 })
+    );
     const service = new MarketplaceOrdersService(supabase);
     const result = await service.placeOrder(
-      { sellerOrganizationId: "seller-org", quantity: 0, unitPrice: 10 },
+      { listingId: "listing-1", quantity: 5 },
+      "buyer-org",
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+    }
+  });
+
+  it("rejects an invalid quantity before touching the listing", async () => {
+    const service = new MarketplaceOrdersService(supabase);
+    const result = await service.placeOrder(
+      { listingId: "listing-1", quantity: 0 },
       "buyer-org",
       "user-1"
     );
@@ -99,10 +164,11 @@ describe("placeOrder", () => {
   });
 
   it("maps a repository failure to unknown", async () => {
+    mockRepo.findListingForOrder.mockResolvedValue(buildListing());
     mockRepo.createOrder.mockResolvedValue(null);
     const service = new MarketplaceOrdersService(supabase);
     const result = await service.placeOrder(
-      { sellerOrganizationId: "seller-org", quantity: 1, unitPrice: 10 },
+      { listingId: "listing-1", quantity: 1 },
       "buyer-org",
       "user-1"
     );

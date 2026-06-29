@@ -3751,6 +3751,20 @@ export interface Database {
           created_at: string;
         }[];
       };
+      get_marketplace_listing: {
+        Args: { p_id: string };
+        Returns: {
+          id: string;
+          organization_id: string;
+          title: string;
+          listing_type: string;
+          price: number | null;
+          currency: string;
+          min_order_qty: number | null;
+          is_published: boolean;
+          status: string;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

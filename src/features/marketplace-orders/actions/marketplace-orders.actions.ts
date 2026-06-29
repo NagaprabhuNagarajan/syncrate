@@ -91,21 +91,13 @@ export async function placeOrderAction(
   formData: FormData
 ): Promise<OrderActionResult<MarketplaceOrder>> {
   const parsed = placeOrderSchema.safeParse({
-    sellerOrganizationId: formData.get("sellerOrganizationId"),
-    listingId: nonEmpty(formData.get("listingId")),
+    listingId: formData.get("listingId"),
     quantity: formData.get("quantity"),
-    unitPrice: formData.get("unitPrice"),
-    currency: nonEmpty(formData.get("currency")),
     notes: nonEmpty(formData.get("notes")),
   });
 
   if (!parsed.success) {
     return invalid(parsed.error.errors[0]?.message ?? "Invalid input");
-  }
-
-  // Participant guard: a buyer cannot order from their own organization.
-  if (parsed.data.sellerOrganizationId === organizationId) {
-    return forbidden("You cannot place an order with your own organization");
   }
 
   const supabase = await createServerSupabaseClient();
@@ -114,14 +106,13 @@ export async function placeOrderAction(
     return auth.result;
   }
 
+  // Seller, price, and currency are resolved authoritatively from the listing
+  // inside the service — the client supplies only which listing + how many.
   const service = new MarketplaceOrdersService(supabase);
   const result = await service.placeOrder(
     {
-      sellerOrganizationId: parsed.data.sellerOrganizationId,
-      listingId: parsed.data.listingId || undefined,
+      listingId: parsed.data.listingId,
       quantity: parsed.data.quantity,
-      unitPrice: parsed.data.unitPrice,
-      currency: parsed.data.currency || undefined,
       notes: parsed.data.notes || undefined,
     },
     organizationId,

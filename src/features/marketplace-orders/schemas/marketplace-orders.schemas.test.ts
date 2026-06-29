@@ -8,55 +8,54 @@ import {
 const VALID_UUID = "11111111-1111-1111-1111-111111111111";
 
 describe("placeOrderSchema", () => {
-  it("accepts a valid order and coerces numeric strings", () => {
+  it("accepts a valid listing order and coerces the quantity", () => {
     const result = placeOrderSchema.safeParse({
-      sellerOrganizationId: VALID_UUID,
+      listingId: VALID_UUID,
       quantity: "3",
-      unitPrice: "25.5",
-      currency: "inr",
+      notes: "Deliver by Friday",
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.quantity).toBe(3);
-      expect(result.data.unitPrice).toBe(25.5);
-      expect(result.data.currency).toBe("INR");
+      expect(result.data.listingId).toBe(VALID_UUID);
     }
   });
 
-  it("rejects a non-uuid seller", () => {
-    const result = placeOrderSchema.safeParse({
-      sellerOrganizationId: "not-a-uuid",
-      quantity: 1,
-      unitPrice: 10,
-    });
-    expect(result.success).toBe(false);
+  it("requires a valid listing id (seller/price are not client-supplied)", () => {
+    expect(
+      placeOrderSchema.safeParse({ listingId: "not-a-uuid", quantity: 1 }).success
+    ).toBe(false);
+    expect(placeOrderSchema.safeParse({ quantity: 1 }).success).toBe(false);
   });
 
   it("rejects a quantity below 1", () => {
     const result = placeOrderSchema.safeParse({
-      sellerOrganizationId: VALID_UUID,
+      listingId: VALID_UUID,
       quantity: 0,
-      unitPrice: 10,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects a negative unit price", () => {
-    const result = placeOrderSchema.safeParse({
-      sellerOrganizationId: VALID_UUID,
-      quantity: 1,
-      unitPrice: -5,
     });
     expect(result.success).toBe(false);
   });
 
   it("rejects a non-integer quantity", () => {
     const result = placeOrderSchema.safeParse({
-      sellerOrganizationId: VALID_UUID,
+      listingId: VALID_UUID,
       quantity: 1.5,
-      unitPrice: 10,
     });
     expect(result.success).toBe(false);
+  });
+
+  it("ignores any client-supplied seller or price (not in the schema)", () => {
+    const result = placeOrderSchema.safeParse({
+      listingId: VALID_UUID,
+      quantity: 2,
+      sellerOrganizationId: VALID_UUID,
+      unitPrice: 0.01,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect("unitPrice" in result.data).toBe(false);
+      expect("sellerOrganizationId" in result.data).toBe(false);
+    }
   });
 });
 

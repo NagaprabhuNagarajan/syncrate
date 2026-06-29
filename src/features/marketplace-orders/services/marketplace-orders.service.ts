@@ -89,28 +89,49 @@ export class MarketplaceOrdersService {
     buyerOrganizationId: string,
     userId: string
   ): Promise<OrderActionResult<MarketplaceOrder>> {
-    if (input.sellerOrganizationId === buyerOrganizationId) {
-      return fail("forbidden", "You cannot place an order with your own organization");
-    }
-
     const quantity = Math.trunc(input.quantity);
     if (!Number.isFinite(quantity) || quantity < 1) {
       return fail("validation", "Quantity must be at least 1");
     }
-    if (!Number.isFinite(input.unitPrice) || input.unitPrice < 0) {
-      return fail("validation", "Unit price is invalid");
+
+    // Seller and price are derived from the AUTHORITATIVE listing, never from
+    // client input — otherwise a buyer could spoof the seller or the price.
+    const listing = await this.repo.findListingForOrder(input.listingId);
+    if (!listing) {
+      return fail(
+        "not_found",
+        "That listing is no longer available to order."
+      );
+    }
+    if (listing.sellerOrganizationId === buyerOrganizationId) {
+      return fail(
+        "forbidden",
+        "You cannot place an order against your own listing"
+      );
+    }
+    if (listing.price === null) {
+      return fail(
+        "validation",
+        "This listing is quote-on-request and cannot be ordered directly."
+      );
+    }
+    if (listing.minOrderQty !== null && quantity < listing.minOrderQty) {
+      return fail(
+        "validation",
+        `Minimum order quantity for this listing is ${listing.minOrderQty}.`
+      );
     }
 
-    const totalAmount = Number((quantity * input.unitPrice).toFixed(2));
+    const totalAmount = Number((quantity * listing.price).toFixed(2));
 
     const order = await this.repo.createOrder({
       organization_id: buyerOrganizationId,
-      seller_organization_id: input.sellerOrganizationId,
-      listing_id: nz(input.listingId),
+      seller_organization_id: listing.sellerOrganizationId,
+      listing_id: listing.id,
       status: "pending",
       quantity,
       total_amount: totalAmount,
-      currency: normalizeCurrency(input.currency),
+      currency: normalizeCurrency(listing.currency),
       notes: nz(input.notes),
       created_by: userId,
     });

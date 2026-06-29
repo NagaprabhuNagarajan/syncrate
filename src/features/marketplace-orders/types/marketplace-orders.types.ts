@@ -84,14 +84,20 @@ export interface MarketplacePayment {
 // ─────────────────────────────────────────────────────────────
 
 export interface PlaceOrderInput {
-  /** The seller org the buyer is ordering from. */
-  readonly sellerOrganizationId: string;
-  readonly listingId?: string;
+  /** The listing being ordered. Seller + price are derived from it server-side. */
+  readonly listingId: string;
   readonly quantity: number;
-  /** Unit price (the buyer already has this from browse). */
-  readonly unitPrice: number;
-  readonly currency?: string;
   readonly notes?: string;
+}
+
+/** Authoritative listing data resolved server-side for order placement. */
+export interface OrderListing {
+  readonly id: string;
+  readonly sellerOrganizationId: string;
+  readonly title: string;
+  readonly price: number | null;
+  readonly currency: string;
+  readonly minOrderQty: number | null;
 }
 
 // ─────────────────────────────────────────────────────────────

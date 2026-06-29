@@ -3,6 +3,7 @@ import type { Database } from "@/types/database.types";
 import type {
   MarketplaceOrder,
   MarketplacePayment,
+  OrderListing,
   OrderListParams,
   OrderListResult,
 } from "@/features/marketplace-orders/types/marketplace-orders.types";
@@ -128,6 +129,32 @@ export class MarketplaceOrdersRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Authoritative fetch of an active, published listing (any org) for order
+   * placement. Uses the SECURITY DEFINER RPC because the buyer cannot read the
+   * seller's listing row directly (own-org RLS). Returns null when the listing
+   * doesn't exist, isn't published, or isn't active.
+   */
+  async findListingForOrder(
+    listingId: string
+  ): Promise<OrderListing | null> {
+    const { data, error } = await this.supabase.rpc("get_marketplace_listing", {
+      p_id: listingId,
+    });
+    const row = data?.[0];
+    if (error || !row) {
+      return null;
+    }
+    return {
+      id: row.id,
+      sellerOrganizationId: row.organization_id,
+      title: row.title,
+      price: row.price,
+      currency: row.currency,
+      minOrderQty: row.min_order_qty,
     };
   }
 
