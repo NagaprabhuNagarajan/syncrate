@@ -5,6 +5,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { InvoiceService } from "@/features/sales/services/invoice.service";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { AuditService } from "@/features/audit/services/audit.service";
+import { DomainEventService } from "@/features/events/services/domain-event.service";
+import { DOMAIN_EVENTS } from "@/features/events/domain-events";
 import {
   createInvoiceSchema,
   updateInvoiceSchema,
@@ -159,6 +161,22 @@ export async function createInvoiceAction(
       entityType: "invoice",
       entityId: result.data.id,
       summary: `Created invoice ${result.data.invoiceNumber}`,
+    });
+    // Fire automation (webhooks + matching workflows). Best-effort — never
+    // throws, so it cannot affect the invoice that was just created.
+    await new DomainEventService(supabase).emit({
+      organizationId,
+      eventType: DOMAIN_EVENTS.INVOICE_CREATED,
+      entityType: "sales_invoice",
+      entityId: result.data.id,
+      actorUserId: auth.userId,
+      payload: {
+        invoiceId: result.data.id,
+        invoiceNumber: result.data.invoiceNumber,
+        customerId: result.data.customerId,
+        status: result.data.status,
+        total_amount: result.data.totalAmount,
+      },
     });
   }
   return result;
