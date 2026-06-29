@@ -368,6 +368,47 @@ describe("WorkflowEngineService.startWorkflow execution", () => {
     expect(h.stepExecutions.create).toHaveBeenCalledTimes(2);
   });
 
+  it("auto-passes an approval step when no rule matches and continues the run", async () => {
+    const h = buildHarness();
+    // No active approval rule matched → zero requests raised.
+    h.approvals.evaluateAndRaise.mockResolvedValue({ success: true, data: [] });
+    const steps: WorkflowStep[] = [
+      { id: "s1", name: "Approve", type: "approval", config: { entityType: "purchase_invoice" } },
+      { id: "s2", name: "After", type: "log", config: {} },
+    ];
+    h.workflows.findById.mockResolvedValue(makeWorkflow(steps));
+    h.instances.create.mockResolvedValue(makeInstance());
+
+    const result = await h.engine.startWorkflow({
+      organizationId: "org-1",
+      workflowId: "wf-1",
+      entityId: "inv-9",
+      actorUserId: "user-1",
+    });
+
+    // The run does NOT dead-lock: it completes instead of suspending.
+    expect(result.success && result.data.status).toBe("completed");
+    // The approval step is recorded as a completed auto-pass (not 'running').
+    expect(h.stepExecutions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        step_index: 0,
+        step_type: "approval",
+        status: "completed",
+        output: expect.objectContaining({ autoPassed: true, raised: 0 }),
+      })
+    );
+    // The step AFTER the approval ran.
+    expect(h.stepExecutions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ step_index: 1, step_type: "log" })
+    );
+    // Instance was never flipped to 'awaiting'.
+    expect(h.instances.update).not.toHaveBeenCalledWith(
+      "inst-1",
+      expect.objectContaining({ status: "awaiting" }),
+      expect.anything()
+    );
+  });
+
   it("marks the instance failed when a step throws", async () => {
     const h = buildHarness();
     const steps: WorkflowStep[] = [

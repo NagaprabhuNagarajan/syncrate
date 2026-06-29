@@ -12,6 +12,7 @@ import {
   type ResumeInstanceInput,
   type StartWorkflowInput,
   type Workflow,
+  type WorkflowError,
   type WorkflowInstance,
   type WorkflowResult,
   type WorkflowStep,
@@ -19,6 +20,12 @@ import {
 
 /** Reserved context key used to carry the run's actor across a resume. */
 const ACTOR_CONTEXT_KEY = "_actorUserId";
+
+/** Result of evaluating a blocking approval step within a run. */
+type ApprovalStepOutcome =
+  | { readonly kind: "suspended"; readonly instance: WorkflowInstance }
+  | { readonly kind: "passed" }
+  | { readonly kind: "error"; readonly error: WorkflowError };
 
 /**
  * The collaborators the engine drives. Exposed so unit tests can inject mocks
@@ -218,7 +225,20 @@ export class WorkflowEngineService {
       }
 
       if (isBlocking(step)) {
-        return this.suspendForApproval(instance, step, index, version);
+        const outcome = await this.handleApprovalStep(
+          instance,
+          step,
+          index,
+          version
+        );
+        if (outcome.kind === "error") {
+          return { success: false, error: outcome.error };
+        }
+        if (outcome.kind === "suspended") {
+          return ok(outcome.instance);
+        }
+        // No approval rule matched → nothing to approve; auto-pass and continue.
+        continue;
       }
 
       const failure = await this.runNonBlockingStep(instance, step, index);
@@ -331,26 +351,30 @@ export class WorkflowEngineService {
   }
 
   /**
-   * Raises the approval for a blocking step (integration point with the
-   * Approval engine), writes a `running` step execution, and suspends the
-   * instance as `awaiting` at this step index.
+   * Handles a blocking approval step. Raises approval requests via the Approval
+   * engine (which evaluates the org's active rules for the entity type):
+   *  - if one or more requests are raised, suspends the instance as `awaiting`
+   *    at this step (the approval UI later drives resumeInstance);
+   *  - if NO request is raised (no active rule matched), there is nothing to
+   *    approve, so the step auto-passes and the run continues — this avoids a
+   *    dead-locked instance waiting on a request that was never created.
    */
-  private async suspendForApproval(
+  private async handleApprovalStep(
     instance: WorkflowInstance,
     step: WorkflowStep,
     index: number,
     version: number
-  ): Promise<WorkflowResult<WorkflowInstance>> {
+  ): Promise<ApprovalStepOutcome> {
     if (step.type !== "approval") {
-      return { success: false, error: { code: "unknown", message: "Expected an approval step" } };
+      return {
+        kind: "error",
+        error: { code: "unknown", message: "Expected an approval step" },
+      };
     }
 
     const actor =
       (instance.context[ACTOR_CONTEXT_KEY] as string | undefined) ?? "system";
 
-    // integration point: the approval engine evaluates active rules for the
-    // entity type and raises a pending request per match. The instance blocks
-    // regardless; the external approval UI then drives resumeInstance().
     const raised = await this.approvals.evaluateAndRaise({
       organizationId: instance.organizationId,
       entityType: step.config.entityType,
@@ -362,6 +386,28 @@ export class WorkflowEngineService {
     const raisedRequestIds = raised.success
       ? raised.data.map((request) => request.id)
       : [];
+
+    // No matching approval rule → nothing to approve. Record the step as a
+    // completed auto-pass and let the caller continue the run.
+    if (raisedRequestIds.length === 0) {
+      await this.stepExecutions.create({
+        organization_id: instance.organizationId,
+        instance_id: instance.id,
+        step_id: step.id,
+        step_index: index,
+        step_type: step.type,
+        status: "completed",
+        output: {
+          type: "approval",
+          entityType: step.config.entityType,
+          raised: 0,
+          autoPassed: true,
+        } as Json,
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+      });
+      return { kind: "passed" };
+    }
 
     await this.stepExecutions.create({
       organization_id: instance.organizationId,
@@ -385,8 +431,14 @@ export class WorkflowEngineService {
       version
     );
     if (!awaiting) {
-      return { success: false, error: { code: "conflict", message: "Instance was modified concurrently. Reload and try again." } };
+      return {
+        kind: "error",
+        error: {
+          code: "conflict",
+          message: "Instance was modified concurrently. Reload and try again.",
+        },
+      };
     }
-    return ok(awaiting);
+    return { kind: "suspended", instance: awaiting };
   }
 }
