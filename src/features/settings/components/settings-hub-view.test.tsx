@@ -21,6 +21,8 @@ describe("SettingsHubView", () => {
           "settings.branches",
           "role.view",
           "api_key.view",
+          "approval.view",
+          "webhook.view",
           "audit.view",
         ]}
       />
@@ -29,6 +31,8 @@ describe("SettingsHubView", () => {
     expect(screen.getByText("Branches")).toBeInTheDocument();
     expect(screen.getByText("Roles & Permissions")).toBeInTheDocument();
     expect(screen.getByText("API Keys")).toBeInTheDocument();
+    expect(screen.getByText("Approvals")).toBeInTheDocument();
+    expect(screen.getByText("Webhooks")).toBeInTheDocument();
     expect(screen.getByText("Audit Center")).toBeInTheDocument();
   });
 

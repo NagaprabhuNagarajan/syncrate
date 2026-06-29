@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   KeyRound,
   ScrollText,
+  CheckSquare,
+  Webhook,
   Settings as SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -60,6 +62,22 @@ const SECTIONS: readonly SettingsSection[] = [
     href: "/settings/api-keys",
     icon: KeyRound,
     permission: "api_key.view",
+  },
+  {
+    key: "approvals",
+    label: "Approvals",
+    description: "Configure approval rules and action pending requests.",
+    href: "/settings/approvals",
+    icon: CheckSquare,
+    permission: "approval.view",
+  },
+  {
+    key: "webhooks",
+    label: "Webhooks",
+    description: "Deliver signed events to your external systems.",
+    href: "/settings/webhooks",
+    icon: Webhook,
+    permission: "webhook.view",
   },
   {
     key: "audit",
