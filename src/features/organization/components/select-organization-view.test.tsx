@@ -130,11 +130,15 @@ describe("SelectOrganizationView", () => {
     expect(img).toHaveAttribute("src", "https://example.com/logo.png");
   });
 
-  it("renders a placeholder icon (no image) when there is no logo", () => {
+  it("renders a placeholder icon (no org image) when there is no logo", () => {
     const orgs = [makeOrg({ id: "org-1", name: "Acme Corp", logoUrl: null })];
     render(<SelectOrganizationView organizations={orgs} userId="user-1" />);
 
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    // The Syncrate brand logo is always present; the org itself must not
+    // render an <img> (it falls back to a Building2 placeholder icon).
+    expect(
+      screen.queryByRole("img", { name: "Acme Corp" })
+    ).not.toBeInTheDocument();
   });
 
   it("calls switchOrganizationAction with the org id when a card is clicked", async () => {

@@ -6,6 +6,7 @@ import { Building2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { switchOrganizationAction } from "@/features/organization/actions/organization.actions";
 import type { Organization } from "@/features/organization/types/organization.types";
 import { cn } from "@/utils/cn";
+import { BrandLogo } from "@/components/shared/logo";
 
 const PLAN_BADGE: Record<Organization["plan"], string> = {
   free: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
@@ -134,12 +135,9 @@ export function SelectOrganizationView({
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 mb-8 flex flex-col items-center gap-2"
+        className="relative z-10 mb-8 flex flex-col items-center"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/20">
-          <span className="text-xl font-bold text-white">S</span>
-        </div>
-        <span className="text-xl font-semibold text-slate-800 dark:text-slate-100">Syncrate</span>
+        <BrandLogo size={140} priority />
       </motion.div>
 
       {/* Panel */}
