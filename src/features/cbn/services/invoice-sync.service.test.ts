@@ -177,6 +177,32 @@ describe("InvoiceSyncService.rejectInvoice", () => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────
+// listSent / listReceived
+// ─────────────────────────────────────────────────────────────
+
+describe("InvoiceSyncService list methods", () => {
+  it("listSent returns the repository result", async () => {
+    const supabase = makeSupabase({ data: undefined, error: null });
+    const service = new InvoiceSyncService(supabase);
+
+    const result = await service.listSent("org-1");
+
+    expect(result).toEqual([]);
+    expect(supabase.from).toHaveBeenCalledWith("cbn_invoices");
+  });
+
+  it("listReceived returns the repository result", async () => {
+    const supabase = makeSupabase({ data: undefined, error: null });
+    const service = new InvoiceSyncService(supabase);
+
+    const result = await service.listReceived("org-1");
+
+    expect(result).toEqual([]);
+    expect(supabase.from).toHaveBeenCalledWith("cbn_invoices");
+  });
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
 });

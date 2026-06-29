@@ -52,12 +52,17 @@ export class SharedDocumentService {
     return ok(doc);
   }
 
-  async revokeDocument(documentId: string): Promise<CbnActionResult<void>> {
+  async revokeDocument(
+    documentId: string,
+    organizationId: string
+  ): Promise<CbnActionResult<void>> {
     const success = await this.repo.revoke(documentId);
-    if (!success) {return fail("unknown", "Failed to revoke document. Please try again.");}
+    if (!success) {
+      return fail("unknown", "Failed to revoke document. Please try again.");
+    }
 
     await this.audit.log({
-      organizationId: documentId, // caller should provide orgId; placeholder
+      organizationId,
       actorUserId: null,
       action: "cbn.document.revoke",
       entityType: "cbn_shared_document",

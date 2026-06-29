@@ -254,6 +254,184 @@ describe("ConnectionService.getConnection", () => {
   });
 });
 
+describe("ConnectionService.rejectConnection (edge cases)", () => {
+  it("returns not_found when the connection does not exist", async () => {
+    const supabase = makeSupabaseFindById(null, { data: null, error: null });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.rejectConnection("missing");
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+  });
+
+  it("passes null reason when omitted and maps RPC errors", async () => {
+    const supabase = makeSupabaseFindById(makeDbRow(), {
+      data: null,
+      error: { message: "permission_denied: not the recipient" },
+    });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.rejectConnection("conn-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("reject_connection_request", {
+      p_connection_id: "conn-1",
+      p_reason: null,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("permission_denied");
+    }
+  });
+});
+
+describe("ConnectionService.acceptConnection (RPC error)", () => {
+  it("maps the RPC error code", async () => {
+    const supabase = makeSupabaseFindById(makeDbRow(), {
+      data: null,
+      error: { message: "invalid_status: not pending" },
+    });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.acceptConnection("conn-1");
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("invalid_status");
+    }
+  });
+});
+
+describe("ConnectionService.disconnect", () => {
+  it("returns success and runs the RPC on the happy path", async () => {
+    const supabase = makeSupabaseFindById(makeDbRow(), {
+      data: undefined,
+      error: null,
+    });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.disconnect("conn-1", "Ended deal");
+
+    expect(result.success).toBe(true);
+    expect(supabase.rpc).toHaveBeenCalledWith("disconnect_business", {
+      p_connection_id: "conn-1",
+      p_reason: "Ended deal",
+    });
+  });
+
+  it("passes null reason when omitted", async () => {
+    const supabase = makeSupabaseFindById(makeDbRow(), {
+      data: undefined,
+      error: null,
+    });
+    const service = new ConnectionService(supabase);
+
+    await service.disconnect("conn-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("disconnect_business", {
+      p_connection_id: "conn-1",
+      p_reason: null,
+    });
+  });
+
+  it("returns not_found when the connection does not exist", async () => {
+    const supabase = makeSupabaseFindById(null, { data: null, error: null });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.disconnect("missing");
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+  });
+
+  it("maps the RPC error code", async () => {
+    const supabase = makeSupabaseFindById(makeDbRow(), {
+      data: null,
+      error: { message: "permission_denied: not a party" },
+    });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.disconnect("conn-1");
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("permission_denied");
+    }
+  });
+});
+
+describe("ConnectionService.updatePermissions", () => {
+  it("returns success and passes grants on the happy path", async () => {
+    const supabase = makeSupabaseFindById(makeDbRow(), {
+      data: undefined,
+      error: null,
+    });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.updatePermissions("conn-1", [
+      "view_catalog",
+      "receive_invoices",
+    ]);
+
+    expect(result.success).toBe(true);
+    expect(supabase.rpc).toHaveBeenCalledWith("update_connection_permissions", {
+      p_connection_id: "conn-1",
+      p_my_grants: ["view_catalog", "receive_invoices"],
+    });
+  });
+
+  it("returns not_found when the connection does not exist", async () => {
+    const supabase = makeSupabaseFindById(null, { data: null, error: null });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.updatePermissions("missing", ["view_catalog"]);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+  });
+
+  it("maps the RPC error code", async () => {
+    const supabase = makeSupabaseFindById(makeDbRow(), {
+      data: null,
+      error: { message: "validation: unknown permission" },
+    });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.updatePermissions("conn-1", ["view_catalog"]);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+    }
+  });
+});
+
+describe("ConnectionService.requestConnection (default error)", () => {
+  it("maps an unrecognized error to unknown", async () => {
+    const supabase = makeSupabaseFindById(makeDbRow(), {
+      data: null,
+      error: { message: "some weird failure" },
+    });
+    const service = new ConnectionService(supabase);
+
+    const result = await service.requestConnection({
+      requesterOrgId: "org-a",
+      recipientOrgId: "org-b",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("unknown");
+    }
+  });
+});
+
 // suppress unused variable warning
 void MOCK_CONNECTION;
 

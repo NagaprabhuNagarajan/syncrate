@@ -185,6 +185,73 @@ describe("DiscoveryService.updateDiscoverySettings", () => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────
+// getOwnProfile
+// ─────────────────────────────────────────────────────────────
+
+function makeOwnProfileRow(overrides?: Record<string, unknown>) {
+  return {
+    id: "bp-1",
+    organization_id: "org-1",
+    verification_level: 3,
+    trust_score: 82,
+    is_discoverable: true,
+    catalog_enabled: true,
+    total_connections: 5,
+    total_invoices_sent: 10,
+    total_invoices_received: 8,
+    total_pos_sent: 4,
+    total_pos_received: 6,
+    payment_rating: 90,
+    delivery_rating: 88,
+    dispute_score: 2,
+    customer_rating: 85,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    created_by: null,
+    ...overrides,
+  };
+}
+
+function makeProfileSupabase(
+  row: Record<string, unknown> | null
+): AppSupabaseClient {
+  const single = vi
+    .fn()
+    .mockResolvedValue({ data: row, error: row ? null : { message: "missing" } });
+  const is = vi.fn().mockReturnValue({ single });
+  const eq = vi.fn().mockReturnValue({ is });
+  const select = vi.fn().mockReturnValue({ eq });
+  const from = vi.fn().mockReturnValue({ select });
+  return { from, rpc: vi.fn() } as unknown as AppSupabaseClient;
+}
+
+describe("DiscoveryService.getOwnProfile", () => {
+  it("returns the mapped profile on success", async () => {
+    const service = new DiscoveryService(makeProfileSupabase(makeOwnProfileRow()));
+
+    const result = await service.getOwnProfile("org-1");
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.organizationId).toBe("org-1");
+      expect(result.data.trustScore).toBe(82);
+      expect(result.data.isDiscoverable).toBe(true);
+    }
+  });
+
+  it("returns not_found when the profile does not exist", async () => {
+    const service = new DiscoveryService(makeProfileSupabase(null));
+
+    const result = await service.getOwnProfile("org-missing");
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+  });
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
