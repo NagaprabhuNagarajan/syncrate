@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Link2, UserCheck, Clock } from "lucide-react";
+import { MapPin, Link2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrustScoreBadge } from "@/features/cbn/components/TrustScoreBadge";
@@ -139,7 +139,10 @@ export function BusinessProfileCard({
               Connected
             </Badge>
           ) : (
-            <ConnectionStatusBadge status={business.connectionStatus} />
+            // A locally just-sent request has no server status yet → show Pending.
+            <ConnectionStatusBadge
+              status={sent ? "pending" : business.connectionStatus}
+            />
           )
         ) : (
           <Button
@@ -147,17 +150,10 @@ export function BusinessProfileCard({
             variant="outline"
             className="h-7 border-teal-200 text-teal-700 hover:bg-teal-50"
             onClick={handleConnect}
-            disabled={isPending || sent}
+            disabled={isPending}
             aria-label={`Connect with ${business.name}`}
           >
-            {sent ? (
-              <>
-                <Clock className="mr-1 h-3 w-3" aria-hidden="true" />
-                Pending
-              </>
-            ) : (
-              "Connect"
-            )}
+            Connect
           </Button>
         )}
       </div>
