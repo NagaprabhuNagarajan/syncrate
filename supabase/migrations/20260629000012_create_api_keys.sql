@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.api_keys (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES public.organizations(id),
   name            TEXT NOT NULL,
-  -- First chars of the key (e.g. "sk_live_a1b2") — non-secret, for display.
+  -- First chars of the key (e.g. "syk_live_a1b2") — non-secret, for display.
   key_prefix      TEXT NOT NULL,
   -- SHA-256 hex digest of the full key. Never store the plaintext.
   key_hash        TEXT NOT NULL,
