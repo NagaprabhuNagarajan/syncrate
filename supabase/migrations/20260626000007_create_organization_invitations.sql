@@ -16,8 +16,14 @@ CREATE TABLE IF NOT EXISTS public.organization_invitations (
   role_id          UUID NOT NULL REFERENCES public.roles(id),
   -- Branch restriction (NULL = all branches)
   branch_id        UUID REFERENCES public.branches(id),
-  -- Invite token — signed, single-use
-  token            TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(32), 'hex'),
+  -- Invite token — single-use, 256-bit. Built from two built-in
+  -- gen_random_uuid() values (64 hex chars) instead of pgcrypto's
+  -- gen_random_bytes(): on hosted Supabase pgcrypto lives in the `extensions`
+  -- schema (not the migration search_path), so unqualified gen_random_bytes()
+  -- fails to resolve. gen_random_uuid() is built-in (pg_catalog) everywhere.
+  token            TEXT NOT NULL UNIQUE
+                     DEFAULT (replace(gen_random_uuid()::text, '-', '')
+                           || replace(gen_random_uuid()::text, '-', '')),
   -- State
   status           TEXT NOT NULL DEFAULT 'pending'
                      CHECK (status IN ('pending', 'accepted', 'declined', 'expired', 'cancelled')),
