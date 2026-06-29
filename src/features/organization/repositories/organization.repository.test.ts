@@ -102,6 +102,7 @@ function buildDbOrg(overrides: Partial<DbOrg> = {}): DbOrg {
     status: "active",
     plan: "professional",
     plan_expires_at: "2027-01-01T00:00:00.000Z",
+    business_id: null,
     created_at: "2026-01-01T00:00:00.000Z",
     updated_at: "2026-01-02T00:00:00.000Z",
     deleted_at: null,
