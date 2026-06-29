@@ -11,9 +11,9 @@ interface PlaceOrderFormProps {
 }
 
 const FIELD_CLASS =
-  "focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2";
+  "focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
 
-const LABEL_CLASS = "mb-1 block text-sm font-medium text-slate-700";
+const LABEL_CLASS = "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 export function PlaceOrderForm({
   organizationId,
@@ -44,13 +44,13 @@ export function PlaceOrderForm({
     <form
       onSubmit={handleSubmit}
       aria-label="Place order"
-      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
-      <h2 className="mb-4 text-base font-semibold text-slate-900">
+      <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">
         Place a new order
       </h2>
 
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         Paste a listing reference from the marketplace. The seller and price are
         taken from the listing itself.
       </p>
@@ -86,7 +86,7 @@ export function PlaceOrderForm({
 
         <div className="sm:col-span-2">
           <label htmlFor="po-notes" className={LABEL_CLASS}>
-            Notes <span className="text-slate-400">(optional)</span>
+            Notes <span className="text-slate-400 dark:text-slate-500">(optional)</span>
           </label>
           <textarea
             id="po-notes"

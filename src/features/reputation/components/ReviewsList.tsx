@@ -15,21 +15,21 @@ interface ReviewCardProps {
 
 function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <li className="rounded-xl border border-slate-200/60 bg-white px-5 py-4 shadow-sm">
+    <li className="rounded-xl border border-slate-200/60 bg-white px-5 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-slate-900">
+          <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
             {review.reviewerName}
           </p>
           <div className="mt-1 flex items-center gap-2">
             <StarRating value={review.rating} size="sm" />
-            <time className="text-xs text-slate-400">
+            <time className="text-xs text-slate-400 dark:text-slate-500">
               {DATE_FORMAT.format(review.createdAt)}
             </time>
           </div>
         </div>
         {review.isRecommended && (
-          <span className="text-success-600 flex shrink-0 items-center gap-1 text-xs font-medium">
+          <span className="text-success-600 dark:text-success-400 flex shrink-0 items-center gap-1 text-xs font-medium">
             <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
             Recommends
           </span>
@@ -37,12 +37,12 @@ function ReviewCard({ review }: ReviewCardProps) {
       </div>
 
       {review.title && (
-        <p className="mt-3 text-sm font-medium text-slate-800">
+        <p className="mt-3 text-sm font-medium text-slate-800 dark:text-slate-100">
           {review.title}
         </p>
       )}
       {review.comment && (
-        <p className="mt-1 text-sm leading-relaxed text-slate-600">
+        <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
           {review.comment}
         </p>
       )}

@@ -30,10 +30,10 @@ export function ReputationBadge({
         aria-label={`Reputation: ${averageRating.toFixed(1)} stars from ${reviewCount} reviews`}
       >
         <StarRating value={averageRating} size="sm" />
-        <span className="font-semibold text-slate-900">
+        <span className="font-semibold text-slate-900 dark:text-slate-100">
           {hasReviews ? averageRating.toFixed(1) : "—"}
         </span>
-        <span className="text-slate-400">
+        <span className="text-slate-400 dark:text-slate-500">
           ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
         </span>
       </div>
@@ -43,29 +43,29 @@ export function ReputationBadge({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-sm sm:flex-row sm:items-center sm:gap-8",
+        "flex flex-col items-center gap-3 rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:gap-8",
         className
       )}
     >
       <div className="flex flex-col items-center">
-        <span className="text-4xl font-bold tracking-tight text-slate-900">
+        <span className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           {hasReviews ? averageRating.toFixed(1) : "—"}
         </span>
         <StarRating value={averageRating} size="md" className="mt-1.5" />
-        <span className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-400">
+        <span className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
           <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
           {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
         </span>
       </div>
 
-      <div className="hidden h-16 w-px bg-slate-100 sm:block" />
+      <div className="hidden h-16 w-px bg-slate-100 dark:bg-slate-800 sm:block" />
 
       <div className="flex flex-col items-center">
-        <span className="flex items-center gap-2 text-2xl font-bold text-success-600">
+        <span className="flex items-center gap-2 text-2xl font-bold text-success-600 dark:text-success-400">
           <ThumbsUp className="h-5 w-5" aria-hidden="true" />
           {hasReviews ? `${Math.round(recommendPercent)}%` : "—"}
         </span>
-        <span className="mt-1.5 text-xs text-slate-400">recommend</span>
+        <span className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">recommend</span>
       </div>
     </div>
   );

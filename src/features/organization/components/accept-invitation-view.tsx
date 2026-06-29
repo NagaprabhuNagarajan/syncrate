@@ -36,34 +36,34 @@ export function AcceptInvitationView({ token }: AcceptInvitationViewProps) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
         className="w-full max-w-md"
       >
-        <div className="rounded-2xl border border-slate-200/60 bg-white px-6 py-7 shadow-xl shadow-slate-200/50">
+        <div className="rounded-2xl border border-slate-200/60 bg-white px-6 py-7 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900">
           {isPending ? (
             <div className="flex flex-col items-center gap-4 py-8">
               <LoadingSpinner size="lg" label="Accepting invitation..." />
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Accepting your invitation…
               </p>
             </div>
           ) : state.status === "success" ? (
             <div className="flex flex-col items-center gap-4 py-4 text-center">
-              <div className="bg-success-50 flex h-12 w-12 items-center justify-center rounded-full">
+              <div className="bg-success-50 flex h-12 w-12 items-center justify-center rounded-full dark:bg-success-500/10">
                 <CheckCircle2
-                  className="text-success-600 h-6 w-6"
+                  className="text-success-600 h-6 w-6 dark:text-success-400"
                   aria-hidden="true"
                 />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-slate-900">
+                <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                   You&apos;ve joined {state.organization.name}
                 </h1>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   Your invitation has been accepted successfully.
                 </p>
               </div>
@@ -79,17 +79,17 @@ export function AcceptInvitationView({ token }: AcceptInvitationViewProps) {
             />
           ) : (
             <div className="flex flex-col items-center gap-5 py-4 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-50">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-500/10">
                 <MailCheck
-                  className="h-6 w-6 text-primary-600"
+                  className="h-6 w-6 text-primary-600 dark:text-primary-400"
                   aria-hidden="true"
                 />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-slate-900">
+                <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                   Accept your invitation
                 </h1>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   You&apos;ve been invited to join an organization on Syncrate.
                   Confirm below to get started.
                 </p>

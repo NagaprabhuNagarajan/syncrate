@@ -18,8 +18,8 @@ import {
 import type { Review } from "@/features/reputation/types/reputation.types";
 
 const inputClass = cn(
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
-  "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-slate-400"
+  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500",
+  "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-slate-400 dark:hover:border-slate-600"
 );
 
 interface WriteReviewFormProps {
@@ -152,20 +152,20 @@ export function WriteReviewForm({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="space-y-5 rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-sm"
+      className="space-y-5 rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       <div>
-        <h2 className="text-base font-semibold tracking-tight text-slate-900">
+        <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           {isEdit ? "Edit your review" : `Review ${subjectName}`}
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Share your experience working with this business.
         </p>
       </div>
 
       {serverError && (
         <div
-          className="border-error-200 bg-error-50 text-error-800 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           role="alert"
         >
           <AlertCircle
@@ -177,7 +177,7 @@ export function WriteReviewForm({
       )}
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700">
+        <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
           Rating
           <span className="text-error-500 ml-0.5" aria-hidden="true">
             *
@@ -189,7 +189,7 @@ export function WriteReviewForm({
       <div>
         <label
           htmlFor="review-title"
-          className="mb-1.5 block text-sm font-medium text-slate-700"
+          className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Title
         </label>
@@ -207,7 +207,7 @@ export function WriteReviewForm({
       <div>
         <label
           htmlFor="review-comment"
-          className="mb-1.5 block text-sm font-medium text-slate-700"
+          className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
         >
           Comment
         </label>
@@ -229,8 +229,8 @@ export function WriteReviewForm({
         className={cn(
           "flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-colors",
           isRecommended
-            ? "border-success-300 bg-success-50 text-success-700"
-            : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
+            ? "border-success-300 bg-success-50 text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300"
+            : "border-slate-300 bg-white text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600"
         )}
       >
         <ThumbsUp className="h-4 w-4" aria-hidden="true" />
@@ -241,7 +241,7 @@ export function WriteReviewForm({
 
       {fieldError && (
         <p
-          className="text-error-600 flex items-center gap-1.5 text-xs"
+          className="text-error-600 dark:text-error-400 flex items-center gap-1.5 text-xs"
           role="alert"
         >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />

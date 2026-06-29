@@ -39,7 +39,7 @@ function describeCondition(condition: ApprovalCondition): string {
 }
 
 const INPUT_CLASS =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
 
 type TabKey = "rules" | "pending";
 
@@ -153,7 +153,7 @@ export function ApprovalsView({
       <div
         role="tablist"
         aria-label="Approvals sections"
-        className="mt-6 flex gap-1 border-b border-slate-200"
+        className="mt-6 flex gap-1 border-b border-slate-200 dark:border-slate-800"
       >
         <button
           type="button"
@@ -164,7 +164,7 @@ export function ApprovalsView({
         >
           <ListChecks className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
           Rules
-          <span className="ml-1.5 text-xs text-slate-400">({rules.length})</span>
+          <span className="ml-1.5 text-xs text-slate-400 dark:text-slate-500">({rules.length})</span>
         </button>
         <button
           type="button"
@@ -175,7 +175,7 @@ export function ApprovalsView({
         >
           <Inbox className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
           Pending approvals
-          <span className="ml-1.5 text-xs text-slate-400">
+          <span className="ml-1.5 text-xs text-slate-400 dark:text-slate-500">
             ({pendingRequests.length})
           </span>
         </button>
@@ -184,7 +184,7 @@ export function ApprovalsView({
       {actionError && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {actionError}
         </p>
@@ -220,11 +220,11 @@ export function ApprovalsView({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
               >
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       <tr>
                         <th scope="col" className="px-4 py-3 font-medium">
                           Name
@@ -251,24 +251,24 @@ export function ApprovalsView({
                         )}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {rules.map((rule) => (
-                        <tr key={rule.id} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium text-slate-900">
+                        <tr key={rule.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                             {rule.name}
                             {rule.description && (
-                              <p className="text-xs font-normal text-slate-500">
+                              <p className="text-xs font-normal text-slate-500 dark:text-slate-400">
                                 {rule.description}
                               </p>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-slate-600">
+                          <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                             {rule.entityType}
                           </td>
-                          <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                          <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
                             {describeCondition(rule.condition)}
                           </td>
-                          <td className="px-4 py-3 text-slate-600">
+                          <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                             {rule.approverRoleId
                               ? (roleNameById.get(rule.approverRoleId) ??
                                 "Unknown role")
@@ -340,17 +340,17 @@ export function ApprovalsView({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
                         {request.entityType}
                       </p>
-                      <p className="font-mono text-xs text-slate-500">
+                      <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
                         {request.entityId}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         Raised {request.createdAt.toLocaleString()}
                       </p>
                     </div>
@@ -397,7 +397,7 @@ export function ApprovalsView({
                       </div>
                     </div>
                   ) : (
-                    <p className="mt-3 text-xs text-slate-500">
+                    <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
                       You do not have permission to decide this request.
                     </p>
                   )}
@@ -415,7 +415,7 @@ function tabClass(active: boolean): string {
   return [
     "-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
     active
-      ? "border-primary-600 text-primary-700"
-      : "border-transparent text-slate-500 hover:text-slate-700",
+      ? "border-primary-600 text-primary-700 dark:text-primary-300"
+      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300",
   ].join(" ");
 }

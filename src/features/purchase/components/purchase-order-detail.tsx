@@ -88,22 +88,22 @@ function CancelDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-po-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
-            <AlertTriangle className="text-error-600 h-5 w-5" aria-hidden="true" />
+          <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+            <AlertTriangle className="text-error-600 dark:text-error-400 h-5 w-5" aria-hidden="true" />
           </div>
           <div>
             <h2
               id="cancel-po-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
               Cancel purchase order
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to cancel{" "}
-              <span className="font-medium text-slate-700">{poNumber}</span>?
+              <span className="font-medium text-slate-700 dark:text-slate-300">{poNumber}</span>?
               This cannot be undone.
             </p>
           </div>
@@ -111,7 +111,7 @@ function CancelDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
@@ -166,7 +166,7 @@ function InfoRow({
       />
       <div>
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700">{value}</dd>
+        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
       </div>
     </div>
   );
@@ -301,7 +301,7 @@ export function PurchaseOrderDetail({
           <Button
             type="button"
             variant="ghost"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700"
+            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
             onClick={() => {
               setActionError(null);
               setShowCancel(true);
@@ -322,7 +322,7 @@ export function PurchaseOrderDetail({
       {actionError && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {actionError}
         </p>
@@ -331,7 +331,7 @@ export function PurchaseOrderDetail({
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Details */}
         <Card className="p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Order details
           </h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -349,17 +349,17 @@ export function PurchaseOrderDetail({
             />
           </dl>
           {purchaseOrder.terms && (
-            <div className="mt-5 border-t border-slate-100 pt-4">
+            <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-800">
               <dt className="text-xs text-muted-foreground">Terms</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {purchaseOrder.terms}
               </dd>
             </div>
           )}
           {purchaseOrder.notes && (
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
               <dt className="text-xs text-muted-foreground">Notes</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {purchaseOrder.notes}
               </dd>
             </div>
@@ -368,29 +368,29 @@ export function PurchaseOrderDetail({
 
         {/* Totals */}
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Summary</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
           <dl className="space-y-4">
             <div className="flex justify-between text-sm">
               <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="tabular-nums text-slate-700">
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                 {formatCurrency(purchaseOrder.subtotal)}
               </dd>
             </div>
             <div className="flex justify-between text-sm">
               <dt className="text-muted-foreground">Discount</dt>
-              <dd className="tabular-nums text-slate-700">
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                 −{formatCurrency(purchaseOrder.discountAmount)}
               </dd>
             </div>
             <div className="flex justify-between text-sm">
               <dt className="text-muted-foreground">Tax</dt>
-              <dd className="tabular-nums text-slate-700">
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                 {formatCurrency(purchaseOrder.taxAmount)}
               </dd>
             </div>
-            <div className="flex justify-between border-t border-slate-100 pt-3">
-              <dt className="text-sm font-medium text-slate-900">Total</dt>
-              <dd className="text-xl font-semibold tabular-nums text-slate-900">
+            <div className="flex justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+              <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">Total</dt>
+              <dd className="text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                 {formatCurrency(purchaseOrder.totalAmount)}
               </dd>
             </div>
@@ -400,11 +400,11 @@ export function PurchaseOrderDetail({
 
       {/* Items */}
       <div className="mt-6">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Line items</h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Line items</h2>
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">
                     Product
@@ -426,25 +426,25 @@ export function PurchaseOrderDetail({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {purchaseOrder.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {productNames[item.productId] ?? item.description ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {item.quantity}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.unitPrice)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {item.discountPercent}%
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {item.taxRate}%
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(item.lineTotal)}
                     </td>
                   </tr>

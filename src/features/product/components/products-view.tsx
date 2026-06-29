@@ -216,7 +216,7 @@ export function ProductsView({
       {exportError && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {exportError}
         </p>
@@ -247,14 +247,14 @@ export function ProductsView({
             placeholder="Search by name, code, SKU or barcode"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </form>
         <select
           aria-label="Filter by type"
           value={filters.type ?? ""}
           onChange={handleTypeChange}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           {TYPE_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -266,7 +266,7 @@ export function ProductsView({
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusChange}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -302,11 +302,11 @@ export function ProductsView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
                       Code
@@ -331,26 +331,26 @@ export function ProductsView({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {items.map((product: Product) => (
                     <tr
                       key={product.id}
                       onClick={() => router.push(detailHref(product.id))}
-                      className="cursor-pointer transition-colors hover:bg-slate-50"
+                      className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-900"
                     >
-                      <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                      <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">
                         {product.code}
                       </td>
-                      <td className="px-4 py-3 font-medium text-slate-900">
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                         <Link
                           href={detailHref(product.id)}
                           onClick={(e) => e.stopPropagation()}
-                          className="hover:text-primary-600 hover:underline"
+                          className="hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
                         >
                           {product.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                         {TYPE_LABEL[product.type]}
                       </td>
                       <td className="px-4 py-3">
@@ -358,10 +358,10 @@ export function ProductsView({
                           {STATUS_LABEL[product.status]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                         {product.sku ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                         {formatCurrency(product.sellingPrice)}
                       </td>
                     </tr>

@@ -8,7 +8,7 @@ import { createBatchAction } from "@/features/inventory/actions/inventory.action
 import type { ProductOption } from "@/features/inventory/types/inventory.types";
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
 
 interface BatchFormDialogProps {
   readonly organizationId: string;
@@ -74,18 +74,18 @@ export function BatchFormDialog({
         initial={{ opacity: 0, scale: 0.97, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-xl sm:px-8"
+        className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-6 shadow-xl sm:px-8"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-5 flex items-start gap-3">
-          <div className="bg-primary-50 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-            <Layers className="text-primary-600 h-5 w-5" aria-hidden="true" />
+          <div className="bg-primary-50 dark:bg-primary-500/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+            <Layers className="text-primary-600 dark:text-primary-400 h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-slate-900">
+            <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               Add batch
             </h2>
-            <p className="mt-0.5 text-sm text-slate-500">
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
               Track a manufacturing batch with its expiry and quantities.
             </p>
           </div>
@@ -93,7 +93,7 @@ export function BatchFormDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             <AlertCircle
@@ -108,7 +108,7 @@ export function BatchFormDialog({
           <div>
             <label
               htmlFor="batch-product"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Product
             </label>
@@ -132,7 +132,7 @@ export function BatchFormDialog({
             <div>
               <label
                 htmlFor="batch-number"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Batch number
               </label>
@@ -149,7 +149,7 @@ export function BatchFormDialog({
             <div>
               <label
                 htmlFor="batch-supplier"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Supplier batch
               </label>
@@ -168,7 +168,7 @@ export function BatchFormDialog({
             <div>
               <label
                 htmlFor="batch-mfg"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Manufacturing date
               </label>
@@ -183,7 +183,7 @@ export function BatchFormDialog({
             <div>
               <label
                 htmlFor="batch-expiry"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Expiry date
               </label>
@@ -200,7 +200,7 @@ export function BatchFormDialog({
           <div>
             <label
               htmlFor="batch-received"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Received quantity
             </label>

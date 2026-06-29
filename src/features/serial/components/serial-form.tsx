@@ -92,7 +92,7 @@ function FieldError({ message }: { readonly message?: string }) {
     <motion.p
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+      className="text-error-600 dark:text-error-400 mt-1.5 flex items-center gap-1.5 text-xs"
       role="alert"
     >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -120,7 +120,7 @@ function FormField({
     <div>
       <label
         htmlFor={htmlFor}
-        className="mb-1.5 block text-sm font-medium text-slate-700"
+        className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
       >
         {label}
         {required && (
@@ -130,7 +130,7 @@ function FormField({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
       <FieldError message={error} />
     </div>
   );
@@ -138,11 +138,11 @@ function FormField({
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors",
     "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
     hasError
-      ? "border-error-400 bg-error-50/30"
-      : "border-slate-300 bg-white hover:border-slate-400"
+      ? "border-error-400 bg-error-50/30 dark:bg-error-500/10"
+      : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600"
   );
 
 // ─────────────────────────────────────────────────────────────
@@ -255,18 +255,18 @@ export function SerialForm({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8"
+      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8"
     >
       {/* Header */}
       <div className="mb-6 flex items-start gap-4">
-        <div className="bg-primary-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
-          <Barcode className="text-primary-600 h-5 w-5" aria-hidden="true" />
+        <div className="bg-primary-50 dark:bg-primary-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+          <Barcode className="text-primary-600 dark:text-primary-400 h-5 w-5" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {isEdit ? "Edit serial number" : "Register serial numbers"}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update the details for this serial number"
               : "Register one or more serial numbers for a product"}
@@ -278,7 +278,7 @@ export function SerialForm({
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           role="alert"
         >
           <AlertCircle

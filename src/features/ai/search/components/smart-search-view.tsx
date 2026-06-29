@@ -40,24 +40,24 @@ function ResultGroup({ group }: { readonly group: SearchResultGroup }) {
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h3 className="text-sm font-semibold text-slate-900">{group.label}</h3>
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{group.label}</h3>
           <Badge variant="muted">
             {group.total} {group.total === 1 ? "result" : "results"}
           </Badge>
         </div>
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-slate-100 dark:divide-slate-800">
           {group.items.map((item) => (
             <li
               key={item.id}
               className="flex items-center justify-between gap-3 px-4 py-3"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-slate-900">
+                <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                   {item.title}
                 </p>
                 {item.subtitle && (
-                  <p className="truncate text-xs text-slate-500">
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                     {item.subtitle}
                   </p>
                 )}
@@ -69,7 +69,7 @@ function ResultGroup({ group }: { readonly group: SearchResultGroup }) {
                   </Badge>
                 )}
                 {item.amount !== null && (
-                  <span className="tabular-nums text-sm text-slate-700">
+                  <span className="tabular-nums text-sm text-slate-700 dark:text-slate-300">
                     {formatAmount(item.amount)}
                   </span>
                 )}
@@ -143,7 +143,7 @@ export function SmartSearchView({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             disabled={!canGenerate}
-            className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-28 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-28 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
           />
           <Button
             type="submit"
@@ -158,7 +158,7 @@ export function SmartSearchView({
       </form>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-slate-500">Try:</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">Try:</span>
         {EXAMPLE_QUERIES.map((example) => (
           <Button
             key={example}
@@ -185,7 +185,7 @@ export function SmartSearchView({
       {error && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30"
         >
           {error}
         </p>
@@ -198,17 +198,17 @@ export function SmartSearchView({
           transition={{ duration: 0.2 }}
           className="mt-6 space-y-4"
         >
-          <div className="flex items-start gap-2 rounded-lg border border-primary-100 bg-primary-50 px-3 py-2.5">
+          <div className="flex items-start gap-2 rounded-lg border border-primary-100 bg-primary-50 px-3 py-2.5 dark:border-primary-500/20 dark:bg-primary-500/10">
             <Info
               className="mt-0.5 h-4 w-4 shrink-0 text-primary-600"
               aria-hidden="true"
             />
-            <p className="text-sm text-slate-700">
-              <span className="font-medium text-slate-900">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              <span className="font-medium text-slate-900 dark:text-slate-100">
                 Interpreted as:
               </span>{" "}
               {result.intent.explanation}{" "}
-              <span className="text-slate-500">
+              <span className="text-slate-500 dark:text-slate-400">
                 ({Math.round(result.intent.confidence * 100)}% confidence)
               </span>
             </p>

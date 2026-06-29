@@ -33,8 +33,8 @@ export default function OnboardingLayout({
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/20">
           <span className="text-xl font-bold text-white">S</span>
         </div>
-        <span className="text-xl font-semibold text-slate-800">Syncrate</span>
-        <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-400">
+        <span className="text-xl font-semibold text-slate-800 dark:text-slate-100">Syncrate</span>
+        <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
           Account Setup
         </p>
       </div>

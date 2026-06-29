@@ -32,14 +32,14 @@ export default function AuthLayout({
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/20">
           <span className="text-xl font-bold text-white">S</span>
         </div>
-        <span className="text-xl font-semibold text-slate-800">Syncrate</span>
+        <span className="text-xl font-semibold text-slate-800 dark:text-slate-100">Syncrate</span>
       </div>
 
       {/* Card */}
       <div className="relative z-10 w-full max-w-md">{children}</div>
 
       {/* Footer */}
-      <p className="relative z-10 mt-8 text-center text-xs text-slate-400">
+      <p className="relative z-10 mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
         &copy; {new Date().getFullYear()} Syncrate. All rights reserved.
       </p>
     </div>

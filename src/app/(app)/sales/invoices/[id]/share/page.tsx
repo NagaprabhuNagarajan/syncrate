@@ -119,20 +119,20 @@ export default async function InvoiceSharePage({
   ]);
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-white dark:bg-slate-900 p-8">
       <div className="mx-auto max-w-4xl">
         {/* Invoice header */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               {invoice.invoiceNumber}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               {invoice.invoiceType.replace(/_/g, " ").toUpperCase()}
             </p>
           </div>
-          <div className="text-right text-sm text-slate-600">
-            <p className="font-semibold text-slate-900">{activeOrg.name}</p>
+          <div className="text-right text-sm text-slate-600 dark:text-slate-400">
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{activeOrg.name}</p>
             <p className="mt-1">Invoice date: {formatDate(invoice.invoiceDate)}</p>
             {invoice.dueDate && (
               <p>Due date: {formatDate(invoice.dueDate)}</p>
@@ -141,18 +141,18 @@ export default async function InvoiceSharePage({
         </div>
 
         {/* Customer info */}
-        <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <div className="mb-6 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             Bill to
           </p>
-          <p className="mt-1 font-semibold text-slate-900">
+          <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
             {customerName ?? "—"}
           </p>
         </div>
 
         {/* Line items */}
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+          <thead className="border-b border-slate-200 dark:border-slate-800 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <tr>
               <th scope="col" className="py-2 pr-4 font-medium">Product</th>
               <th scope="col" className="py-2 pr-4 font-medium">HSN</th>
@@ -170,13 +170,13 @@ export default async function InvoiceSharePage({
               <th scope="col" className="py-2 text-right font-medium">Total</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {invoice.items.map((item) => (
               <tr key={item.id}>
-                <td className="py-2 pr-4 text-slate-700">
+                <td className="py-2 pr-4 text-slate-700 dark:text-slate-300">
                   {productNames[item.productId] ?? item.description ?? "—"}
                 </td>
-                <td className="py-2 pr-4 font-mono text-xs text-slate-500">
+                <td className="py-2 pr-4 font-mono text-xs text-slate-500 dark:text-slate-400">
                   {item.hsnCode ?? "—"}
                 </td>
                 <td className="py-2 pr-4 text-right tabular-nums">{item.quantity}</td>
@@ -212,25 +212,25 @@ export default async function InvoiceSharePage({
         <div className="mt-6 flex justify-end">
           <dl className="w-full max-w-xs space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-slate-500">Taxable value</dt>
+              <dt className="text-slate-500 dark:text-slate-400">Taxable value</dt>
               <dd className="tabular-nums">
                 {formatCurrency(invoice.subtotal - invoice.discountAmount)}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Total GST</dt>
+              <dt className="text-slate-500 dark:text-slate-400">Total GST</dt>
               <dd className="tabular-nums">{formatCurrency(invoice.taxAmount)}</dd>
             </div>
             {invoice.roundOff !== 0 && (
               <div className="flex justify-between">
-                <dt className="text-slate-500">Round off</dt>
+                <dt className="text-slate-500 dark:text-slate-400">Round off</dt>
                 <dd className="tabular-nums">
                   {invoice.roundOff > 0 ? "+" : ""}
                   {formatCurrency(invoice.roundOff)}
                 </dd>
               </div>
             )}
-            <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold">
+            <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 text-base font-bold">
               <dt>Grand total</dt>
               <dd className="tabular-nums">{formatCurrency(invoice.totalAmount)}</dd>
             </div>
@@ -239,23 +239,23 @@ export default async function InvoiceSharePage({
 
         {/* Notes / Terms */}
         {(invoice.notes || invoice.terms) && (
-          <div className="mt-8 space-y-4 border-t border-slate-200 pt-6 text-sm text-slate-600">
+          <div className="mt-8 space-y-4 border-t border-slate-200 dark:border-slate-800 pt-6 text-sm text-slate-600 dark:text-slate-400">
             {invoice.notes && (
               <div>
-                <p className="font-semibold text-slate-800">Notes</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">Notes</p>
                 <p className="mt-1 whitespace-pre-line">{invoice.notes}</p>
               </div>
             )}
             {invoice.terms && (
               <div>
-                <p className="font-semibold text-slate-800">Terms &amp; conditions</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">Terms &amp; conditions</p>
                 <p className="mt-1 whitespace-pre-line">{invoice.terms}</p>
               </div>
             )}
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs text-slate-400">
+        <p className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
           Thank you for your business!
         </p>
       </div>

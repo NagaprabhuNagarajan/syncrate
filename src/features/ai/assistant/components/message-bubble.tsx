@@ -34,7 +34,7 @@ export function MessageBubble({
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          isUser ? "bg-primary-600 text-white" : "border bg-muted text-slate-600"
+          isUser ? "bg-primary-600 text-white" : "border bg-muted text-slate-600 dark:text-slate-400"
         )}
         aria-hidden="true"
       >
@@ -47,7 +47,7 @@ export function MessageBubble({
             "whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm",
             isUser
               ? "bg-primary-600 text-white"
-              : "border border-slate-200 bg-white text-slate-800"
+              : "border border-slate-200 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
           )}
         >
           {message.content}

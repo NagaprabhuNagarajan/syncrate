@@ -53,16 +53,16 @@ export function ResetPasswordForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-8 shadow-xl shadow-slate-200/50"
+      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 px-8 py-8 shadow-xl shadow-slate-200/50"
     >
       <div className="mb-7">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50">
-          <Lock className="h-6 w-6 text-primary-600" aria-hidden="true" />
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
+          <Lock className="h-6 w-6 text-primary-600 dark:text-primary-400" aria-hidden="true" />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Set new password
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Choose a strong password for your account
         </p>
       </div>
@@ -71,7 +71,7 @@ export function ResetPasswordForm() {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           role="alert"
         >
           <AlertCircle
@@ -87,7 +87,7 @@ export function ResetPasswordForm() {
         <div>
           <label
             htmlFor="password"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             New password
           </label>
@@ -98,11 +98,11 @@ export function ResetPasswordForm() {
               autoComplete="new-password"
               aria-invalid={errors.password ? "true" : "false"}
               className={cn(
-                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
                 "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
                 errors.password
                   ? "border-error-400 bg-error-50/30"
-                  : "border-slate-300 bg-white hover:border-slate-400"
+                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
               )}
               placeholder="At least 8 characters"
               {...register("password")}
@@ -110,7 +110,7 @@ export function ResetPasswordForm() {
             <button
               type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
@@ -122,7 +122,7 @@ export function ResetPasswordForm() {
           </div>
           {errors.password && (
             <p
-              className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+              className="text-error-600 dark:text-error-400 mt-1.5 flex items-center gap-1.5 text-xs"
               role="alert"
             >
               <AlertCircle
@@ -138,7 +138,7 @@ export function ResetPasswordForm() {
         <div>
           <label
             htmlFor="confirmPassword"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Confirm new password
           </label>
@@ -149,11 +149,11 @@ export function ResetPasswordForm() {
               autoComplete="new-password"
               aria-invalid={errors.confirmPassword ? "true" : "false"}
               className={cn(
-                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
                 "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
                 errors.confirmPassword
                   ? "border-error-400 bg-error-50/30"
-                  : "border-slate-300 bg-white hover:border-slate-400"
+                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
               )}
               placeholder="Confirm your password"
               {...register("confirmPassword")}
@@ -161,7 +161,7 @@ export function ResetPasswordForm() {
             <button
               type="button"
               onClick={() => setShowConfirm((p) => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
               aria-label={showConfirm ? "Hide password" : "Show password"}
             >
               {showConfirm ? (
@@ -173,7 +173,7 @@ export function ResetPasswordForm() {
           </div>
           {errors.confirmPassword && (
             <p
-              className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+              className="text-error-600 dark:text-error-400 mt-1.5 flex items-center gap-1.5 text-xs"
               role="alert"
             >
               <AlertCircle

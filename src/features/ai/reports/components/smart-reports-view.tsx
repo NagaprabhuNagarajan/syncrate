@@ -67,7 +67,7 @@ function SectionCard({ section }: { readonly section: ReportSection }) {
     <Card>
       <CardContent className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-base font-semibold text-slate-900">
+          <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
             {section.title}
           </h3>
           <Badge variant={trendBadgeVariant(section.trend)}>
@@ -76,17 +76,17 @@ function SectionCard({ section }: { readonly section: ReportSection }) {
           </Badge>
         </div>
 
-        <p className="text-sm text-slate-700">{section.narrative}</p>
+        <p className="text-sm text-slate-700 dark:text-slate-300">{section.narrative}</p>
 
         {section.metrics.length > 0 && (
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {section.metrics.map((metric) => (
               <div
                 key={metric.label}
-                className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
               >
-                <dt className="text-xs text-slate-500">{metric.label}</dt>
-                <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-900">
+                <dt className="text-xs text-slate-500 dark:text-slate-400">{metric.label}</dt>
+                <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                   {metric.value}
                   {metric.changePercent !== null && (
                     <span
@@ -107,12 +107,12 @@ function SectionCard({ section }: { readonly section: ReportSection }) {
         )}
 
         {section.recommendations.length > 0 && (
-          <div className="rounded-lg border border-primary-100 bg-primary-50 p-3">
-            <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-primary-700">
+          <div className="rounded-lg border border-primary-100 bg-primary-50 p-3 dark:border-primary-500/20 dark:bg-primary-500/10">
+            <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-primary-700 dark:text-primary-300">
               <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
               Recommendations
             </p>
-            <ul className="list-inside list-disc space-y-1 text-sm text-slate-700">
+            <ul className="list-inside list-disc space-y-1 text-sm text-slate-700 dark:text-slate-300">
               {section.recommendations.map((rec) => (
                 <li key={rec}>{rec}</li>
               ))}
@@ -120,7 +120,7 @@ function SectionCard({ section }: { readonly section: ReportSection }) {
           </div>
         )}
 
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 dark:text-slate-500">
           {Math.round(section.confidence * 100)}% confidence · {section.explanation}
         </p>
       </CardContent>
@@ -174,7 +174,7 @@ export function SmartReportsView({
           value={reportType}
           onChange={handleTypeChange}
           disabled={!canGenerate || isPending}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-60"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
         >
           {REPORT_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -204,7 +204,7 @@ export function SmartReportsView({
       {error && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30"
         >
           {error}
         </p>
@@ -227,16 +227,16 @@ export function SmartReportsView({
           transition={{ duration: 0.25 }}
           className="mt-6 space-y-4"
         >
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-start justify-between gap-3">
-              <h2 className="text-lg font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {report.title}
               </h2>
               <Badge variant="muted">
                 {Math.round(report.confidence * 100)}% confidence
               </Badge>
             </div>
-            <p className="mt-2 text-sm text-slate-700">{report.summary}</p>
+            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{report.summary}</p>
           </div>
 
           {report.sections.map((section) => (

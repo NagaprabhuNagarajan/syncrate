@@ -29,9 +29,9 @@ const PAYMENT_METHODS = Object.entries(PAYMENT_METHOD_LABELS) as [
 ][];
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
 
-const labelClass = "block text-sm font-medium text-slate-700 mb-1";
+const labelClass = "block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300";
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -175,27 +175,27 @@ export function RecordSupplierPaymentDialog({
         initial={{ opacity: 0, scale: 0.97, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-xl"
+        className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900"
         onClick={(event) => event.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
+        <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-5 dark:border-slate-800">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-500/10">
             <CreditCard
-              className="h-5 w-5 text-blue-600"
+              className="h-5 w-5 text-blue-600 dark:text-blue-400"
               aria-hidden="true"
             />
           </div>
           <div className="flex-1">
-            <h2 className="text-base font-semibold text-slate-900">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Make Payment
             </h2>
-            <p className="text-sm text-slate-500">{supplierName}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{supplierName}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             aria-label="Close dialog"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -297,10 +297,10 @@ export function RecordSupplierPaymentDialog({
             <div className="mt-5">
               <div className="mb-3 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-900">
+                  <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100">
                     Allocate to Purchase Invoices
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Optionally allocate this payment across outstanding purchase
                     invoices
                   </p>
@@ -308,7 +308,7 @@ export function RecordSupplierPaymentDialog({
                 <button
                   type="button"
                   onClick={addAllocation}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/50"
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                   Add Invoice
@@ -320,7 +320,7 @@ export function RecordSupplierPaymentDialog({
                   {allocations.map((row, index) => (
                     <div
                       key={row.key}
-                      className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3"
+                      className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
                     >
                       <div className="flex-1">
                         {outstandingInvoices.length > 0 ? (
@@ -378,7 +378,7 @@ export function RecordSupplierPaymentDialog({
                       <button
                         type="button"
                         onClick={() => removeAllocation(index)}
-                        className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                        className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-slate-500 dark:hover:bg-red-500/10"
                         aria-label={`Remove allocation ${index + 1}`}
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -390,15 +390,17 @@ export function RecordSupplierPaymentDialog({
 
               {/* Running total */}
               {totalAmount > 0 && allocations.length > 0 && (
-                <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5">
-                  <span className="text-sm text-slate-600">
+                <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
                     Allocated: ₹{totalAllocated.toFixed(2)} of ₹
                     {totalAmount.toFixed(2)}
                   </span>
                   <span
                     className={cn(
                       "text-sm font-medium",
-                      remaining < 0 ? "text-red-600" : "text-blue-600"
+                      remaining < 0
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-blue-600 dark:text-blue-400"
                     )}
                   >
                     {remaining >= 0
@@ -414,20 +416,20 @@ export function RecordSupplierPaymentDialog({
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
+                className="mt-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-500/30 dark:bg-red-500/10"
                 role="alert"
               >
                 <AlertCircle
                   className="mt-0.5 h-4 w-4 shrink-0 text-red-500"
                   aria-hidden="true"
                 />
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </motion.div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"

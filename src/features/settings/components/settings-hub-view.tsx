@@ -113,8 +113,8 @@ export function SettingsHubView({ permissions }: SettingsHubViewProps) {
           <SettingsIcon className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Settings</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Settings</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Manage your organization, access control, and integrations.
           </p>
         </div>
@@ -133,7 +133,7 @@ export function SettingsHubView({ permissions }: SettingsHubViewProps) {
               <Link href={section.href} className="block h-full">
                 <Card className="h-full transition-shadow hover:shadow-md">
                   <CardHeader>
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400">
                       <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <CardTitle className="mt-3 text-base">

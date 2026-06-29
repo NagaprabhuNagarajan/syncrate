@@ -44,12 +44,12 @@ function num(value: string): number {
 }
 
 const cellClass = cn(
-  "block w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 shadow-sm",
+  "block w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100",
   "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
 );
 
 const inputClass = cn(
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500",
   "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-slate-400"
 );
 
@@ -148,19 +148,19 @@ export function GoodsReceiptForm({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8"
+      className="rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 sm:px-8 sm:py-8"
     >
       <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50">
-          <PackageCheck className="h-5 w-5 text-primary-600" aria-hidden="true" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
+          <PackageCheck className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900">
+          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             Receive goods
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Record delivery against{" "}
-            <span className="font-medium text-slate-700">
+            <span className="font-medium text-slate-700 dark:text-slate-300">
               {purchaseOrder.poNumber}
             </span>
           </p>
@@ -170,7 +170,7 @@ export function GoodsReceiptForm({
       {serverError && (
         <div
           role="alert"
-          className="border-error-200 bg-error-50 text-error-800 mb-6 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mb-6 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm"
         >
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           {serverError}
@@ -182,7 +182,7 @@ export function GoodsReceiptForm({
           <div>
             <label
               htmlFor="grn-warehouse"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Warehouse
               <span className="text-error-500 ml-0.5" aria-hidden="true">
@@ -205,7 +205,7 @@ export function GoodsReceiptForm({
           <div>
             <label
               htmlFor="grn-date"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Received date
             </label>
@@ -218,10 +218,10 @@ export function GoodsReceiptForm({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200">
+        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">
                     Product
@@ -243,19 +243,19 @@ export function GoodsReceiptForm({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {meta.map((line, index) => (
                   <tr key={line.purchaseOrderItemId}>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {line.productName}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
                       {line.ordered}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
                       {line.alreadyReceived}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                       {line.outstanding}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -288,7 +288,7 @@ export function GoodsReceiptForm({
         <div>
           <label
             htmlFor="grn-notes"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Notes
           </label>
@@ -301,7 +301,7 @@ export function GoodsReceiptForm({
           />
         </div>
 
-        <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 dark:border-slate-800 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"

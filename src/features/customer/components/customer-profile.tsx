@@ -92,25 +92,25 @@ function ArchiveDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="archive-customer-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+          <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
             <AlertTriangle
-              className="text-error-600 h-5 w-5"
+              className="text-error-600 dark:text-error-400 h-5 w-5"
               aria-hidden="true"
             />
           </div>
           <div>
             <h2
               id="archive-customer-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
               Archive customer
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to archive{" "}
-              <span className="font-medium text-slate-700">{customerName}</span>?
+              <span className="font-medium text-slate-700 dark:text-slate-300">{customerName}</span>?
               Archived customers cannot receive new invoices.
             </p>
           </div>
@@ -118,7 +118,7 @@ function ArchiveDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
@@ -173,7 +173,7 @@ function InfoRow({
       />
       <div>
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700">{value}</dd>
+        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
       </div>
     </div>
   );
@@ -245,7 +245,7 @@ export function CustomerProfile({
               <Button
                 type="button"
                 variant="ghost"
-                className="text-error-600 hover:bg-error-50 hover:text-error-700"
+                className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
                 onClick={() => {
                   setArchiveError(null);
                   setShowArchive(true);
@@ -273,7 +273,7 @@ export function CustomerProfile({
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Details */}
         <Card className="p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Customer details
           </h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -295,9 +295,9 @@ export function CustomerProfile({
             />
           </dl>
           {customer.notes && (
-            <div className="mt-5 border-t border-slate-100 pt-4">
+            <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-800">
               <dt className="text-xs text-muted-foreground">Notes</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {customer.notes}
               </dd>
             </div>
@@ -306,31 +306,31 @@ export function CustomerProfile({
 
         {/* Financials */}
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Financials
           </h2>
           <dl className="space-y-4">
             <div>
               <dt className="text-xs text-muted-foreground">Outstanding</dt>
-              <dd className="text-2xl font-semibold text-slate-900">
+              <dd className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 {formatCurrency(ledger.outstanding)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Opening balance</dt>
-              <dd className="text-base font-medium text-slate-700">
+              <dd className="text-base font-medium text-slate-700 dark:text-slate-300">
                 {formatCurrency(ledger.openingBalance)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Credit limit</dt>
-              <dd className="text-base font-medium text-slate-700">
+              <dd className="text-base font-medium text-slate-700 dark:text-slate-300">
                 {formatCurrency(customer.creditLimit)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Payment terms</dt>
-              <dd className="text-base font-medium text-slate-700">
+              <dd className="text-base font-medium text-slate-700 dark:text-slate-300">
                 {customer.paymentTermsDays} days
               </dd>
             </div>
@@ -341,10 +341,10 @@ export function CustomerProfile({
       {/* Ledger */}
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">Ledger</h2>
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Ledger</h2>
           <Link
             href={`/customers/${customer.id}/ledger`}
-            className="text-xs font-medium text-primary-600 hover:text-primary-700"
+            className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
             View full ledger →
           </Link>
@@ -356,10 +356,10 @@ export function CustomerProfile({
             description="Ledger entries appear here once this customer has sales, payments or adjustments."
           />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
                       Date
@@ -378,22 +378,22 @@ export function CustomerProfile({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {ledger.entries.map((entry) => (
                     <tr key={entry.id}>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                         {formatDate(entry.entryDate)}
                       </td>
-                      <td className="px-4 py-3 text-slate-700">
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                         {entry.description ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                         {formatCurrency(entry.debit)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                         {formatCurrency(entry.credit)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                      <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                         {formatCurrency(entry.runningBalance)}
                       </td>
                     </tr>

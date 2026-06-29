@@ -86,16 +86,16 @@ function SupplierCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.05 }}
-      className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50">
-          <Truck className="h-5 w-5 text-primary-600" aria-hidden="true" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
+          <Truck className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
           <Link
             href={supplierHref(organizationId, `/suppliers/${supplier.id}`)}
-            className="block truncate text-sm font-semibold text-slate-900 hover:text-primary-600 hover:underline"
+            className="block truncate text-sm font-semibold text-slate-900 hover:text-primary-600 hover:underline dark:text-slate-100 dark:hover:text-primary-400"
           >
             {supplier.name}
           </Link>
@@ -105,7 +105,7 @@ function SupplierCard({
               {STATUS_LABEL[supplier.status]}
             </Badge>
             {supplier.rating !== null && (
-              <span className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-600">
+              <span className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
                 <Star
                   className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
                   aria-hidden="true"
@@ -117,10 +117,10 @@ function SupplierCard({
         </div>
       </div>
 
-      <dl className="mt-4 space-y-1.5 text-xs text-slate-500">
+      <dl className="mt-4 space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
         {supplier.contactPerson && (
           <div>
-            <dt className="inline font-medium text-slate-400">Contact: </dt>
+            <dt className="inline font-medium text-slate-400 dark:text-slate-500">Contact: </dt>
             <dd className="inline">{supplier.contactPerson}</dd>
           </div>
         )}
@@ -138,13 +138,13 @@ function SupplierCard({
         )}
         {location && (
           <div>
-            <dt className="inline font-medium text-slate-400">Location: </dt>
+            <dt className="inline font-medium text-slate-400 dark:text-slate-500">Location: </dt>
             <dd className="inline">{location}</dd>
           </div>
         )}
       </dl>
 
-      <div className="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4">
+      <div className="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
         <Button
           asChild
           type="button"
@@ -167,7 +167,7 @@ function SupplierCard({
             type="button"
             variant="ghost"
             size="sm"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700"
+            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
             onClick={() => onArchive(supplier)}
             aria-label={`Archive ${supplier.name}`}
           >
@@ -214,25 +214,25 @@ function ArchiveDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="archive-supplier-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full dark:bg-error-500/10">
             <AlertTriangle
-              className="text-error-600 h-5 w-5"
+              className="text-error-600 h-5 w-5 dark:text-error-400"
               aria-hidden="true"
             />
           </div>
           <div>
             <h2
               id="archive-supplier-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
               Archive supplier
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to archive{" "}
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-slate-700 dark:text-slate-300">
                 {supplier.name}
               </span>
               ? Archived suppliers remain available for historical reports.
@@ -242,7 +242,7 @@ function ArchiveDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
             role="alert"
           >
             {error}
@@ -411,7 +411,7 @@ export function SuppliersView({
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-xs">
             <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
               aria-hidden="true"
             />
             <input
@@ -420,7 +420,7 @@ export function SuppliersView({
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search suppliers"
               aria-label="Search suppliers"
-              className="block w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="block w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
             />
           </div>
           <div
@@ -437,8 +437,8 @@ export function SuppliersView({
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                   statusFilter === f.value
-                    ? "border-primary-600 bg-primary-50 text-primary-700"
-                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                    ? "border-primary-600 bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-700"
                 )}
               >
                 {f.label}

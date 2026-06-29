@@ -31,7 +31,7 @@ function FieldError({ message }: FieldErrorProps) {
     <motion.p
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+      className="text-error-600 dark:text-error-400 mt-1.5 flex items-center gap-1.5 text-xs"
       role="alert"
     >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -54,8 +54,8 @@ function AlertBanner({ type, message }: AlertBannerProps) {
       className={cn(
         "flex items-start gap-3 rounded-lg border px-4 py-3 text-sm",
         isError
-          ? "border-error-200 bg-error-50 text-error-800"
-          : "border-success-200 bg-success-50 text-success-800"
+          ? "border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300"
+          : "border-success-200 dark:border-success-500/30 bg-success-50 dark:bg-success-500/10 text-success-800 dark:text-success-300"
       )}
       role="alert"
       aria-live="assertive"
@@ -128,14 +128,14 @@ export function LoginForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-8 shadow-xl shadow-slate-200/50"
+      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 px-8 py-8 shadow-xl shadow-slate-200/50"
     >
       {/* Heading */}
       <div className="mb-7">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Welcome back
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Sign in to your Syncrate account
         </p>
       </div>
@@ -153,7 +153,7 @@ export function LoginForm() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Email address
           </label>
@@ -164,11 +164,11 @@ export function LoginForm() {
             aria-invalid={errors.email ? "true" : "false"}
             aria-describedby={errors.email ? "email-error" : undefined}
             className={cn(
-              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
               "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
               errors.email
                 ? "border-error-400 bg-error-50/30 focus:ring-error-500 focus:border-error-500"
-                : "border-slate-300 bg-white hover:border-slate-400"
+                : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
             )}
             placeholder="you@company.com"
             {...register("email")}
@@ -181,13 +181,13 @@ export function LoginForm() {
           <div className="mb-1.5 flex items-center justify-between">
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-slate-700"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="rounded text-xs font-medium text-primary-600 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              className="rounded text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             >
               Forgot password?
             </Link>
@@ -200,11 +200,11 @@ export function LoginForm() {
               aria-invalid={errors.password ? "true" : "false"}
               aria-describedby={errors.password ? "password-error" : undefined}
               className={cn(
-                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
                 "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
                 errors.password
                   ? "border-error-400 bg-error-50/30 focus:ring-error-500 focus:border-error-500"
-                  : "border-slate-300 bg-white hover:border-slate-400"
+                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
               )}
               placeholder="Enter your password"
               {...register("password")}
@@ -212,7 +212,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
@@ -230,10 +230,10 @@ export function LoginForm() {
           <input
             id="rememberMe"
             type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+            className="h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-primary-600 dark:text-primary-400 focus:ring-primary-500"
             {...register("rememberMe")}
           />
-          <label htmlFor="rememberMe" className="text-sm text-slate-600">
+          <label htmlFor="rememberMe" className="text-sm text-slate-600 dark:text-slate-400">
             Remember me for 30 days
           </label>
         </div>
@@ -252,11 +252,11 @@ export function LoginForm() {
       </form>
 
       {/* Register link */}
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="rounded font-medium text-primary-600 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          className="rounded font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         >
           Create one free
         </Link>

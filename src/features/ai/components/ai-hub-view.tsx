@@ -117,19 +117,19 @@ function ActivityRow({ item }: { readonly item: AiInteraction }) {
   return (
     <li className="flex items-center justify-between gap-3 py-2.5 text-sm">
       <div className="flex min-w-0 items-center gap-2">
-        <span className="font-medium text-slate-700">
+        <span className="font-medium text-slate-700 dark:text-slate-300">
           {CAPABILITY_LABELS[item.capability]}
         </span>
-        <span className="truncate text-slate-400">{item.model}</span>
+        <span className="truncate text-slate-400 dark:text-slate-500">{item.model}</span>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {item.confidence !== null && (
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {Math.round(item.confidence * 100)}%
           </span>
         )}
         <Badge variant={STATUS_VARIANT[item.status]}>{item.status}</Badge>
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-slate-400 dark:text-slate-500">
           {formatTime(item.createdAt)}
         </span>
       </div>
@@ -151,8 +151,8 @@ export function AiHubView({ recentActivity, aiConfigured }: AiHubViewProps) {
           <Sparkles className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">AI Platform</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">AI Platform</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Intelligent automation, insights, and assistance across your business.
           </p>
         </div>
@@ -160,7 +160,7 @@ export function AiHubView({ recentActivity, aiConfigured }: AiHubViewProps) {
 
       {!aiConfigured && (
         <div
-          className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800"
+          className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300"
           role="status"
         >
           AI is not yet configured. Set <code>ANTHROPIC_API_KEY</code> to enable
@@ -181,7 +181,7 @@ export function AiHubView({ recentActivity, aiConfigured }: AiHubViewProps) {
               <Link href={cap.href} className="block h-full">
                 <Card className="h-full transition-shadow hover:shadow-md">
                   <CardHeader>
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400">
                       <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <CardTitle className="mt-3 text-base">{cap.label}</CardTitle>
@@ -208,7 +208,7 @@ export function AiHubView({ recentActivity, aiConfigured }: AiHubViewProps) {
               description="Run an AI capability to see its audited history here."
             />
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
               {recentActivity.map((item) => (
                 <ActivityRow key={item.id} item={item} />
               ))}

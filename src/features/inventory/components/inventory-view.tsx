@@ -193,7 +193,7 @@ export function InventoryView({
 
       <p className="mt-4 text-sm text-muted-foreground">
         Total stock value:{" "}
-        <span className="font-semibold text-slate-900">
+        <span className="font-semibold text-slate-900 dark:text-slate-100">
           {currencyFormatter.format(stockValue)}
         </span>
       </p>
@@ -241,14 +241,14 @@ export function InventoryView({
             placeholder="Search by product name or code"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </form>
         <select
           aria-label="Filter by warehouse"
           value={filters.warehouseId ?? ""}
           onChange={handleWarehouseChange}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">All warehouses</option>
           {warehouses.map((warehouse) => (
@@ -257,10 +257,10 @@ export function InventoryView({
             </option>
           ))}
         </select>
-        <label className="flex items-center gap-2 whitespace-nowrap text-sm text-slate-700">
+        <label className="flex items-center gap-2 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+            className="h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-primary-600 focus:ring-primary-500"
             checked={filters.lowStockOnly ?? false}
             onChange={handleLowStockToggle}
           />
@@ -285,11 +285,11 @@ export function InventoryView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
                       Product
@@ -314,29 +314,29 @@ export function InventoryView({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {items.map((level: InventoryLevel) => {
                     const isLow = level.quantity <= level.reorderLevel;
                     return (
                       <tr
                         key={level.id}
-                        className="transition-colors hover:bg-slate-50"
+                        className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
                       >
                         <td className="px-4 py-3">
-                          <div className="font-medium text-slate-900">
+                          <div className="font-medium text-slate-900 dark:text-slate-100">
                             {level.productName}
                           </div>
-                          <div className="font-mono text-xs text-slate-500">
+                          <div className="font-mono text-xs text-slate-500 dark:text-slate-400">
                             {level.productCode}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-slate-600">
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                           {level.warehouseName}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                        <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                           {formatQuantity(level.quantity)}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-500">
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-500 dark:text-slate-400">
                           {formatQuantity(level.reorderLevel)}
                         </td>
                         <td className="px-4 py-3">
@@ -366,7 +366,7 @@ export function InventoryView({
       <div className="mt-10">
         <div className="mb-3 flex items-center gap-2">
           <History className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             Recent stock movements
           </h2>
         </div>
@@ -377,10 +377,10 @@ export function InventoryView({
             description="Inventory events are recorded here as an immutable ledger."
           />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
                       When
@@ -408,10 +408,10 @@ export function InventoryView({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {transactions.map((tx: InventoryTransaction) => (
-                    <tr key={tx.id} className="hover:bg-slate-50">
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-500">
+                    <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="whitespace-nowrap px-4 py-3 text-slate-500 dark:text-slate-400">
                         {formatDateTime(tx.createdAt)}
                       </td>
                       <td className="px-4 py-3">
@@ -419,22 +419,22 @@ export function InventoryView({
                           {TX_LABEL[tx.type]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                         {tx.productName ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                         {tx.warehouseName ?? "—"}
                       </td>
                       <td
                         className={
                           tx.quantity < 0
-                            ? "text-error-600 px-4 py-3 text-right tabular-nums font-medium"
-                            : "text-success-700 px-4 py-3 text-right tabular-nums font-medium"
+                            ? "text-error-600 dark:text-error-400 px-4 py-3 text-right tabular-nums font-medium"
+                            : "text-success-700 dark:text-success-300 px-4 py-3 text-right tabular-nums font-medium"
                         }
                       >
                         {formatSignedQuantity(tx.quantity)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-900">
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-900 dark:text-slate-100">
                         {formatQuantity(tx.runningBalance)}
                       </td>
                     </tr>

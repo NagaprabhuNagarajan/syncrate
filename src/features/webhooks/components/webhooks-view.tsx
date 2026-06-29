@@ -94,24 +94,24 @@ function SecretRevealPanel({ secret, onDismiss }: SecretRevealPanelProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       role="alert"
-      className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4"
+      className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
     >
       <div className="flex items-start gap-3">
         <ShieldAlert
-          className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+          className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400"
           aria-hidden="true"
         />
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-amber-900">
+          <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
             Copy your signing secret now
           </h3>
-          <p className="mt-0.5 text-sm text-amber-800">
+          <p className="mt-0.5 text-sm text-amber-800 dark:text-amber-300">
             This is the only time the signing secret will be shown. Store it
             securely — you won&apos;t be able to see it again. Use it to verify
             the signature on every delivery.
           </p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-            <code className="flex-1 break-all rounded-lg border border-amber-200 bg-white px-3 py-2 font-mono text-xs text-slate-800">
+            <code className="flex-1 break-all rounded-lg border border-amber-200 bg-white px-3 py-2 font-mono text-xs text-slate-800 dark:border-amber-500/30 dark:bg-slate-900 dark:text-slate-100">
               {secret}
             </code>
             <Button type="button" variant="outline" onClick={handleCopy}>
@@ -257,13 +257,13 @@ function EndpointForm({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       onSubmit={handleSubmit}
-      className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
       aria-label={isEdit ? "Edit webhook endpoint" : "Create webhook endpoint"}
     >
       {formError && (
         <p
           role="alert"
-          className="mb-4 rounded-lg border border-error-200 bg-error-50 px-3 py-2.5 text-sm text-error-700"
+          className="mb-4 rounded-lg border border-error-200 bg-error-50 px-3 py-2.5 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
         >
           {formError}
         </p>
@@ -273,7 +273,7 @@ function EndpointForm({
         <div>
           <label
             htmlFor="webhook-url"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Endpoint URL
           </label>
@@ -286,9 +286,9 @@ function EndpointForm({
             onChange={handleUrlChange}
             placeholder="https://example.com/webhooks/syncrate"
             required
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
           />
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Must be an HTTPS URL. We will POST signed JSON payloads here.
           </p>
         </div>
@@ -296,7 +296,7 @@ function EndpointForm({
         <div>
           <label
             htmlFor="webhook-description"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Description (optional)
           </label>
@@ -307,20 +307,20 @@ function EndpointForm({
             value={description}
             onChange={handleDescriptionChange}
             placeholder="e.g. Sync invoices to accounting system"
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
           />
         </div>
       </div>
 
       <fieldset className="mt-4">
-        <legend className="mb-2 text-sm font-medium text-slate-700">
+        <legend className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           Events
         </legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {WEBHOOK_EVENT_TYPES.map((eventType) => (
             <label
               key={eventType.value}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:border-slate-300"
+              className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:border-slate-300 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-700"
             >
               <input
                 type="checkbox"
@@ -328,7 +328,7 @@ function EndpointForm({
                 value={eventType.value}
                 checked={eventTypes.includes(eventType.value)}
                 onChange={handleEventToggle}
-                className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 dark:border-slate-700"
               />
               {eventType.label}
             </label>
@@ -336,7 +336,7 @@ function EndpointForm({
         </div>
       </fieldset>
 
-      <label className="mt-4 flex items-center gap-2 text-sm text-slate-700">
+      <label className="mt-4 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
         <input
           type="checkbox"
           name="isActive"
@@ -370,7 +370,7 @@ interface DeliveriesLogProps {
 function DeliveriesLog({ deliveries }: DeliveriesLogProps) {
   if (deliveries.length === 0) {
     return (
-      <p className="px-4 py-4 text-sm text-slate-500">
+      <p className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
         No deliveries yet. Send a test event to verify your endpoint.
       </p>
     );
@@ -379,7 +379,7 @@ function DeliveriesLog({ deliveries }: DeliveriesLogProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="border-y border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <thead className="border-y border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
           <tr>
             <th scope="col" className="px-4 py-2.5 font-medium">
               Event
@@ -398,10 +398,10 @@ function DeliveriesLog({ deliveries }: DeliveriesLogProps) {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
           {deliveries.map((delivery) => (
             <tr key={delivery.id}>
-              <td className="px-4 py-2.5 font-mono text-xs text-slate-700">
+              <td className="px-4 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">
                 {delivery.eventType}
               </td>
               <td className="px-4 py-2.5">
@@ -409,13 +409,13 @@ function DeliveriesLog({ deliveries }: DeliveriesLogProps) {
                   {STATUS_LABEL[delivery.status]}
                 </Badge>
               </td>
-              <td className="px-4 py-2.5 text-slate-600">
+              <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400">
                 {delivery.responseStatus ?? "—"}
               </td>
-              <td className="px-4 py-2.5 text-slate-600">
+              <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400">
                 {delivery.attempts}
               </td>
-              <td className="px-4 py-2.5 text-slate-600">
+              <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400">
                 {formatDateTime(delivery.createdAt)}
               </td>
             </tr>
@@ -469,11 +469,11 @@ function EndpointCard({
   }, [endpoint, onSendTest]);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="break-all font-mono text-sm font-medium text-slate-900">
+            <span className="break-all font-mono text-sm font-medium text-slate-900 dark:text-slate-100">
               {endpoint.url}
             </span>
             <Badge variant={endpoint.isActive ? "success" : "muted"}>
@@ -481,7 +481,7 @@ function EndpointCard({
             </Badge>
           </div>
           {endpoint.description && (
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {endpoint.description}
             </p>
           )}
@@ -492,11 +492,11 @@ function EndpointCard({
               </Badge>
             ))}
           </div>
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             Last delivery:{" "}
             {lastDelivery ? (
               <>
-                <span className="font-medium text-slate-700">
+                <span className="font-medium text-slate-700 dark:text-slate-300">
                   {STATUS_LABEL[lastDelivery.status]}
                 </span>{" "}
                 · {formatDateTime(lastDelivery.createdAt)}
@@ -548,12 +548,12 @@ function EndpointCard({
         </div>
       </div>
 
-      <div className="border-t border-slate-100">
+      <div className="border-t border-slate-100 dark:border-slate-800">
         <button
           type="button"
           onClick={handleToggle}
           aria-expanded={isExpanded}
-          className="flex w-full items-center gap-1.5 px-5 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+          className="flex w-full items-center gap-1.5 px-5 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"
         >
           {isExpanded ? (
             <ChevronDown className="h-4 w-4" aria-hidden="true" />
@@ -722,9 +722,9 @@ export function WebhooksView({
         <div
           role="alertdialog"
           aria-label="Delete webhook endpoint"
-          className="mt-6 rounded-xl border border-error-200 bg-error-50 p-4"
+          className="mt-6 rounded-xl border border-error-200 bg-error-50 p-4 dark:border-error-500/30 dark:bg-error-500/10"
         >
-          <p className="text-sm text-error-800">
+          <p className="text-sm text-error-800 dark:text-error-300">
             Delete{" "}
             <span className="font-semibold break-all">{pendingDelete.url}</span>?
             Events will no longer be delivered to this endpoint. This cannot be

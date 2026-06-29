@@ -13,9 +13,9 @@ interface ShipmentFormProps {
 }
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
 
-const labelClass = "mb-1 block text-sm font-medium text-slate-700";
+const labelClass = "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 export function ShipmentForm({
   organizationId,
@@ -48,7 +48,7 @@ export function ShipmentForm({
     <form
       onSubmit={handleSubmit}
       aria-label="Create shipment"
-      className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       {/* The manual provider is the honest default; no external carrier calls. */}
       <input type="hidden" name="provider" value="manual" />
@@ -66,7 +66,7 @@ export function ShipmentForm({
           placeholder="Paste the marketplace order ID you are shipping"
           className={inputClass}
         />
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           You must be the seller on this order to create its shipment.
         </p>
       </div>

@@ -89,7 +89,7 @@ export function ReputationView({
       )}
 
       <section aria-label="Reviews">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
           {summary.reviewCount} {summary.reviewCount === 1 ? "review" : "reviews"}
         </h2>
         <ReviewsList reviews={reviews} />

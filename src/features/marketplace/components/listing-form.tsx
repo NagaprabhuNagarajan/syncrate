@@ -16,9 +16,9 @@ interface ListingFormProps {
 }
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
 
-const labelClass = "mb-1 block text-sm font-medium text-slate-700";
+const labelClass = "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 export function ListingForm({
   organizationId,
@@ -52,7 +52,7 @@ export function ListingForm({
     <form
       onSubmit={handleSubmit}
       aria-label={isEdit ? "Edit listing" : "Create listing"}
-      className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -116,7 +116,7 @@ export function ListingForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <label htmlFor="price" className={labelClass}>
-            Price <span className="text-slate-400">(blank = on request)</span>
+            Price <span className="text-slate-400 dark:text-slate-500">(blank = on request)</span>
           </label>
           <input
             id="price"
@@ -195,7 +195,7 @@ export function ListingForm({
       {error && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 rounded-lg border px-3 py-2.5 text-sm"
         >
           {error}
         </p>
