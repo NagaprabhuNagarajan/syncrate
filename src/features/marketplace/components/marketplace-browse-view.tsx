@@ -7,6 +7,7 @@ import { Search, Star, Store, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import type {
@@ -49,7 +50,7 @@ interface ListingCardProps {
 function ListingCard({ listing }: ListingCardProps) {
   const rating = listing.reputation;
   return (
-    <Card className="flex h-full flex-col">
+    <Card hover className="flex h-full flex-col">
       <CardContent className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
           <Badge variant="info">{TYPE_LABEL[listing.listingType]}</Badge>
@@ -82,7 +83,7 @@ function ListingCard({ listing }: ListingCardProps) {
         )}
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <div className="text-primary-600 dark:text-primary-400 font-semibold tabular-nums">
+          <div className="text-primary-600 dark:text-primary-400 nums font-semibold">
             {formatPrice(listing)}
           </div>
           {listing.category && (
@@ -172,7 +173,7 @@ export function MarketplaceBrowseView({
   }, [page, pushWith]);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Marketplace"
         description="Discover products and suppliers across the network"
@@ -180,7 +181,7 @@ export function MarketplaceBrowseView({
       />
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
@@ -190,20 +191,20 @@ export function MarketplaceBrowseView({
             className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             aria-label="Search marketplace"
             placeholder="Search products and suppliers"
             value={queryInput}
             onChange={handleQueryChange}
-            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
+            className="pl-9"
           />
         </form>
         <select
           aria-label="Filter by type"
           value={filters.listingType ?? ""}
           onChange={handleTypeChange}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {TYPE_OPTIONS.map((option) => (
             <option key={option.value || "all-types"} value={option.value}>
@@ -214,7 +215,7 @@ export function MarketplaceBrowseView({
       </div>
 
       {/* Grid / empty state */}
-      <div className="mt-6">
+      <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={Store}
@@ -241,7 +242,7 @@ export function MarketplaceBrowseView({
 
       {/* Pagination */}
       {items.length > 0 && (
-        <div className="mt-6 flex items-center justify-between gap-3">
+        <div className="mt-4 flex items-center justify-between gap-3">
           <p className="text-muted-foreground text-sm">Page {page}</p>
           <div className="flex items-center gap-2">
             <Button

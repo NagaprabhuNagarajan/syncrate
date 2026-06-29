@@ -225,14 +225,14 @@ export function PurchaseReturnDetail({
     run(() => cancelPurchaseReturnAction(organizationId, purchaseReturn.id));
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title={purchaseReturn.returnNumber}
         description={supplierName ?? undefined}
         icon={Undo2}
       >
         {isDraft && canComplete && (
-          <Button type="button" onClick={handleComplete} loading={isPending}>
+          <Button type="button" variant="gradient" onClick={handleComplete} loading={isPending}>
             <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Complete
           </Button>
@@ -253,8 +253,8 @@ export function PurchaseReturnDetail({
         )}
       </PageHeader>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <Badge variant={PRET_STATUS_VARIANT[status]}>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Badge dot variant={PRET_STATUS_VARIANT[status]}>
           {PRET_STATUS_LABEL[status]}
         </Badge>
       </div>
@@ -268,9 +268,9 @@ export function PurchaseReturnDetail({
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Details */}
-        <Card className="p-6 lg:col-span-2">
+        <Card className="p-5 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Return details
           </h2>
@@ -299,24 +299,24 @@ export function PurchaseReturnDetail({
         </Card>
 
         {/* Totals */}
-        <Card className="p-6">
+        <Card className="p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
           <dl className="space-y-4">
             <div className="flex justify-between text-sm">
               <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
+              <dd className="nums text-slate-700 dark:text-slate-300">
                 {formatCurrency(purchaseReturn.subtotal)}
               </dd>
             </div>
             <div className="flex justify-between text-sm">
               <dt className="text-muted-foreground">Tax</dt>
-              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
+              <dd className="nums text-slate-700 dark:text-slate-300">
                 {formatCurrency(purchaseReturn.taxAmount)}
               </dd>
             </div>
             <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
               <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">Total</dt>
-              <dd className="text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+              <dd className="text-xl font-semibold nums text-slate-900 dark:text-slate-100">
                 {formatCurrency(purchaseReturn.totalAmount)}
               </dd>
             </div>
@@ -325,46 +325,46 @@ export function PurchaseReturnDetail({
       </div>
 
       {/* Items */}
-      <div className="mt-6">
+      <div className="mt-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Line items</h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-medium">
+                  <th scope="col" className="px-3 py-2 font-medium">
                     Product
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Qty
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Unit price
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Tax
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Line total
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {purchaseReturn.items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                  <tr key={item.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
                       {productNames[item.productId] ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
                       {item.quantity}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.unitPrice)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
                       {item.taxRate}%
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                    <td className="px-3 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(item.lineTotal)}
                     </td>
                   </tr>

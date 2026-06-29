@@ -144,7 +144,7 @@ function OverviewTab({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Other org info */}
       <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-100 text-base font-bold text-teal-700 dark:bg-teal-500/20 dark:text-teal-300">
@@ -170,7 +170,7 @@ function OverviewTab({
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
           <p className="text-xs text-slate-500 dark:text-slate-400">Status</p>
-          <Badge variant={STATUS_VARIANT[connection.status]} className="mt-1">
+          <Badge dot variant={STATUS_VARIANT[connection.status]} className="mt-1">
             {connection.status}
           </Badge>
         </div>
@@ -233,9 +233,9 @@ function OverviewTab({
           <div className="mt-4 flex gap-2">
             <Button
               size="sm"
+              variant="gradient"
               onClick={handleSave}
               disabled={isPending}
-              className="bg-teal-600 hover:bg-teal-700"
             >
               {isPending ? "Saving…" : "Save Permissions"}
             </Button>
@@ -311,7 +311,7 @@ function DocumentsTab({
               <td className="py-2 pr-4 text-slate-500 dark:text-slate-400">
                 {doc.documentDate ?? "—"}
               </td>
-              <td className="py-2 pr-4 text-right">
+              <td className="nums py-2 pr-4 text-right">
                 {doc.amount !== null
                   ? new Intl.NumberFormat("en-IN", {
                       style: "currency",
@@ -322,6 +322,7 @@ function DocumentsTab({
               </td>
               <td className="py-2">
                 <Badge
+                  dot
                   variant={
                     doc.status === "active"
                       ? "success"

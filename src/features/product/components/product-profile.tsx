@@ -187,7 +187,7 @@ function PriceRow({
   return (
     <div className="flex items-center justify-between">
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium tabular-nums text-slate-900 dark:text-slate-100">
+      <dd className="nums text-sm font-medium text-slate-900 dark:text-slate-100">
         {formatCurrency(value)}
       </dd>
     </div>
@@ -234,7 +234,7 @@ export function ProductProfile({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title={product.name}
         description={product.code}
@@ -266,8 +266,8 @@ export function ProductProfile({
         )}
       </PageHeader>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <Badge variant={STATUS_VARIANT[product.status]}>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Badge dot variant={STATUS_VARIANT[product.status]}>
           {STATUS_LABEL[product.status]}
         </Badge>
         <Badge variant="info">{TYPE_LABEL[product.type]}</Badge>
@@ -278,9 +278,9 @@ export function ProductProfile({
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Details */}
-        <Card className="p-6 lg:col-span-2">
+        <Card className="p-5 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Product details
           </h2>
@@ -341,12 +341,12 @@ export function ProductProfile({
         </Card>
 
         {/* Pricing */}
-        <Card className="p-6">
+        <Card className="p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Pricing</h2>
           <dl className="space-y-3">
             <div>
               <dt className="text-xs text-muted-foreground">Selling price</dt>
-              <dd className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              <dd className="nums text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 {formatCurrency(product.sellingPrice)}
               </dd>
             </div>

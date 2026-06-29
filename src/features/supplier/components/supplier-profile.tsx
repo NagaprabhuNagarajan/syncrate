@@ -212,7 +212,7 @@ export function SupplierProfile({
     .join("\n");
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <Link
         href={`/suppliers?org=${organizationId}`}
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
@@ -245,7 +245,7 @@ export function SupplierProfile({
       </PageHeader>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Badge variant={STATUS_VARIANT[supplier.status]}>
+        <Badge dot variant={STATUS_VARIANT[supplier.status]}>
           {STATUS_LABEL[supplier.status]}
         </Badge>
         {supplier.rating !== null && (
@@ -264,8 +264,8 @@ export function SupplierProfile({
         ))}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Contact</CardTitle>
@@ -318,7 +318,7 @@ export function SupplierProfile({
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Payables</CardTitle>
@@ -329,7 +329,7 @@ export function SupplierProfile({
                   <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                     Outstanding
                   </dt>
-                  <dd className="mt-0.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                  <dd className="nums mt-0.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">
                     {currency.format(ledger.outstanding)}
                   </dd>
                 </div>
@@ -370,7 +370,7 @@ export function SupplierProfile({
                       <span className="text-slate-600 dark:text-slate-400">
                         {entry.description ?? entry.referenceType ?? "Entry"}
                       </span>
-                      <span className="font-medium text-slate-900 dark:text-slate-100">
+                      <span className="nums font-medium text-slate-900 dark:text-slate-100">
                         {currency.format(entry.runningBalance)}
                       </span>
                     </li>

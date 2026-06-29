@@ -98,7 +98,7 @@ export function SupplierLedgerView({ supplier, ledger }: SupplierLedgerViewProps
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}
-      className="p-6 lg:p-8"
+      className="p-4 lg:p-6"
     >
       {/* Back */}
       <Link
@@ -136,7 +136,7 @@ export function SupplierLedgerView({ supplier, ledger }: SupplierLedgerViewProps
             <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Outstanding Balance
             </p>
-            <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-slate-100">
+            <p className="nums mt-1 text-3xl font-bold text-slate-900 dark:text-slate-100">
               {formatINR(ledger.outstanding)}
             </p>
           </div>
@@ -144,25 +144,25 @@ export function SupplierLedgerView({ supplier, ledger }: SupplierLedgerViewProps
           <div className="flex flex-wrap gap-8">
             <div>
               <p className="text-xs text-muted-foreground">Opening Balance</p>
-              <p className="mt-0.5 font-semibold text-slate-700 dark:text-slate-300">
+              <p className="nums mt-0.5 font-semibold text-slate-700 dark:text-slate-300">
                 {formatINR(ledger.openingBalance)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Debits</p>
-              <p className="mt-0.5 font-semibold text-red-600 dark:text-red-400">
+              <p className="nums mt-0.5 font-semibold text-red-600 dark:text-red-400">
                 {formatINR(totalDebits)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Credits</p>
-              <p className="mt-0.5 font-semibold text-emerald-600 dark:text-emerald-400">
+              <p className="nums mt-0.5 font-semibold text-emerald-600 dark:text-emerald-400">
                 {formatINR(totalCredits)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Closing Balance</p>
-              <p className="mt-0.5 font-semibold text-slate-900 dark:text-slate-100">
+              <p className="nums mt-0.5 font-semibold text-slate-900 dark:text-slate-100">
                 {formatINR(ledger.outstanding)}
               </p>
             </div>
@@ -178,27 +178,27 @@ export function SupplierLedgerView({ supplier, ledger }: SupplierLedgerViewProps
           description="Ledger entries will appear here once this supplier has invoices, payments, or adjustments."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-medium">
+                  <th scope="col" className="px-3 py-2 font-medium">
                     Date
                   </th>
-                  <th scope="col" className="px-4 py-3 font-medium">
+                  <th scope="col" className="px-3 py-2 font-medium">
                     Reference
                   </th>
-                  <th scope="col" className="px-4 py-3 font-medium">
+                  <th scope="col" className="px-3 py-2 font-medium">
                     Description
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Debit
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Credit
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Balance
                   </th>
                 </tr>
@@ -206,22 +206,22 @@ export function SupplierLedgerView({ supplier, ledger }: SupplierLedgerViewProps
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {ledger.entries.map((entry) => (
                   <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600 dark:text-slate-400">
+                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-400">
                       {formatDate(entry.entryDate)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-300">
+                    <td className="whitespace-nowrap px-3 py-2 text-slate-700 dark:text-slate-300">
                       {mapRefType(entry.referenceType)}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                       {entry.description ?? "—"}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums font-medium text-red-600 dark:text-red-400">
+                    <td className="whitespace-nowrap px-3 py-2 text-right nums font-medium text-red-600 dark:text-red-400">
                       {entry.debit > 0 ? formatINR(entry.debit) : "—"}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums font-medium text-emerald-600 dark:text-emerald-400">
+                    <td className="whitespace-nowrap px-3 py-2 text-right nums font-medium text-emerald-600 dark:text-emerald-400">
                       {entry.credit > 0 ? formatINR(entry.credit) : "—"}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums font-semibold text-slate-900 dark:text-slate-100">
+                    <td className="whitespace-nowrap px-3 py-2 text-right nums font-semibold text-slate-900 dark:text-slate-100">
                       {formatINR(entry.runningBalance)}
                     </td>
                   </tr>

@@ -43,12 +43,12 @@ export function ReputationBadge({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:gap-8",
+        "flex flex-col items-center gap-3 rounded-2xl border border-slate-200/60 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:gap-8 sm:p-6",
         className
       )}
     >
       <div className="flex flex-col items-center">
-        <span className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <span className="nums text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           {hasReviews ? averageRating.toFixed(1) : "—"}
         </span>
         <StarRating value={averageRating} size="md" className="mt-1.5" />
@@ -61,7 +61,7 @@ export function ReputationBadge({
       <div className="hidden h-16 w-px bg-slate-100 dark:bg-slate-800 sm:block" />
 
       <div className="flex flex-col items-center">
-        <span className="flex items-center gap-2 text-2xl font-bold text-success-600 dark:text-success-400">
+        <span className="nums flex items-center gap-2 text-2xl font-bold text-success-600 dark:text-success-400">
           <ThumbsUp className="h-5 w-5" aria-hidden="true" />
           {hasReviews ? `${Math.round(recommendPercent)}%` : "—"}
         </span>

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShieldCheck, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { BusinessProfileCard } from "@/features/cbn/components/BusinessProfileCard";
@@ -55,20 +56,20 @@ export function BusinessDiscovery({ organizationId }: BusinessDiscoveryProps) {
   }, []);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Search bar + filter */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by business name, GST, or Business ID…"
-            className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="pl-9"
             aria-label="Search businesses"
           />
         </div>
@@ -114,8 +115,8 @@ export function BusinessDiscovery({ organizationId }: BusinessDiscoveryProps) {
 
         {!isLoading && debouncedQuery.length < 2 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-500/20">
-              <Search className="h-7 w-7 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+            <div className="bg-gradient-brand shadow-glow-primary mb-4 flex h-14 w-14 items-center justify-center rounded-full">
+              <Search className="h-7 w-7 text-white" aria-hidden="true" />
             </div>
             <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Search the Business Network

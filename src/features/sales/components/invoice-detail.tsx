@@ -115,7 +115,7 @@ function CancelDialog({
 
         {error && (
           <div
-            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mt-4 rounded-lg border px-3 py-2 text-sm"
             role="alert"
           >
             {error}
@@ -228,7 +228,7 @@ export function InvoiceDetail({
   const shareUrl = `/sales/invoices/${invoice.id}/share`;
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title={invoice.invoiceNumber}
         description={customerName ?? undefined}
@@ -242,7 +242,7 @@ export function InvoiceDetail({
                 Edit
               </Link>
             </Button>
-            <Button type="button" onClick={handlePost} loading={isPending}>
+            <Button type="button" variant="gradient" onClick={handlePost} loading={isPending}>
               <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
               Post
             </Button>
@@ -305,9 +305,9 @@ export function InvoiceDetail({
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Details card */}
-        <Card className="p-6 lg:col-span-2">
+        <Card className="p-5 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Invoice details
           </h2>
@@ -362,7 +362,7 @@ export function InvoiceDetail({
         </Card>
 
         {/* Totals summary */}
-        <Card className="p-6">
+        <Card className="p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between">
@@ -436,46 +436,46 @@ export function InvoiceDetail({
       </div>
 
       {/* Line items table */}
-      <div className="mt-6">
+      <div className="mt-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Line items</h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-medium">
+                  <th scope="col" className="px-3 py-2 font-medium">
                     Product
                   </th>
-                  <th scope="col" className="px-4 py-3 font-medium">
+                  <th scope="col" className="px-3 py-2 font-medium">
                     HSN
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Qty
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Rate
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Disc %
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Taxable
                   </th>
                   {invoice.isInterstate ? (
-                    <th scope="col" className="px-4 py-3 text-right font-medium">
+                    <th scope="col" className="px-3 py-2 text-right font-medium">
                       IGST
                     </th>
                   ) : (
                     <>
-                      <th scope="col" className="px-4 py-3 text-right font-medium">
+                      <th scope="col" className="px-3 py-2 text-right font-medium">
                         CGST
                       </th>
-                      <th scope="col" className="px-4 py-3 text-right font-medium">
+                      <th scope="col" className="px-3 py-2 text-right font-medium">
                         SGST
                       </th>
                     </>
                   )}
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Total
                   </th>
                 </tr>
@@ -483,47 +483,47 @@ export function InvoiceDetail({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {invoice.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
                       {productNames[item.productId] ?? item.description ?? "—"}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">
+                    <td className="px-3 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">
                       {item.hsnCode ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {item.quantity}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.unitPrice)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {item.discountPercent > 0
                         ? `${item.discountPercent}%`
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.taxableAmount)}
                     </td>
                     {invoice.isInterstate ? (
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-700 dark:text-slate-300">
                         {item.igstRate > 0
                           ? `${formatCurrency(item.igstAmount)} (${item.igstRate}%)`
                           : "—"}
                       </td>
                     ) : (
                       <>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                        <td className="px-3 py-2 text-right tabular-nums text-slate-700 dark:text-slate-300">
                           {item.cgstRate > 0
                             ? `${formatCurrency(item.cgstAmount)} (${item.cgstRate}%)`
                             : "—"}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                        <td className="px-3 py-2 text-right tabular-nums text-slate-700 dark:text-slate-300">
                           {item.sgstRate > 0
                             ? `${formatCurrency(item.sgstAmount)} (${item.sgstRate}%)`
                             : "—"}
                         </td>
                       </>
                     )}
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                    <td className="px-3 py-2 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(item.lineTotal)}
                     </td>
                   </tr>

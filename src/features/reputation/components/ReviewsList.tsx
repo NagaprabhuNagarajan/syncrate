@@ -15,7 +15,7 @@ interface ReviewCardProps {
 
 function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <li className="rounded-xl border border-slate-200/60 bg-white px-5 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <li className="rounded-xl border border-slate-200/60 bg-white px-5 py-4 shadow-card transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">

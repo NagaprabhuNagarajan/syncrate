@@ -144,7 +144,7 @@ function ShipmentRow({
 
   return (
     <tr className="align-top transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         <div className="font-mono text-xs text-slate-700 dark:text-slate-300">
           {shipment.orderId}
         </div>
@@ -154,7 +154,7 @@ function ShipmentRow({
           </div>
         )}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         <span className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300">
           {isShipper ? (
             <ArrowUpRight className="h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
@@ -167,16 +167,16 @@ function ShipmentRow({
           {isShipper ? "Outbound" : "Inbound"}
         </span>
       </td>
-      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{shipment.carrier ?? "—"}</td>
-      <td className="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">
+      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">{shipment.carrier ?? "—"}</td>
+      <td className="px-3 py-2 font-mono text-xs text-slate-700 dark:text-slate-300">
         {shipment.trackingNumber ?? "—"}
       </td>
-      <td className="px-4 py-3">
-        <Badge variant={STATUS_VARIANT[shipment.status]}>
+      <td className="px-3 py-2">
+        <Badge dot variant={STATUS_VARIANT[shipment.status]}>
           {STATUS_LABEL[shipment.status]}
         </Badge>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         {actions.length > 0 ? (
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             {actions.map((action) => (
@@ -310,14 +310,14 @@ export function ShipmentsView({
   }, [page, pushWith]);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Shipments"
         description="Track logistics for your marketplace orders"
         icon={Truck}
       >
         {canManage && (
-          <Button type="button" onClick={openCreate}>
+          <Button type="button" variant="gradient" onClick={openCreate}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             New shipment
           </Button>
@@ -325,7 +325,7 @@ export function ShipmentsView({
       </PageHeader>
 
       {formOpen && canManage && (
-        <div className="mt-6">
+        <div className="mt-4">
           <ShipmentForm
             organizationId={organizationId}
             onSaved={handleSaved}
@@ -335,12 +335,12 @@ export function ShipmentsView({
       )}
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <select
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusChange}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -351,7 +351,7 @@ export function ShipmentsView({
       </div>
 
       {/* Table / empty state */}
-      <div className="mt-6">
+      <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={Truck}
@@ -372,28 +372,28 @@ export function ShipmentsView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+                <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Order
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Direction
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Carrier
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Tracking
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Status
                     </th>
-                    <th scope="col" className="px-4 py-3 text-right font-medium">
+                    <th scope="col" className="px-3 py-2 text-right font-medium">
                       Actions
                     </th>
                   </tr>

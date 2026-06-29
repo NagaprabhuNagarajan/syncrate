@@ -43,7 +43,7 @@ export function AcceptInvitationView({ token }: AcceptInvitationViewProps) {
         transition={{ duration: 0.25 }}
         className="w-full max-w-md"
       >
-        <div className="rounded-2xl border border-slate-200/60 bg-white px-6 py-7 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none sm:p-6">
           {isPending ? (
             <div className="flex flex-col items-center gap-4 py-8">
               <LoadingSpinner size="lg" label="Accepting invitation..." />
@@ -67,7 +67,7 @@ export function AcceptInvitationView({ token }: AcceptInvitationViewProps) {
                   Your invitation has been accepted successfully.
                 </p>
               </div>
-              <Button asChild className="w-full">
+              <Button asChild variant="gradient" className="w-full">
                 <Link href="/dashboard">Go to dashboard</Link>
               </Button>
             </div>
@@ -79,9 +79,9 @@ export function AcceptInvitationView({ token }: AcceptInvitationViewProps) {
             />
           ) : (
             <div className="flex flex-col items-center gap-5 py-4 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-500/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-brand shadow-glow-primary">
                 <MailCheck
-                  className="h-6 w-6 text-primary-600 dark:text-primary-400"
+                  className="h-6 w-6 text-white"
                   aria-hidden="true"
                 />
               </div>
@@ -96,6 +96,7 @@ export function AcceptInvitationView({ token }: AcceptInvitationViewProps) {
               </div>
               <Button
                 type="button"
+                variant="gradient"
                 className="w-full"
                 onClick={handleAccept}
                 loading={isPending}

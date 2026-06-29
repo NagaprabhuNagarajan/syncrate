@@ -6,6 +6,7 @@ import { Download, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AnimatedNumber } from '@/components/shared/animated-number';
 import { createClient } from '@/lib/supabase/client';
 import { getOutstandingReport } from '../services/outstanding-report.service';
 import { objectsToCsv } from '@/utils/csv';
@@ -84,7 +85,7 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
 
   return (
     <motion.div
-      className="space-y-6 p-6"
+      className="space-y-4 p-4 lg:p-6"
       variants={fadeIn}
       initial="hidden"
       animate="visible"
@@ -103,17 +104,21 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Card className="border-green-200 bg-green-50 dark:border-green-500/30 dark:bg-green-500/10">
+        <Card hover className="border-green-200 bg-green-50 dark:border-green-500/30 dark:bg-green-500/10">
           <CardContent className="pt-4">
             <p className="text-xs font-medium text-green-700 dark:text-green-300">Total Receivable</p>
-            <p className="mt-1 text-2xl font-bold text-green-900 dark:text-green-200">{fmt(data.totalReceivable)}</p>
+            <p className="mt-1 text-2xl font-bold text-green-900 dark:text-green-200">
+              <AnimatedNumber value={data.totalReceivable} prefix="₹" decimals={2} />
+            </p>
             <p className="mt-0.5 text-xs text-green-600 dark:text-green-400">{data.customers.length} customers</p>
           </CardContent>
         </Card>
-        <Card className="border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10">
+        <Card hover className="border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10">
           <CardContent className="pt-4">
             <p className="text-xs font-medium text-red-700 dark:text-red-300">Total Payable</p>
-            <p className="mt-1 text-2xl font-bold text-red-900 dark:text-red-200">{fmt(data.totalPayable)}</p>
+            <p className="mt-1 text-2xl font-bold text-red-900 dark:text-red-200">
+              <AnimatedNumber value={data.totalPayable} prefix="₹" decimals={2} />
+            </p>
             <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">{data.suppliers.length} suppliers</p>
           </CardContent>
         </Card>
@@ -178,25 +183,25 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" aria-label="Customer receivables">
                   <thead>
-                    <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:text-slate-400">
+                    <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:border-slate-800 dark:text-slate-400">
                       <th className="pb-2 pr-4">Code</th>
                       <th className="pb-2 pr-4">Customer</th>
                       <th className="pb-2 pr-4 text-right">Outstanding</th>
                       <th className="pb-2 text-right">Overdue</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y dark:divide-slate-800">
                     {data.customers.map((row) => (
-                      <tr key={row.customerId} className="hover:bg-gray-50 dark:hover:bg-slate-800/50">
-                        <td className="py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
+                      <tr key={row.customerId} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                        <td className="nums py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
                           {row.customerCode}
                         </td>
                         <td className="py-2.5 pr-4 font-medium">{row.customerName}</td>
-                        <td className="py-2.5 pr-4 text-right font-medium">
+                        <td className="nums py-2.5 pr-4 text-right font-medium">
                           {fmt(row.outstanding)}
                         </td>
                         <td
-                          className={`py-2.5 text-right font-medium ${
+                          className={`nums py-2.5 text-right font-medium ${
                             row.overdue > 0 ? 'text-red-700 dark:text-red-300' : 'text-gray-400 dark:text-slate-500'
                           }`}
                         >
@@ -237,20 +242,20 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" aria-label="Supplier payables">
                   <thead>
-                    <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:text-slate-400">
+                    <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:border-slate-800 dark:text-slate-400">
                       <th className="pb-2 pr-4">Code</th>
                       <th className="pb-2 pr-4">Supplier</th>
                       <th className="pb-2 text-right">Outstanding</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y dark:divide-slate-800">
                     {data.suppliers.map((row) => (
-                      <tr key={row.supplierId} className="hover:bg-gray-50 dark:hover:bg-slate-800/50">
-                        <td className="py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
+                      <tr key={row.supplierId} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                        <td className="nums py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
                           {row.supplierCode}
                         </td>
                         <td className="py-2.5 pr-4 font-medium">{row.supplierName}</td>
-                        <td className="py-2.5 text-right font-medium text-red-700 dark:text-red-300">
+                        <td className="nums py-2.5 text-right font-medium text-red-700 dark:text-red-300">
                           {fmt(row.outstanding)}
                         </td>
                       </tr>

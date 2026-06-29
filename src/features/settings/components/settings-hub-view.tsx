@@ -107,9 +107,9 @@ export function SettingsHubView({ permissions }: SettingsHubViewProps) {
   const visible = SECTIONS.filter((s) => permissions.includes(s.permission));
 
   return (
-    <div className="space-y-6 p-6 lg:p-8">
+    <div className="space-y-4 p-4 lg:p-6">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 shadow-sm">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
           <SettingsIcon className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
@@ -131,9 +131,9 @@ export function SettingsHubView({ permissions }: SettingsHubViewProps) {
               transition={{ duration: 0.2, delay: index * 0.03 }}
             >
               <Link href={section.href} className="block h-full">
-                <Card className="h-full transition-shadow hover:shadow-md">
+                <Card hover className="h-full">
                   <CardHeader>
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-brand text-white shadow-glow-primary">
                       <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <CardTitle className="mt-3 text-base">

@@ -7,12 +7,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Mail, ArrowLeft, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
 } from "@/features/identity/schemas/auth.schemas";
 import { forgotPasswordAction } from "@/features/identity/actions/auth.actions";
-import { cn } from "@/utils/cn";
 
 export function ForgotPasswordForm() {
   const [sent, setSent] = useState(false);
@@ -51,10 +51,10 @@ export function ForgotPasswordForm() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="rounded-2xl border border-slate-200/60 bg-white px-8 py-10 text-center shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900"
+        className="rounded-2xl border border-slate-200/60 bg-white p-6 sm:p-8 text-center shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
       >
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-500/10">
-          <Mail className="h-8 w-8 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-brand shadow-glow-primary">
+          <Mail className="h-8 w-8 text-white" aria-hidden="true" />
         </div>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
           Check your inbox
@@ -82,9 +82,9 @@ export function ForgotPasswordForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-8 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900"
+      className="rounded-2xl border border-slate-200/60 bg-white p-5 sm:p-6 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
     >
-      <div className="mb-7">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Reset your password
         </h1>
@@ -97,7 +97,7 @@ export function ForgotPasswordForm() {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
+          className="border-error-200 bg-error-50 text-error-800 mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
           role="alert"
         >
           <AlertCircle
@@ -108,7 +108,7 @@ export function ForgotPasswordForm() {
         </motion.div>
       )}
 
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
         <div>
           <label
             htmlFor="email"
@@ -116,18 +116,11 @@ export function ForgotPasswordForm() {
           >
             Email address
           </label>
-          <input
+          <Input
             id="email"
             type="email"
             autoComplete="email"
             aria-invalid={errors.email ? "true" : "false"}
-            className={cn(
-              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
-              "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
-              errors.email
-                ? "border-error-400 bg-error-50/30"
-                : "border-slate-300 bg-white hover:border-slate-400"
-            )}
             placeholder="you@company.com"
             {...register("email")}
           />
@@ -150,6 +143,7 @@ export function ForgotPasswordForm() {
         <Button
           type="submit"
           size="lg"
+          variant="gradient"
           className="w-full"
           loading={isPending}
           disabled={isPending}

@@ -47,26 +47,26 @@ function RoleRow({ role, canManage, onEdit, onDelete }: RoleRowProps) {
 
   return (
     <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         <div className="font-medium text-slate-900 dark:text-slate-100">{role.name}</div>
         {role.description && (
           <div className="text-xs text-slate-500 dark:text-slate-400">{role.description}</div>
         )}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         {role.isSystem ? (
           <Badge variant="muted">
             <Lock className="mr-1 h-3 w-3" aria-hidden="true" />
             System
           </Badge>
         ) : (
-          <Badge variant="info">Custom</Badge>
+          <Badge dot variant="info">Custom</Badge>
         )}
       </td>
-      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 tabular-nums">
+      <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">
         {role.permissionIds.length}
       </td>
-      <td className="px-4 py-3 text-right">
+      <td className="px-3 py-2 text-right">
         {editable ? (
           <div className="flex items-center justify-end gap-1">
             <Button
@@ -239,21 +239,21 @@ export function RolesView({
   );
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Roles & Permissions"
         description="Manage custom roles and the permissions they grant"
         icon={ShieldCheck}
       >
         {canManage && (
-          <Button type="button" onClick={handleOpenCreate}>
+          <Button type="button" variant="gradient" onClick={handleOpenCreate}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Create role
           </Button>
         )}
       </PageHeader>
 
-      <div className="mt-6">
+      <div className="mt-4">
         {roles.length === 0 ? (
           <EmptyState
             icon={ShieldCheck}
@@ -270,24 +270,24 @@ export function RolesView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Role
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Type
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Permissions
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right font-medium"
+                      className="px-3 py-2 text-right font-medium"
                     >
                       Actions
                     </th>

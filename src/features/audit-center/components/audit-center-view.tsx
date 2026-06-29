@@ -15,6 +15,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import {
   exportAuditCenterAction,
@@ -97,23 +98,23 @@ function AuditRow({ entry, index }: AuditRowProps) {
       transition={{ duration: 0.16, delay: Math.min(index, 10) * 0.02 }}
       className="border-b border-slate-100 last:border-0 dark:border-slate-800"
     >
-      <td className="px-4 py-3 align-top">
-        <Badge variant={SOURCE_BADGE[entry.source]}>
+      <td className="px-3 py-2 align-top">
+        <Badge dot variant={SOURCE_BADGE[entry.source]}>
           {AUDIT_CENTER_SOURCE_LABEL[entry.source]}
         </Badge>
       </td>
-      <td className="px-4 py-3 align-top">
+      <td className="px-3 py-2 align-top">
         <span className="font-mono text-xs text-slate-700 dark:text-slate-300">{entry.action}</span>
       </td>
-      <td className="px-4 py-3 align-top">
+      <td className="px-3 py-2 align-top">
         <span className="text-sm text-slate-600 dark:text-slate-400">
           {entry.actor ?? "System"}
         </span>
       </td>
-      <td className="px-4 py-3 align-top">
+      <td className="px-3 py-2 align-top">
         <span className="text-sm text-slate-900 dark:text-slate-100">{entry.summary}</span>
       </td>
-      <td className="whitespace-nowrap px-4 py-3 align-top">
+      <td className="whitespace-nowrap px-3 py-2 align-top">
         <span className="text-xs text-slate-500 dark:text-slate-400">
           {formatTimestamp(entry.timestamp)}
         </span>
@@ -273,7 +274,7 @@ export function AuditCenterView({
   const rangeEnd = Math.min(data.total, data.page * data.pageSize);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Audit Center"
         description="Browse, filter and export your organization's immutable audit trails."
@@ -292,7 +293,7 @@ export function AuditCenterView({
       </PageHeader>
 
       {/* Filter bar */}
-      <div className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-end dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-end dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col gap-1">
           <label
             htmlFor="audit-source"
@@ -304,7 +305,7 @@ export function AuditCenterView({
             id="audit-source"
             value={source}
             onChange={handleSourceChange}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             {SOURCE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -326,13 +327,13 @@ export function AuditCenterView({
               className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
               aria-hidden="true"
             />
-            <input
+            <Input
               id="audit-search"
               type="search"
               value={searchInput}
               onChange={handleSearchChange}
               placeholder="Action, summary, or actor"
-              className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="pl-8"
             />
           </div>
         </div>
@@ -344,12 +345,11 @@ export function AuditCenterView({
           >
             From
           </label>
-          <input
+          <Input
             id="audit-from"
             type="date"
             value={from}
             onChange={handleFromChange}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
@@ -360,18 +360,17 @@ export function AuditCenterView({
           >
             To
           </label>
-          <input
+          <Input
             id="audit-to"
             type="date"
             value={to}
             onChange={handleToChange}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
       </div>
 
       {/* Table */}
-      <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
         {error ? (
           <div className="p-5">
             <ErrorState message={error} />
@@ -392,20 +391,20 @@ export function AuditCenterView({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-800/40">
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <tr className="border-b border-slate-100 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-800/40">
+                  <th className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Source
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Action
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Actor
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Summary
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Timestamp
                   </th>
                 </tr>

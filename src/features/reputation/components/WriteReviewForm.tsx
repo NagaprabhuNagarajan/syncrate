@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { AlertCircle, Star, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/utils/cn";
 import { StarRatingInput } from "@/features/reputation/components/StarRating";
 import {
@@ -16,11 +18,6 @@ import {
   updateReviewAction,
 } from "@/features/reputation/actions/reputation.actions";
 import type { Review } from "@/features/reputation/types/reputation.types";
-
-const inputClass = cn(
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500",
-  "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-slate-400 dark:hover:border-slate-600"
-);
 
 interface WriteReviewFormProps {
   readonly organizationId: string;
@@ -152,7 +149,7 @@ export function WriteReviewForm({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="space-y-5 rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="space-y-4 rounded-2xl border border-slate-200/60 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900 sm:p-6"
     >
       <div>
         <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
@@ -193,12 +190,11 @@ export function WriteReviewForm({
         >
           Title
         </label>
-        <input
+        <Input
           id="review-title"
           type="text"
           value={title}
           onChange={handleTitleChange}
-          className={inputClass}
           placeholder="Great supplier, fast delivery"
           maxLength={150}
         />
@@ -211,12 +207,11 @@ export function WriteReviewForm({
         >
           Comment
         </label>
-        <textarea
+        <Textarea
           id="review-comment"
           value={comment}
           onChange={handleCommentChange}
           rows={4}
-          className={inputClass}
           placeholder="Describe your experience…"
           maxLength={2000}
         />
@@ -260,7 +255,12 @@ export function WriteReviewForm({
             Cancel
           </Button>
         )}
-        <Button type="submit" loading={isPending} disabled={isPending}>
+        <Button
+          type="submit"
+          variant="gradient"
+          loading={isPending}
+          disabled={isPending}
+        >
           <Star className="mr-1.5 h-4 w-4" aria-hidden="true" />
           {isEdit ? "Save changes" : "Submit review"}
         </Button>

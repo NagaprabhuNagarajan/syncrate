@@ -7,12 +7,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
 } from "@/features/identity/schemas/auth.schemas";
 import { resetPasswordAction } from "@/features/identity/actions/auth.actions";
-import { cn } from "@/utils/cn";
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -53,11 +53,11 @@ export function ResetPasswordForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 px-8 py-8 shadow-xl shadow-slate-200/50"
+      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 shadow-lg shadow-slate-200/50 dark:shadow-none"
     >
-      <div className="mb-7">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
-          <Lock className="h-6 w-6 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+      <div className="mb-6">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+          <Lock className="h-6 w-6 text-white" aria-hidden="true" />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Set new password
@@ -71,7 +71,7 @@ export function ResetPasswordForm() {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           role="alert"
         >
           <AlertCircle
@@ -82,7 +82,7 @@ export function ResetPasswordForm() {
         </motion.div>
       )}
 
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
         {/* New Password */}
         <div>
           <label
@@ -92,18 +92,12 @@ export function ResetPasswordForm() {
             New password
           </label>
           <div className="relative">
-            <input
+            <Input
               id="password"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               aria-invalid={errors.password ? "true" : "false"}
-              className={cn(
-                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
-                "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
-                errors.password
-                  ? "border-error-400 bg-error-50/30"
-                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
-              )}
+              className="pr-10"
               placeholder="At least 8 characters"
               {...register("password")}
             />
@@ -143,18 +137,12 @@ export function ResetPasswordForm() {
             Confirm new password
           </label>
           <div className="relative">
-            <input
+            <Input
               id="confirmPassword"
               type={showConfirm ? "text" : "password"}
               autoComplete="new-password"
               aria-invalid={errors.confirmPassword ? "true" : "false"}
-              className={cn(
-                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
-                "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
-                errors.confirmPassword
-                  ? "border-error-400 bg-error-50/30"
-                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
-              )}
+              className="pr-10"
               placeholder="Confirm your password"
               {...register("confirmPassword")}
             />
@@ -188,6 +176,7 @@ export function ResetPasswordForm() {
         <Button
           type="submit"
           size="lg"
+          variant="gradient"
           className="w-full"
           loading={isPending}
           disabled={isPending}

@@ -6,6 +6,7 @@ import { Download, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AnimatedNumber } from '@/components/shared/animated-number';
 import { createClient } from '@/lib/supabase/client';
 import { getGstReport } from '../services/gst-report.service';
 import { ReportDateFilter } from './report-date-filter';
@@ -83,7 +84,7 @@ export function GstReportView({ initialData, orgId }: GstReportViewProps) {
 
   return (
     <motion.div
-      className="space-y-6 p-6"
+      className="space-y-4 p-4 lg:p-6"
       variants={fadeIn}
       initial="hidden"
       animate="visible"
@@ -91,8 +92,8 @@ export function GstReportView({ initialData, orgId }: GstReportViewProps) {
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">GST Summary</h1>
-          <p className="mt-1 text-sm text-gray-500">CGST, SGST, and IGST breakdown for tax compliance</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">GST Summary</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">CGST, SGST, and IGST breakdown for tax compliance</p>
         </div>
         <ReportDateFilter value={dateRange} onChange={handleDateChange} />
       </div>
@@ -105,17 +106,19 @@ export function GstReportView({ initialData, orgId }: GstReportViewProps) {
           { label: 'Total SGST', value: data.totals.sgstAmount },
           { label: 'Total IGST', value: data.totals.igstAmount },
         ].map((card) => (
-          <Card key={card.label}>
+          <Card key={card.label} hover>
             <CardContent className="pt-4">
-              <p className="text-xs text-gray-500">{card.label}</p>
-              <p className="mt-1 text-lg font-bold text-gray-900">{fmt(card.value)}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{card.label}</p>
+              <p className="mt-1 text-lg font-bold text-gray-900 dark:text-slate-100">
+                <AnimatedNumber value={card.value} prefix="₹" decimals={2} />
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {error !== null && (
-        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
           {error}
         </div>
       )}
@@ -138,14 +141,14 @@ export function GstReportView({ initialData, orgId }: GstReportViewProps) {
           {isLoading ? (
             <TableSkeleton />
           ) : data.lines.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500">
+            <p className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">
               No GST data found for the selected period.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm" aria-label="Monthly GST breakdown">
                 <thead>
-                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500">
+                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:border-slate-800 dark:text-slate-400">
                     <th className="pb-2 pr-4">Month</th>
                     <th className="pb-2 pr-4 text-right">Taxable Amount</th>
                     <th className="pb-2 pr-4 text-right">CGST</th>
@@ -154,26 +157,26 @@ export function GstReportView({ initialData, orgId }: GstReportViewProps) {
                     <th className="pb-2 text-right">Total Tax</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y dark:divide-slate-800">
                   {data.lines.map((row) => (
-                    <tr key={row.month} className="hover:bg-gray-50">
+                    <tr key={row.month} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
                       <td className="py-2.5 pr-4 font-medium">{row.month}</td>
-                      <td className="py-2.5 pr-4 text-right">{fmt(row.taxableAmount)}</td>
-                      <td className="py-2.5 pr-4 text-right">{fmt(row.cgstAmount)}</td>
-                      <td className="py-2.5 pr-4 text-right">{fmt(row.sgstAmount)}</td>
-                      <td className="py-2.5 pr-4 text-right">{fmt(row.igstAmount)}</td>
-                      <td className="py-2.5 text-right font-medium">{fmt(row.totalTax)}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{fmt(row.taxableAmount)}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{fmt(row.cgstAmount)}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{fmt(row.sgstAmount)}</td>
+                      <td className="nums py-2.5 pr-4 text-right">{fmt(row.igstAmount)}</td>
+                      <td className="nums py-2.5 text-right font-medium">{fmt(row.totalTax)}</td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="border-t-2">
+                <tfoot className="border-t-2 dark:border-slate-700">
                   <tr className="font-semibold">
                     <td className="pt-2.5 pr-4">Total</td>
-                    <td className="pt-2.5 pr-4 text-right">{fmt(data.totals.taxableAmount)}</td>
-                    <td className="pt-2.5 pr-4 text-right">{fmt(data.totals.cgstAmount)}</td>
-                    <td className="pt-2.5 pr-4 text-right">{fmt(data.totals.sgstAmount)}</td>
-                    <td className="pt-2.5 pr-4 text-right">{fmt(data.totals.igstAmount)}</td>
-                    <td className="pt-2.5 text-right">{fmt(data.totals.totalTax)}</td>
+                    <td className="nums pt-2.5 pr-4 text-right">{fmt(data.totals.taxableAmount)}</td>
+                    <td className="nums pt-2.5 pr-4 text-right">{fmt(data.totals.cgstAmount)}</td>
+                    <td className="nums pt-2.5 pr-4 text-right">{fmt(data.totals.sgstAmount)}</td>
+                    <td className="nums pt-2.5 pr-4 text-right">{fmt(data.totals.igstAmount)}</td>
+                    <td className="nums pt-2.5 text-right">{fmt(data.totals.totalTax)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -183,7 +186,7 @@ export function GstReportView({ initialData, orgId }: GstReportViewProps) {
       </Card>
 
       {isLoading && (
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-500" aria-live="polite">
+        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-slate-400" aria-live="polite">
           <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
           Loading report…
         </div>

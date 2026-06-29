@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CategoryForm } from "@/features/category/components/category-form";
@@ -142,14 +143,18 @@ export function CategoriesView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Categories"
         description="Organize your products into nested categories"
         icon={FolderTree}
       >
         {canManage && (
-          <Button type="button" onClick={() => setFormState({ mode: "create" })}>
+          <Button
+            type="button"
+            variant="gradient"
+            onClick={() => setFormState({ mode: "create" })}
+          >
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Add category
           </Button>
@@ -166,7 +171,7 @@ export function CategoriesView({
       )}
 
       {canManage && formState && (
-        <div className="mt-6">
+        <div className="mt-4">
           <CategoryForm
             organizationId={organizationId}
             category={formState.mode === "edit" ? formState.category : undefined}
@@ -178,30 +183,30 @@ export function CategoriesView({
       )}
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
           className="relative flex-1"
         >
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             aria-label="Search categories"
             placeholder="Search by name or description"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="pl-9"
           />
         </form>
         <select
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusChange}
-          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -212,7 +217,7 @@ export function CategoriesView({
       </div>
 
       {/* Table / empty state */}
-      <div className="mt-6">
+      <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={FolderTree}
@@ -237,28 +242,28 @@ export function CategoriesView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Name
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Parent
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Description
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Status
                     </th>
                     {canManage && (
                       <th
                         scope="col"
-                        className="px-4 py-3 text-right font-medium"
+                        className="px-3 py-2 text-right font-medium"
                       >
                         Actions
                       </th>
@@ -267,23 +272,23 @@ export function CategoriesView({
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {items.map((category: Category) => (
-                    <tr key={category.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                    <tr key={category.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100">
                         {category.name}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {parentLabel(category.parentId)}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {category.description ?? "—"}
                       </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={STATUS_VARIANT[category.status]}>
+                      <td className="px-3 py-2">
+                        <Badge dot variant={STATUS_VARIANT[category.status]}>
                           {STATUS_LABEL[category.status]}
                         </Badge>
                       </td>
                       {canManage && (
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               type="button"

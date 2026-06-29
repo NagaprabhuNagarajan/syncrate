@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BrandLogo } from "@/components/shared/logo";
+import { AuthShowcase } from "@/components/shared/auth-showcase";
 
 export const metadata: Metadata = {
   title: {
@@ -9,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Onboarding layout — fullscreen gradient with a prominent centered form.
- * Slightly different from auth layout — has a progress indicator slot.
+ * Onboarding layout — split screen: branded showcase panel (lg+) beside the
+ * setup form. Mirrors the auth layout for a consistent first-run experience.
  */
 export default function OnboardingLayout({
   children,
@@ -18,27 +19,35 @@ export default function OnboardingLayout({
   readonly children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12 sm:px-6 lg:px-8">
-      {/* Background decoration */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-      >
-        <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-primary-100/50 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-indigo-100/50 blur-3xl" />
-        <div className="absolute left-1/2 top-1/4 h-64 w-64 -translate-x-1/2 rounded-full bg-sky-100/30 blur-3xl" />
-      </div>
+    <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr] xl:grid-cols-[1.15fr_1fr]">
+      {/* Left: branded showcase (desktop only) */}
+      <AuthShowcase variant="onboarding" className="hidden lg:flex" />
 
-      {/* Logo + step indicator */}
-      <div className="relative z-10 mb-8 flex flex-col items-center">
-        <BrandLogo size={150} priority />
-        <p className="mt-2 text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Account Setup
-        </p>
-      </div>
+      {/* Right: content area */}
+      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-10 sm:px-6 lg:px-8">
+        {/* Soft background decoration */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
+          <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-primary-100/50 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-indigo-100/50 blur-3xl" />
+          <div className="absolute left-1/2 top-1/4 h-64 w-64 -translate-x-1/2 rounded-full bg-sky-100/30 blur-3xl" />
+        </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-xl">{children}</div>
+        {/* Logo + step indicator — shown when showcase panel is hidden */}
+        <div className="relative z-10 mb-6 flex flex-col items-center">
+          <div className="lg:hidden">
+            <BrandLogo size={132} priority />
+          </div>
+          <p className="mt-2 text-xs font-medium uppercase tracking-wider text-slate-400">
+            Account Setup
+          </p>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-xl">{children}</div>
+      </div>
     </div>
   );
 }

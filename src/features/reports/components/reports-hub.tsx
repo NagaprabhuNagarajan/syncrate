@@ -12,40 +12,35 @@ const REPORTS = [
     description: 'Daily, monthly, and yearly sales totals with customer breakdown',
     icon: BarChart3,
     href: '/reports/sales',
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
+    gradient: 'bg-gradient-info',
   },
   {
     title: 'Purchase Report',
     description: 'Purchase summary and supplier-wise breakdown',
     icon: ShoppingCart,
     href: '/reports/purchases',
-    color: 'text-purple-600',
-    bg: 'bg-purple-50',
+    gradient: 'bg-gradient-violet',
   },
   {
     title: 'Inventory Report',
     description: 'Current stock levels, low stock alerts, and out-of-stock items',
     icon: Package,
     href: '/reports/inventory',
-    color: 'text-green-600',
-    bg: 'bg-green-50',
+    gradient: 'bg-gradient-success',
   },
   {
     title: 'GST Summary',
     description: 'CGST, SGST, and IGST breakdowns for tax compliance',
     icon: Receipt,
     href: '/reports/gst',
-    color: 'text-orange-600',
-    bg: 'bg-orange-50',
+    gradient: 'bg-gradient-warning',
   },
   {
     title: 'Outstanding Report',
     description: 'Customer receivables and supplier payables with aging analysis',
     icon: AlertCircle,
     href: '/reports/outstanding',
-    color: 'text-red-600',
-    bg: 'bg-red-50',
+    gradient: 'bg-gradient-error',
   },
 ] as const;
 
@@ -64,10 +59,10 @@ const cardVariants = {
 
 export function ReportsHub() {
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 p-4 lg:p-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Reports</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
           View and export business reports for insights and compliance
         </p>
       </div>
@@ -81,12 +76,12 @@ export function ReportsHub() {
           const Icon = report.icon;
           return (
             <motion.div key={report.href} variants={cardVariants}>
-              <Card className="group h-full transition-shadow duration-200 hover:shadow-md">
+              <Card hover className="group h-full">
                 <CardHeader>
                   <div
-                    className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg ${report.bg}`}
+                    className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg ${report.gradient} shadow-glow-primary`}
                   >
-                    <Icon className={`h-5 w-5 ${report.color}`} aria-hidden="true" />
+                    <Icon className="h-5 w-5 text-white" aria-hidden="true" />
                   </div>
                   <CardTitle className="text-base">{report.title}</CardTitle>
                   <CardDescription>{report.description}</CardDescription>

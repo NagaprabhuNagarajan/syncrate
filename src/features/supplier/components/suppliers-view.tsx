@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import {
@@ -101,7 +102,7 @@ function SupplierCard({
           </Link>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{supplier.code}</Badge>
-            <Badge variant={STATUS_VARIANT[supplier.status]}>
+            <Badge dot variant={STATUS_VARIANT[supplier.status]}>
               {STATUS_LABEL[supplier.status]}
             </Badge>
             {supplier.rating !== null && (
@@ -360,7 +361,7 @@ export function SuppliersView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Suppliers"
         description="Manage your supplier relationships and procurement contacts"
@@ -389,7 +390,7 @@ export function SuppliersView({
               </Button>
             </>
           )}
-          <Button asChild type="button">
+          <Button asChild type="button" variant="gradient">
             <Link href={supplierHref(organizationId, "/suppliers/new")}>
               <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
               Add supplier
@@ -408,19 +409,19 @@ export function SuppliersView({
       )}
 
       {suppliers.length > 0 && (
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-xs">
             <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+              className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
             />
-            <input
+            <Input
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search suppliers"
               aria-label="Search suppliers"
-              className="block w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
+              className="pl-9"
             />
           </div>
           <div
@@ -448,7 +449,7 @@ export function SuppliersView({
         </div>
       )}
 
-      <div className="mt-8">
+      <div className="mt-6">
         {suppliers.length === 0 ? (
           <EmptyState
             icon={Truck}

@@ -128,7 +128,7 @@ function ActivityRow({ item }: { readonly item: AiInteraction }) {
             {Math.round(item.confidence * 100)}%
           </span>
         )}
-        <Badge variant={STATUS_VARIANT[item.status]}>{item.status}</Badge>
+        <Badge dot variant={STATUS_VARIANT[item.status]}>{item.status}</Badge>
         <span className="text-xs text-slate-400 dark:text-slate-500">
           {formatTime(item.createdAt)}
         </span>
@@ -145,9 +145,9 @@ interface AiHubViewProps {
 /** Landing hub for the AI Platform: capability launcher + recent activity. */
 export function AiHubView({ recentActivity, aiConfigured }: AiHubViewProps) {
   return (
-    <div className="space-y-6 p-6 lg:p-8">
+    <div className="space-y-4 p-4 lg:p-6">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 shadow-sm">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
           <Sparkles className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>

@@ -58,7 +58,7 @@ export function ReputationView({
   const showReviewAction = canReview && !isOwnOrg;
 
   return (
-    <div className="space-y-6 p-6 lg:p-8">
+    <div className="space-y-4 p-4 lg:p-6">
       <PageHeader
         title={isOwnOrg ? "Your reputation" : `${subjectName} reputation`}
         description={
@@ -68,7 +68,7 @@ export function ReputationView({
         }
       >
         {showReviewAction && !isWriting && (
-          <Button onClick={openForm}>
+          <Button variant="gradient" onClick={openForm}>
             <PenSquare className="mr-1.5 h-4 w-4" aria-hidden="true" />
             {existingReview ? "Edit your review" : "Write a review"}
           </Button>

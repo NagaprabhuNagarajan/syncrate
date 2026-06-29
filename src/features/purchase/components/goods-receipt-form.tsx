@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { PackageCheck, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { createGoodsReceiptAction } from "@/features/purchase/actions/goods-receipt.actions";
 import type { PurchaseOrderWithItems } from "@/features/purchase/types/purchase-order.types";
 import type { WarehouseOption } from "@/features/purchase/components/purchase-order-form";
@@ -44,13 +46,13 @@ function num(value: string): number {
 }
 
 const cellClass = cn(
-  "block w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100",
-  "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+  "block w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-slate-900 shadow-sm transition-[border-color,box-shadow] duration-150 ease-out dark:text-slate-100",
+  "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
 );
 
 const inputClass = cn(
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500",
-  "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-slate-400"
+  "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out dark:text-slate-100",
+  "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-slate-400 dark:hover:border-slate-600"
 );
 
 // ─────────────────────────────────────────────────────────────
@@ -148,11 +150,11 @@ export function GoodsReceiptForm({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 sm:px-8 sm:py-8"
+      className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 sm:p-6"
     >
-      <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
-          <PackageCheck className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+      <div className="mb-6 flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+          <PackageCheck className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
@@ -177,7 +179,7 @@ export function GoodsReceiptForm({
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form onSubmit={onSubmit} className="space-y-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label
@@ -209,36 +211,35 @@ export function GoodsReceiptForm({
             >
               Received date
             </label>
-            <input
+            <Input
               id="grn-date"
               type="date"
-              className={inputClass}
               {...register("receivedDate")}
             />
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+        <div className="overflow-hidden rounded-xl border border-slate-200 shadow-card dark:border-slate-800">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+              <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-medium">
+                  <th scope="col" className="px-3 py-2 font-medium">
                     Product
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Ordered
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Already received
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Outstanding
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Receive now
                   </th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
                     Rejected
                   </th>
                 </tr>
@@ -246,19 +247,19 @@ export function GoodsReceiptForm({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {meta.map((line, index) => (
                   <tr key={line.purchaseOrderItemId}>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                    <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
                       {line.productName}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
+                    <td className="px-3 py-2 text-right nums text-slate-600 dark:text-slate-400">
                       {line.ordered}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
+                    <td className="px-3 py-2 text-right nums text-slate-600 dark:text-slate-400">
                       {line.alreadyReceived}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                    <td className="px-3 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
                       {line.outstanding}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-2 text-right">
                       <input
                         type="number"
                         min={0}
@@ -268,7 +269,7 @@ export function GoodsReceiptForm({
                         {...register(`items.${index}.receivedQuantity`)}
                       />
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-2 text-right">
                       <input
                         type="number"
                         min={0}
@@ -292,11 +293,10 @@ export function GoodsReceiptForm({
           >
             Notes
           </label>
-          <textarea
+          <Textarea
             id="grn-notes"
             rows={3}
             placeholder="Delivery condition, discrepancies, etc."
-            className={inputClass}
             {...register("notes")}
           />
         </div>
@@ -310,7 +310,12 @@ export function GoodsReceiptForm({
           >
             Cancel
           </Button>
-          <Button type="submit" loading={isPending} disabled={isPending}>
+          <Button
+            type="submit"
+            variant="gradient"
+            loading={isPending}
+            disabled={isPending}
+          >
             <PackageCheck className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Record receipt
           </Button>

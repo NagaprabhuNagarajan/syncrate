@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import {
@@ -170,14 +171,18 @@ export function SerialsView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Serial Numbers"
         description="Track unique, serialized inventory items"
         icon={Barcode}
       >
         {canManage && (
-          <Button type="button" onClick={() => setRegisterOpen(true)}>
+          <Button
+            type="button"
+            variant="gradient"
+            onClick={() => setRegisterOpen(true)}
+          >
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Register serials
           </Button>
@@ -194,30 +199,30 @@ export function SerialsView({
       )}
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
           className="relative flex-1"
         >
           <Search
-            className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+            className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             aria-label="Search serial numbers"
             placeholder="Search by serial number or notes"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:outline-none focus:ring-2"
+            className="pl-9"
           />
         </form>
         <select
           aria-label="Filter by product"
           value={filters.productId ?? ""}
           onChange={handleProductFilter}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:outline-none focus:ring-2"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           <option value="">All products</option>
           {products.map((product) => (
@@ -230,7 +235,7 @@ export function SerialsView({
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusFilter}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:outline-none focus:ring-2"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           <option value="">All statuses</option>
           {STATUS_OPTIONS.map((status) => (
@@ -242,7 +247,7 @@ export function SerialsView({
       </div>
 
       {/* Table / empty state */}
-      <div className="mt-6">
+      <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={Barcode}
@@ -267,46 +272,49 @@ export function SerialsView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Serial
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Product
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Status
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Warehouse
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Notes
                     </th>
                     {canManage && (
                       <th
                         scope="col"
-                        className="px-4 py-3 text-right font-medium"
+                        className="px-3 py-2 text-right font-medium"
                       >
                         Actions
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {items.map((serial: SerialNumber) => (
-                    <tr key={serial.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-mono text-xs font-medium text-slate-900">
+                    <tr
+                      key={serial.id}
+                      className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    >
+                      <td className="px-3 py-2 font-mono text-xs font-medium text-slate-900 dark:text-slate-100">
                         {canManage ? (
                           <button
                             type="button"
                             onClick={() => setEditing(serial)}
-                            className="hover:text-primary-600 hover:underline"
+                            className="hover:text-primary-600 hover:underline dark:hover:text-primary-400"
                           >
                             {serial.serialNumber}
                           </button>
@@ -314,7 +322,7 @@ export function SerialsView({
                           serial.serialNumber
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {serial.productName ?? "—"}
                         {serial.productCode && (
                           <span className="ml-1 text-xs text-slate-400">
@@ -322,21 +330,21 @@ export function SerialsView({
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={STATUS_VARIANT[serial.status]}>
+                      <td className="px-3 py-2">
+                        <Badge dot variant={STATUS_VARIANT[serial.status]}>
                           {SERIAL_STATUS_LABELS[serial.status]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {serial.warehouseId
                           ? warehouseNames.get(serial.warehouseId) ?? "—"
                           : "—"}
                       </td>
-                      <td className="max-w-[16rem] truncate px-4 py-3 text-slate-600">
+                      <td className="max-w-[16rem] truncate px-3 py-2 text-slate-600 dark:text-slate-400">
                         {serial.notes ?? "—"}
                       </td>
                       {canManage && (
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2">
                           <div className="flex items-center justify-end gap-2">
                             <label className="sr-only" htmlFor={`status-${serial.id}`}>
                               Update status for {serial.serialNumber}
@@ -347,7 +355,7 @@ export function SerialsView({
                               onChange={(e) =>
                                 handleStatusChange(serial, e.target.value)
                               }
-                              className="focus:border-primary-500 focus:ring-primary-500 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:outline-none focus:ring-2"
+                              className="rounded-md border border-input bg-background px-2 py-1 text-xs text-slate-700 shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:text-slate-300"
                             >
                               {STATUS_OPTIONS.map((status) => (
                                 <option key={status} value={status}>

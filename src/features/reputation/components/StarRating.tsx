@@ -78,7 +78,7 @@ function StarButton({ star, active, size, onSelect }: StarButtonProps) {
           SIZE_CLASS[size],
           active
             ? "fill-amber-400 text-amber-400"
-            : "fill-slate-100 text-slate-300"
+            : "fill-slate-100 text-slate-300 dark:fill-slate-700 dark:text-slate-600"
         )}
         aria-hidden="true"
       />

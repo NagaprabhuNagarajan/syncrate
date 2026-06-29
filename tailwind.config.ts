@@ -85,13 +85,24 @@ const config: Config = {
         mono: ["var(--font-mono)", "monospace"],
       },
       fontSize: {
-        "heading-1": ["2.25rem", { lineHeight: "2.5rem", fontWeight: "700" }],
-        "heading-2": ["1.875rem", { lineHeight: "2.25rem", fontWeight: "700" }],
-        "heading-3": ["1.5rem", { lineHeight: "2rem", fontWeight: "600" }],
-        "heading-4": ["1.25rem", { lineHeight: "1.75rem", fontWeight: "600" }],
-        "heading-5": ["1.125rem", { lineHeight: "1.75rem", fontWeight: "600" }],
-        body: ["1rem", { lineHeight: "1.5rem" }],
-        small: ["0.875rem", { lineHeight: "1.25rem" }],
+        // Standard scale — stepped down one notch for a denser, enterprise
+        // feel (14px base). Type-only; spacing scale is untouched.
+        xs: ["0.75rem", { lineHeight: "1rem" }], // 12
+        sm: ["0.8125rem", { lineHeight: "1.125rem" }], // 13
+        base: ["0.875rem", { lineHeight: "1.375rem" }], // 14 (new base)
+        lg: ["1rem", { lineHeight: "1.5rem" }], // 16
+        xl: ["1.125rem", { lineHeight: "1.75rem" }], // 18
+        "2xl": ["1.375rem", { lineHeight: "1.875rem" }], // 22
+        "3xl": ["1.625rem", { lineHeight: "2rem" }], // 26
+        "4xl": ["1.875rem", { lineHeight: "2.25rem" }], // 30
+        // Semantic heading tokens — stepped down to match
+        "heading-1": ["1.875rem", { lineHeight: "2.25rem", fontWeight: "700" }],
+        "heading-2": ["1.5rem", { lineHeight: "2rem", fontWeight: "700" }],
+        "heading-3": ["1.25rem", { lineHeight: "1.75rem", fontWeight: "600" }],
+        "heading-4": ["1.125rem", { lineHeight: "1.5rem", fontWeight: "600" }],
+        "heading-5": ["1rem", { lineHeight: "1.5rem", fontWeight: "600" }],
+        body: ["0.875rem", { lineHeight: "1.375rem" }],
+        small: ["0.8125rem", { lineHeight: "1.125rem" }],
         caption: ["0.75rem", { lineHeight: "1rem" }],
       },
       spacing: {
@@ -126,6 +137,26 @@ const config: Config = {
         lg: "0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.06)",
         xl: "0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05)",
         card: "0 2px 8px 0 rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04)",
+        // Colored glows for vibrant CTAs / KPI tiles
+        "glow-primary":
+          "0 6px 20px -6px rgb(37 99 235 / 0.45), 0 2px 6px -2px rgb(37 99 235 / 0.30)",
+        "glow-success":
+          "0 6px 20px -6px rgb(22 163 74 / 0.45), 0 2px 6px -2px rgb(22 163 74 / 0.30)",
+        "glow-error":
+          "0 6px 20px -6px rgb(220 38 38 / 0.45), 0 2px 6px -2px rgb(220 38 38 / 0.30)",
+      },
+      backgroundImage: {
+        // Brand + semantic gradients (vibrant direction). Driven by CSS vars so
+        // each can be tuned per theme in globals.css.
+        "gradient-brand": "var(--gradient-brand)",
+        "gradient-brand-soft": "var(--gradient-brand-soft)",
+        "gradient-success": "var(--gradient-success)",
+        "gradient-warning": "var(--gradient-warning)",
+        "gradient-error": "var(--gradient-error)",
+        "gradient-info": "var(--gradient-info)",
+        "gradient-violet": "var(--gradient-violet)",
+        // Ambient page backdrop (radial accents)
+        "app-backdrop": "var(--app-backdrop)",
       },
       keyframes: {
         "accordion-down": {

@@ -8,7 +8,7 @@ import { createBatchAction } from "@/features/inventory/actions/inventory.action
 import type { ProductOption } from "@/features/inventory/types/inventory.types";
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40";
 
 interface BatchFormDialogProps {
   readonly organizationId: string;
@@ -74,12 +74,12 @@ export function BatchFormDialog({
         initial={{ opacity: 0, scale: 0.97, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-6 shadow-xl sm:px-8"
+        className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xl sm:p-6"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-5 flex items-start gap-3">
-          <div className="bg-primary-50 dark:bg-primary-500/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-            <Layers className="text-primary-600 dark:text-primary-400 h-5 w-5" aria-hidden="true" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <Layers className="h-5 w-5 text-white" aria-hidden="true" />
           </div>
           <div>
             <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
@@ -210,7 +210,7 @@ export function BatchFormDialog({
               required
               min={0}
               step="1"
-              className={inputClass}
+              className={`${inputClass} nums`}
               placeholder="0"
               value={receivedQuantity}
               onChange={(event) => setReceivedQuantity(event.target.value)}
@@ -226,7 +226,12 @@ export function BatchFormDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" loading={isPending} disabled={isPending}>
+            <Button
+              type="submit"
+              variant="gradient"
+              loading={isPending}
+              disabled={isPending}
+            >
               Create batch
             </Button>
           </div>

@@ -105,7 +105,7 @@ function MemberRow({ member, index }: MemberRowProps) {
         </span>
       </div>
 
-      <Badge variant={STATUS_BADGE[status]} className="shrink-0 capitalize">
+      <Badge dot variant={STATUS_BADGE[status]} className="shrink-0 capitalize">
         {STATUS_LABEL[status]}
       </Badge>
     </motion.li>
@@ -221,23 +221,23 @@ export function TeamManagementView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Team"
         description="Manage members and invitations for your organization"
         icon={Users}
       >
-        <Button type="button" onClick={handleToggleInvite}>
+        <Button type="button" variant="gradient" onClick={handleToggleInvite}>
           <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
           {showInviteForm ? "Close" : "Invite"}
         </Button>
       </PageHeader>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Members + invitations */}
         <div
           className={cn(
-            "space-y-6",
+            "space-y-4",
             showInviteForm ? "lg:col-span-2" : "lg:col-span-3"
           )}
         >

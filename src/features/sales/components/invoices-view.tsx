@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import type {
@@ -162,14 +163,14 @@ export function InvoicesView({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Invoices"
         description="Create, send and track your customer invoices"
         icon={FileText}
       >
         {canManage && (
-          <Button asChild>
+          <Button asChild variant="gradient">
             <Link href={newHref()}>
               <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
               New invoice
@@ -179,30 +180,30 @@ export function InvoicesView({
       </PageHeader>
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
           className="relative flex-1"
         >
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             aria-label="Search invoices"
             placeholder="Search by invoice number"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="pl-9"
           />
         </form>
         <select
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusChange}
-          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -214,7 +215,7 @@ export function InvoicesView({
           aria-label="Filter by payment status"
           value={filters.paymentStatus ?? ""}
           onChange={handlePaymentStatusChange}
-          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {PAYMENT_STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all-payment"} value={option.value}>
@@ -225,7 +226,7 @@ export function InvoicesView({
       </div>
 
       {/* Table / empty state */}
-      <div className="mt-6">
+      <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={FileText}
@@ -250,34 +251,34 @@ export function InvoicesView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Invoice no.
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Customer
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Date
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Due date
                     </th>
-                    <th scope="col" className="px-4 py-3 text-right font-medium">
+                    <th scope="col" className="px-3 py-2 text-right font-medium">
                       Amount
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Payment
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Status
                     </th>
-                    <th scope="col" className="px-4 py-3">
+                    <th scope="col" className="px-3 py-2">
                       <span className="sr-only">Actions</span>
                     </th>
                   </tr>
@@ -287,9 +288,9 @@ export function InvoicesView({
                     <tr
                       key={invoice.id}
                       onClick={() => router.push(detailHref(invoice.id))}
-                      className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-900"
+                      className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
-                      <td className="px-4 py-3 font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
+                      <td className="px-3 py-2 font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
                         <Link
                           href={detailHref(invoice.id)}
                           onClick={(e) => e.stopPropagation()}
@@ -298,31 +299,32 @@ export function InvoicesView({
                           {invoice.invoiceNumber}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
                         {invoice.customerName ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {formatDate(invoice.invoiceDate)}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {invoice.dueDate ? formatDate(invoice.dueDate) : "—"}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                      <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
                         {formatCurrency(invoice.totalAmount)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <Badge
+                          dot
                           variant={PAYMENT_STATUS_VARIANT[invoice.paymentStatus]}
                         >
                           {PAYMENT_STATUS_LABEL[invoice.paymentStatus]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={INV_STATUS_VARIANT[invoice.status]}>
+                      <td className="px-3 py-2">
+                        <Badge dot variant={INV_STATUS_VARIANT[invoice.status]}>
                           {INV_STATUS_LABEL[invoice.status]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-3 py-2 text-right">
                         <Link
                           href={detailHref(invoice.id)}
                           onClick={(e) => e.stopPropagation()}

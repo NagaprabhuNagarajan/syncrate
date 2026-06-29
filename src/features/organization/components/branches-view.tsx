@@ -60,7 +60,7 @@ function BranchCard({ branch, index, onEdit, onDelete }: BranchCardProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.05 }}
-      className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
@@ -75,7 +75,7 @@ function BranchCard({ branch, index, onEdit, onDelete }: BranchCardProps) {
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{branch.code}</Badge>
-            <Badge variant={STATUS_VARIANT[branch.status]}>
+            <Badge dot variant={STATUS_VARIANT[branch.status]}>
               {STATUS_LABEL[branch.status]}
             </Badge>
           </div>
@@ -264,7 +264,7 @@ export function BranchesView({ organizationId, branches }: BranchesViewProps) {
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Branches"
         description="Manage the branches and locations of your organization"
@@ -272,6 +272,7 @@ export function BranchesView({ organizationId, branches }: BranchesViewProps) {
       >
         <Button
           type="button"
+          variant="gradient"
           onClick={() => setFormState({ mode: "create" })}
         >
           <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
@@ -279,7 +280,7 @@ export function BranchesView({ organizationId, branches }: BranchesViewProps) {
         </Button>
       </PageHeader>
 
-      <div className="mt-8">
+      <div className="mt-6">
         {branches.length === 0 ? (
           <EmptyState
             icon={Building2}

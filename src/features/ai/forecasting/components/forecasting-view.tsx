@@ -129,11 +129,12 @@ function ForecastResultPanel({ forecast }: ForecastResultPanelProps) {
   const percent = Math.round(forecast.confidence * 100);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base">Outlook</CardTitle>
           <Badge
+            dot
             variant={confidenceVariant(forecast.confidence)}
             aria-label={`Confidence ${percent} percent`}
           >
@@ -173,17 +174,17 @@ function ForecastResultPanel({ forecast }: ForecastResultPanelProps) {
                 </thead>
                 <tbody className="divide-y">
                   {forecast.points.map((point) => (
-                    <tr key={point.period} className="hover:bg-muted/40">
+                    <tr key={point.period} className="transition-colors hover:bg-muted/40">
                       <td className="py-2.5 pr-4 font-medium">
                         {point.period}
                       </td>
-                      <td className="py-2.5 pr-4 text-right font-medium">
+                      <td className="nums py-2.5 pr-4 text-right font-medium">
                         {fmtNumber(point.predicted)}
                       </td>
-                      <td className="py-2.5 pr-4 text-right text-muted-foreground">
+                      <td className="nums py-2.5 pr-4 text-right text-muted-foreground">
                         {point.low === null ? "—" : fmtNumber(point.low)}
                       </td>
-                      <td className="py-2.5 text-right text-muted-foreground">
+                      <td className="nums py-2.5 text-right text-muted-foreground">
                         {point.high === null ? "—" : fmtNumber(point.high)}
                       </td>
                     </tr>
@@ -195,7 +196,7 @@ function ForecastResultPanel({ forecast }: ForecastResultPanelProps) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Assumptions</CardTitle>
@@ -266,16 +267,16 @@ export function ForecastingView({ organizationId }: ForecastingViewProps) {
 
   return (
     <motion.div
-      className="space-y-6 p-6 lg:p-8"
+      className="space-y-4 p-4 lg:p-6"
       variants={fadeIn}
       initial="hidden"
       animate="visible"
       transition={{ duration: 0.25 }}
     >
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-brand shadow-glow-primary">
           <TrendingUp
-            className="h-5 w-5 text-muted-foreground"
+            className="h-5 w-5 text-white"
             aria-hidden="true"
           />
         </div>

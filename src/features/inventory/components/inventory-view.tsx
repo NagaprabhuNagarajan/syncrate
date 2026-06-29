@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AdjustStockDialog } from "@/features/inventory/components/adjust-stock-dialog";
@@ -160,7 +161,7 @@ export function InventoryView({
   });
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Inventory"
         description="Track stock levels and movements across your warehouses"
@@ -181,6 +182,7 @@ export function InventoryView({
           {canAdjust && (
             <Button
               type="button"
+              variant="gradient"
               onClick={() => setAdjustOpen(true)}
               disabled={products.length === 0 || warehouses.length === 0}
             >
@@ -193,7 +195,7 @@ export function InventoryView({
 
       <p className="mt-4 text-sm text-muted-foreground">
         Total stock value:{" "}
-        <span className="font-semibold text-slate-900 dark:text-slate-100">
+        <span className="nums font-semibold text-slate-900 dark:text-slate-100">
           {currencyFormatter.format(stockValue)}
         </span>
       </p>
@@ -225,30 +227,30 @@ export function InventoryView({
       )}
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
           className="relative flex-1"
         >
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             aria-label="Search stock by product"
             placeholder="Search by product name or code"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="pl-9"
           />
         </form>
         <select
           aria-label="Filter by warehouse"
           value={filters.warehouseId ?? ""}
           onChange={handleWarehouseChange}
-          className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           <option value="">All warehouses</option>
           {warehouses.map((warehouse) => (
@@ -269,7 +271,7 @@ export function InventoryView({
       </div>
 
       {/* Stock levels */}
-      <div className="mt-6">
+      <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={Boxes}
@@ -285,31 +287,31 @@ export function InventoryView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Product
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Warehouse
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right font-medium"
+                      className="px-3 py-2 text-right font-medium"
                     >
                       Quantity
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right font-medium"
+                      className="px-3 py-2 text-right font-medium"
                     >
                       Reorder level
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Status
                     </th>
                   </tr>
@@ -322,7 +324,7 @@ export function InventoryView({
                         key={level.id}
                         className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2">
                           <div className="font-medium text-slate-900 dark:text-slate-100">
                             {level.productName}
                           </div>
@@ -330,16 +332,16 @@ export function InventoryView({
                             {level.productCode}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                           {level.warehouseName}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                        <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
                           {formatQuantity(level.quantity)}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-500 dark:text-slate-400">
+                        <td className="nums px-3 py-2 text-right text-slate-500 dark:text-slate-400">
                           {formatQuantity(level.reorderLevel)}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2">
                           {isLow ? (
                             <Badge variant="warning">
                               <AlertTriangle
@@ -349,7 +351,9 @@ export function InventoryView({
                               Reorder
                             </Badge>
                           ) : (
-                            <Badge variant="success">In stock</Badge>
+                            <Badge dot variant="success">
+                              In stock
+                            </Badge>
                           )}
                         </td>
                       </tr>
@@ -363,7 +367,7 @@ export function InventoryView({
       </div>
 
       {/* Ledger / transactions */}
-      <div className="mt-10">
+      <div className="mt-8">
         <div className="mb-3 flex items-center gap-2">
           <History className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -377,32 +381,32 @@ export function InventoryView({
             description="Inventory events are recorded here as an immutable ledger."
           />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       When
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Type
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Product
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Warehouse
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right font-medium"
+                      className="px-3 py-2 text-right font-medium"
                     >
                       Change
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right font-medium"
+                      className="px-3 py-2 text-right font-medium"
                     >
                       Balance
                     </th>
@@ -410,31 +414,31 @@ export function InventoryView({
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {transactions.map((tx: InventoryTransaction) => (
-                    <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-500 dark:text-slate-400">
+                    <tr key={tx.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="whitespace-nowrap px-3 py-2 text-slate-500 dark:text-slate-400">
                         {formatDateTime(tx.createdAt)}
                       </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={TX_VARIANT[tx.type]}>
+                      <td className="px-3 py-2">
+                        <Badge dot variant={TX_VARIANT[tx.type]}>
                           {TX_LABEL[tx.type]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
                         {tx.productName ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {tx.warehouseName ?? "—"}
                       </td>
                       <td
                         className={
                           tx.quantity < 0
-                            ? "text-error-600 dark:text-error-400 px-4 py-3 text-right tabular-nums font-medium"
-                            : "text-success-700 dark:text-success-300 px-4 py-3 text-right tabular-nums font-medium"
+                            ? "text-error-600 dark:text-error-400 nums px-3 py-2 text-right font-medium"
+                            : "text-success-700 dark:text-success-300 nums px-3 py-2 text-right font-medium"
                         }
                       >
                         {formatSignedQuantity(tx.quantity)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-900 dark:text-slate-100">
+                      <td className="nums px-3 py-2 text-right text-slate-900 dark:text-slate-100">
                         {formatQuantity(tx.runningBalance)}
                       </td>
                     </tr>

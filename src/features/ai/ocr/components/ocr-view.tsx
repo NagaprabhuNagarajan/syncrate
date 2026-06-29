@@ -124,14 +124,14 @@ export function OcrView({ organizationId, canGenerate }: OcrViewProps) {
   }, []);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="AI OCR"
         description="Upload a bill, invoice, receipt, challan or product label and let AI extract the details for you to verify."
         icon={FileScan}
       />
 
-      <div className="mt-6 max-w-4xl">
+      <div className="mt-4 max-w-4xl">
         {response ? (
           <OcrVerificationForm
             extraction={response.extraction}
@@ -231,6 +231,7 @@ export function OcrView({ organizationId, canGenerate }: OcrViewProps) {
               <div className="flex justify-end">
                 <Button
                   type="button"
+                  variant="gradient"
                   onClick={handleExtract}
                   loading={isPending}
                   disabled={!file || !canGenerate}

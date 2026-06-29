@@ -6,6 +6,7 @@ import { Search, Sparkles, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { runSmartSearchAction } from "@/features/ai/search/actions/search.actions";
@@ -40,7 +41,7 @@ function ResultGroup({ group }: { readonly group: SearchResultGroup }) {
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+        <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-800">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{group.label}</h3>
           <Badge variant="muted">
             {group.total} {group.total === 1 ? "result" : "results"}
@@ -50,7 +51,7 @@ function ResultGroup({ group }: { readonly group: SearchResultGroup }) {
           {group.items.map((item) => (
             <li
               key={item.id}
-              className="flex items-center justify-between gap-3 px-4 py-3"
+              className="flex items-center justify-between gap-3 px-3 py-2"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -69,7 +70,7 @@ function ResultGroup({ group }: { readonly group: SearchResultGroup }) {
                   </Badge>
                 )}
                 {item.amount !== null && (
-                  <span className="tabular-nums text-sm text-slate-700 dark:text-slate-300">
+                  <span className="nums text-sm text-slate-700 dark:text-slate-300">
                     {formatAmount(item.amount)}
                   </span>
                 )}
@@ -123,30 +124,31 @@ export function SmartSearchView({
     result !== null && result.groups.some((g) => g.items.length > 0);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader
         title="Smart Search"
         description="Ask in plain language — AI turns it into a precise query over your data"
         icon={Sparkles}
       />
 
-      <form onSubmit={handleSubmit} role="search" className="mt-6">
+      <form onSubmit={handleSubmit} role="search" className="mt-4">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             aria-label="Smart search query"
             placeholder="e.g. show unpaid invoices"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             disabled={!canGenerate}
-            className="block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-28 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
+            className="pl-9 pr-28"
           />
           <Button
             type="submit"
+            variant="gradient"
             size="sm"
             loading={isPending}
             disabled={!canGenerate || query.trim().length === 0}
@@ -196,7 +198,7 @@ export function SmartSearchView({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="mt-6 space-y-4"
+          className="mt-4 space-y-4"
         >
           <div className="flex items-start gap-2 rounded-lg border border-primary-100 bg-primary-50 px-3 py-2.5 dark:border-primary-500/20 dark:bg-primary-500/10">
             <Info

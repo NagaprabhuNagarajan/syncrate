@@ -116,11 +116,11 @@ function FormField({
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors dark:text-slate-100 dark:placeholder-slate-500",
-    "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
+    "block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out",
+    "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary",
     hasError
-      ? "border-error-400 bg-error-50/30 dark:bg-error-500/10"
-      : "border-slate-300 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
+      ? "border-destructive bg-destructive/5"
+      : "border-input bg-background hover:border-slate-400 dark:hover:border-slate-600"
   );
 
 // ─────────────────────────────────────────────────────────────
@@ -209,12 +209,12 @@ export function BranchForm({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8 dark:border-slate-800 dark:bg-slate-900"
+      className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none sm:p-6"
     >
       {/* Header */}
       <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
-          <Building2 className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+          <Building2 className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
@@ -232,7 +232,7 @@ export function BranchForm({
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
+          className="border-error-200 bg-error-50 text-error-800 mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
           role="alert"
         >
           <AlertCircle
@@ -243,9 +243,9 @@ export function BranchForm({
         </motion.div>
       )}
 
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
         {/* Name + Code */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             label="Branch name"
             htmlFor="name"
@@ -333,7 +333,7 @@ export function BranchForm({
         </div>
 
         {/* Phone + Email */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField label="Phone" htmlFor="phone" error={errors.phone?.message}>
             <input
               id="phone"
@@ -389,7 +389,7 @@ export function BranchForm({
         </FormField>
 
         {/* City + State */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField label="City" htmlFor="city" error={errors.city?.message}>
             <input
               id="city"
@@ -411,7 +411,7 @@ export function BranchForm({
         </div>
 
         {/* Pincode + GST */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             label="Pincode"
             htmlFor="pincode"
@@ -455,7 +455,12 @@ export function BranchForm({
               Cancel
             </Button>
           )}
-          <Button type="submit" loading={isPending} disabled={isPending}>
+          <Button
+            type="submit"
+            variant="gradient"
+            loading={isPending}
+            disabled={isPending}
+          >
             {isEdit ? "Save changes" : "Create branch"}
           </Button>
         </div>

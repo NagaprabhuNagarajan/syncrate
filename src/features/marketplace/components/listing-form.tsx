@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   createListingAction,
   updateListingAction,
@@ -15,8 +17,8 @@ interface ListingFormProps {
   readonly onCancel: () => void;
 }
 
-const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
+const selectClass =
+  "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40";
 
 const labelClass = "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
@@ -63,7 +65,7 @@ export function ListingForm({
             id="listingType"
             name="listingType"
             defaultValue={listing?.listingType ?? "product"}
-            className={inputClass}
+            className={selectClass}
           >
             <option value="product">Product</option>
             <option value="supplier">Supplier</option>
@@ -73,13 +75,12 @@ export function ListingForm({
           <label htmlFor="category" className={labelClass}>
             Category
           </label>
-          <input
+          <Input
             id="category"
             name="category"
             type="text"
             defaultValue={listing?.category ?? ""}
             placeholder="e.g. Electronics"
-            className={inputClass}
           />
         </div>
       </div>
@@ -88,14 +89,13 @@ export function ListingForm({
         <label htmlFor="title" className={labelClass}>
           Title
         </label>
-        <input
+        <Input
           id="title"
           name="title"
           type="text"
           required
           defaultValue={listing?.title ?? ""}
           placeholder="Listing title"
-          className={inputClass}
         />
       </div>
 
@@ -103,13 +103,12 @@ export function ListingForm({
         <label htmlFor="description" className={labelClass}>
           Description
         </label>
-        <textarea
+        <Textarea
           id="description"
           name="description"
           rows={3}
           defaultValue={listing?.description ?? ""}
           placeholder="Describe what you offer"
-          className={inputClass}
         />
       </div>
 
@@ -118,7 +117,7 @@ export function ListingForm({
           <label htmlFor="price" className={labelClass}>
             Price <span className="text-slate-400 dark:text-slate-500">(blank = on request)</span>
           </label>
-          <input
+          <Input
             id="price"
             name="price"
             type="number"
@@ -126,33 +125,31 @@ export function ListingForm({
             step="0.01"
             defaultValue={listing?.price ?? ""}
             placeholder="Quote on request"
-            className={inputClass}
+            className="nums"
           />
         </div>
         <div>
           <label htmlFor="currency" className={labelClass}>
             Currency
           </label>
-          <input
+          <Input
             id="currency"
             name="currency"
             type="text"
             maxLength={3}
             defaultValue={listing?.currency ?? "INR"}
-            className={inputClass}
           />
         </div>
         <div>
           <label htmlFor="unit" className={labelClass}>
             Unit
           </label>
-          <input
+          <Input
             id="unit"
             name="unit"
             type="text"
             defaultValue={listing?.unit ?? ""}
             placeholder="e.g. piece, kg"
-            className={inputClass}
           />
         </div>
       </div>
@@ -162,7 +159,7 @@ export function ListingForm({
           <label htmlFor="minOrderQty" className={labelClass}>
             Minimum order quantity
           </label>
-          <input
+          <Input
             id="minOrderQty"
             name="minOrderQty"
             type="number"
@@ -170,20 +167,19 @@ export function ListingForm({
             step="1"
             defaultValue={listing?.minOrderQty ?? ""}
             placeholder="Optional"
-            className={inputClass}
+            className="nums"
           />
         </div>
         <div>
           <label htmlFor="productId" className={labelClass}>
             Linked product ID
           </label>
-          <input
+          <Input
             id="productId"
             name="productId"
             type="text"
             defaultValue={listing?.productId ?? ""}
             placeholder="Optional product UUID"
-            className={inputClass}
           />
         </div>
       </div>
@@ -205,7 +201,7 @@ export function ListingForm({
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" loading={isPending}>
+        <Button type="submit" variant="gradient" loading={isPending}>
           {isEdit ? "Save changes" : "Create listing"}
         </Button>
       </div>

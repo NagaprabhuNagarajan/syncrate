@@ -231,7 +231,7 @@ export function CustomerProfile({
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <PageHeader title={customer.name} description={customer.code} icon={Users}>
         {canManage && (
           <>
@@ -259,8 +259,8 @@ export function CustomerProfile({
         )}
       </PageHeader>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <Badge variant={STATUS_VARIANT[customer.status]}>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Badge dot variant={STATUS_VARIANT[customer.status]}>
           {STATUS_LABEL[customer.status]}
         </Badge>
         {customer.tags.map((tag) => (
@@ -270,9 +270,9 @@ export function CustomerProfile({
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Details */}
-        <Card className="p-6 lg:col-span-2">
+        <Card className="p-5 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Customer details
           </h2>
@@ -305,32 +305,32 @@ export function CustomerProfile({
         </Card>
 
         {/* Financials */}
-        <Card className="p-6">
+        <Card hover className="p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Financials
           </h2>
           <dl className="space-y-4">
             <div>
               <dt className="text-xs text-muted-foreground">Outstanding</dt>
-              <dd className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              <dd className="nums text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 {formatCurrency(ledger.outstanding)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Opening balance</dt>
-              <dd className="text-base font-medium text-slate-700 dark:text-slate-300">
+              <dd className="nums text-base font-medium text-slate-700 dark:text-slate-300">
                 {formatCurrency(ledger.openingBalance)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Credit limit</dt>
-              <dd className="text-base font-medium text-slate-700 dark:text-slate-300">
+              <dd className="nums text-base font-medium text-slate-700 dark:text-slate-300">
                 {formatCurrency(customer.creditLimit)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Payment terms</dt>
-              <dd className="text-base font-medium text-slate-700 dark:text-slate-300">
+              <dd className="nums text-base font-medium text-slate-700 dark:text-slate-300">
                 {customer.paymentTermsDays} days
               </dd>
             </div>
@@ -339,7 +339,7 @@ export function CustomerProfile({
       </div>
 
       {/* Ledger */}
-      <div className="mt-6">
+      <div className="mt-4">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Ledger</h2>
           <Link
@@ -356,44 +356,44 @@ export function CustomerProfile({
             description="Ledger entries appear here once this customer has sales, payments or adjustments."
           />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+                <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Date
                     </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
+                    <th scope="col" className="px-3 py-2 font-medium">
                       Description
                     </th>
-                    <th scope="col" className="px-4 py-3 text-right font-medium">
+                    <th scope="col" className="px-3 py-2 text-right font-medium">
                       Debit
                     </th>
-                    <th scope="col" className="px-4 py-3 text-right font-medium">
+                    <th scope="col" className="px-3 py-2 text-right font-medium">
                       Credit
                     </th>
-                    <th scope="col" className="px-4 py-3 text-right font-medium">
+                    <th scope="col" className="px-3 py-2 text-right font-medium">
                       Balance
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {ledger.entries.map((entry) => (
-                    <tr key={entry.id}>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                    <tr key={entry.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {formatDate(entry.entryDate)}
                       </td>
-                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
                         {entry.description ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                      <td className="nums px-3 py-2 text-right text-slate-700 dark:text-slate-300">
                         {formatCurrency(entry.debit)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                      <td className="nums px-3 py-2 text-right text-slate-700 dark:text-slate-300">
                         {formatCurrency(entry.credit)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                      <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
                         {formatCurrency(entry.runningBalance)}
                       </td>
                     </tr>

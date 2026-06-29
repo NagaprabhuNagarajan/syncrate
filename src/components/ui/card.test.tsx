@@ -8,6 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  cardVariants,
 } from "./card";
 
 describe("Card", () => {
@@ -73,6 +74,31 @@ describe("Card", () => {
     expect(descRef.current).toBeInstanceOf(HTMLDivElement);
     expect(contentRef.current).toBeInstanceOf(HTMLDivElement);
     expect(footerRef.current).toBeInstanceOf(HTMLDivElement);
+  });
+
+  it("applies the glass variant classes", () => {
+    render(
+      <Card variant="glass" data-testid="glass-card">
+        Glass
+      </Card>
+    );
+    expect(screen.getByTestId("glass-card")).toHaveClass("glass-panel");
+  });
+
+  it("applies hover classes when hover is enabled", () => {
+    render(
+      <Card hover data-testid="hover-card">
+        Hover
+      </Card>
+    );
+    expect(screen.getByTestId("hover-card")).toHaveClass(
+      "hover:-translate-y-0.5"
+    );
+  });
+
+  it("exposes the cardVariants helper", () => {
+    expect(typeof cardVariants).toBe("function");
+    expect(cardVariants({ variant: "default" })).toContain("bg-card");
   });
 
   it("sets displayNames for each sub-component", () => {
