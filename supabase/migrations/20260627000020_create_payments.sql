@@ -19,7 +19,12 @@
 --   Supplier ledger DEBIT  = A/P decreases (payment made to supplier)
 -- =============================================================================
 
--- ── Fix missing ledger INSERT policies (needed by existing + new RPCs) ────────
+-- ── Ensure ledger INSERT policies exist (needed by existing + new RPCs) ───────
+-- These are also created in 20260627000014; DROP IF EXISTS first makes this
+-- migration idempotent so a clean apply (where 000014 already created them)
+-- doesn't fail with "policy already exists" (42710).
+DROP POLICY IF EXISTS "customer_ledger_insert_org_members"
+  ON public.customer_ledger_entries;
 CREATE POLICY "customer_ledger_insert_org_members"
   ON public.customer_ledger_entries FOR INSERT
   TO authenticated
@@ -27,6 +32,8 @@ CREATE POLICY "customer_ledger_insert_org_members"
     organization_id = ANY (public.get_user_organization_ids())
   );
 
+DROP POLICY IF EXISTS "supplier_ledger_insert_org_members"
+  ON public.supplier_ledger_entries;
 CREATE POLICY "supplier_ledger_insert_org_members"
   ON public.supplier_ledger_entries FOR INSERT
   TO authenticated
