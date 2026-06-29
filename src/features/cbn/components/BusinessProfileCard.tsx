@@ -78,7 +78,7 @@ export function BusinessProfileCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       whileHover={{ y: -2 }}
-      className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+      className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
     >
       {/* Header */}
       <div className="flex items-start gap-3">
@@ -90,16 +90,16 @@ export function BusinessProfileCard({
             className="h-10 w-10 rounded-lg object-cover"
           />
         ) : (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-sm font-bold text-teal-700">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-sm font-bold text-teal-700 dark:bg-teal-500/20 dark:text-teal-300">
             {initials}
           </div>
         )}
 
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-slate-900">
+          <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
             {business.displayName ?? business.name}
           </h3>
-          <p className="text-[11px] font-mono text-slate-400">
+          <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
             {formatBusinessId(business.businessId)}
           </p>
         </div>
@@ -110,19 +110,19 @@ export function BusinessProfileCard({
       {/* Meta */}
       <div className="mt-3 space-y-1.5">
         {(business.city ?? business.state) && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
             <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
             <span>{[business.city, business.state].filter(Boolean).join(", ")}</span>
           </div>
         )}
         {business.gstNumber && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
             <Link2 className="h-3 w-3 shrink-0" aria-hidden="true" />
             <span className="font-mono">{business.gstNumber}</span>
           </div>
         )}
         {business.businessType && (
-          <p className="text-xs text-slate-500 capitalize">
+          <p className="text-xs text-slate-500 capitalize dark:text-slate-400">
             {business.businessType.replace(/_/g, " ")}
           </p>
         )}
@@ -148,7 +148,7 @@ export function BusinessProfileCard({
           <Button
             size="sm"
             variant="outline"
-            className="h-7 border-teal-200 text-teal-700 hover:bg-teal-50"
+            className="h-7 border-teal-200 text-teal-700 hover:bg-teal-50 dark:border-teal-500/30 dark:text-teal-300 dark:hover:bg-teal-500/10"
             onClick={handleConnect}
             disabled={isPending}
             aria-label={`Connect with ${business.name}`}

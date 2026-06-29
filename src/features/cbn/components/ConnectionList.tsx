@@ -54,7 +54,7 @@ export function ConnectionList({
     <div className="space-y-4">
       {/* Tabs */}
       <div
-        className="flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1"
+        className="flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900"
         role="tablist"
         aria-label="Filter connections"
       >
@@ -72,8 +72,8 @@ export function ConnectionList({
               onClick={() => setActiveTab(tab.value)}
               className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                 activeTab === tab.value
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
               }`}
             >
               {tab.label}
@@ -81,8 +81,8 @@ export function ConnectionList({
                 <span
                   className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
                     activeTab === tab.value
-                      ? "bg-teal-100 text-teal-700"
-                      : "bg-slate-200 text-slate-500"
+                      ? "bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300"
+                      : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
                   }`}
                 >
                   {count}
@@ -154,7 +154,7 @@ export function ConnectionList({
         <Button
           variant="outline"
           size="sm"
-          className="border-teal-200 text-teal-700 hover:bg-teal-50"
+          className="border-teal-200 text-teal-700 hover:bg-teal-50 dark:border-teal-500/30 dark:text-teal-300 dark:hover:bg-teal-500/10"
           onClick={() => router.push("/cbn/discover")}
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />

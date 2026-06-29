@@ -46,11 +46,11 @@ function RoleRow({ role, canManage, onEdit, onDelete }: RoleRowProps) {
   const editable = canManage && !role.isSystem;
 
   return (
-    <tr className="transition-colors hover:bg-slate-50">
+    <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
       <td className="px-4 py-3">
-        <div className="font-medium text-slate-900">{role.name}</div>
+        <div className="font-medium text-slate-900 dark:text-slate-100">{role.name}</div>
         {role.description && (
-          <div className="text-xs text-slate-500">{role.description}</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">{role.description}</div>
         )}
       </td>
       <td className="px-4 py-3">
@@ -63,7 +63,7 @@ function RoleRow({ role, canManage, onEdit, onDelete }: RoleRowProps) {
           <Badge variant="info">Custom</Badge>
         )}
       </td>
-      <td className="px-4 py-3 text-slate-600 tabular-nums">
+      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 tabular-nums">
         {role.permissionIds.length}
       </td>
       <td className="px-4 py-3 text-right">
@@ -89,7 +89,7 @@ function RoleRow({ role, canManage, onEdit, onDelete }: RoleRowProps) {
             </Button>
           </div>
         ) : (
-          <span className="text-xs text-slate-400">Read-only</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">Read-only</span>
         )}
       </td>
     </tr>
@@ -139,7 +139,7 @@ function DeleteRoleDialog({
           <CardContent>
             <p
               role="alert"
-              className="text-error-700 bg-error-50 border-error-200 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
+              className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
             >
               <AlertCircle
                 className="mt-0.5 h-4 w-4 shrink-0"
@@ -270,11 +270,11 @@ export function RolesView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
                       Role
@@ -293,7 +293,7 @@ export function RolesView({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {roles.map((role) => (
                     <RoleRow
                       key={role.id}

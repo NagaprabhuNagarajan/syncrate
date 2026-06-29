@@ -6,12 +6,15 @@ import { Building2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { switchOrganizationAction } from "@/features/organization/actions/organization.actions";
 import type { Organization } from "@/features/organization/types/organization.types";
 import { cn } from "@/utils/cn";
+import { BrandLogo } from "@/components/shared/logo";
 
 const PLAN_BADGE: Record<Organization["plan"], string> = {
-  free: "bg-slate-100 text-slate-600",
-  starter: "bg-blue-50 text-blue-700",
-  professional: "bg-purple-50 text-purple-700",
-  enterprise: "bg-amber-50 text-amber-700",
+  free: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+  starter: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  professional:
+    "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",
+  enterprise:
+    "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
 };
 
 const PLAN_LABEL: Record<Organization["plan"], string> = {
@@ -44,15 +47,15 @@ function OrgCard({ org, index }: OrgCardProps) {
       disabled={isPending}
       className={cn(
         "group relative flex w-full items-center gap-4 rounded-xl border px-5 py-4 text-left transition-all duration-150",
-        "hover:border-primary-300 hover:bg-primary-50/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+        "hover:border-primary-300 hover:bg-primary-50/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:hover:border-primary-500/40 dark:hover:bg-primary-500/10",
         isPending
-          ? "cursor-wait border-primary-200 bg-primary-50/30"
-          : "border-slate-200 bg-white"
+          ? "cursor-wait border-primary-200 bg-primary-50/30 dark:border-primary-500/30 dark:bg-primary-500/10"
+          : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
       )}
       aria-label={`Select ${org.name}`}
     >
       {/* Logo / Avatar */}
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-100 to-indigo-100">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-100 to-indigo-100 dark:from-primary-500/20 dark:to-indigo-500/20">
         {org.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -61,14 +64,14 @@ function OrgCard({ org, index }: OrgCardProps) {
             className="h-10 w-10 rounded-lg object-contain"
           />
         ) : (
-          <Building2 className="h-6 w-6 text-primary-600" aria-hidden="true" />
+          <Building2 className="h-6 w-6 text-primary-600 dark:text-primary-400" aria-hidden="true" />
         )}
       </div>
 
       {/* Info */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-semibold text-slate-900">
+          <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
             {org.name}
           </p>
           <span
@@ -81,12 +84,12 @@ function OrgCard({ org, index }: OrgCardProps) {
           </span>
         </div>
         {(org.city ?? org.state) && (
-          <p className="mt-0.5 truncate text-xs text-slate-500">
+          <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
             {[org.city, org.state].filter(Boolean).join(", ")}
           </p>
         )}
         {org.gstNumber && (
-          <p className="mt-0.5 text-xs text-slate-400">GST: {org.gstNumber}</p>
+          <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">GST: {org.gstNumber}</p>
         )}
       </div>
 
@@ -101,7 +104,7 @@ function OrgCard({ org, index }: OrgCardProps) {
         {isPending ? (
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-400 border-t-transparent" />
         ) : (
-          <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-primary-500" />
+          <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-primary-500 dark:text-slate-500" />
         )}
       </div>
     </motion.button>
@@ -118,7 +121,7 @@ export function SelectOrganizationView({
   userId: _userId,
 }: SelectOrganizationViewProps) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
       {/* Background blobs */}
       <div
         aria-hidden="true"
@@ -132,12 +135,9 @@ export function SelectOrganizationView({
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 mb-8 flex flex-col items-center gap-2"
+        className="relative z-10 mb-8 flex flex-col items-center"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/20">
-          <span className="text-xl font-bold text-white">S</span>
-        </div>
-        <span className="text-xl font-semibold text-slate-800">Syncrate</span>
+        <BrandLogo size={140} priority />
       </motion.div>
 
       {/* Panel */}
@@ -147,12 +147,12 @@ export function SelectOrganizationView({
         transition={{ duration: 0.25 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="rounded-2xl border border-slate-200/60 bg-white px-6 py-7 shadow-xl shadow-slate-200/50">
+        <div className="rounded-2xl border border-slate-200/60 bg-white px-6 py-7 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-slate-900">
+            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
               Select organization
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               You belong to {organizations.length} organizations — choose one to
               continue
             </p>
@@ -165,10 +165,10 @@ export function SelectOrganizationView({
           </div>
 
           {/* Create new */}
-          <div className="mt-5 border-t border-slate-100 pt-5">
+          <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800">
             <a
               href="/create-organization"
-              className="flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
             >
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               Create a new organization

@@ -9,7 +9,7 @@ import type { ProductOption } from "@/features/inventory/types/inventory.types";
 import type { WarehouseOption } from "@/features/warehouse/types/warehouse.types";
 
 const selectClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
 
 interface TransferStockDialogProps {
   readonly organizationId: string;
@@ -76,21 +76,21 @@ export function TransferStockDialog({
         initial={{ opacity: 0, scale: 0.97, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-xl sm:px-8"
+        className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-6 shadow-xl sm:px-8"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-5 flex items-start gap-3">
-          <div className="bg-primary-50 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+          <div className="bg-primary-50 dark:bg-primary-500/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
             <ArrowLeftRight
-              className="text-primary-600 h-5 w-5"
+              className="text-primary-600 dark:text-primary-400 h-5 w-5"
               aria-hidden="true"
             />
           </div>
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-slate-900">
+            <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               Transfer stock
             </h2>
-            <p className="mt-0.5 text-sm text-slate-500">
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
               Move stock between warehouses. This writes two ledger entries.
             </p>
           </div>
@@ -98,7 +98,7 @@ export function TransferStockDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             <AlertCircle
@@ -113,7 +113,7 @@ export function TransferStockDialog({
           <div>
             <label
               htmlFor="transfer-product"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Product
             </label>
@@ -137,7 +137,7 @@ export function TransferStockDialog({
             <div>
               <label
                 htmlFor="transfer-from"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 From warehouse
               </label>
@@ -159,7 +159,7 @@ export function TransferStockDialog({
             <div>
               <label
                 htmlFor="transfer-to"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 To warehouse
               </label>
@@ -183,7 +183,7 @@ export function TransferStockDialog({
           <div>
             <label
               htmlFor="transfer-quantity"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Quantity
             </label>
@@ -203,7 +203,7 @@ export function TransferStockDialog({
           <div>
             <label
               htmlFor="transfer-note"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
+              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Note
             </label>

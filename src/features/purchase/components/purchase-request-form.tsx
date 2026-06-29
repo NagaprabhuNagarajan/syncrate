@@ -95,7 +95,7 @@ function FieldError({ message }: { readonly message?: string }) {
   }
   return (
     <p
-      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+      className="text-error-600 dark:text-error-400 mt-1.5 flex items-center gap-1.5 text-xs"
       role="alert"
     >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -123,7 +123,7 @@ function FormField({
     <div>
       <label
         htmlFor={htmlFor}
-        className="mb-1.5 block text-sm font-medium text-slate-700"
+        className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
       >
         {label}
         {required && (
@@ -133,7 +133,7 @@ function FormField({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
       <FieldError message={error} />
     </div>
   );
@@ -142,26 +142,26 @@ function FormField({
 function SectionTitle({ children }: { readonly children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 py-1">
-      <div className="flex-1 border-t border-slate-100" />
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
+      <span className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
         {children}
       </span>
-      <div className="flex-1 border-t border-slate-100" />
+      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
     </div>
   );
 }
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors",
     "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
     hasError
-      ? "border-error-400 bg-error-50/30"
-      : "border-slate-300 bg-white hover:border-slate-400"
+      ? "border-error-400 bg-error-50/30 dark:bg-error-500/10"
+      : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
   );
 
 const cellClass = cn(
-  "block w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 shadow-sm",
+  "block w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-2 text-sm text-slate-900 dark:text-slate-100 shadow-sm",
   "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
 );
 
@@ -299,21 +299,21 @@ export function PurchaseRequestForm({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8"
+      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8"
     >
       {/* Header */}
       <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
           <ClipboardList
-            className="h-5 w-5 text-primary-600"
+            className="h-5 w-5 text-primary-600 dark:text-primary-400"
             aria-hidden="true"
           />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900">
+          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {isEdit ? "Edit purchase request" : "New purchase request"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update the draft requisition"
               : "Raise an internal requisition for goods you need"}
@@ -325,7 +325,7 @@ export function PurchaseRequestForm({
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           role="alert"
         >
           <AlertCircle
@@ -394,7 +394,7 @@ export function PurchaseRequestForm({
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-400">
+            <thead className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
               <tr>
                 <th scope="col" className="px-2 py-2 font-medium">
                   Product
@@ -461,7 +461,7 @@ export function PurchaseRequestForm({
                       />
                       <FieldError message={rowErrors?.estimatedPrice?.message} />
                     </td>
-                    <td className="px-2 py-2 text-right tabular-nums font-medium text-slate-900">
+                    <td className="px-2 py-2 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(round2(lineTotal))}
                     </td>
                     <td className="px-2 py-2 text-right">
@@ -472,7 +472,7 @@ export function PurchaseRequestForm({
                         aria-label={`Remove line ${index + 1}`}
                         disabled={fields.length <= 1}
                         onClick={() => remove(index)}
-                        className="text-error-600 hover:bg-error-50 hover:text-error-700"
+                        className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700 dark:hover:text-error-300"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -496,8 +496,8 @@ export function PurchaseRequestForm({
 
         {/* Estimated total */}
         <div className="flex justify-end">
-          <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-            <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold text-slate-900">
+          <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-sm">
+            <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 text-base font-semibold text-slate-900 dark:text-slate-100">
               <dt>Estimated total</dt>
               <dd className="tabular-nums">{formatCurrency(estimatedTotal)}</dd>
             </div>

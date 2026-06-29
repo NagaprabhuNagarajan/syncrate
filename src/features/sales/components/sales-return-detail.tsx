@@ -98,22 +98,22 @@ function ActionDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="action-dialog-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
-            <AlertTriangle className="text-error-600 h-5 w-5" aria-hidden="true" />
+          <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+            <AlertTriangle className="text-error-600 dark:text-error-400 h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h2 id="action-dialog-title" className="text-base font-semibold text-slate-900">
+            <h2 id="action-dialog-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
               {title}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">{description}</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
           </div>
         </div>
 
         {error && (
-          <div className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm" role="alert">
+          <div className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm" role="alert">
             {error}
           </div>
         )}
@@ -156,7 +156,7 @@ function InfoRow({
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
       <div>
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700">{value}</dd>
+        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
       </div>
     </div>
   );
@@ -233,7 +233,7 @@ export function SalesReturnDetail({
           <Button
             type="button"
             variant="ghost"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700"
+            className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700 dark:hover:text-error-300"
             onClick={() => { setActionError(null); setDialog("cancel"); }}
           >
             <XCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />
@@ -249,7 +249,7 @@ export function SalesReturnDetail({
       </div>
 
       {actionError && (
-        <p role="alert" className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm">
+        <p role="alert" className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm">
           {actionError}
         </p>
       )}
@@ -257,7 +257,7 @@ export function SalesReturnDetail({
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Details */}
         <Card className="p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Return details</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Return details</h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <InfoRow icon={User} label="Customer" value={customerName} />
             <InfoRow
@@ -275,28 +275,28 @@ export function SalesReturnDetail({
             )}
           </dl>
           {salesReturn.notes && (
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
               <dt className="text-xs text-muted-foreground">Notes</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">{salesReturn.notes}</dd>
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">{salesReturn.notes}</dd>
             </div>
           )}
         </Card>
 
         {/* Totals */}
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Credit summary</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Credit summary</h2>
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="tabular-nums text-slate-700">{formatCurrency(salesReturn.subtotal)}</dd>
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">{formatCurrency(salesReturn.subtotal)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Tax</dt>
-              <dd className="tabular-nums text-slate-700">{formatCurrency(salesReturn.taxAmount)}</dd>
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">{formatCurrency(salesReturn.taxAmount)}</dd>
             </div>
-            <div className="flex justify-between border-t border-slate-100 pt-3">
-              <dt className="text-base font-bold text-slate-900">Total credit</dt>
-              <dd className="text-xl font-bold tabular-nums text-slate-900">
+            <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+              <dt className="text-base font-bold text-slate-900 dark:text-slate-100">Total credit</dt>
+              <dd className="text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
                 {formatCurrency(salesReturn.totalAmount)}
               </dd>
             </div>
@@ -306,11 +306,11 @@ export function SalesReturnDetail({
 
       {/* Line items */}
       <div className="mt-6">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Line items</h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Line items</h2>
+        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">Product</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">Qty</th>
@@ -319,18 +319,18 @@ export function SalesReturnDetail({
                   <th scope="col" className="px-4 py-3 text-right font-medium">Line total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {salesReturn.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {productNames[item.productId] ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">{item.quantity}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">{item.quantity}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.unitPrice)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">{item.taxRate}%</td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">{item.taxRate}%</td>
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(item.lineTotal)}
                     </td>
                   </tr>
@@ -348,7 +348,7 @@ export function SalesReturnDetail({
             description={
               <>
                 Are you sure you want to complete{" "}
-                <span className="font-medium text-slate-700">{salesReturn.returnNumber}</span>?
+                <span className="font-medium text-slate-700 dark:text-slate-300">{salesReturn.returnNumber}</span>?
                 This will restore inventory and credit the customer ledger.
               </>
             }
@@ -366,7 +366,7 @@ export function SalesReturnDetail({
             description={
               <>
                 Are you sure you want to cancel{" "}
-                <span className="font-medium text-slate-700">{salesReturn.returnNumber}</span>?
+                <span className="font-medium text-slate-700 dark:text-slate-300">{salesReturn.returnNumber}</span>?
                 This cannot be undone.
               </>
             }

@@ -65,10 +65,10 @@ function DetailRow({
   }
   return (
     <div className="flex flex-col gap-0.5 py-2 sm:flex-row sm:items-baseline sm:gap-4">
-      <dt className="w-44 shrink-0 text-xs font-medium uppercase tracking-wide text-slate-400">
+      <dt className="w-44 shrink-0 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
         {label}
       </dt>
-      <dd className="text-sm text-slate-700">{value}</dd>
+      <dd className="text-sm text-slate-700 dark:text-slate-300">{value}</dd>
     </div>
   );
 }
@@ -107,25 +107,25 @@ function ArchiveDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="archive-supplier-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full dark:bg-error-500/10">
             <AlertTriangle
-              className="text-error-600 h-5 w-5"
+              className="text-error-600 h-5 w-5 dark:text-error-400"
               aria-hidden="true"
             />
           </div>
           <div>
             <h2
               id="archive-supplier-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
               Archive supplier
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to archive{" "}
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-slate-700 dark:text-slate-300">
                 {supplier.name}
               </span>
               ? Archived suppliers remain available for historical reports.
@@ -135,7 +135,7 @@ function ArchiveDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
             role="alert"
           >
             {error}
@@ -215,7 +215,7 @@ export function SupplierProfile({
     <div className="p-6 lg:p-8">
       <Link
         href={`/suppliers?org=${organizationId}`}
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Back to suppliers
@@ -232,7 +232,7 @@ export function SupplierProfile({
           <Button
             type="button"
             variant="ghost"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700"
+            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
             onClick={() => {
               setArchiveError(null);
               setShowArchive(true);
@@ -249,7 +249,7 @@ export function SupplierProfile({
           {STATUS_LABEL[supplier.status]}
         </Badge>
         {supplier.rating !== null && (
-          <span className="inline-flex items-center gap-0.5 text-sm font-medium text-amber-600">
+          <span className="inline-flex items-center gap-0.5 text-sm font-medium text-amber-600 dark:text-amber-400">
             <Star
               className="h-4 w-4 fill-amber-400 text-amber-400"
               aria-hidden="true"
@@ -271,7 +271,7 @@ export function SupplierProfile({
               <CardTitle className="text-base">Contact</CardTitle>
             </CardHeader>
             <CardContent>
-              <dl className="divide-y divide-slate-100">
+              <dl className="divide-y divide-slate-100 dark:divide-slate-800">
                 <DetailRow label="Contact person" value={supplier.contactPerson} />
                 <DetailRow label="Mobile" value={supplier.mobile} />
                 <DetailRow label="Email" value={supplier.email} />
@@ -288,7 +288,7 @@ export function SupplierProfile({
               <CardTitle className="text-base">Bank details</CardTitle>
             </CardHeader>
             <CardContent>
-              <dl className="divide-y divide-slate-100">
+              <dl className="divide-y divide-slate-100 dark:divide-slate-800">
                 <DetailRow
                   label="Account holder"
                   value={supplier.bankAccountName}
@@ -310,7 +310,7 @@ export function SupplierProfile({
                 <CardTitle className="text-base">Notes</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-line text-sm text-slate-700">
+                <p className="whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                   {supplier.notes}
                 </p>
               </CardContent>
@@ -326,10 +326,10 @@ export function SupplierProfile({
             <CardContent>
               <dl className="space-y-3">
                 <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  <dt className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                     Outstanding
                   </dt>
-                  <dd className="mt-0.5 text-2xl font-semibold text-slate-900">
+                  <dd className="mt-0.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">
                     {currency.format(ledger.outstanding)}
                   </dd>
                 </div>
@@ -350,14 +350,14 @@ export function SupplierProfile({
               <CardTitle className="text-base">Ledger</CardTitle>
               <Link
                 href={`/suppliers/${supplier.id}/ledger`}
-                className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
               >
                 View full ledger →
               </Link>
             </CardHeader>
             <CardContent>
               {ledger.entries.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   No ledger entries yet.
                 </p>
               ) : (
@@ -367,10 +367,10 @@ export function SupplierProfile({
                       key={entry.id}
                       className="flex items-center justify-between gap-3 text-sm"
                     >
-                      <span className="text-slate-600">
+                      <span className="text-slate-600 dark:text-slate-400">
                         {entry.description ?? entry.referenceType ?? "Entry"}
                       </span>
-                      <span className="font-medium text-slate-900">
+                      <span className="font-medium text-slate-900 dark:text-slate-100">
                         {currency.format(entry.runningBalance)}
                       </span>
                     </li>

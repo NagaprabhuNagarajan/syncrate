@@ -139,7 +139,7 @@ function CustomerPaymentsTab({
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="relative">
             <Search
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
               aria-hidden="true"
             />
             <input
@@ -147,7 +147,7 @@ function CustomerPaymentsTab({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by payment no., reference…"
-              className="w-72 rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-72 rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
               aria-label="Search customer payments"
             />
           </div>
@@ -180,55 +180,55 @@ function CustomerPaymentsTab({
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+              <thead className="bg-slate-50 dark:bg-slate-900">
                 <tr>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Payment #
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Customer
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Date
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Method
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Amount
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Status
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {result.payments.map((payment: CustomerPayment, index: number) => (
                     <motion.tr
                       key={payment.id}
@@ -236,30 +236,30 @@ function CustomerPaymentsTab({
                       initial="hidden"
                       animate="visible"
                       variants={rowVariants}
-                      className="hover:bg-slate-50"
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
                       <td className="px-4 py-3">
-                        <span className="font-mono text-sm font-medium text-slate-900">
+                        <span className="font-mono text-sm font-medium text-slate-900 dark:text-slate-100">
                           {payment.paymentNumber}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-slate-700">
+                        <span className="text-sm text-slate-700 dark:text-slate-300">
                           {payment.customerName ?? payment.customerId}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-slate-600">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
                           {formatDate(payment.paymentDate)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-slate-600">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
                           {METHOD_LABELS[payment.paymentMethod]}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-semibold text-slate-900">
+                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {formatCurrency(payment.amount)}
                         </span>
                       </td>
@@ -273,7 +273,7 @@ function CustomerPaymentsTab({
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/payments/${payment.id}`}
-                          className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline"
+                          className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
                         >
                           View
                         </Link>
@@ -288,7 +288,7 @@ function CustomerPaymentsTab({
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Showing {(result.page - 1) * result.pageSize + 1}–
                 {Math.min(result.page * result.pageSize, result.total)} of{" "}
                 {result.total} payments
@@ -303,7 +303,7 @@ function CustomerPaymentsTab({
                 >
                   <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <span className="text-sm text-slate-700">
+                <span className="text-sm text-slate-700 dark:text-slate-300">
                   {result.page} / {totalPages}
                 </span>
                 <Button
@@ -387,7 +387,7 @@ function SupplierPaymentsTab({
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="relative">
             <Search
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
               aria-hidden="true"
             />
             <input
@@ -395,7 +395,7 @@ function SupplierPaymentsTab({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by payment no., reference…"
-              className="w-72 rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-72 rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
               aria-label="Search supplier payments"
             />
           </div>
@@ -428,55 +428,55 @@ function SupplierPaymentsTab({
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+              <thead className="bg-slate-50 dark:bg-slate-900">
                 <tr>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Payment #
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Supplier
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Date
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Method
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Amount
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Status
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {result.payments.map(
                   (payment: SupplierPayment, index: number) => (
                     <motion.tr
@@ -485,30 +485,30 @@ function SupplierPaymentsTab({
                       initial="hidden"
                       animate="visible"
                       variants={rowVariants}
-                      className="hover:bg-slate-50"
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     >
                       <td className="px-4 py-3">
-                        <span className="font-mono text-sm font-medium text-slate-900">
+                        <span className="font-mono text-sm font-medium text-slate-900 dark:text-slate-100">
                           {payment.paymentNumber}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-slate-700">
+                        <span className="text-sm text-slate-700 dark:text-slate-300">
                           {payment.supplierName ?? payment.supplierId}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-slate-600">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
                           {formatDate(payment.paymentDate)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-slate-600">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
                           {METHOD_LABELS[payment.paymentMethod]}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-semibold text-slate-900">
+                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {formatCurrency(payment.amount)}
                         </span>
                       </td>
@@ -522,7 +522,7 @@ function SupplierPaymentsTab({
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/payments/${payment.id}`}
-                          className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline"
+                          className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
                         >
                           View
                         </Link>
@@ -537,7 +537,7 @@ function SupplierPaymentsTab({
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Showing {(result.page - 1) * result.pageSize + 1}–
                 {Math.min(result.page * result.pageSize, result.total)} of{" "}
                 {result.total} payments
@@ -552,7 +552,7 @@ function SupplierPaymentsTab({
                 >
                   <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <span className="text-sm text-slate-700">
+                <span className="text-sm text-slate-700 dark:text-slate-300">
                   {result.page} / {totalPages}
                 </span>
                 <Button
@@ -611,9 +611,9 @@ const SKELETON_ROW_KEYS = [
 
 function PaymentsTableSkeleton() {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
       <table className="min-w-full">
-        <thead className="bg-slate-50">
+        <thead className="bg-slate-50 dark:bg-slate-900">
           <tr>
             {SKELETON_COLUMN_KEYS.map((columnKey) => (
               <th key={columnKey} className="px-4 py-3">
@@ -622,7 +622,7 @@ function PaymentsTableSkeleton() {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
           {SKELETON_ROW_KEYS.map((rowKey) => (
             <tr key={rowKey}>
               {SKELETON_COLUMN_KEYS.map((columnKey) => (
@@ -664,7 +664,7 @@ export function PaymentsView({
       />
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-slate-200 dark:border-slate-800">
         <nav className="-mb-px flex gap-6" aria-label="Payment tabs">
           <button
             type="button"
@@ -672,8 +672,8 @@ export function PaymentsView({
             className={[
               "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition-colors",
               activeTab === "customer"
-                ? "border-primary-600 text-primary-600"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700",
+                ? "border-primary-600 text-primary-600 dark:text-primary-400"
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300",
             ].join(" ")}
             aria-selected={activeTab === "customer"}
             role="tab"
@@ -681,7 +681,7 @@ export function PaymentsView({
             <DollarSign className="h-4 w-4" aria-hidden="true" />
             Customer Payments
             {customerPayments.total > 0 && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                 {customerPayments.total}
               </span>
             )}
@@ -692,8 +692,8 @@ export function PaymentsView({
             className={[
               "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition-colors",
               activeTab === "supplier"
-                ? "border-primary-600 text-primary-600"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700",
+                ? "border-primary-600 text-primary-600 dark:text-primary-400"
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300",
             ].join(" ")}
             aria-selected={activeTab === "supplier"}
             role="tab"
@@ -701,7 +701,7 @@ export function PaymentsView({
             <CreditCard className="h-4 w-4" aria-hidden="true" />
             Supplier Payments
             {supplierPayments.total > 0 && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                 {supplierPayments.total}
               </span>
             )}

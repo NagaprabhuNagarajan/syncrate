@@ -33,7 +33,7 @@ function FieldError({ message }: FieldErrorProps) {
     <motion.p
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs dark:text-error-400"
       role="alert"
     >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -56,8 +56,8 @@ function AlertBanner({ type, message }: AlertBannerProps) {
       className={cn(
         "flex items-start gap-3 rounded-lg border px-4 py-3 text-sm",
         isError
-          ? "border-error-200 bg-error-50 text-error-800"
-          : "border-success-200 bg-success-50 text-success-800"
+          ? "border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
+          : "border-success-200 bg-success-50 text-success-800 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300"
       )}
       role="alert"
       aria-live="assertive"
@@ -84,11 +84,11 @@ function AlertBanner({ type, message }: AlertBannerProps) {
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors dark:text-slate-100 dark:placeholder-slate-500",
     "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
     hasError
-      ? "border-error-400 bg-error-50/30 focus:ring-error-500 focus:border-error-500"
-      : "border-slate-300 bg-white hover:border-slate-400"
+      ? "border-error-400 bg-error-50/30 focus:ring-error-500 focus:border-error-500 dark:bg-error-500/10"
+      : "border-slate-300 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
   );
 
 interface InviteUserFormProps {
@@ -149,13 +149,13 @@ export function InviteUserForm({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-slate-900">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Invite a team member
         </h2>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
           They&apos;ll receive an email with a link to join.
         </p>
       </div>
@@ -174,7 +174,7 @@ export function InviteUserForm({
         <div>
           <label
             htmlFor="invite-email"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Email address
           </label>
@@ -194,10 +194,10 @@ export function InviteUserForm({
         <div>
           <label
             htmlFor="invite-full-name"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Full name{" "}
-            <span className="font-normal text-slate-400">(optional)</span>
+            <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
           </label>
           <input
             id="invite-full-name"
@@ -215,7 +215,7 @@ export function InviteUserForm({
         <div>
           <label
             htmlFor="invite-role"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Role
           </label>
@@ -242,10 +242,10 @@ export function InviteUserForm({
         <div>
           <label
             htmlFor="invite-branch"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Branch{" "}
-            <span className="font-normal text-slate-400">(optional)</span>
+            <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
           </label>
           <select
             id="invite-branch"

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandLogo } from "@/components/shared/logo";
 
 export const metadata: Metadata = {
   title: {
@@ -28,18 +29,15 @@ export default function AuthLayout({
       </div>
 
       {/* Logo */}
-      <div className="relative z-10 mb-8 flex flex-col items-center gap-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/20">
-          <span className="text-xl font-bold text-white">S</span>
-        </div>
-        <span className="text-xl font-semibold text-slate-800">Syncrate</span>
+      <div className="relative z-10 mb-8 flex flex-col items-center">
+        <BrandLogo size={150} priority />
       </div>
 
       {/* Card */}
       <div className="relative z-10 w-full max-w-md">{children}</div>
 
       {/* Footer */}
-      <p className="relative z-10 mt-8 text-center text-xs text-slate-400">
+      <p className="relative z-10 mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
         &copy; {new Date().getFullYear()} Syncrate. All rights reserved.
       </p>
     </div>

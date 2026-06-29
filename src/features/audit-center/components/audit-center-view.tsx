@@ -95,7 +95,7 @@ function AuditRow({ entry, index }: AuditRowProps) {
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.16, delay: Math.min(index, 10) * 0.02 }}
-      className="border-b border-slate-100 last:border-0"
+      className="border-b border-slate-100 last:border-0 dark:border-slate-800"
     >
       <td className="px-4 py-3 align-top">
         <Badge variant={SOURCE_BADGE[entry.source]}>
@@ -103,18 +103,18 @@ function AuditRow({ entry, index }: AuditRowProps) {
         </Badge>
       </td>
       <td className="px-4 py-3 align-top">
-        <span className="font-mono text-xs text-slate-700">{entry.action}</span>
+        <span className="font-mono text-xs text-slate-700 dark:text-slate-300">{entry.action}</span>
       </td>
       <td className="px-4 py-3 align-top">
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-slate-600 dark:text-slate-400">
           {entry.actor ?? "System"}
         </span>
       </td>
       <td className="px-4 py-3 align-top">
-        <span className="text-sm text-slate-900">{entry.summary}</span>
+        <span className="text-sm text-slate-900 dark:text-slate-100">{entry.summary}</span>
       </td>
       <td className="whitespace-nowrap px-4 py-3 align-top">
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-500 dark:text-slate-400">
           {formatTimestamp(entry.timestamp)}
         </span>
       </td>
@@ -292,11 +292,11 @@ export function AuditCenterView({
       </PageHeader>
 
       {/* Filter bar */}
-      <div className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-end">
+      <div className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-end dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col gap-1">
           <label
             htmlFor="audit-source"
-            className="text-xs font-medium text-slate-600"
+            className="text-xs font-medium text-slate-600 dark:text-slate-400"
           >
             Source
           </label>
@@ -317,13 +317,13 @@ export function AuditCenterView({
         <div className="flex min-w-[12rem] flex-1 flex-col gap-1">
           <label
             htmlFor="audit-search"
-            className="text-xs font-medium text-slate-600"
+            className="text-xs font-medium text-slate-600 dark:text-slate-400"
           >
             Search
           </label>
           <div className="relative">
             <Search
-              className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
               aria-hidden="true"
             />
             <input
@@ -340,7 +340,7 @@ export function AuditCenterView({
         <div className="flex flex-col gap-1">
           <label
             htmlFor="audit-from"
-            className="text-xs font-medium text-slate-600"
+            className="text-xs font-medium text-slate-600 dark:text-slate-400"
           >
             From
           </label>
@@ -356,7 +356,7 @@ export function AuditCenterView({
         <div className="flex flex-col gap-1">
           <label
             htmlFor="audit-to"
-            className="text-xs font-medium text-slate-600"
+            className="text-xs font-medium text-slate-600 dark:text-slate-400"
           >
             To
           </label>
@@ -371,7 +371,7 @@ export function AuditCenterView({
       </div>
 
       {/* Table */}
-      <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         {error ? (
           <div className="p-5">
             <ErrorState message={error} />
@@ -392,20 +392,20 @@ export function AuditCenterView({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60">
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500">
+                <tr className="border-b border-slate-100 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-800/40">
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Source
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Action
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Actor
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Summary
                   </th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Timestamp
                   </th>
                 </tr>
@@ -423,7 +423,7 @@ export function AuditCenterView({
       {/* Pagination */}
       {data.total > 0 && (
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Showing {rangeStart}–{rangeEnd} of {data.total}
           </p>
           <div className="flex items-center gap-2">
@@ -438,7 +438,7 @@ export function AuditCenterView({
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               Prev
             </Button>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               Page {data.page} of {totalPages}
             </span>
             <Button

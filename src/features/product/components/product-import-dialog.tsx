@@ -96,7 +96,7 @@ export function ProductImportDialog({
             <div>
               <label
                 htmlFor="product-import-file"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 CSV file
               </label>
@@ -107,7 +107,7 @@ export function ProductImportDialog({
                 accept=".csv"
                 aria-label="CSV file"
                 onChange={handleFileChange}
-                className="block w-full cursor-pointer rounded-lg border border-slate-300 bg-white text-sm text-slate-700 shadow-sm file:mr-3 file:border-0 file:bg-slate-50 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-slate-700 hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="block w-full cursor-pointer rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 shadow-sm file:mr-3 file:border-0 file:bg-slate-50 dark:file:bg-slate-800 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-slate-700 dark:file:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
           )}
@@ -115,7 +115,7 @@ export function ProductImportDialog({
           {error && (
             <p
               role="alert"
-              className="text-error-700 bg-error-50 border-error-200 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
+              className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
             >
               <AlertCircle
                 className="mt-0.5 h-4 w-4 shrink-0"
@@ -127,7 +127,7 @@ export function ProductImportDialog({
 
           {result && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
                 <CheckCircle2
                   className="text-success h-5 w-5"
                   aria-hidden="true"
@@ -138,15 +138,15 @@ export function ProductImportDialog({
               </div>
 
               {result.errors.length > 0 && (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-3">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     {result.errors.length}{" "}
                     {result.errors.length === 1 ? "error" : "errors"}
                   </p>
-                  <ul className="max-h-48 space-y-1 overflow-y-auto text-sm text-slate-600">
+                  <ul className="max-h-48 space-y-1 overflow-y-auto text-sm text-slate-600 dark:text-slate-400">
                     {result.errors.map((rowError) => (
                       <li key={rowError.row}>
-                        <span className="font-medium text-slate-800">
+                        <span className="font-medium text-slate-800 dark:text-slate-100">
                           Row {rowError.row}:
                         </span>{" "}
                         {rowError.message}

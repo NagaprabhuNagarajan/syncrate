@@ -68,7 +68,7 @@ function FieldError({ message }: { readonly message?: string }) {
     <motion.p
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs dark:text-error-400"
       role="alert"
     >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -96,7 +96,7 @@ function FormField({
     <div>
       <label
         htmlFor={htmlFor}
-        className="mb-1.5 block text-sm font-medium text-slate-700"
+        className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
       >
         {label}
         {required && (
@@ -106,7 +106,9 @@ function FormField({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      {hint && !error && (
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>
+      )}
       <FieldError message={error} />
     </div>
   );
@@ -114,11 +116,11 @@ function FormField({
 
 const inputClass = (hasError: boolean) =>
   cn(
-    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+    "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors dark:text-slate-100 dark:placeholder-slate-500",
     "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
     hasError
-      ? "border-error-400 bg-error-50/30"
-      : "border-slate-300 bg-white hover:border-slate-400"
+      ? "border-error-400 bg-error-50/30 dark:bg-error-500/10"
+      : "border-slate-300 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
   );
 
 // ─────────────────────────────────────────────────────────────
@@ -207,18 +209,18 @@ export function BranchForm({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8"
+      className="rounded-2xl border border-slate-200/60 bg-white px-6 py-6 shadow-xl shadow-slate-200/50 sm:px-8 sm:py-8 dark:border-slate-800 dark:bg-slate-900"
     >
       {/* Header */}
       <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50">
-          <Building2 className="h-5 w-5 text-primary-600" aria-hidden="true" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-500/10">
+          <Building2 className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {isEdit ? "Edit branch" : "Add branch"}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update the details for this branch"
               : "Create a new branch for your organization"}
@@ -230,7 +232,7 @@ export function BranchForm({
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
           role="alert"
         >
           <AlertCircle
@@ -282,19 +284,19 @@ export function BranchForm({
         {/* Headquarters */}
         <label
           htmlFor="isHeadquarters"
-          className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3"
+          className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50"
         >
           <input
             id="isHeadquarters"
             type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 dark:border-slate-700"
             {...register("isHeadquarters")}
           />
           <span>
-            <span className="block text-sm font-medium text-slate-700">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Set as headquarters
             </span>
-            <span className="mt-0.5 block text-xs text-slate-400">
+            <span className="mt-0.5 block text-xs text-slate-400 dark:text-slate-500">
               The headquarters branch cannot be deleted
             </span>
           </span>
@@ -323,11 +325,11 @@ export function BranchForm({
 
         {/* Divider */}
         <div className="flex items-center gap-3 py-1">
-          <div className="flex-1 border-t border-slate-100" />
-          <span className="text-xs text-slate-400">
+          <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
+          <span className="text-xs text-slate-400 dark:text-slate-500">
             Contact &amp; address (optional)
           </span>
-          <div className="flex-1 border-t border-slate-100" />
+          <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
         </div>
 
         {/* Phone + Email */}

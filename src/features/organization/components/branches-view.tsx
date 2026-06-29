@@ -60,15 +60,15 @@ function BranchCard({ branch, index, onEdit, onDelete }: BranchCardProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.05 }}
-      className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50">
-          <Building2 className="h-5 w-5 text-primary-600" aria-hidden="true" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
+          <Building2 className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-slate-900">
+            <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
               {branch.name}
             </h3>
             {branch.isHeadquarters && <Badge variant="info">HQ</Badge>}
@@ -82,7 +82,7 @@ function BranchCard({ branch, index, onEdit, onDelete }: BranchCardProps) {
         </div>
       </div>
 
-      <dl className="mt-4 space-y-1.5 text-xs text-slate-500">
+      <dl className="mt-4 space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
         {location && (
           <div className="flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -91,13 +91,13 @@ function BranchCard({ branch, index, onEdit, onDelete }: BranchCardProps) {
         )}
         {branch.gstNumber && (
           <div>
-            <dt className="inline font-medium text-slate-400">GST: </dt>
+            <dt className="inline font-medium text-slate-400 dark:text-slate-500">GST: </dt>
             <dd className="inline">{branch.gstNumber}</dd>
           </div>
         )}
       </dl>
 
-      <div className="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4">
+      <div className="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
         <Button
           type="button"
           variant="outline"
@@ -113,7 +113,7 @@ function BranchCard({ branch, index, onEdit, onDelete }: BranchCardProps) {
             type="button"
             variant="ghost"
             size="sm"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700"
+            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
             onClick={() => onDelete(branch)}
             aria-label={`Delete ${branch.name}`}
           >
@@ -160,25 +160,25 @@ function DeleteDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-branch-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full dark:bg-error-500/10">
             <AlertTriangle
-              className="text-error-600 h-5 w-5"
+              className="text-error-600 h-5 w-5 dark:text-error-400"
               aria-hidden="true"
             />
           </div>
           <div>
             <h2
               id="delete-branch-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
               Delete branch
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to delete{" "}
-              <span className="font-medium text-slate-700">{branch.name}</span>?
+              <span className="font-medium text-slate-700 dark:text-slate-300">{branch.name}</span>?
               This action cannot be undone.
             </p>
           </div>
@@ -186,7 +186,7 @@ function DeleteDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
             role="alert"
           >
             {error}

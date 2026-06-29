@@ -152,7 +152,7 @@ export function OcrView({ organizationId, canGenerate }: OcrViewProps) {
               {!canGenerate && (
                 <div
                   role="note"
-                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
                 >
                   You can view this page but need the “AI generate” permission to
                   run extraction.
@@ -173,7 +173,7 @@ export function OcrView({ organizationId, canGenerate }: OcrViewProps) {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
+                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <FileText
@@ -181,10 +181,10 @@ export function OcrView({ organizationId, canGenerate }: OcrViewProps) {
                       aria-hidden="true"
                     />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">
+                      <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                         {file.name}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {formatBytes(file.size)}
                       </p>
                     </div>
@@ -203,7 +203,7 @@ export function OcrView({ organizationId, canGenerate }: OcrViewProps) {
                 <div
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
-                  className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-muted/30 px-6 py-12 text-center"
+                  className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-muted/30 px-6 py-12 text-center dark:border-slate-700"
                 >
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                     <Upload

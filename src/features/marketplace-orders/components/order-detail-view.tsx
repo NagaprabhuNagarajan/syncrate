@@ -156,17 +156,17 @@ function PaymentPanel({
   return (
     <section
       aria-label="Payment"
-      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="mb-4 flex items-center gap-2">
         <Wallet className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-        <h2 className="text-base font-semibold text-slate-900">
+        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
           Escrow payment
         </h2>
       </div>
 
       <dl className="grid grid-cols-2 gap-3 text-sm">
-        <dt className="text-slate-500">Status</dt>
+        <dt className="text-slate-500 dark:text-slate-400">Status</dt>
         <dd>
           {payment ? (
             <Badge variant={PAYMENT_STATUS_VARIANT[payment.status]}>
@@ -177,19 +177,19 @@ function PaymentPanel({
           )}
         </dd>
 
-        <dt className="text-slate-500">Amount</dt>
-        <dd className="tabular-nums text-slate-800">
+        <dt className="text-slate-500 dark:text-slate-400">Amount</dt>
+        <dd className="tabular-nums text-slate-800 dark:text-slate-100">
           {formatMoney(
             payment?.amount ?? order.totalAmount,
             payment?.currency ?? order.currency
           )}
         </dd>
 
-        <dt className="text-slate-500">Provider</dt>
-        <dd className="text-slate-800">{payment?.provider ?? "—"}</dd>
+        <dt className="text-slate-500 dark:text-slate-400">Provider</dt>
+        <dd className="text-slate-800 dark:text-slate-100">{payment?.provider ?? "—"}</dd>
 
-        <dt className="text-slate-500">Reference</dt>
-        <dd className="break-all font-mono text-xs text-slate-600">
+        <dt className="text-slate-500 dark:text-slate-400">Reference</dt>
+        <dd className="break-all font-mono text-xs text-slate-600 dark:text-slate-400">
           {payment?.externalReference ?? "—"}
         </dd>
       </dl>
@@ -277,41 +277,41 @@ export function OrderDetailView({
         {/* Summary */}
         <section
           aria-label="Order summary"
-          className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2"
+          className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900"
         >
-          <h2 className="mb-4 text-base font-semibold text-slate-900">
+          <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">
             Summary
           </h2>
           <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-            <dt className="text-slate-500">Counterparty</dt>
-            <dd className="col-span-1 font-mono text-xs text-slate-700 sm:col-span-2">
+            <dt className="text-slate-500 dark:text-slate-400">Counterparty</dt>
+            <dd className="col-span-1 font-mono text-xs text-slate-700 sm:col-span-2 dark:text-slate-300">
               {shortId(counterparty)}
             </dd>
 
-            <dt className="text-slate-500">Listing</dt>
-            <dd className="col-span-1 font-mono text-xs text-slate-700 sm:col-span-2">
+            <dt className="text-slate-500 dark:text-slate-400">Listing</dt>
+            <dd className="col-span-1 font-mono text-xs text-slate-700 sm:col-span-2 dark:text-slate-300">
               {order.listingId ? shortId(order.listingId) : "—"}
             </dd>
 
-            <dt className="text-slate-500">Quantity</dt>
-            <dd className="col-span-1 tabular-nums text-slate-800 sm:col-span-2">
+            <dt className="text-slate-500 dark:text-slate-400">Quantity</dt>
+            <dd className="col-span-1 tabular-nums text-slate-800 sm:col-span-2 dark:text-slate-100">
               {order.quantity}
             </dd>
 
-            <dt className="text-slate-500">Unit price</dt>
-            <dd className="col-span-1 tabular-nums text-slate-800 sm:col-span-2">
+            <dt className="text-slate-500 dark:text-slate-400">Unit price</dt>
+            <dd className="col-span-1 tabular-nums text-slate-800 sm:col-span-2 dark:text-slate-100">
               {formatMoney(unitPrice, order.currency)}
             </dd>
 
-            <dt className="text-slate-500">Total</dt>
-            <dd className="col-span-1 font-semibold tabular-nums text-slate-900 sm:col-span-2">
+            <dt className="text-slate-500 dark:text-slate-400">Total</dt>
+            <dd className="col-span-1 font-semibold tabular-nums text-slate-900 sm:col-span-2 dark:text-slate-100">
               {formatMoney(order.totalAmount, order.currency)}
             </dd>
 
             {order.notes && (
               <>
-                <dt className="text-slate-500">Notes</dt>
-                <dd className="col-span-1 text-slate-700 sm:col-span-2">
+                <dt className="text-slate-500 dark:text-slate-400">Notes</dt>
+                <dd className="col-span-1 text-slate-700 sm:col-span-2 dark:text-slate-300">
                   {order.notes}
                 </dd>
               </>
@@ -319,8 +319,8 @@ export function OrderDetailView({
           </dl>
 
           {canTransact && role && (
-            <div className="mt-6 border-t border-slate-100 pt-5">
-              <h3 className="mb-3 text-sm font-semibold text-slate-900">
+            <div className="mt-6 border-t border-slate-100 pt-5 dark:border-slate-800">
+              <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Actions
               </h3>
               <OrderActions

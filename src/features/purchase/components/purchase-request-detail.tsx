@@ -79,7 +79,7 @@ function InfoRow({
       />
       <div>
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700">{value}</dd>
+        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
       </div>
     </div>
   );
@@ -119,22 +119,22 @@ function CancelDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-pr-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
-            <AlertTriangle className="text-error-600 h-5 w-5" aria-hidden="true" />
+          <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+            <AlertTriangle className="text-error-600 dark:text-error-400 h-5 w-5" aria-hidden="true" />
           </div>
           <div>
             <h2
               id="cancel-pr-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
               Cancel purchase request
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to cancel{" "}
-              <span className="font-medium text-slate-700">{requestNumber}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">{requestNumber}</span>
               ? This cannot be undone.
             </p>
           </div>
@@ -142,7 +142,7 @@ function CancelDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
@@ -211,22 +211,22 @@ function RejectDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="reject-pr-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <h2
           id="reject-pr-title"
-          className="text-base font-semibold text-slate-900"
+          className="text-base font-semibold text-slate-900 dark:text-slate-100"
         >
           Reject {requestNumber}
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Provide a reason so the requester understands why this was rejected.
         </p>
 
         <div className="mt-4">
           <label
             htmlFor="reject-reason"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Reason
           </label>
@@ -235,14 +235,14 @@ function RejectDialog({
             rows={3}
             value={reason}
             onChange={(e) => onReasonChange(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             placeholder="e.g. Budget not approved this quarter"
           />
         </div>
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
@@ -313,15 +313,15 @@ function ConvertDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="convert-pr-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <h2
           id="convert-pr-title"
-          className="text-base font-semibold text-slate-900"
+          className="text-base font-semibold text-slate-900 dark:text-slate-100"
         >
           Convert {requestNumber} to a purchase order
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Choose the supplier to raise the purchase order against. The line
           items and estimated prices carry over.
         </p>
@@ -329,7 +329,7 @@ function ConvertDialog({
         <div className="mt-4">
           <label
             htmlFor="convert-supplier"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Supplier
           </label>
@@ -337,7 +337,7 @@ function ConvertDialog({
             id="convert-supplier"
             value={supplierId}
             onChange={(e) => onSupplierChange(e.target.value)}
-            className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           >
             <option value="">— Select supplier —</option>
             {suppliers.map((supplier) => (
@@ -350,7 +350,7 @@ function ConvertDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
@@ -512,7 +512,7 @@ export function PurchaseRequestDetail({
           <Button
             type="button"
             variant="outline"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700"
+            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
             onClick={() => {
               setActionError(null);
               setShowReject(true);
@@ -546,7 +546,7 @@ export function PurchaseRequestDetail({
           <Button
             type="button"
             variant="ghost"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700"
+            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
             onClick={() => {
               setActionError(null);
               setShowCancel(true);
@@ -567,7 +567,7 @@ export function PurchaseRequestDetail({
       {actionError && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {actionError}
         </p>
@@ -576,7 +576,7 @@ export function PurchaseRequestDetail({
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Details */}
         <Card className="p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Request details
           </h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -593,17 +593,17 @@ export function PurchaseRequestDetail({
             />
           </dl>
           {purchaseRequest.notes && (
-            <div className="mt-5 border-t border-slate-100 pt-4">
+            <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-800">
               <dt className="text-xs text-muted-foreground">Notes</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {purchaseRequest.notes}
               </dd>
             </div>
           )}
           {status === "rejected" && purchaseRequest.rejectedReason && (
-            <div className="mt-4 border-t border-slate-100 pt-4">
-              <dt className="text-error-600 text-xs">Rejection reason</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">
+            <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <dt className="text-error-600 text-xs dark:text-error-400">Rejection reason</dt>
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {purchaseRequest.rejectedReason}
               </dd>
             </div>
@@ -612,19 +612,19 @@ export function PurchaseRequestDetail({
 
         {/* Estimated total */}
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Summary</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
           <dl className="space-y-4">
             <div className="flex justify-between text-sm">
               <dt className="text-muted-foreground">Line items</dt>
-              <dd className="tabular-nums text-slate-700">
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                 {purchaseRequest.items.length}
               </dd>
             </div>
-            <div className="flex justify-between border-t border-slate-100 pt-3">
-              <dt className="text-sm font-medium text-slate-900">
+            <div className="flex justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+              <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">
                 Estimated total
               </dt>
-              <dd className="text-xl font-semibold tabular-nums text-slate-900">
+              <dd className="text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                 {formatCurrency(estimatedTotal)}
               </dd>
             </div>
@@ -634,11 +634,11 @@ export function PurchaseRequestDetail({
 
       {/* Items */}
       <div className="mt-6">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Line items</h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Line items</h2>
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">
                     Product
@@ -654,19 +654,19 @@ export function PurchaseRequestDetail({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {purchaseRequest.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {productNames[item.productId] ?? item.description ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {item.quantity}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.estimatedPrice)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(item.quantity * item.estimatedPrice)}
                     </td>
                   </tr>

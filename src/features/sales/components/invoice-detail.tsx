@@ -89,25 +89,25 @@ function CancelDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-inv-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+          <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
             <AlertTriangle
-              className="text-error-600 h-5 w-5"
+              className="text-error-600 dark:text-error-400 h-5 w-5"
               aria-hidden="true"
             />
           </div>
           <div>
             <h2
               id="cancel-inv-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
               Cancel invoice
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to cancel{" "}
-              <span className="font-medium text-slate-700">{invoiceNumber}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">{invoiceNumber}</span>
               ? This cannot be undone.
             </p>
           </div>
@@ -115,7 +115,7 @@ function CancelDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
@@ -168,7 +168,7 @@ function InfoRow({
       />
       <div>
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700">{value}</dd>
+        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
       </div>
     </div>
   );
@@ -252,7 +252,7 @@ export function InvoiceDetail({
           <Button
             type="button"
             variant="ghost"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700"
+            className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700 dark:hover:text-error-300"
             onClick={() => {
               setActionError(null);
               setShowCancel(true);
@@ -290,7 +290,7 @@ export function InvoiceDetail({
           {PAYMENT_STATUS_LABEL[invoice.paymentStatus]}
         </Badge>
         {invoice.postedAt && (
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             Posted on {formatDate(invoice.postedAt)}
           </span>
         )}
@@ -299,7 +299,7 @@ export function InvoiceDetail({
       {actionError && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {actionError}
         </p>
@@ -308,7 +308,7 @@ export function InvoiceDetail({
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Details card */}
         <Card className="p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Invoice details
           </h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -344,17 +344,17 @@ export function InvoiceDetail({
             )}
           </dl>
           {invoice.notes && (
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
               <dt className="text-xs text-muted-foreground">Notes</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {invoice.notes}
               </dd>
             </div>
           )}
           {invoice.terms && (
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
               <dt className="text-xs text-muted-foreground">Terms &amp; conditions</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {invoice.terms}
               </dd>
             </div>
@@ -363,18 +363,18 @@ export function InvoiceDetail({
 
         {/* Totals summary */}
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Summary</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="tabular-nums text-slate-700">
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                 {formatCurrency(invoice.subtotal)}
               </dd>
             </div>
             {invoice.discountAmount > 0 && (
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Discount</dt>
-                <dd className="tabular-nums text-slate-700">
+                <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                   −{formatCurrency(invoice.discountAmount)}
                 </dd>
               </div>
@@ -382,7 +382,7 @@ export function InvoiceDetail({
             {invoice.isInterstate ? (
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">IGST</dt>
-                <dd className="tabular-nums text-slate-700">
+                <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                   {formatCurrency(invoice.igstAmount)}
                 </dd>
               </div>
@@ -390,13 +390,13 @@ export function InvoiceDetail({
               <>
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">CGST</dt>
-                  <dd className="tabular-nums text-slate-700">
+                  <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                     {formatCurrency(invoice.cgstAmount)}
                   </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">SGST</dt>
-                  <dd className="tabular-nums text-slate-700">
+                  <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                     {formatCurrency(invoice.sgstAmount)}
                   </dd>
                 </div>
@@ -405,29 +405,29 @@ export function InvoiceDetail({
             {invoice.roundOff !== 0 && (
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Round off</dt>
-                <dd className="tabular-nums text-slate-700">
+                <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                   {invoice.roundOff > 0 ? "+" : ""}
                   {formatCurrency(invoice.roundOff)}
                 </dd>
               </div>
             )}
-            <div className="flex justify-between border-t border-slate-100 pt-3">
-              <dt className="text-base font-bold text-slate-900">
+            <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+              <dt className="text-base font-bold text-slate-900 dark:text-slate-100">
                 GRAND TOTAL
               </dt>
-              <dd className="text-xl font-bold tabular-nums text-slate-900">
+              <dd className="text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
                 {formatCurrency(invoice.totalAmount)}
               </dd>
             </div>
             <div className="flex justify-between pt-1 text-xs">
               <dt className="text-muted-foreground">Amount paid</dt>
-              <dd className="tabular-nums text-slate-700">
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                 {formatCurrency(invoice.amountPaid)}
               </dd>
             </div>
             <div className="flex justify-between text-xs">
               <dt className="text-muted-foreground">Balance due</dt>
-              <dd className="tabular-nums font-medium text-slate-900">
+              <dd className="tabular-nums font-medium text-slate-900 dark:text-slate-100">
                 {formatCurrency(invoice.totalAmount - invoice.amountPaid)}
               </dd>
             </div>
@@ -437,11 +437,11 @@ export function InvoiceDetail({
 
       {/* Line items table */}
       <div className="mt-6">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Line items</h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Line items</h2>
+        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-medium">
                     Product
@@ -480,50 +480,50 @@ export function InvoiceDetail({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {invoice.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {productNames[item.productId] ?? item.description ?? "—"}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                    <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">
                       {item.hsnCode ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {item.quantity}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.unitPrice)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {item.discountPercent > 0
                         ? `${item.discountPercent}%`
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                       {formatCurrency(item.taxableAmount)}
                     </td>
                     {invoice.isInterstate ? (
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                         {item.igstRate > 0
                           ? `${formatCurrency(item.igstAmount)} (${item.igstRate}%)`
                           : "—"}
                       </td>
                     ) : (
                       <>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                           {item.cgstRate > 0
                             ? `${formatCurrency(item.cgstAmount)} (${item.cgstRate}%)`
                             : "—"}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                           {item.sgstRate > 0
                             ? `${formatCurrency(item.sgstAmount)} (${item.sgstRate}%)`
                             : "—"}
                         </td>
                       </>
                     )}
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(item.lineTotal)}
                     </td>
                   </tr>
@@ -536,52 +536,52 @@ export function InvoiceDetail({
 
       {/* GST summary */}
       <div className="mt-4 flex justify-end">
-        <dl className="w-full max-w-sm space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+        <dl className="w-full max-w-sm space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-sm">
           <div className="flex justify-between">
-            <dt className="text-slate-500">Taxable value</dt>
-            <dd className="tabular-nums text-slate-700">
+            <dt className="text-slate-500 dark:text-slate-400">Taxable value</dt>
+            <dd className="tabular-nums text-slate-700 dark:text-slate-300">
               {formatCurrency(invoice.subtotal - invoice.discountAmount)}
             </dd>
           </div>
           {invoice.isInterstate ? (
             <div className="flex justify-between">
-              <dt className="text-slate-500">IGST</dt>
-              <dd className="tabular-nums text-slate-700">
+              <dt className="text-slate-500 dark:text-slate-400">IGST</dt>
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                 {formatCurrency(invoice.igstAmount)}
               </dd>
             </div>
           ) : (
             <>
               <div className="flex justify-between">
-                <dt className="text-slate-500">CGST</dt>
-                <dd className="tabular-nums text-slate-700">
+                <dt className="text-slate-500 dark:text-slate-400">CGST</dt>
+                <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                   {formatCurrency(invoice.cgstAmount)}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-slate-500">SGST</dt>
-                <dd className="tabular-nums text-slate-700">
+                <dt className="text-slate-500 dark:text-slate-400">SGST</dt>
+                <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                   {formatCurrency(invoice.sgstAmount)}
                 </dd>
               </div>
             </>
           )}
           <div className="flex justify-between">
-            <dt className="text-slate-500">Total GST</dt>
-            <dd className="tabular-nums font-medium text-slate-900">
+            <dt className="text-slate-500 dark:text-slate-400">Total GST</dt>
+            <dd className="tabular-nums font-medium text-slate-900 dark:text-slate-100">
               {formatCurrency(invoice.taxAmount)}
             </dd>
           </div>
           {invoice.roundOff !== 0 && (
             <div className="flex justify-between">
-              <dt className="text-slate-500">Round off</dt>
-              <dd className="tabular-nums text-slate-700">
+              <dt className="text-slate-500 dark:text-slate-400">Round off</dt>
+              <dd className="tabular-nums text-slate-700 dark:text-slate-300">
                 {invoice.roundOff > 0 ? "+" : ""}
                 {formatCurrency(invoice.roundOff)}
               </dd>
             </div>
           )}
-          <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-900">
+          <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 text-base font-bold text-slate-900 dark:text-slate-100">
             <dt>Grand total</dt>
             <dd className="tabular-nums">{formatCurrency(invoice.totalAmount)}</dd>
           </div>

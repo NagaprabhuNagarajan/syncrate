@@ -54,46 +54,46 @@ function ListingCard({ listing }: ListingCardProps) {
         <div className="flex items-start justify-between gap-2">
           <Badge variant="info">{TYPE_LABEL[listing.listingType]}</Badge>
           {rating && rating.reviewCount > 0 && (
-            <span className="flex items-center gap-1 text-xs font-medium text-slate-600">
+            <span className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
               <Star
                 className="h-3.5 w-3.5 fill-warning text-warning"
                 aria-hidden="true"
               />
               {rating.averageRating.toFixed(1)}
-              <span className="text-slate-400">({rating.reviewCount})</span>
+              <span className="text-slate-400 dark:text-slate-500">({rating.reviewCount})</span>
             </span>
           )}
         </div>
 
         <div>
-          <h3 className="line-clamp-2 text-base font-semibold text-slate-900">
+          <h3 className="line-clamp-2 text-base font-semibold text-slate-900 dark:text-slate-100">
             {listing.title}
           </h3>
-          <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-500">
+          <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
             <Store className="h-3.5 w-3.5" aria-hidden="true" />
             {listing.sellerName}
           </p>
         </div>
 
         {listing.description && (
-          <p className="line-clamp-3 text-sm text-slate-600">
+          <p className="line-clamp-3 text-sm text-slate-600 dark:text-slate-400">
             {listing.description}
           </p>
         )}
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <div className="text-primary-600 font-semibold tabular-nums">
+          <div className="text-primary-600 dark:text-primary-400 font-semibold tabular-nums">
             {formatPrice(listing)}
           </div>
           {listing.category && (
-            <span className="flex items-center gap-1 text-xs text-slate-500">
+            <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
               <Tag className="h-3 w-3" aria-hidden="true" />
               {listing.category}
             </span>
           )}
         </div>
         {listing.minOrderQty !== null && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             Min. order: {listing.minOrderQty}
           </p>
         )}
@@ -196,14 +196,14 @@ export function MarketplaceBrowseView({
             placeholder="Search products and suppliers"
             value={queryInput}
             onChange={handleQueryChange}
-            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
           />
         </form>
         <select
           aria-label="Filter by type"
           value={filters.listingType ?? ""}
           onChange={handleTypeChange}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
         >
           {TYPE_OPTIONS.map((option) => (
             <option key={option.value || "all-types"} value={option.value}>

@@ -92,8 +92,8 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Outstanding Report</h1>
-          <p className="mt-1 text-sm text-gray-500">Customer receivables and supplier payables</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Outstanding Report</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Customer receivables and supplier payables</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void fetchReport()} disabled={isLoading}>
           <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -103,31 +103,31 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-green-200 bg-green-50 dark:border-green-500/30 dark:bg-green-500/10">
           <CardContent className="pt-4">
-            <p className="text-xs font-medium text-green-700">Total Receivable</p>
-            <p className="mt-1 text-2xl font-bold text-green-900">{fmt(data.totalReceivable)}</p>
-            <p className="mt-0.5 text-xs text-green-600">{data.customers.length} customers</p>
+            <p className="text-xs font-medium text-green-700 dark:text-green-300">Total Receivable</p>
+            <p className="mt-1 text-2xl font-bold text-green-900 dark:text-green-200">{fmt(data.totalReceivable)}</p>
+            <p className="mt-0.5 text-xs text-green-600 dark:text-green-400">{data.customers.length} customers</p>
           </CardContent>
         </Card>
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10">
           <CardContent className="pt-4">
-            <p className="text-xs font-medium text-red-700">Total Payable</p>
-            <p className="mt-1 text-2xl font-bold text-red-900">{fmt(data.totalPayable)}</p>
-            <p className="mt-0.5 text-xs text-red-600">{data.suppliers.length} suppliers</p>
+            <p className="text-xs font-medium text-red-700 dark:text-red-300">Total Payable</p>
+            <p className="mt-1 text-2xl font-bold text-red-900 dark:text-red-200">{fmt(data.totalPayable)}</p>
+            <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">{data.suppliers.length} suppliers</p>
           </CardContent>
         </Card>
       </div>
 
       {error !== null && (
-        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* Tab navigation */}
       <div
-        className="flex gap-1 rounded-lg border bg-gray-50 p-1"
+        className="flex gap-1 rounded-lg border bg-gray-50 p-1 dark:bg-slate-900"
         role="tablist"
         aria-label="Outstanding report tabs"
       >
@@ -144,8 +144,8 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-800 dark:text-slate-100'
+                : 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300'
             }`}
           >
             {tab.label}
@@ -173,12 +173,12 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
             {isLoading ? (
               <TableSkeleton />
             ) : data.customers.length === 0 ? (
-              <p className="py-8 text-center text-sm text-gray-500">No outstanding receivables.</p>
+              <p className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">No outstanding receivables.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" aria-label="Customer receivables">
                   <thead>
-                    <tr className="border-b text-left text-xs font-medium uppercase text-gray-500">
+                    <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:text-slate-400">
                       <th className="pb-2 pr-4">Code</th>
                       <th className="pb-2 pr-4">Customer</th>
                       <th className="pb-2 pr-4 text-right">Outstanding</th>
@@ -187,8 +187,8 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
                   </thead>
                   <tbody className="divide-y">
                     {data.customers.map((row) => (
-                      <tr key={row.customerId} className="hover:bg-gray-50">
-                        <td className="py-2.5 pr-4 font-mono text-xs text-gray-500">
+                      <tr key={row.customerId} className="hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                        <td className="py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
                           {row.customerCode}
                         </td>
                         <td className="py-2.5 pr-4 font-medium">{row.customerName}</td>
@@ -197,7 +197,7 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
                         </td>
                         <td
                           className={`py-2.5 text-right font-medium ${
-                            row.overdue > 0 ? 'text-red-700' : 'text-gray-400'
+                            row.overdue > 0 ? 'text-red-700 dark:text-red-300' : 'text-gray-400 dark:text-slate-500'
                           }`}
                         >
                           {row.overdue > 0 ? fmt(row.overdue) : '—'}
@@ -232,12 +232,12 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
             {isLoading ? (
               <TableSkeleton />
             ) : data.suppliers.length === 0 ? (
-              <p className="py-8 text-center text-sm text-gray-500">No outstanding payables.</p>
+              <p className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">No outstanding payables.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" aria-label="Supplier payables">
                   <thead>
-                    <tr className="border-b text-left text-xs font-medium uppercase text-gray-500">
+                    <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:text-slate-400">
                       <th className="pb-2 pr-4">Code</th>
                       <th className="pb-2 pr-4">Supplier</th>
                       <th className="pb-2 text-right">Outstanding</th>
@@ -245,12 +245,12 @@ export function OutstandingReportView({ initialData, orgId }: OutstandingReportV
                   </thead>
                   <tbody className="divide-y">
                     {data.suppliers.map((row) => (
-                      <tr key={row.supplierId} className="hover:bg-gray-50">
-                        <td className="py-2.5 pr-4 font-mono text-xs text-gray-500">
+                      <tr key={row.supplierId} className="hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                        <td className="py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
                           {row.supplierCode}
                         </td>
                         <td className="py-2.5 pr-4 font-medium">{row.supplierName}</td>
-                        <td className="py-2.5 text-right font-medium text-red-700">
+                        <td className="py-2.5 text-right font-medium text-red-700 dark:text-red-300">
                           {fmt(row.outstanding)}
                         </td>
                       </tr>

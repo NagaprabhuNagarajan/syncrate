@@ -136,11 +136,11 @@ function ListingRow({
   const archived = listing.status === "archived";
 
   return (
-    <tr className="align-top transition-colors hover:bg-slate-50">
+    <tr className="align-top transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
       <td className="px-4 py-3">
-        <div className="font-medium text-slate-900">{listing.title}</div>
+        <div className="font-medium text-slate-900 dark:text-slate-100">{listing.title}</div>
         {listing.category && (
-          <div className="text-xs text-slate-500">{listing.category}</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">{listing.category}</div>
         )}
         {error && (
           <div role="alert" className="mt-1 text-xs text-error">
@@ -151,7 +151,7 @@ function ListingRow({
       <td className="px-4 py-3">
         <Badge variant="info">{TYPE_LABEL[listing.listingType]}</Badge>
       </td>
-      <td className="px-4 py-3 tabular-nums text-slate-700">
+      <td className="px-4 py-3 tabular-nums text-slate-700 dark:text-slate-300">
         {formatPrice(listing)}
       </td>
       <td className="px-4 py-3">
@@ -379,14 +379,14 @@ export function MyListingsView({
             placeholder="Search by title, description or category"
             value={searchInput}
             onChange={handleSearchChange}
-            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600"
           />
         </form>
         <select
           aria-label="Filter by type"
           value={filters.listingType ?? ""}
           onChange={handleTypeChange}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
         >
           {TYPE_OPTIONS.map((option) => (
             <option key={option.value || "all-types"} value={option.value}>
@@ -398,7 +398,7 @@ export function MyListingsView({
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusChange}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all-status"} value={option.value}>
@@ -430,11 +430,11 @@ export function MyListingsView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
                       Listing
@@ -459,7 +459,7 @@ export function MyListingsView({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {items.map((listing) => (
                     <ListingRow
                       key={listing.id}

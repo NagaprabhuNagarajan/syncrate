@@ -77,7 +77,7 @@ function MemberRow({ member, index }: MemberRowProps) {
       transition={{ duration: 0.18, delay: index * 0.04 }}
       className="flex items-center gap-4 px-5 py-3.5"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-100 to-indigo-100 text-sm font-semibold text-primary-700">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-100 to-indigo-100 text-sm font-semibold text-primary-700 dark:from-primary-500/20 dark:to-indigo-500/20 dark:text-primary-300">
         {member.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -91,16 +91,16 @@ function MemberRow({ member, index }: MemberRowProps) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-slate-900">
+        <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
           {member.fullName ?? member.email ?? "Unknown member"}
         </p>
         {member.email && (
-          <p className="truncate text-xs text-slate-500">{member.email}</p>
+          <p className="truncate text-xs text-slate-500 dark:text-slate-400">{member.email}</p>
         )}
       </div>
 
       <div className="hidden shrink-0 sm:block">
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-slate-600 dark:text-slate-400">
           {member.roleName ?? "—"}
         </span>
       </div>
@@ -152,22 +152,22 @@ function InvitationRow({
       transition={{ duration: 0.18, delay: index * 0.04 }}
       className="flex items-center gap-4 px-5 py-3.5"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100">
-        <Mail className="h-4 w-4 text-slate-500" aria-hidden="true" />
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+        <Mail className="h-4 w-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-slate-900">
+        <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
           {invitation.email}
         </p>
-        <p className="flex items-center gap-1.5 text-xs text-slate-500">
+        <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
           <span>{roleName}</span>
           <span aria-hidden="true">·</span>
           <Clock className="h-3 w-3" aria-hidden="true" />
           <span>Expires {formatExpiry(invitation.expiresAt)}</span>
         </p>
         {error && (
-          <p className="text-error-600 mt-1 text-xs" role="alert">
+          <p className="text-error-600 mt-1 text-xs dark:text-error-400" role="alert">
             {error}
           </p>
         )}
@@ -242,12 +242,12 @@ export function TeamManagementView({
           )}
         >
           {/* Members */}
-          <section className="rounded-xl border border-slate-200 bg-white">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <h2 className="text-sm font-semibold text-slate-900">
+          <section className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Members
               </h2>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
                 {members.length}{" "}
                 {members.length === 1 ? "member" : "members"}
               </span>
@@ -261,7 +261,7 @@ export function TeamManagementView({
                 />
               </div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
                 {members.map((member, i) => (
                   <MemberRow key={member.id} member={member} index={i} />
                 ))}
@@ -270,12 +270,12 @@ export function TeamManagementView({
           </section>
 
           {/* Pending invitations */}
-          <section className="rounded-xl border border-slate-200 bg-white">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <h2 className="text-sm font-semibold text-slate-900">
+          <section className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Pending invitations
               </h2>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
                 {pendingInvitations.length} pending
               </span>
             </div>
@@ -288,7 +288,7 @@ export function TeamManagementView({
                 />
               </div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
                 {pendingInvitations.map((invitation, i) => (
                   <InvitationRow
                     key={invitation.id}

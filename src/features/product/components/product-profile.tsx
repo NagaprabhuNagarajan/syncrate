@@ -90,25 +90,25 @@ function ArchiveDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="archive-product-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl"
       >
         <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+          <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
             <AlertTriangle
-              className="text-error-600 h-5 w-5"
+              className="text-error-600 dark:text-error-400 h-5 w-5"
               aria-hidden="true"
             />
           </div>
           <div>
             <h2
               id="archive-product-title"
-              className="text-base font-semibold text-slate-900"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
               Archive product
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to archive{" "}
-              <span className="font-medium text-slate-700">{productName}</span>?
+              <span className="font-medium text-slate-700 dark:text-slate-300">{productName}</span>?
               Archived products cannot be added to new transactions.
             </p>
           </div>
@@ -116,7 +116,7 @@ function ArchiveDialog({
 
         {error && (
           <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
@@ -171,7 +171,7 @@ function InfoRow({
       />
       <div>
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700">{value}</dd>
+        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
       </div>
     </div>
   );
@@ -187,7 +187,7 @@ function PriceRow({
   return (
     <div className="flex items-center justify-between">
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium tabular-nums text-slate-900">
+      <dd className="text-sm font-medium tabular-nums text-slate-900 dark:text-slate-100">
         {formatCurrency(value)}
       </dd>
     </div>
@@ -252,7 +252,7 @@ export function ProductProfile({
               <Button
                 type="button"
                 variant="ghost"
-                className="text-error-600 hover:bg-error-50 hover:text-error-700"
+                className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700 dark:hover:text-error-300"
                 onClick={() => {
                   setArchiveError(null);
                   setShowArchive(true);
@@ -281,7 +281,7 @@ export function ProductProfile({
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Details */}
         <Card className="p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Product details
           </h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -303,35 +303,35 @@ export function ProductProfile({
             />
           </dl>
           {product.description && (
-            <div className="mt-5 border-t border-slate-100 pt-4">
+            <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4">
               <dt className="text-xs text-muted-foreground">Description</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700">
+              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {product.description}
               </dd>
             </div>
           )}
 
-          <div className="mt-5 border-t border-slate-100 pt-4">
-            <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">
+          <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4">
+            <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Tax
             </h3>
             <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex items-center justify-between">
                 <dt className="text-sm text-muted-foreground">GST rate</dt>
-                <dd className="text-sm font-medium text-slate-900">
+                <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">
                   {product.gstRate}%
                 </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-sm text-muted-foreground">Tax inclusive</dt>
-                <dd className="text-sm font-medium text-slate-900">
+                <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">
                   {product.taxInclusive ? "Yes" : "No"}
                 </dd>
               </div>
               {product.hsnCode && (
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-muted-foreground">HSN code</dt>
-                  <dd className="text-sm font-medium text-slate-900">
+                  <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">
                     {product.hsnCode}
                   </dd>
                 </div>
@@ -342,15 +342,15 @@ export function ProductProfile({
 
         {/* Pricing */}
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Pricing</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Pricing</h2>
           <dl className="space-y-3">
             <div>
               <dt className="text-xs text-muted-foreground">Selling price</dt>
-              <dd className="text-2xl font-semibold text-slate-900">
+              <dd className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 {formatCurrency(product.sellingPrice)}
               </dd>
             </div>
-            <div className="space-y-2.5 border-t border-slate-100 pt-3">
+            <div className="space-y-2.5 border-t border-slate-100 dark:border-slate-800 pt-3">
               <PriceRow label="Purchase price" value={product.purchasePrice} />
               <PriceRow label="Dealer price" value={product.dealerPrice} />
               <PriceRow

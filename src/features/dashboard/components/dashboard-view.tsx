@@ -71,10 +71,10 @@ function KpiCard({
       <Card className="p-5">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
               {label}
             </p>
-            <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+            <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               {value}
             </p>
           </div>
@@ -100,16 +100,16 @@ function KpiCard({
               className={cn(
                 "text-xs font-medium",
                 subPositive === true
-                  ? "text-emerald-600"
+                  ? "text-emerald-600 dark:text-emerald-400"
                   : subPositive === false
-                    ? "text-red-600"
-                    : "text-slate-500"
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-slate-500 dark:text-slate-400"
               )}
             >
               {sub}
             </span>
             {subPositive !== undefined && (
-              <span className="text-xs text-slate-400">vs last month</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">vs last month</span>
             )}
           </div>
         )}
@@ -132,20 +132,20 @@ const ACTIVITY_COLORS: Record<
   RecentActivityItem["type"],
   { bg: string; text: string }
 > = {
-  invoice: { bg: "bg-blue-50", text: "text-blue-700" },
-  purchase_invoice: { bg: "bg-purple-50", text: "text-purple-700" },
-  customer_payment: { bg: "bg-emerald-50", text: "text-emerald-700" },
+  invoice: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-700 dark:text-blue-300" },
+  purchase_invoice: { bg: "bg-purple-50 dark:bg-purple-500/10", text: "text-purple-700 dark:text-purple-300" },
+  customer_payment: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-300" },
 };
 
 function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
-        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
-          <Zap className="h-5 w-5 text-slate-400" aria-hidden="true" />
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+          <Zap className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
         </div>
-        <p className="text-sm font-medium text-slate-600">No activity yet</p>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">No activity yet</p>
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
           Recent transactions will appear here
         </p>
       </div>
@@ -155,7 +155,7 @@ function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
           <tr>
             <th scope="col" className="px-4 py-3 font-medium">
               Type
@@ -174,11 +174,11 @@ function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
           {items.map((item) => {
             const colors = ACTIVITY_COLORS[item.type];
             return (
-              <tr key={`${item.type}-${item.id}`} className="hover:bg-slate-50">
+              <tr key={`${item.type}-${item.id}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 <td className="px-4 py-3">
                   <span
                     className={cn(
@@ -190,19 +190,19 @@ function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
                     {ACTIVITY_LABELS[item.type]}
                   </span>
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
                   {item.reference}
                 </td>
-                <td className="max-w-[180px] truncate px-4 py-3 text-slate-700">
+                <td className="max-w-[180px] truncate px-4 py-3 text-slate-700 dark:text-slate-300">
                   {item.partyName}
                 </td>
-                <td className="px-4 py-3 text-slate-500">
+                <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
                   {new Date(item.date).toLocaleDateString("en-IN", {
                     day: "numeric",
                     month: "short",
                   })}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900">
+                <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                   {formatINR(item.amount)}
                 </td>
               </tr>
@@ -230,7 +230,7 @@ function QuickAction({ label, description, icon: Icon, href, color }: QuickActio
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-all duration-150 hover:border-blue-200 hover:shadow-md"
+      className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-all duration-150 hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-500/30"
     >
       <div
         className={cn(
@@ -241,13 +241,13 @@ function QuickAction({ label, description, icon: Icon, href, color }: QuickActio
         <Icon className="h-5 w-5 text-white" aria-hidden="true" />
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700">
+        <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 dark:text-slate-100 dark:group-hover:text-blue-300">
           {label}
         </p>
-        <p className="mt-0.5 truncate text-xs text-slate-500">{description}</p>
+        <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{description}</p>
       </div>
       <ArrowUpRight
-        className="ml-auto h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-blue-500"
+        className="ml-auto h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-blue-500 dark:text-slate-600"
         aria-hidden="true"
       />
     </Link>
@@ -314,14 +314,14 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
         transition={{ duration: 0.2 }}
         className="mb-8 flex items-center gap-3"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-          <Building2 className="h-5 w-5 text-blue-600" aria-hidden="true" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
+          <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
             {organization.name}
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Welcome back — here&apos;s your business overview
           </p>
         </div>
@@ -336,8 +336,8 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
           sub={growthText}
           subPositive={kpis.salesLastMonth === 0 ? undefined : growthPositive}
           icon={TrendingUp}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
+          iconBg="bg-blue-50 dark:bg-blue-500/10"
+          iconColor="text-blue-600 dark:text-blue-400"
         />
         <KpiCard
           index={1}
@@ -349,8 +349,8 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
               : "All invoices paid"
           }
           icon={Receipt}
-          iconBg="bg-amber-50"
-          iconColor="text-amber-600"
+          iconBg="bg-amber-50 dark:bg-amber-500/10"
+          iconColor="text-amber-600 dark:text-amber-400"
           badge={
             kpis.openInvoiceCount > 0
               ? String(kpis.openInvoiceCount)
@@ -363,8 +363,8 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
           value={formatINR(kpis.outstandingPayable)}
           sub={`${formatINR(kpis.purchasesThisMonth)} purchased this month`}
           icon={ShoppingCart}
-          iconBg="bg-purple-50"
-          iconColor="text-purple-600"
+          iconBg="bg-purple-50 dark:bg-purple-500/10"
+          iconColor="text-purple-600 dark:text-purple-400"
         />
         <KpiCard
           index={3}
@@ -377,8 +377,8 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
           }
           subPositive={kpis.outOfStockCount === 0 ? true : false}
           icon={AlertCircle}
-          iconBg="bg-red-50"
-          iconColor="text-red-600"
+          iconBg="bg-red-50 dark:bg-red-500/10"
+          iconColor="text-red-600 dark:text-red-400"
         />
       </div>
 
@@ -389,10 +389,10 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.2 }}
-          className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+          className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Recent Activity
             </h2>
             <Badge variant="secondary" className="text-xs">
@@ -407,10 +407,10 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.25 }}
-          className="rounded-xl border border-slate-200 bg-white shadow-sm"
+          className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-slate-900">
+          <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Quick Actions
             </h2>
           </div>

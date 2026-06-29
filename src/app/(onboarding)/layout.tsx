@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandLogo } from "@/components/shared/logo";
 
 export const metadata: Metadata = {
   title: {
@@ -29,12 +30,9 @@ export default function OnboardingLayout({
       </div>
 
       {/* Logo + step indicator */}
-      <div className="relative z-10 mb-8 flex flex-col items-center gap-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/20">
-          <span className="text-xl font-bold text-white">S</span>
-        </div>
-        <span className="text-xl font-semibold text-slate-800">Syncrate</span>
-        <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-400">
+      <div className="relative z-10 mb-8 flex flex-col items-center">
+        <BrandLogo size={150} priority />
+        <p className="mt-2 text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
           Account Setup
         </p>
       </div>

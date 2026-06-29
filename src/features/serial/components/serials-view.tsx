@@ -187,7 +187,7 @@ export function SerialsView({
       {rowError && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {rowError}
         </p>
@@ -210,14 +210,14 @@ export function SerialsView({
             placeholder="Search by serial number or notes"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+            className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 py-2.5 pl-9 pr-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:outline-none focus:ring-2"
           />
         </form>
         <select
           aria-label="Filter by product"
           value={filters.productId ?? ""}
           onChange={handleProductFilter}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:outline-none focus:ring-2"
         >
           <option value="">All products</option>
           {products.map((product) => (
@@ -230,7 +230,7 @@ export function SerialsView({
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusFilter}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:outline-none focus:ring-2"
         >
           <option value="">All statuses</option>
           {STATUS_OPTIONS.map((status) => (

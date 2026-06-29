@@ -65,8 +65,8 @@ interface DetailRowProps {
 function DetailRow({ label, value }: DetailRowProps) {
   return (
     <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-baseline sm:gap-4">
-      <dt className="w-40 shrink-0 text-sm text-slate-500">{label}</dt>
-      <dd className="text-sm font-medium text-slate-900">{value}</dd>
+      <dt className="w-40 shrink-0 text-sm text-slate-500 dark:text-slate-400">{label}</dt>
+      <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{value}</dd>
     </div>
   );
 }
@@ -118,7 +118,7 @@ export default async function PaymentDetailPage({
       <div className="mb-6">
         <Link
           href="/payments"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to Payments
@@ -128,14 +128,14 @@ export default async function PaymentDetailPage({
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
-            <Receipt className="h-5 w-5 text-green-600" aria-hidden="true" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 dark:bg-green-500/10">
+            <Receipt className="h-5 w-5 text-green-600 dark:text-green-400" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               {payment.paymentNumber}
             </h1>
-            <p className="text-sm text-slate-500">Customer Payment</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Customer Payment</p>
           </div>
         </div>
         <Badge variant={STATUS_VARIANT[payment.status]} className="self-start sm:self-auto">
@@ -146,18 +146,18 @@ export default async function PaymentDetailPage({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Payment details */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-6">
-            <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Payment Details
             </h2>
-            <dl className="divide-y divide-slate-100">
+            <dl className="divide-y divide-slate-100 dark:divide-slate-800">
               <DetailRow label="Payment Number" value={payment.paymentNumber} />
               <DetailRow label="Customer ID" value={payment.customerName ?? payment.customerId} />
               <DetailRow label="Payment Date" value={formatDate(payment.paymentDate)} />
               <DetailRow
                 label="Amount"
                 value={
-                  <span className="text-lg font-bold text-slate-900">
+                  <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(payment.amount)}
                   </span>
                 }
@@ -180,40 +180,40 @@ export default async function PaymentDetailPage({
 
           {/* Allocations */}
           {payment.allocations.length > 0 && (
-            <div className="rounded-xl border border-slate-200 bg-white p-6">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                 Invoice Allocations
               </h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <tr className="border-b border-slate-100 dark:border-slate-800">
+                      <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Invoice ID
                       </th>
-                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Allocated Amount
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                     {payment.allocations.map((allocation) => (
                       <tr key={allocation.id}>
-                        <td className="py-3 text-sm font-mono text-slate-700">
+                        <td className="py-3 text-sm font-mono text-slate-700 dark:text-slate-300">
                           {allocation.invoiceId}
                         </td>
-                        <td className="py-3 text-right text-sm font-semibold text-slate-900">
+                        <td className="py-3 text-right text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {formatCurrency(allocation.allocatedAmount)}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t border-slate-200">
-                      <td className="pt-3 text-sm font-semibold text-slate-700">
+                    <tr className="border-t border-slate-200 dark:border-slate-800">
+                      <td className="pt-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
                         Total Allocated
                       </td>
-                      <td className="pt-3 text-right text-sm font-bold text-slate-900">
+                      <td className="pt-3 text-right text-sm font-bold text-slate-900 dark:text-slate-100">
                         {formatCurrency(
                           payment.allocations.reduce(
                             (s, a) => s + a.allocatedAmount,
@@ -231,35 +231,35 @@ export default async function PaymentDetailPage({
 
         {/* Sidebar */}
         <div className="space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Timeline
             </h2>
             <dl className="space-y-3">
               <div>
-                <dt className="text-xs text-slate-500">Created</dt>
-                <dd className="mt-0.5 text-sm text-slate-700">
+                <dt className="text-xs text-slate-500 dark:text-slate-400">Created</dt>
+                <dd className="mt-0.5 text-sm text-slate-700 dark:text-slate-300">
                   {formatDateTime(payment.createdAt)}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Last Updated</dt>
-                <dd className="mt-0.5 text-sm text-slate-700">
+                <dt className="text-xs text-slate-500 dark:text-slate-400">Last Updated</dt>
+                <dd className="mt-0.5 text-sm text-slate-700 dark:text-slate-300">
                   {formatDateTime(payment.updatedAt)}
                 </dd>
               </div>
               {payment.voidedAt && (
                 <div>
-                  <dt className="text-xs text-slate-500">Voided</dt>
-                  <dd className="mt-0.5 text-sm text-red-600">
+                  <dt className="text-xs text-slate-500 dark:text-slate-400">Voided</dt>
+                  <dd className="mt-0.5 text-sm text-red-600 dark:text-red-400">
                     {formatDateTime(payment.voidedAt)}
                   </dd>
                 </div>
               )}
               {payment.voidReason && (
                 <div>
-                  <dt className="text-xs text-slate-500">Void Reason</dt>
-                  <dd className="mt-0.5 text-sm text-slate-700">
+                  <dt className="text-xs text-slate-500 dark:text-slate-400">Void Reason</dt>
+                  <dd className="mt-0.5 text-sm text-slate-700 dark:text-slate-300">
                     {payment.voidReason}
                   </dd>
                 </div>

@@ -108,11 +108,11 @@ export function BatchesView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
                       Batch
@@ -143,25 +143,25 @@ export function BatchesView({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {items.map((batch: Batch) => (
-                    <tr key={batch.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-mono text-xs text-slate-700">
+                    <tr key={batch.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">
                         {batch.batchNumber}
                       </td>
-                      <td className="px-4 py-3 text-slate-700">
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                         {productName(products, batch.productId)}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                         {batch.manufacturingDate ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                         {batch.expiryDate ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                         {numberFormatter.format(batch.receivedQuantity)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-900">
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-900 dark:text-slate-100">
                         {numberFormatter.format(batch.remainingQuantity)}
                       </td>
                       <td className="px-4 py-3">

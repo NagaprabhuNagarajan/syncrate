@@ -33,7 +33,7 @@ export default function MarketplaceLayout({
   return (
     <div className="flex h-full flex-col">
       <nav
-        className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-4 sm:px-6"
+        className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-4 sm:px-6 dark:border-slate-800 dark:bg-slate-900"
         aria-label="Marketplace sections"
       >
         {TABS.map((tab) => {
@@ -46,8 +46,8 @@ export default function MarketplaceLayout({
               className={cn(
                 "whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors",
                 active
-                  ? "border-primary-600 text-primary-700"
-                  : "border-transparent text-slate-500 hover:text-slate-800"
+                  ? "border-primary-600 text-primary-700 dark:text-primary-300"
+                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
               )}
             >
               {tab.label}

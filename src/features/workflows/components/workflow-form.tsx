@@ -37,9 +37,10 @@ const STEP_TYPE_OPTIONS: readonly { value: WorkflowStepType; label: string }[] =
   ];
 
 const INPUT_CLASS =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
 
-const LABEL_CLASS = "mb-1 block text-sm font-medium text-slate-700";
+const LABEL_CLASS =
+  "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 // ─────────────────────────────────────────────────────────────
 // Step draft model (UI-only; serialized to a WorkflowStep on submit)
@@ -221,7 +222,7 @@ export function WorkflowForm({
     <form
       onSubmit={handleSubmit}
       aria-label={isEdit ? "Edit workflow" : "Create workflow"}
-      className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       {workflow && (
         <input type="hidden" name="version" value={String(workflow.version)} />
@@ -230,7 +231,7 @@ export function WorkflowForm({
       {error && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mb-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 bg-error-50 border-error-200 mb-4 rounded-lg border px-3 py-2.5 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
         >
           {error}
         </p>
@@ -288,17 +289,17 @@ export function WorkflowForm({
         </div>
       </div>
 
-      <fieldset className="mt-5 rounded-lg border border-slate-200 p-4">
-        <legend className="px-1 text-sm font-medium text-slate-700">
+      <fieldset className="mt-5 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+        <legend className="px-1 text-sm font-medium text-slate-700 dark:text-slate-300">
           Steps
         </legend>
-        <p className="mb-3 text-xs text-slate-500">
+        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
           Steps run in order. Approval steps pause the run until a decision is
           made.
         </p>
 
         {steps.length === 0 ? (
-          <p className="mb-3 text-sm text-slate-500">
+          <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
             No steps yet — add one below.
           </p>
         ) : (
@@ -306,10 +307,10 @@ export function WorkflowForm({
             {steps.map((step, index) => (
               <li
                 key={step.key}
-                className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
               >
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Step {index + 1}
                   </span>
                   <div className="flex items-center gap-1">
@@ -478,9 +479,9 @@ export function WorkflowForm({
           type="checkbox"
           value="true"
           defaultChecked={workflow?.isActive ?? true}
-          className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+          className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 dark:border-slate-700"
         />
-        <label htmlFor="workflow-active" className="text-sm text-slate-700">
+        <label htmlFor="workflow-active" className="text-sm text-slate-700 dark:text-slate-300">
           Active
         </label>
       </div>

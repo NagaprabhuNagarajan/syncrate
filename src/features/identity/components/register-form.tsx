@@ -48,7 +48,7 @@ function PasswordStrengthIndicator({
     passed === 0 ? 0 : passed <= 1 ? 1 : passed <= 2 ? 2 : passed <= 3 ? 3 : 4;
 
   const colors = [
-    "bg-slate-200",
+    "bg-slate-200 dark:bg-slate-700",
     "bg-error-500",
     "bg-warning-500",
     "bg-warning-400",
@@ -64,7 +64,7 @@ function PasswordStrengthIndicator({
             key={i}
             className={cn(
               "h-1 flex-1 rounded-full transition-colors duration-300",
-              i <= strength ? colors[strength] : "bg-slate-200"
+              i <= strength ? colors[strength] : "bg-slate-200 dark:bg-slate-700"
             )}
           />
         ))}
@@ -73,7 +73,7 @@ function PasswordStrengthIndicator({
         <p
           className={cn(
             "text-xs",
-            strength >= 3 ? "text-success-600" : "text-slate-500"
+            strength >= 3 ? "text-success-600 dark:text-success-400" : "text-slate-500 dark:text-slate-400"
           )}
         >
           Password strength: {labels[strength]}
@@ -92,7 +92,7 @@ function PasswordStrengthIndicator({
               ) : (
                 <X className="h-3 w-3 text-slate-300" aria-hidden="true" />
               )}
-              <span className={passes ? "text-success-700" : "text-slate-500"}>
+              <span className={passes ? "text-success-700 dark:text-success-300" : "text-slate-500 dark:text-slate-400"}>
                 {rule.label}
               </span>
             </li>
@@ -115,7 +115,7 @@ function FieldError({ message }: { readonly message?: string }) {
     <motion.p
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-error-600 mt-1.5 flex items-center gap-1.5 text-xs"
+      className="text-error-600 dark:text-error-400 mt-1.5 flex items-center gap-1.5 text-xs"
       role="alert"
     >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -175,13 +175,13 @@ export function RegisterForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-8 shadow-xl shadow-slate-200/50"
+      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 px-8 py-8 shadow-xl shadow-slate-200/50"
     >
       <div className="mb-7">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Create your account
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Start your free Syncrate account today
         </p>
       </div>
@@ -190,7 +190,7 @@ export function RegisterForm() {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           role="alert"
         >
           <AlertCircle
@@ -206,7 +206,7 @@ export function RegisterForm() {
         <div>
           <label
             htmlFor="fullName"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Full name
           </label>
@@ -216,11 +216,11 @@ export function RegisterForm() {
             autoComplete="name"
             aria-invalid={errors.fullName ? "true" : "false"}
             className={cn(
-              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
               "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
               errors.fullName
                 ? "border-error-400 bg-error-50/30"
-                : "border-slate-300 bg-white hover:border-slate-400"
+                : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
             )}
             placeholder="Priya Sharma"
             {...register("fullName")}
@@ -232,7 +232,7 @@ export function RegisterForm() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Work email
           </label>
@@ -242,11 +242,11 @@ export function RegisterForm() {
             autoComplete="email"
             aria-invalid={errors.email ? "true" : "false"}
             className={cn(
-              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+              "block w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
               "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
               errors.email
                 ? "border-error-400 bg-error-50/30"
-                : "border-slate-300 bg-white hover:border-slate-400"
+                : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
             )}
             placeholder="you@company.com"
             {...register("email")}
@@ -258,7 +258,7 @@ export function RegisterForm() {
         <div>
           <label
             htmlFor="password"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Password
           </label>
@@ -269,11 +269,11 @@ export function RegisterForm() {
               autoComplete="new-password"
               aria-invalid={errors.password ? "true" : "false"}
               className={cn(
-                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
                 "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
                 errors.password
                   ? "border-error-400 bg-error-50/30"
-                  : "border-slate-300 bg-white hover:border-slate-400"
+                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
               )}
               placeholder="Create a strong password"
               {...register("password")}
@@ -281,7 +281,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
@@ -301,7 +301,7 @@ export function RegisterForm() {
         <div>
           <label
             htmlFor="confirmPassword"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Confirm password
           </label>
@@ -312,11 +312,11 @@ export function RegisterForm() {
               autoComplete="new-password"
               aria-invalid={errors.confirmPassword ? "true" : "false"}
               className={cn(
-                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors",
+                "block w-full rounded-lg border px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 shadow-sm transition-colors",
                 "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500",
                 errors.confirmPassword
                   ? "border-error-400 bg-error-50/30"
-                  : "border-slate-300 bg-white hover:border-slate-400"
+                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400"
               )}
               placeholder="Confirm your password"
               {...register("confirmPassword")}
@@ -324,7 +324,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setShowConfirm((p) => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
               aria-label={showConfirm ? "Hide password" : "Show password"}
             >
               {showConfirm ? (
@@ -343,21 +343,21 @@ export function RegisterForm() {
             <input
               id="acceptTerms"
               type="checkbox"
-              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-primary-600 dark:text-primary-400 focus:ring-primary-500"
               {...register("acceptTerms")}
             />
-            <label htmlFor="acceptTerms" className="text-sm text-slate-600">
+            <label htmlFor="acceptTerms" className="text-sm text-slate-600 dark:text-slate-400">
               I agree to the{" "}
               <Link
                 href="/terms"
-                className="font-medium text-primary-600 hover:text-primary-700"
+                className="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
               >
                 Terms of Service
               </Link>{" "}
               and{" "}
               <Link
                 href="/privacy"
-                className="font-medium text-primary-600 hover:text-primary-700"
+                className="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
               >
                 Privacy Policy
               </Link>
@@ -379,11 +379,11 @@ export function RegisterForm() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="font-medium text-primary-600 hover:text-primary-700"
+          className="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
         >
           Sign in
         </Link>
@@ -402,21 +402,21 @@ export function RegistrationSuccess() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-10 text-center shadow-xl shadow-slate-200/50"
+      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 px-8 py-10 text-center shadow-xl shadow-slate-200/50"
     >
-      <div className="bg-success-50 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full">
-        <CheckCircle2 className="text-success-600 h-8 w-8" aria-hidden="true" />
+      <div className="bg-success-50 dark:bg-success-500/10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full">
+        <CheckCircle2 className="text-success-600 dark:text-success-400 h-8 w-8" aria-hidden="true" />
       </div>
-      <h2 className="text-xl font-semibold text-slate-900">Check your email</h2>
-      <p className="mt-2 text-sm text-slate-500">
+      <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Check your email</h2>
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
         We&apos;ve sent a verification link to your email address. Click it to
         activate your account.
       </p>
-      <p className="mt-4 text-xs text-slate-400">
+      <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
         Didn&apos;t receive it? Check your spam folder or{" "}
         <Link
           href="/register"
-          className="font-medium text-primary-600 hover:text-primary-700"
+          className="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
         >
           try again
         </Link>

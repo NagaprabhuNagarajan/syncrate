@@ -28,9 +28,9 @@ import type {
 // ─────────────────────────────────────────────────────────────
 
 const inputClass =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:hover:border-slate-600";
 
-const labelClass = "mb-1 block text-xs font-medium text-slate-600";
+const labelClass = "mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400";
 
 const DOCUMENT_TYPE_LABELS: Record<OcrDocumentType, string> = {
   purchase_bill: "Purchase bill",
@@ -356,7 +356,7 @@ export function OcrVerificationForm({
         </CardHeader>
         {extraction.overallNotes.trim().length > 0 && (
           <CardContent>
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
               {extraction.overallNotes}
             </div>
           </CardContent>
@@ -475,7 +475,7 @@ export function OcrVerificationForm({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="text-xs uppercase tracking-wide text-slate-500">
+                <thead className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-2 py-2 font-medium">
                       Description

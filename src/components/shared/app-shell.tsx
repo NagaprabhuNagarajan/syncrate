@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { signOutAction } from "@/features/identity/actions/auth.actions";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { BrandMark } from "@/components/shared/logo";
 
 // ─────────────────────────────────────────────────────────────
 // Navigation definition
@@ -91,7 +93,7 @@ function NavLink({
         "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
         isActive
           ? "bg-primary-600 text-white shadow-sm shadow-primary-600/30"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100",
         collapsed && "justify-center px-2"
       )}
       title={collapsed ? item.label : undefined}
@@ -100,7 +102,9 @@ function NavLink({
       <Icon
         className={cn(
           "h-4 w-4 shrink-0 transition-colors",
-          isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"
+          isActive
+            ? "text-white"
+            : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
         )}
         aria-hidden="true"
       />
@@ -118,7 +122,7 @@ function NavLink({
         )}
       </AnimatePresence>
       {!collapsed && item.badge && (
-        <span className="ml-auto rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-700">
+        <span className="ml-auto rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
           {item.badge}
         </span>
       )}
@@ -140,35 +144,29 @@ function Sidebar({
   return (
     <aside
       className={cn(
-        "flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200",
+        "flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-200 dark:border-slate-800 dark:bg-slate-900",
         collapsed ? "w-14" : "w-56"
       )}
     >
       {/* Logo + collapse toggle */}
       <div
         className={cn(
-          "flex items-center border-b border-slate-100 px-3 py-4",
+          "flex items-center border-b border-slate-100 px-3 py-4 dark:border-slate-800",
           collapsed ? "justify-center" : "justify-between gap-2"
         )}
       >
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-600 shadow-sm">
-              <span className="text-sm font-bold text-white">S</span>
-            </div>
-            <span className="text-base font-semibold text-slate-900">
+            <BrandMark size={28} priority />
+            <span className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               Syncrate
             </span>
           </div>
         )}
-        {collapsed && (
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-600 shadow-sm">
-            <span className="text-sm font-bold text-white">S</span>
-          </div>
-        )}
+        {collapsed && <BrandMark size={28} priority />}
         <button
           onClick={onToggle}
-          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
@@ -181,16 +179,16 @@ function Sidebar({
 
       {/* Org selector (placeholder) */}
       {!collapsed && (
-        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-2">
+        <div className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-800/50">
           <Building2
-            className="h-4 w-4 shrink-0 text-slate-400"
+            className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500"
             aria-hidden="true"
           />
-          <span className="flex-1 truncate text-xs font-medium text-slate-600">
+          <span className="flex-1 truncate text-xs font-medium text-slate-600 dark:text-slate-300">
             My Organization
           </span>
           <ChevronDown
-            className="h-3 w-3 shrink-0 text-slate-400"
+            className="h-3 w-3 shrink-0 text-slate-400 dark:text-slate-500"
             aria-hidden="true"
           />
         </div>
@@ -211,7 +209,7 @@ function Sidebar({
       </nav>
 
       {/* Footer nav */}
-      <div className="border-t border-slate-100 px-2 py-3">
+      <div className="border-t border-slate-100 px-2 py-3 dark:border-slate-800">
         <ul className="space-y-0.5">
           {NAV_FOOTER.map((item) => (
             <li key={item.href}>
@@ -223,14 +221,14 @@ function Sidebar({
               <button
                 type="submit"
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600",
-                  "transition-colors hover:bg-slate-100 hover:text-slate-900",
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300",
+                  "transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100",
                   collapsed && "justify-center px-2"
                 )}
                 title={collapsed ? "Sign out" : undefined}
               >
                 <LogOut
-                  className="h-4 w-4 shrink-0 text-slate-400"
+                  className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500"
                   aria-hidden="true"
                 />
                 {!collapsed && <span>Sign out</span>}
@@ -253,10 +251,10 @@ function TopBar({
   readonly onMobileMenuOpen: () => void;
 }) {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
+    <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
       <button
         onClick={onMobileMenuOpen}
-        className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 lg:hidden"
+        className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden"
         aria-label="Open navigation menu"
       >
         <Menu className="h-5 w-5" aria-hidden="true" />
@@ -265,8 +263,10 @@ function TopBar({
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
+        <ThemeToggle />
+
         <button
-          className="relative rounded-md p-1.5 text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          className="relative rounded-md p-1.5 text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-slate-400 dark:hover:bg-slate-800"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" aria-hidden="true" />
@@ -278,7 +278,7 @@ function TopBar({
         </button>
 
         {/* User avatar (placeholder) */}
-        <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+        <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
           U
         </div>
       </div>
@@ -314,20 +314,18 @@ function MobileDrawer({
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl lg:hidden"
+            className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl dark:bg-slate-900 lg:hidden"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-600">
-                  <span className="text-sm font-bold text-white">S</span>
-                </div>
-                <span className="text-base font-semibold text-slate-900">
+                <BrandMark size={28} />
+                <span className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                   Syncrate
                 </span>
               </div>
               <button
                 onClick={onClose}
-                className="rounded-md p-1 text-slate-400 hover:bg-slate-100"
+                className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:text-slate-500 dark:hover:bg-slate-800"
                 aria-label="Close navigation"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
@@ -367,7 +365,7 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:flex-col">
         <Sidebar

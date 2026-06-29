@@ -143,9 +143,9 @@ function ShipmentRow({
   );
 
   return (
-    <tr className="align-top transition-colors hover:bg-slate-50">
+    <tr className="align-top transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
       <td className="px-4 py-3">
-        <div className="font-mono text-xs text-slate-700">
+        <div className="font-mono text-xs text-slate-700 dark:text-slate-300">
           {shipment.orderId}
         </div>
         {error && (
@@ -155,20 +155,20 @@ function ShipmentRow({
         )}
       </td>
       <td className="px-4 py-3">
-        <span className="inline-flex items-center gap-1 text-sm text-slate-700">
+        <span className="inline-flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300">
           {isShipper ? (
-            <ArrowUpRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+            <ArrowUpRight className="h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
           ) : (
             <ArrowDownLeft
-              className="h-4 w-4 text-slate-400"
+              className="h-4 w-4 text-slate-400 dark:text-slate-500"
               aria-hidden="true"
             />
           )}
           {isShipper ? "Outbound" : "Inbound"}
         </span>
       </td>
-      <td className="px-4 py-3 text-slate-700">{shipment.carrier ?? "—"}</td>
-      <td className="px-4 py-3 font-mono text-xs text-slate-700">
+      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{shipment.carrier ?? "—"}</td>
+      <td className="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">
         {shipment.trackingNumber ?? "—"}
       </td>
       <td className="px-4 py-3">
@@ -190,7 +190,7 @@ function ShipmentRow({
             ))}
           </div>
         ) : (
-          <span className="block text-right text-xs text-slate-400">
+          <span className="block text-right text-xs text-slate-400 dark:text-slate-500">
             No actions
           </span>
         )}
@@ -340,7 +340,7 @@ export function ShipmentsView({
           aria-label="Filter by status"
           value={filters.status ?? ""}
           onChange={handleStatusChange}
-          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2"
+          className="focus:border-primary-500 focus:ring-primary-500 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -372,11 +372,11 @@ export function ShipmentsView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
                       Order
@@ -398,7 +398,7 @@ export function ShipmentsView({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {items.map((shipment) => (
                     <ShipmentRow
                       key={shipment.id}

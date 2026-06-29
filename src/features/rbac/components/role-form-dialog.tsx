@@ -69,20 +69,20 @@ function PermissionRow({
   }, [onToggle, permission.id]);
 
   return (
-    <label className="flex cursor-pointer items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-slate-50">
+    <label className="flex cursor-pointer items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/50">
       <input
         type="checkbox"
-        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-2 focus:ring-primary-500"
+        className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-primary-600 focus:ring-2 focus:ring-primary-500"
         checked={checked}
         disabled={disabled}
         onChange={handleChange}
       />
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-slate-800">
+        <span className="block text-sm font-medium text-slate-800 dark:text-slate-100">
           {permission.action}
         </span>
         {permission.description && (
-          <span className="block text-xs text-slate-500">
+          <span className="block text-xs text-slate-500 dark:text-slate-400">
             {permission.description}
           </span>
         )}
@@ -125,15 +125,15 @@ function PermissionGroupSection({
   }, [onToggleModule, ids, allSelected]);
 
   return (
-    <div className="rounded-lg border border-slate-200">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
-        <span className="text-sm font-semibold text-slate-700">
+    <div className="rounded-lg border border-slate-200 dark:border-slate-800">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-2">
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
           {titleCase(group.module)}
         </span>
-        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-500">
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <input
             type="checkbox"
-            className="h-3.5 w-3.5 rounded border-slate-300 text-primary-600 focus:ring-2 focus:ring-primary-500"
+            className="h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-700 text-primary-600 focus:ring-2 focus:ring-primary-500"
             checked={allSelected}
             disabled={disabled}
             onChange={handleModuleToggle}
@@ -324,7 +324,7 @@ export function RoleFormDialog({
             <div>
               <label
                 htmlFor="role-name"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Role name
               </label>
@@ -335,14 +335,14 @@ export function RoleFormDialog({
                 value={name}
                 onChange={handleNameChange}
                 placeholder="e.g. Sales Manager"
-                className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
             <div>
               <label
                 htmlFor="role-description"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Description
               </label>
@@ -352,7 +352,7 @@ export function RoleFormDialog({
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="What this role is for"
-                className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -362,7 +362,7 @@ export function RoleFormDialog({
                   className="h-4 w-4 text-primary-600"
                   aria-hidden="true"
                 />
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Permissions ({selectedIds.size} selected)
                 </span>
               </div>
@@ -383,7 +383,7 @@ export function RoleFormDialog({
             {error && (
               <p
                 role="alert"
-                className="text-error-700 bg-error-50 border-error-200 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
+                className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
               >
                 <AlertCircle
                   className="mt-0.5 h-4 w-4 shrink-0"
@@ -394,7 +394,7 @@ export function RoleFormDialog({
             )}
           </CardContent>
 
-          <CardFooter className="justify-end gap-2 border-t border-slate-100">
+          <CardFooter className="justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>

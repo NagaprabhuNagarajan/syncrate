@@ -51,24 +51,24 @@ export function ForgotPasswordForm() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="rounded-2xl border border-slate-200/60 bg-white px-8 py-10 text-center shadow-xl shadow-slate-200/50"
+        className="rounded-2xl border border-slate-200/60 bg-white px-8 py-10 text-center shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900"
       >
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-50">
-          <Mail className="h-8 w-8 text-primary-600" aria-hidden="true" />
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-500/10">
+          <Mail className="h-8 w-8 text-primary-600 dark:text-primary-400" aria-hidden="true" />
         </div>
-        <h2 className="text-xl font-semibold text-slate-900">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
           Check your inbox
         </h2>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
           If an account exists for{" "}
-          <strong className="font-medium text-slate-700">
+          <strong className="font-medium text-slate-700 dark:text-slate-300">
             {getValues("email")}
           </strong>
           , we sent a password reset link. It expires in 24 hours.
         </p>
         <Link
           href="/login"
-          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to sign in
@@ -82,13 +82,13 @@ export function ForgotPasswordForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-8 shadow-xl shadow-slate-200/50"
+      className="rounded-2xl border border-slate-200/60 bg-white px-8 py-8 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="mb-7">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Reset your password
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Enter your email and we&apos;ll send you a reset link
         </p>
       </div>
@@ -97,7 +97,7 @@ export function ForgotPasswordForm() {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 bg-error-50 text-error-800 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
           role="alert"
         >
           <AlertCircle
@@ -112,7 +112,7 @@ export function ForgotPasswordForm() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Email address
           </label>

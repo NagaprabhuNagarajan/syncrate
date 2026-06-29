@@ -159,7 +159,7 @@ export function WorkflowsView({
       <div
         role="tablist"
         aria-label="Workflow sections"
-        className="mt-6 flex gap-1 border-b border-slate-200"
+        className="mt-6 flex gap-1 border-b border-slate-200 dark:border-slate-800"
       >
         <button
           type="button"

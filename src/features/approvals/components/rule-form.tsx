@@ -35,9 +35,9 @@ const OPERATOR_OPTIONS: readonly { value: ApprovalOperator; label: string }[] =
   ];
 
 const INPUT_CLASS =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-colors hover:border-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
+  "block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500";
 
-const LABEL_CLASS = "mb-1 block text-sm font-medium text-slate-700";
+const LABEL_CLASS = "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 interface RuleFormProps {
   readonly organizationId: string;
@@ -78,7 +78,7 @@ export function RuleForm({
     <form
       onSubmit={handleSubmit}
       aria-label={isEdit ? "Edit approval rule" : "Create approval rule"}
-      className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="mt-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm"
     >
       {rule && (
         <input type="hidden" name="version" value={String(rule.version)} />
@@ -87,7 +87,7 @@ export function RuleForm({
       {error && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mb-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mb-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {error}
         </p>
@@ -161,11 +161,11 @@ export function RuleForm({
         </div>
       </div>
 
-      <fieldset className="mt-4 rounded-lg border border-slate-200 p-4">
-        <legend className="px-1 text-sm font-medium text-slate-700">
+      <fieldset className="mt-4 rounded-lg border border-slate-200 dark:border-slate-800 p-4">
+        <legend className="px-1 text-sm font-medium text-slate-700 dark:text-slate-300">
           Condition
         </legend>
-        <p className="mb-3 text-xs text-slate-500">
+        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
           Raise an approval when the entity field matches this comparison.
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -226,9 +226,9 @@ export function RuleForm({
           type="checkbox"
           value="true"
           defaultChecked={rule?.isActive ?? true}
-          className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+          className="h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-primary-600 focus:ring-primary-500"
         />
-        <label htmlFor="rule-active" className="text-sm text-slate-700">
+        <label htmlFor="rule-active" className="text-sm text-slate-700 dark:text-slate-300">
           Active
         </label>
       </div>
