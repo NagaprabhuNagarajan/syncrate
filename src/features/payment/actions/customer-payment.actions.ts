@@ -5,6 +5,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { CustomerPaymentService } from "@/features/payment/services/customer-payment.service";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { AuditService } from "@/features/audit/services/audit.service";
+import { DomainEventService } from "@/features/events/services/domain-event.service";
+import { DOMAIN_EVENTS } from "@/features/events/domain-events";
 import { recordCustomerPaymentSchema } from "@/features/payment/schemas/payment.schemas";
 import type {
   CustomerPayment,
@@ -126,6 +128,20 @@ export async function recordCustomerPaymentAction(
       entityType: "customer_payment",
       entityId: result.data.id,
       summary: `Recorded customer payment ${result.data.paymentNumber} for ${result.data.amount}`,
+    });
+    // Fire automation (webhooks + matching workflows). Best-effort.
+    await new DomainEventService(supabase).emit({
+      organizationId,
+      eventType: DOMAIN_EVENTS.CUSTOMER_PAYMENT_RECORDED,
+      entityType: "customer_payment",
+      entityId: result.data.id,
+      actorUserId: auth.userId,
+      payload: {
+        paymentId: result.data.id,
+        paymentNumber: result.data.paymentNumber,
+        customerId: result.data.customerId,
+        amount: result.data.amount,
+      },
     });
   }
 

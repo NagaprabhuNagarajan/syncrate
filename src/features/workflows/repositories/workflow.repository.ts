@@ -66,6 +66,26 @@ export class WorkflowRepository {
     return data.map(mapWorkflow);
   }
 
+  /** Active (non-deleted) workflows whose trigger matches an emitted event. */
+  async findActiveByTriggerEvent(
+    organizationId: string,
+    triggerEvent: string
+  ): Promise<Workflow[]> {
+    const { data, error } = await this.supabase
+      .from("workflows")
+      .select("*")
+      .eq("organization_id", organizationId)
+      .eq("trigger_event", triggerEvent)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+    return data.map(mapWorkflow);
+  }
+
   async findById(id: string): Promise<Workflow | null> {
     const { data, error } = await this.supabase
       .from("workflows")
