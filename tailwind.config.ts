@@ -85,13 +85,24 @@ const config: Config = {
         mono: ["var(--font-mono)", "monospace"],
       },
       fontSize: {
-        "heading-1": ["2.25rem", { lineHeight: "2.5rem", fontWeight: "700" }],
-        "heading-2": ["1.875rem", { lineHeight: "2.25rem", fontWeight: "700" }],
-        "heading-3": ["1.5rem", { lineHeight: "2rem", fontWeight: "600" }],
-        "heading-4": ["1.25rem", { lineHeight: "1.75rem", fontWeight: "600" }],
-        "heading-5": ["1.125rem", { lineHeight: "1.75rem", fontWeight: "600" }],
-        body: ["1rem", { lineHeight: "1.5rem" }],
-        small: ["0.875rem", { lineHeight: "1.25rem" }],
+        // Standard scale — stepped down one notch for a denser, enterprise
+        // feel (14px base). Type-only; spacing scale is untouched.
+        xs: ["0.75rem", { lineHeight: "1rem" }], // 12
+        sm: ["0.8125rem", { lineHeight: "1.125rem" }], // 13
+        base: ["0.875rem", { lineHeight: "1.375rem" }], // 14 (new base)
+        lg: ["1rem", { lineHeight: "1.5rem" }], // 16
+        xl: ["1.125rem", { lineHeight: "1.75rem" }], // 18
+        "2xl": ["1.375rem", { lineHeight: "1.875rem" }], // 22
+        "3xl": ["1.625rem", { lineHeight: "2rem" }], // 26
+        "4xl": ["1.875rem", { lineHeight: "2.25rem" }], // 30
+        // Semantic heading tokens — stepped down to match
+        "heading-1": ["1.875rem", { lineHeight: "2.25rem", fontWeight: "700" }],
+        "heading-2": ["1.5rem", { lineHeight: "2rem", fontWeight: "700" }],
+        "heading-3": ["1.25rem", { lineHeight: "1.75rem", fontWeight: "600" }],
+        "heading-4": ["1.125rem", { lineHeight: "1.5rem", fontWeight: "600" }],
+        "heading-5": ["1rem", { lineHeight: "1.5rem", fontWeight: "600" }],
+        body: ["0.875rem", { lineHeight: "1.375rem" }],
+        small: ["0.8125rem", { lineHeight: "1.125rem" }],
         caption: ["0.75rem", { lineHeight: "1rem" }],
       },
       spacing: {
