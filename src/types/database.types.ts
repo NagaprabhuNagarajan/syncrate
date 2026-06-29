@@ -329,6 +329,36 @@ type CbnEventsRow = {
 
 // ─── end CBN Row types ────────────────────────────────────────────────────────
 
+// ─── AI Platform Row types ────────────────────────────────────────────────────
+
+type AiInteractionsRow = {
+  id: string;
+  organization_id: string;
+  actor_user_id: string | null;
+  capability:
+    | "assistant"
+    | "ocr"
+    | "forecast"
+    | "recommendation"
+    | "insight"
+    | "search"
+    | "report";
+  model: string;
+  prompt_summary: string | null;
+  response_summary: string | null;
+  confidence: number | null;
+  input_tokens: number;
+  output_tokens: number;
+  execution_ms: number;
+  approval_status: "not_required" | "pending" | "approved" | "rejected";
+  status: "success" | "failed" | "refused";
+  error_message: string | null;
+  metadata: Json;
+  created_at: string;
+};
+
+// ─── end AI Platform Row types ────────────────────────────────────────────────
+
 type CustomerLedgerEntriesRow = {
   id: string;
   organization_id: string;
@@ -2706,6 +2736,39 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "cbn_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── ai_interactions ───────────────────────────────────
+      ai_interactions: {
+        Row: AiInteractionsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          actor_user_id?: string | null;
+          capability: AiInteractionsRow["capability"];
+          model: string;
+          prompt_summary?: string | null;
+          response_summary?: string | null;
+          confidence?: number | null;
+          input_tokens?: number;
+          output_tokens?: number;
+          execution_ms?: number;
+          approval_status?: AiInteractionsRow["approval_status"];
+          status?: AiInteractionsRow["status"];
+          error_message?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: Partial<AiInteractionsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "ai_interactions_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";

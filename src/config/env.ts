@@ -22,6 +22,15 @@ const serverEnvSchema = z.object({
     .min(1, "SUPABASE_SERVICE_ROLE_KEY is required")
     .optional(),
 
+  // AI Platform (Anthropic Claude) — server-only, never exposed to client.
+  // Optional so the app boots without AI configured; the AI Gateway throws a
+  // clean, typed error at call time when a feature is used without a key.
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  // Default model for reasoning/assistant/vision work. Override per-deployment.
+  AI_DEFAULT_MODEL: z.string().min(1).default("claude-opus-4-8"),
+  // Cheaper/faster model for high-volume extraction (search parsing, etc.).
+  AI_FAST_MODEL: z.string().min(1).default("claude-haiku-4-5"),
+
   // App
   NEXT_PUBLIC_APP_URL: z
     .string()
@@ -82,6 +91,10 @@ function validateEnv() {
   return {
     ...parsed.data,
     SUPABASE_SERVICE_ROLE_KEY: undefined,
+    // Server-only AI config is never available on the client.
+    ANTHROPIC_API_KEY: undefined,
+    AI_DEFAULT_MODEL: "claude-opus-4-8",
+    AI_FAST_MODEL: "claude-haiku-4-5",
     NODE_ENV: (process.env.NODE_ENV ?? "development") as
       | "development"
       | "test"

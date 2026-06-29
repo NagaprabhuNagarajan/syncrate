@@ -42,6 +42,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      // `server-only` throws when imported outside a React Server Component;
+      // under Vitest we exercise server modules directly, so map it to the
+      // package's no-op stub.
+      "server-only": resolve(__dirname, "./node_modules/server-only/empty.js"),
     },
   },
 });

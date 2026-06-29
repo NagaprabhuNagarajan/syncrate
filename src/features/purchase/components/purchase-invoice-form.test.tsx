@@ -7,6 +7,11 @@ import {
   type ProductOption,
   type SupplierOption,
 } from "./purchase-invoice-form";
+import {
+  OCR_PURCHASE_DRAFT_KEY,
+  buildOcrPurchaseDraft,
+  saveOcrPurchaseDraft,
+} from "@/features/ai/ocr/utils/purchase-draft";
 
 const { mockPush, createActionMock, updateActionMock } = vi.hoisted(() => ({
   mockPush: vi.fn(),
@@ -247,5 +252,60 @@ describe("PurchaseInvoiceForm", () => {
       (screen.getByLabelText(/tax rate for line 1/i) as HTMLSelectElement).value
     ).toBe("0");
     expect((await screen.findAllByText("₹200.00")).length).toBeGreaterThan(0);
+  });
+});
+
+describe("PurchaseInvoiceForm — OCR prefill", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+
+  function seedDraft(): void {
+    saveOcrPurchaseDraft(
+      buildOcrPurchaseDraft({
+        supplierName: "Kumar Traders",
+        supplierInvoiceNumber: "INV-9",
+        invoiceDate: "2026-06-01",
+        items: [
+          {
+            description: "Steel rod",
+            quantity: "10",
+            unitPrice: "250",
+            taxPercent: "18",
+          },
+        ],
+      })
+    );
+  }
+
+  it("prefills header + line values from the stored draft when fromOcr", () => {
+    seedDraft();
+    render(
+      <PurchaseInvoiceForm
+        organizationId="org-1"
+        suppliers={suppliers}
+        products={products}
+        fromOcr
+      />
+    );
+
+    expect(screen.getByText(/prefilled from your document/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Supplier invoice no.")).toHaveValue("INV-9");
+    expect(screen.getByLabelText("Quantity for line 1")).toHaveValue(10);
+    expect(screen.getByLabelText("Unit price for line 1")).toHaveValue(250);
+    expect(
+      (screen.getByLabelText(/tax rate for line 1/i) as HTMLSelectElement).value
+    ).toBe("18");
+    // The draft is consumed (cleared) so a refresh won't re-apply it.
+    expect(window.sessionStorage.getItem(OCR_PURCHASE_DRAFT_KEY)).toBeNull();
+  });
+
+  it("ignores the draft when fromOcr is not set", () => {
+    seedDraft();
+    renderForm();
+    expect(
+      screen.queryByText(/prefilled from your document/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Supplier invoice no.")).toHaveValue("");
   });
 });
