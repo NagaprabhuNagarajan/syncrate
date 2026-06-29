@@ -10,6 +10,7 @@ import {
   ScrollText,
   CheckSquare,
   Webhook,
+  Workflow as WorkflowIcon,
   Settings as SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -78,6 +79,14 @@ const SECTIONS: readonly SettingsSection[] = [
     href: "/settings/webhooks",
     icon: Webhook,
     permission: "webhook.view",
+  },
+  {
+    key: "workflows",
+    label: "Workflows",
+    description: "Automate multi-step processes triggered by events.",
+    href: "/settings/workflows",
+    icon: WorkflowIcon,
+    permission: "workflow.view",
   },
   {
     key: "audit",

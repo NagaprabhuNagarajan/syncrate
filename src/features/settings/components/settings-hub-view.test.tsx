@@ -23,6 +23,7 @@ describe("SettingsHubView", () => {
           "api_key.view",
           "approval.view",
           "webhook.view",
+          "workflow.view",
           "audit.view",
         ]}
       />
@@ -33,6 +34,7 @@ describe("SettingsHubView", () => {
     expect(screen.getByText("API Keys")).toBeInTheDocument();
     expect(screen.getByText("Approvals")).toBeInTheDocument();
     expect(screen.getByText("Webhooks")).toBeInTheDocument();
+    expect(screen.getByText("Workflows")).toBeInTheDocument();
     expect(screen.getByText("Audit Center")).toBeInTheDocument();
   });
 
