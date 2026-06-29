@@ -1,8 +1,22 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@/tests/utils";
 import { OcrVerificationForm } from "@/features/ai/ocr/components/ocr-verification-form";
 import type { OcrExtraction } from "@/features/ai/ocr/schemas/ocrExtractionSchema";
+import {
+  OCR_PURCHASE_DRAFT_KEY,
+  parseOcrPurchaseDraft,
+} from "@/features/ai/ocr/utils/purchase-draft";
+
+const { mockPush } = vi.hoisted(() => ({ mockPush: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+beforeEach(() => {
+  mockPush.mockClear();
+  window.sessionStorage.clear();
+});
 
 // Framer Motion is not needed for behavior assertions; render children plainly.
 vi.mock("framer-motion", () => ({
@@ -117,12 +131,41 @@ describe("OcrVerificationForm", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /confirm verified data/i })
+      screen.getByRole("button", { name: /mark as verified/i })
     );
-    expect(screen.getByText(/data verified/i)).toBeInTheDocument();
+    expect(screen.getByText(/values verified/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /upload another/i }));
     expect(onReset).toHaveBeenCalledTimes(1);
+  });
+
+  it("hands the verified draft to the purchase-bill form on Create", async () => {
+    const user = userEvent.setup();
+    render(
+      <OcrVerificationForm
+        extraction={buildExtraction()}
+        model="claude-test"
+        onReset={vi.fn()}
+        organizationId="org-123"
+      />
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /create purchase bill/i })
+    );
+
+    // Navigates to the real purchase-invoice form in OCR-prefill mode.
+    expect(mockPush).toHaveBeenCalledWith(
+      "/purchases/invoices/new?fromOcr=1&org=org-123"
+    );
+
+    // And stashes a valid draft for that form to read.
+    const stored = window.sessionStorage.getItem(OCR_PURCHASE_DRAFT_KEY);
+    expect(stored).not.toBeNull();
+    const draft = parseOcrPurchaseDraft(JSON.parse(stored ?? "null"));
+    expect(draft?.supplierName).toBe("Kumar Traders");
+    expect(draft?.supplierInvoiceNumber).toBe("INV-2026-001");
+    expect(draft?.items[0]?.description).toBe("Steel rod 12mm");
   });
 
   it("renders a graceful message when no line items were detected", () => {

@@ -137,6 +137,7 @@ export function OcrView({ organizationId, canGenerate }: OcrViewProps) {
             extraction={response.extraction}
             model={response.model}
             onReset={handleReset}
+            organizationId={organizationId}
           />
         ) : (
           <Card>

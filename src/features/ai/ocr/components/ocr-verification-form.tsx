@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { CheckCircle2, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { CheckCircle2, FilePlus, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { OCR_DOCUMENT_TYPES } from "@/features/ai/ocr/schemas/ocrExtractionSchema";
+import {
+  buildOcrPurchaseDraft,
+  saveOcrPurchaseDraft,
+} from "@/features/ai/ocr/utils/purchase-draft";
 import type {
   OcrDocumentType,
   OcrExtraction,
@@ -236,13 +241,17 @@ interface OcrVerificationFormProps {
   readonly extraction: OcrExtraction;
   readonly model: string;
   readonly onReset: () => void;
+  /** Owning organization — threaded into the purchase-bill hand-off URL. */
+  readonly organizationId?: string;
 }
 
 export function OcrVerificationForm({
   extraction,
   model,
   onReset,
+  organizationId,
 }: OcrVerificationFormProps) {
+  const router = useRouter();
   const [form, setForm] = useState<ScalarForm>(() => toScalarForm(extraction));
   const [items, setItems] = useState<LineItemForm[]>(() =>
     toLineItemForms(extraction)
@@ -295,6 +304,26 @@ export function OcrVerificationForm({
   const handleConfirm = useCallback((): void => {
     setConfirmed(true);
   }, []);
+
+  const handleCreatePurchaseBill = useCallback((): void => {
+    saveOcrPurchaseDraft(
+      buildOcrPurchaseDraft({
+        supplierName: form.supplierName,
+        supplierInvoiceNumber: form.invoiceNumber,
+        invoiceDate: form.invoiceDate,
+        items: items.map((it) => ({
+          description: it.description,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+          taxPercent: it.taxPercent,
+        })),
+      })
+    );
+    const orgParam = organizationId
+      ? `&org=${encodeURIComponent(organizationId)}`
+      : "";
+    router.push(`/purchases/invoices/new?fromOcr=1${orgParam}`);
+  }, [form, items, organizationId, router]);
 
   const overallPercent = useMemo(
     () => confidenceLabel(extraction.confidence),
@@ -560,10 +589,20 @@ export function OcrVerificationForm({
           <RotateCcw className="mr-1.5 h-4 w-4" aria-hidden="true" />
           Upload another
         </Button>
-        <Button type="button" variant="success" onClick={handleConfirm}>
-          <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Confirm verified data
-        </Button>
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+          <Button type="button" variant="outline" onClick={handleConfirm}>
+            <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Mark as verified
+          </Button>
+          <Button
+            type="button"
+            variant="success"
+            onClick={handleCreatePurchaseBill}
+          >
+            <FilePlus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Create purchase bill
+          </Button>
+        </div>
       </div>
 
       {confirmed && (
@@ -571,8 +610,9 @@ export function OcrVerificationForm({
           role="status"
           className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success-dark"
         >
-          Data verified. Saving verified data into a purchase bill will be wired
-          up next — for now your reviewed values are ready.
+          Values verified. Choose <strong>Create purchase bill</strong> to carry
+          them into a new supplier bill, where you can match the supplier and
+          products before saving.
         </div>
       )}
     </motion.div>

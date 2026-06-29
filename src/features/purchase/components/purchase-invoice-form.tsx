@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,10 @@ import {
   updatePurchaseInvoiceAction,
 } from "@/features/purchase/actions/purchase-invoice.actions";
 import type { PurchaseInvoiceWithItems } from "@/features/purchase/types/purchase-invoice.types";
+import {
+  clearOcrPurchaseDraft,
+  readOcrPurchaseDraft,
+} from "@/features/ai/ocr/utils/purchase-draft";
 import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
@@ -96,6 +100,13 @@ function emptyItem(): LineItemValue {
     unitPrice: "0",
     taxRate: "0",
   };
+}
+
+/** Snaps an arbitrary OCR tax value to a supported GST slab (defaults to 0). */
+function normalizeTaxRate(value: string): string {
+  const parsed = Number.parseFloat(value);
+  const match = PURCHASE_TAX_RATES.find((rate) => rate === parsed);
+  return match === undefined ? "0" : String(match);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -187,6 +198,8 @@ interface PurchaseInvoiceFormProps {
   readonly suppliers: readonly SupplierOption[];
   readonly products: readonly ProductOption[];
   readonly purchaseInvoice?: PurchaseInvoiceWithItems;
+  /** When true, prefill from a verified AI-OCR draft (sessionStorage). */
+  readonly fromOcr?: boolean;
 }
 
 export function PurchaseInvoiceForm({
@@ -194,6 +207,7 @@ export function PurchaseInvoiceForm({
   suppliers,
   products,
   purchaseInvoice,
+  fromOcr = false,
 }: PurchaseInvoiceFormProps) {
   const router = useRouter();
   const isEdit = Boolean(purchaseInvoice);
@@ -239,10 +253,49 @@ export function PurchaseInvoiceForm({
     },
   });
 
-  const { fields, append, remove } = useFieldArray<PurchaseInvoiceFormValues>({
-    control,
-    name: "items",
-  });
+  const { fields, append, remove, replace } =
+    useFieldArray<PurchaseInvoiceFormValues>({
+      control,
+      name: "items",
+    });
+
+  // Prefill from a verified AI-OCR draft on first mount (create flow only).
+  // The user still maps supplier + products against real records before saving.
+  const [ocrNotice, setOcrNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!fromOcr || isEdit) {
+      return;
+    }
+    const draft = readOcrPurchaseDraft();
+    clearOcrPurchaseDraft();
+    if (!draft) {
+      return;
+    }
+    if (draft.supplierInvoiceNumber) {
+      setValue("supplierInvoiceNumber", draft.supplierInvoiceNumber);
+    }
+    if (draft.invoiceDate) {
+      setValue("invoiceDate", draft.invoiceDate);
+    }
+    if (draft.items.length > 0) {
+      replace(
+        draft.items.map((item) => ({
+          productId: "",
+          description: item.description,
+          quantity: item.quantity || "1",
+          unitPrice: item.unitPrice || "0",
+          taxRate: normalizeTaxRate(item.taxRate),
+        }))
+      );
+    }
+    setOcrNotice(
+      draft.supplierName
+        ? `Prefilled from your document for "${draft.supplierName}". Select the matching supplier and a product for each line before saving.`
+        : "Prefilled from your scanned document. Select the supplier and a product for each line before saving."
+    );
+    // Run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const watchedItems = watch("items");
 
@@ -350,6 +403,19 @@ export function PurchaseInvoiceForm({
           </p>
         </div>
       </div>
+
+      {ocrNotice && (
+        <div
+          className="mb-5 flex items-start gap-3 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-800"
+          role="status"
+        >
+          <FileText
+            className="mt-0.5 h-4 w-4 shrink-0 text-primary-500"
+            aria-hidden="true"
+          />
+          <span>{ocrNotice}</span>
+        </div>
+      )}
 
       {serverError && (
         <motion.div

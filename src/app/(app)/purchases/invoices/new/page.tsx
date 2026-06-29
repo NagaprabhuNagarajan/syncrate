@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function NewPurchaseInvoicePage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ org?: string }>;
+  readonly searchParams: Promise<{ org?: string; fromOcr?: string }>;
 }) {
   const query = await searchParams;
   const supabase = await createServerSupabaseClient();
@@ -64,6 +64,7 @@ export default async function NewPurchaseInvoicePage({
           organizationId={activeOrg.id}
           suppliers={options.suppliers}
           products={options.products}
+          fromOcr={query.fromOcr === "1"}
         />
       </div>
     </div>
