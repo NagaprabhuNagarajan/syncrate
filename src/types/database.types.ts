@@ -359,6 +359,142 @@ type AiInteractionsRow = {
 
 // ─── end AI Platform Row types ────────────────────────────────────────────────
 
+// ─── Enterprise Row types ─────────────────────────────────────────────────────
+
+type ApiKeysRow = {
+  id: string;
+  organization_id: string;
+  name: string;
+  key_prefix: string;
+  key_hash: string;
+  scopes: string[];
+  last_used_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  revoked_by: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
+type ApprovalRulesRow = {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  entity_type: string;
+  condition: Json;
+  approver_role_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
+  version: number;
+};
+
+type ApprovalRequestsRow = {
+  id: string;
+  organization_id: string;
+  rule_id: string | null;
+  entity_type: string;
+  entity_id: string;
+  requested_by: string | null;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  decided_by: string | null;
+  decided_at: string | null;
+  decision_reason: string | null;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+  version: number;
+};
+
+type WebhookEndpointsRow = {
+  id: string;
+  organization_id: string;
+  url: string;
+  description: string | null;
+  secret: string;
+  event_types: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
+  version: number;
+};
+
+type WebhookDeliveriesRow = {
+  id: string;
+  organization_id: string;
+  endpoint_id: string;
+  event_type: string;
+  payload: Json;
+  status: "pending" | "success" | "failed";
+  attempts: number;
+  response_status: number | null;
+  error: string | null;
+  created_at: string;
+  delivered_at: string | null;
+};
+
+type WorkflowsRow = {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  trigger_event: string;
+  definition: Json;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
+  version: number;
+};
+
+type WorkflowInstancesRow = {
+  id: string;
+  organization_id: string;
+  workflow_id: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  status: "pending" | "running" | "awaiting" | "completed" | "failed" | "cancelled";
+  current_step_index: number;
+  context: Json;
+  error: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  version: number;
+};
+
+type WorkflowStepExecutionsRow = {
+  id: string;
+  organization_id: string;
+  instance_id: string;
+  step_id: string;
+  step_index: number;
+  step_type: string;
+  status: "pending" | "running" | "completed" | "failed" | "skipped";
+  output: Json;
+  error: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+};
+
+// ─── end Enterprise Row types ─────────────────────────────────────────────────
+
 type CustomerLedgerEntriesRow = {
   id: string;
   organization_id: string;
@@ -2739,6 +2875,250 @@ export interface Database {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── api_keys ──────────────────────────────────────────
+      api_keys: {
+        Row: ApiKeysRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          key_prefix: string;
+          key_hash: string;
+          scopes?: string[];
+          last_used_at?: string | null;
+          expires_at?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+        };
+        Update: Partial<ApiKeysRow>;
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── approval_rules ────────────────────────────────────
+      approval_rules: {
+        Row: ApprovalRulesRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          entity_type: string;
+          condition?: Json;
+          approver_role_id?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<ApprovalRulesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "approval_rules_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── approval_requests ─────────────────────────────────
+      approval_requests: {
+        Row: ApprovalRequestsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          rule_id?: string | null;
+          entity_type: string;
+          entity_id: string;
+          requested_by?: string | null;
+          status?: ApprovalRequestsRow["status"];
+          decided_by?: string | null;
+          decided_at?: string | null;
+          decision_reason?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: Partial<ApprovalRequestsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── webhook_endpoints ─────────────────────────────────
+      webhook_endpoints: {
+        Row: WebhookEndpointsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          url: string;
+          description?: string | null;
+          secret: string;
+          event_types?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<WebhookEndpointsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── webhook_deliveries ────────────────────────────────
+      webhook_deliveries: {
+        Row: WebhookDeliveriesRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          endpoint_id: string;
+          event_type: string;
+          payload?: Json;
+          status?: WebhookDeliveriesRow["status"];
+          attempts?: number;
+          response_status?: number | null;
+          error?: string | null;
+          created_at?: string;
+          delivered_at?: string | null;
+        };
+        Update: Partial<WebhookDeliveriesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_endpoint_id_fkey";
+            columns: ["endpoint_id"];
+            isOneToOne: false;
+            referencedRelation: "webhook_endpoints";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── workflows ─────────────────────────────────────────
+      workflows: {
+        Row: WorkflowsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          trigger_event: string;
+          definition?: Json;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<WorkflowsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "workflows_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── workflow_instances ────────────────────────────────
+      workflow_instances: {
+        Row: WorkflowInstancesRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          workflow_id: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          status?: WorkflowInstancesRow["status"];
+          current_step_index?: number;
+          context?: Json;
+          error?: string | null;
+          started_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: Partial<WorkflowInstancesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "workflow_instances_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflows";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── workflow_step_executions ──────────────────────────
+      workflow_step_executions: {
+        Row: WorkflowStepExecutionsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          instance_id: string;
+          step_id: string;
+          step_index: number;
+          step_type: string;
+          status?: WorkflowStepExecutionsRow["status"];
+          output?: Json;
+          error?: string | null;
+          started_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<WorkflowStepExecutionsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "workflow_step_executions_instance_id_fkey";
+            columns: ["instance_id"];
+            isOneToOne: false;
+            referencedRelation: "workflow_instances";
             referencedColumns: ["id"];
           },
         ];
