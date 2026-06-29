@@ -359,6 +359,27 @@ type AiInteractionsRow = {
 
 // ─── end AI Platform Row types ────────────────────────────────────────────────
 
+// ─── Enterprise Row types ─────────────────────────────────────────────────────
+
+type ApiKeysRow = {
+  id: string;
+  organization_id: string;
+  name: string;
+  key_prefix: string;
+  key_hash: string;
+  scopes: string[];
+  last_used_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  revoked_by: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
+// ─── end Enterprise Row types ─────────────────────────────────────────────────
+
 type CustomerLedgerEntriesRow = {
   id: string;
   organization_id: string;
@@ -2736,6 +2757,37 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "cbn_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── api_keys ──────────────────────────────────────────
+      api_keys: {
+        Row: ApiKeysRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          key_prefix: string;
+          key_hash: string;
+          scopes?: string[];
+          last_used_at?: string | null;
+          expires_at?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+        };
+        Update: Partial<ApiKeysRow>;
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
