@@ -535,6 +535,60 @@ type MarketplaceReviewsRow = {
   version: number;
 };
 
+type MarketplaceOrdersRow = {
+  id: string;
+  organization_id: string;
+  seller_organization_id: string;
+  listing_id: string | null;
+  status: "pending" | "confirmed" | "cancelled" | "fulfilled" | "completed";
+  quantity: number;
+  total_amount: number;
+  currency: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  version: number;
+};
+
+type MarketplacePaymentsRow = {
+  id: string;
+  organization_id: string;
+  counterparty_organization_id: string;
+  order_id: string;
+  provider: string;
+  status: "pending" | "held" | "released" | "refunded" | "failed";
+  amount: number;
+  currency: string;
+  external_reference: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  version: number;
+};
+
+type MarketplaceShipmentsRow = {
+  id: string;
+  organization_id: string;
+  counterparty_organization_id: string;
+  order_id: string;
+  provider: string;
+  carrier: string | null;
+  tracking_number: string | null;
+  status: "pending" | "in_transit" | "delivered" | "cancelled";
+  shipped_at: string | null;
+  delivered_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  version: number;
+};
+
 // ─── end Enterprise Row types ─────────────────────────────────────────────────
 
 type CustomerLedgerEntriesRow = {
@@ -3231,6 +3285,102 @@ export interface Database {
             columns: ["subject_organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── marketplace_orders ────────────────────────────────
+      marketplace_orders: {
+        Row: MarketplaceOrdersRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          seller_organization_id: string;
+          listing_id?: string | null;
+          status?: MarketplaceOrdersRow["status"];
+          quantity?: number;
+          total_amount?: number;
+          currency?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<MarketplaceOrdersRow>;
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_orders_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── marketplace_payments ──────────────────────────────
+      marketplace_payments: {
+        Row: MarketplacePaymentsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          counterparty_organization_id: string;
+          order_id: string;
+          provider?: string;
+          status?: MarketplacePaymentsRow["status"];
+          amount?: number;
+          currency?: string;
+          external_reference?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<MarketplacePaymentsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_payments_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "marketplace_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── marketplace_shipments ─────────────────────────────
+      marketplace_shipments: {
+        Row: MarketplaceShipmentsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          counterparty_organization_id: string;
+          order_id: string;
+          provider?: string;
+          carrier?: string | null;
+          tracking_number?: string | null;
+          status?: MarketplaceShipmentsRow["status"];
+          shipped_at?: string | null;
+          delivered_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<MarketplaceShipmentsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_shipments_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "marketplace_orders";
             referencedColumns: ["id"];
           },
         ];
