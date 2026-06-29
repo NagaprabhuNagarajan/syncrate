@@ -82,6 +82,8 @@ type OrganizationsRow = AuditFields & {
   status: "active" | "suspended" | "inactive";
   plan: "free" | "starter" | "professional" | "enterprise";
   plan_expires_at: string | null;
+  // CBN: added by migration 20260628000001
+  business_id: string | null;
 };
 
 type BranchesRow = AuditFields & {
@@ -176,6 +178,156 @@ type AuditLogsRow = {
   user_agent: string | null;
   created_at: string;
 };
+
+// ─── CBN Row types ────────────────────────────────────────────────────────────
+
+type ConnectionStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "blocked"
+  | "disconnected";
+
+type CbnSyncStatus = "pending" | "accepted" | "rejected" | "cancelled";
+
+type BusinessProfilesRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  verification_level: number;
+  trust_score: number;
+  is_discoverable: boolean;
+  catalog_enabled: boolean;
+  total_connections: number;
+  total_invoices_sent: number;
+  total_invoices_received: number;
+  total_pos_sent: number;
+  total_pos_received: number;
+  payment_rating: number;
+  delivery_rating: number;
+  dispute_score: number;
+  customer_rating: number;
+};
+
+type BusinessConnectionsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  requester_organization_id: string;
+  recipient_organization_id: string;
+  status: ConnectionStatus;
+  connection_message: string | null;
+  requester_grants: string[];
+  recipient_grants: string[];
+  requested_at: string;
+  accepted_at: string | null;
+  rejected_at: string | null;
+  disconnected_at: string | null;
+  rejection_reason: string | null;
+};
+
+type SupplierCatalogItemsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  product_id: string;
+  catalog_price: number;
+  currency: string;
+  moq: number;
+  lead_time_days: number | null;
+  stock_availability: "available" | "limited" | "out_of_stock" | "pre_order";
+  is_published: boolean;
+  catalog_notes: string | null;
+};
+
+type CbnInvoicesRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  counterparty_organization_id: string;
+  connection_id: string;
+  source_invoice_id: string;
+  invoice_number: string;
+  invoice_date: string;
+  due_date: string | null;
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+  currency: string;
+  status: CbnSyncStatus;
+  accepted_at: string | null;
+  accepted_by: string | null;
+  rejected_at: string | null;
+  rejected_by: string | null;
+  rejection_reason: string | null;
+  buyer_purchase_invoice_id: string | null;
+};
+
+type CbnPurchaseOrdersRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  counterparty_organization_id: string;
+  connection_id: string;
+  source_purchase_order_id: string;
+  po_number: string;
+  po_date: string;
+  expected_delivery_date: string | null;
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+  currency: string;
+  status: CbnSyncStatus | "fulfilled";
+  accepted_at: string | null;
+  accepted_by: string | null;
+  rejected_at: string | null;
+  rejected_by: string | null;
+  rejection_reason: string | null;
+  supplier_sales_order_id: string | null;
+};
+
+type CbnSharedDocumentsRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  counterparty_organization_id: string;
+  connection_id: string;
+  document_type:
+    | "purchase_order"
+    | "quotation"
+    | "sales_order"
+    | "tax_invoice"
+    | "delivery_challan"
+    | "grn"
+    | "credit_note"
+    | "debit_note"
+    | "payment_receipt"
+    | "return_request"
+    | "other";
+  document_reference_type: string | null;
+  document_reference_id: string | null;
+  document_number: string | null;
+  document_date: string | null;
+  amount: number | null;
+  currency: string;
+  file_url: string | null;
+  file_name: string | null;
+  status: "active" | "revoked" | "superseded";
+  notes: string | null;
+};
+
+type CbnEventsRow = {
+  id: string;
+  organization_id: string;
+  connection_id: string | null;
+  event_type: string;
+  actor_user_id: string | null;
+  source_organization_id: string | null;
+  target_organization_id: string | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  correlation_id: string;
+  metadata: Json;
+  status: "success" | "failed" | "pending";
+  error_message: string | null;
+  created_at: string;
+};
+
+// ─── end CBN Row types ────────────────────────────────────────────────────────
 
 type CustomerLedgerEntriesRow = {
   id: string;
@@ -2324,6 +2476,244 @@ export interface Database {
         ];
       };
 
+      // ── business_profiles ─────────────────────────────────
+      business_profiles: {
+        Row: BusinessProfilesRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          verification_level?: number;
+          trust_score?: number;
+          is_discoverable?: boolean;
+          catalog_enabled?: boolean;
+          total_connections?: number;
+          total_invoices_sent?: number;
+          total_invoices_received?: number;
+          total_pos_sent?: number;
+          total_pos_received?: number;
+          payment_rating?: number;
+          delivery_rating?: number;
+          dispute_score?: number;
+          customer_rating?: number;
+        };
+        Update: Partial<BusinessProfilesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "business_profiles_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── business_connections ──────────────────────────────
+      business_connections: {
+        Row: BusinessConnectionsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          requester_organization_id: string;
+          recipient_organization_id: string;
+          status?: ConnectionStatus;
+          connection_message?: string | null;
+          requester_grants?: string[];
+          recipient_grants?: string[];
+          requested_at?: string;
+          accepted_at?: string | null;
+          rejected_at?: string | null;
+          disconnected_at?: string | null;
+          rejection_reason?: string | null;
+        };
+        Update: Partial<BusinessConnectionsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "business_connections_requester_organization_id_fkey";
+            columns: ["requester_organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "business_connections_recipient_organization_id_fkey";
+            columns: ["recipient_organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── supplier_catalog_items ────────────────────────────
+      supplier_catalog_items: {
+        Row: SupplierCatalogItemsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          product_id: string;
+          catalog_price?: number;
+          currency?: string;
+          moq?: number;
+          lead_time_days?: number | null;
+          stock_availability?: SupplierCatalogItemsRow["stock_availability"];
+          is_published?: boolean;
+          catalog_notes?: string | null;
+        };
+        Update: Partial<SupplierCatalogItemsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "supplier_catalog_items_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "supplier_catalog_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── cbn_invoices ──────────────────────────────────────
+      cbn_invoices: {
+        Row: CbnInvoicesRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          counterparty_organization_id: string;
+          connection_id: string;
+          source_invoice_id: string;
+          invoice_number: string;
+          invoice_date: string;
+          due_date?: string | null;
+          subtotal?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          currency?: string;
+          status?: CbnSyncStatus;
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          rejected_at?: string | null;
+          rejected_by?: string | null;
+          rejection_reason?: string | null;
+          buyer_purchase_invoice_id?: string | null;
+        };
+        Update: Partial<CbnInvoicesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "cbn_invoices_connection_id_fkey";
+            columns: ["connection_id"];
+            isOneToOne: false;
+            referencedRelation: "business_connections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── cbn_purchase_orders ───────────────────────────────
+      cbn_purchase_orders: {
+        Row: CbnPurchaseOrdersRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          counterparty_organization_id: string;
+          connection_id: string;
+          source_purchase_order_id: string;
+          po_number: string;
+          po_date: string;
+          expected_delivery_date?: string | null;
+          subtotal?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          currency?: string;
+          status?: CbnPurchaseOrdersRow["status"];
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          rejected_at?: string | null;
+          rejected_by?: string | null;
+          rejection_reason?: string | null;
+          supplier_sales_order_id?: string | null;
+        };
+        Update: Partial<CbnPurchaseOrdersRow>;
+        Relationships: [
+          {
+            foreignKeyName: "cbn_purchase_orders_connection_id_fkey";
+            columns: ["connection_id"];
+            isOneToOne: false;
+            referencedRelation: "business_connections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── cbn_shared_documents ──────────────────────────────
+      cbn_shared_documents: {
+        Row: CbnSharedDocumentsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          counterparty_organization_id: string;
+          connection_id: string;
+          document_type: CbnSharedDocumentsRow["document_type"];
+          document_reference_type?: string | null;
+          document_reference_id?: string | null;
+          document_number?: string | null;
+          document_date?: string | null;
+          amount?: number | null;
+          currency?: string;
+          file_url?: string | null;
+          file_name?: string | null;
+          status?: CbnSharedDocumentsRow["status"];
+          notes?: string | null;
+        };
+        Update: Partial<CbnSharedDocumentsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "cbn_shared_documents_connection_id_fkey";
+            columns: ["connection_id"];
+            isOneToOne: false;
+            referencedRelation: "business_connections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── cbn_events ────────────────────────────────────────
+      cbn_events: {
+        Row: CbnEventsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          connection_id?: string | null;
+          event_type: string;
+          actor_user_id?: string | null;
+          source_organization_id?: string | null;
+          target_organization_id?: string | null;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          correlation_id?: string;
+          metadata?: Json;
+          status?: CbnEventsRow["status"];
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<CbnEventsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "cbn_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       // ── organization_invitations ──────────────────────────
       organization_invitations: {
         Row: OrganizationInvitationsRow;
@@ -2466,6 +2856,149 @@ export interface Database {
           p_allocations: Json;
         };
         Returns: string;
+      };
+      // ── CBN Helper Functions ───────────────────────────────
+      get_connected_organization_ids: {
+        Args: Record<string, never>;
+        Returns: string[];
+      };
+      search_businesses: {
+        Args: { p_query: string; p_limit?: number; p_offset?: number };
+        Returns: {
+          id: string;
+          name: string;
+          display_name: string | null;
+          business_id: string | null;
+          gst_number: string | null;
+          business_type: string | null;
+          city: string | null;
+          state: string | null;
+          country: string;
+          logo_url: string | null;
+          verification_status: string;
+          verification_level: number;
+          trust_score: number;
+          is_connected: boolean;
+          connection_status: string | null;
+        }[];
+      };
+      get_business_public_profile: {
+        Args: { p_organization_id: string };
+        Returns: {
+          id: string;
+          name: string;
+          display_name: string | null;
+          business_id: string | null;
+          gst_number: string | null;
+          business_type: string | null;
+          city: string | null;
+          state: string | null;
+          country: string;
+          logo_url: string | null;
+          website: string | null;
+          email: string | null;
+          phone: string | null;
+          verification_status: string;
+          verification_level: number;
+          trust_score: number;
+          catalog_enabled: boolean;
+          total_connections: number;
+          is_connected: boolean;
+          connection_id: string | null;
+          connection_status: string | null;
+        }[];
+      };
+      search_supplier_catalog: {
+        Args: {
+          p_supplier_org_id: string;
+          p_query?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          id: string;
+          product_id: string;
+          product_name: string;
+          product_sku: string | null;
+          catalog_price: number;
+          currency: string;
+          moq: number;
+          lead_time_days: number | null;
+          stock_availability: string;
+          catalog_notes: string | null;
+        }[];
+      };
+      // ── CBN Connection RPCs ────────────────────────────────
+      request_business_connection: {
+        Args: {
+          p_requester_org_id: string;
+          p_recipient_org_id: string;
+          p_message?: string | null;
+        };
+        Returns: string;
+      };
+      accept_connection_request: {
+        Args: { p_connection_id: string };
+        Returns: undefined;
+      };
+      reject_connection_request: {
+        Args: { p_connection_id: string; p_reason?: string | null };
+        Returns: undefined;
+      };
+      disconnect_business: {
+        Args: { p_connection_id: string; p_reason?: string | null };
+        Returns: undefined;
+      };
+      update_connection_permissions: {
+        Args: { p_connection_id: string; p_my_grants: string[] };
+        Returns: undefined;
+      };
+      // ── CBN Invoice Sync RPCs ──────────────────────────────
+      send_cbn_invoice: {
+        Args: { p_invoice_id: string; p_connection_id: string };
+        Returns: string;
+      };
+      accept_cbn_invoice: {
+        Args: {
+          p_cbn_invoice_id: string;
+          p_buyer_org_id: string;
+          p_notes?: string | null;
+        };
+        Returns: string;
+      };
+      reject_cbn_invoice: {
+        Args: {
+          p_cbn_invoice_id: string;
+          p_buyer_org_id: string;
+          p_reason: string;
+        };
+        Returns: undefined;
+      };
+      // ── CBN Purchase Sync RPCs ─────────────────────────────
+      send_cbn_purchase_order: {
+        Args: { p_po_id: string; p_connection_id: string };
+        Returns: string;
+      };
+      accept_cbn_purchase_order: {
+        Args: {
+          p_cbn_po_id: string;
+          p_supplier_org_id: string;
+          p_notes?: string | null;
+        };
+        Returns: string;
+      };
+      reject_cbn_purchase_order: {
+        Args: {
+          p_cbn_po_id: string;
+          p_supplier_org_id: string;
+          p_reason: string;
+        };
+        Returns: undefined;
+      };
+      // ── CBN Trust Score RPC ────────────────────────────────
+      compute_trust_score: {
+        Args: { p_org_id: string };
+        Returns: number;
       };
     };
     Enums: Record<string, never>;

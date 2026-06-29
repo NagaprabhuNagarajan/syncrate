@@ -23,6 +23,7 @@ import {
   Building2,
   Bell,
   Sparkles,
+  Network,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { signOutAction } from "@/features/identity/actions/auth.actions";
@@ -50,6 +51,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: "Sales", href: "/sales/orders", icon: TrendingUp, activePrefix: "/sales" },
   { label: "Invoices", href: "/sales/invoices", icon: FileText },
   { label: "Payments", href: "/payments", icon: CreditCard },
+  { label: "Network", href: "/cbn", icon: Network, activePrefix: "/cbn" },
   { label: "Reports", href: "/reports", icon: BarChart2 },
   { label: "AI Insights", href: "/ai", icon: Sparkles, badge: "Beta" },
 ];
