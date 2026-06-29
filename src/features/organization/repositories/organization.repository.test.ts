@@ -392,7 +392,11 @@ describe("OrganizationRepository", () => {
   describe("create", () => {
     it("inserts with defaults and maps the created org", async () => {
       const row = buildDbOrg();
+      // create() inserts (1st chain), then reads back via findBySlug (2nd chain)
+      // — the insert isn't chained with .select() because the row only becomes
+      // RLS-visible after the AFTER-INSERT trigger creates the owner membership.
       const { client, builders } = createMockClient([
+        { data: null, error: null },
         { data: row, error: null },
       ]);
       const repo = new OrganizationRepository(client);
@@ -419,6 +423,7 @@ describe("OrganizationRepository", () => {
     it("passes through provided optional fields", async () => {
       const row = buildDbOrg();
       const { client, builders } = createMockClient([
+        { data: null, error: null },
         { data: row, error: null },
       ]);
       const repo = new OrganizationRepository(client);
@@ -453,8 +458,12 @@ describe("OrganizationRepository", () => {
       ).toBeNull();
     });
 
-    it("returns null when no data", async () => {
-      const { client } = createMockClient([{ data: null, error: null }]);
+    it("returns null when the read-back finds no row", async () => {
+      // insert succeeds, but findBySlug returns no row → null
+      const { client } = createMockClient([
+        { data: null, error: null },
+        { data: null, error: null },
+      ]);
       const repo = new OrganizationRepository(client);
       expect(
         await repo.create({ name: "X", slug: "x", createdBy: "user-1" })

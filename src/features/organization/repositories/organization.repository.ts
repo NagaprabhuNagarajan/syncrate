@@ -243,29 +243,33 @@ export class OrganizationRepository {
     addressLine1?: string | null;
     createdBy: string;
   }): Promise<Organization | null> {
-    const { data, error } = await this.supabase
-      .from("organizations")
-      .insert({
-        name: input.name,
-        slug: input.slug,
-        business_type: input.businessType ?? null,
-        gst_number: input.gstNumber ?? null,
-        phone: input.phone ?? null,
-        email: input.email ?? null,
-        city: input.city ?? null,
-        state: input.state ?? null,
-        country: input.country ?? "IN",
-        pincode: input.pincode ?? null,
-        address_line1: input.addressLine1 ?? null,
-        created_by: input.createdBy,
-      })
-      .select("*")
-      .single();
+    // NOTE: do NOT chain `.select()` onto this insert. The organizations SELECT
+    // policy (organizations_select_members) only exposes rows the caller is a
+    // member of. Membership is created by the AFTER-INSERT trigger
+    // (handle_new_organization), but that row isn't visible to the
+    // INSERT...RETURNING statement's own RLS evaluation — so a chained select
+    // returns 0 rows and org creation appears to fail. Insert first, then read
+    // back in a separate statement where the new membership is visible.
+    const { error } = await this.supabase.from("organizations").insert({
+      name: input.name,
+      slug: input.slug,
+      business_type: input.businessType ?? null,
+      gst_number: input.gstNumber ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      city: input.city ?? null,
+      state: input.state ?? null,
+      country: input.country ?? "IN",
+      pincode: input.pincode ?? null,
+      address_line1: input.addressLine1 ?? null,
+      created_by: input.createdBy,
+    });
 
-    if (error || !data) {
+    if (error) {
       return null;
     }
-    return mapOrg(data);
+    // Separate statement: the trigger-created owner membership is now visible.
+    return this.findBySlug(input.slug);
   }
 
   async update(
