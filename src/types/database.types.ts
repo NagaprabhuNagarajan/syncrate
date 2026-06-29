@@ -378,6 +378,72 @@ type ApiKeysRow = {
   updated_by: string | null;
 };
 
+type ApprovalRulesRow = {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  entity_type: string;
+  condition: Json;
+  approver_role_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
+  version: number;
+};
+
+type ApprovalRequestsRow = {
+  id: string;
+  organization_id: string;
+  rule_id: string | null;
+  entity_type: string;
+  entity_id: string;
+  requested_by: string | null;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  decided_by: string | null;
+  decided_at: string | null;
+  decision_reason: string | null;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+  version: number;
+};
+
+type WebhookEndpointsRow = {
+  id: string;
+  organization_id: string;
+  url: string;
+  description: string | null;
+  secret: string;
+  event_types: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
+  version: number;
+};
+
+type WebhookDeliveriesRow = {
+  id: string;
+  organization_id: string;
+  endpoint_id: string;
+  event_type: string;
+  payload: Json;
+  status: "pending" | "success" | "failed";
+  attempts: number;
+  response_status: number | null;
+  error: string | null;
+  created_at: string;
+  delivered_at: string | null;
+};
+
 // ─── end Enterprise Row types ─────────────────────────────────────────────────
 
 type CustomerLedgerEntriesRow = {
@@ -2791,6 +2857,128 @@ export interface Database {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── approval_rules ────────────────────────────────────
+      approval_rules: {
+        Row: ApprovalRulesRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          entity_type: string;
+          condition?: Json;
+          approver_role_id?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<ApprovalRulesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "approval_rules_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── approval_requests ─────────────────────────────────
+      approval_requests: {
+        Row: ApprovalRequestsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          rule_id?: string | null;
+          entity_type: string;
+          entity_id: string;
+          requested_by?: string | null;
+          status?: ApprovalRequestsRow["status"];
+          decided_by?: string | null;
+          decided_at?: string | null;
+          decision_reason?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: Partial<ApprovalRequestsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── webhook_endpoints ─────────────────────────────────
+      webhook_endpoints: {
+        Row: WebhookEndpointsRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          url: string;
+          description?: string | null;
+          secret: string;
+          event_types?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          deleted_by?: string | null;
+          version?: number;
+        };
+        Update: Partial<WebhookEndpointsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── webhook_deliveries ────────────────────────────────
+      webhook_deliveries: {
+        Row: WebhookDeliveriesRow;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          endpoint_id: string;
+          event_type: string;
+          payload?: Json;
+          status?: WebhookDeliveriesRow["status"];
+          attempts?: number;
+          response_status?: number | null;
+          error?: string | null;
+          created_at?: string;
+          delivered_at?: string | null;
+        };
+        Update: Partial<WebhookDeliveriesRow>;
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_endpoint_id_fkey";
+            columns: ["endpoint_id"];
+            isOneToOne: false;
+            referencedRelation: "webhook_endpoints";
             referencedColumns: ["id"];
           },
         ];
