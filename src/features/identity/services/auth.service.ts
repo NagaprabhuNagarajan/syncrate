@@ -77,10 +77,17 @@ export class AuthService {
   // ── Sign up ───────────────────────────────────────────────
 
   async signUp(input: SignUpInput): Promise<AuthActionResult<void>> {
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
     const { error } = await this.supabase.auth.signUp({
       email: input.email.toLowerCase().trim(),
       password: input.password,
       options: {
+        // Where the email-confirmation link returns to. The /auth/callback
+        // route exchanges the token into a session; without it the link lands
+        // on a blank page and the user is never signed in.
+        emailRedirectTo: `${appUrl}/auth/callback`,
         data: {
           full_name: input.fullName.trim(),
         },

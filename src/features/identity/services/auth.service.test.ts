@@ -78,7 +78,10 @@ describe("AuthService.signUp", () => {
     expect(auth.signUp).toHaveBeenCalledWith({
       email: "new@example.com",
       password: "Password1",
-      options: { data: { full_name: "New User" } },
+      options: {
+        emailRedirectTo: expect.stringContaining("/auth/callback"),
+        data: { full_name: "New User" },
+      },
     });
   });
 

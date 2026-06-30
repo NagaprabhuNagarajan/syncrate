@@ -69,6 +69,8 @@ export async function middleware(request: NextRequest) {
     "/forgot-password",
     "/reset-password",
     "/verify-email",
+    "/auth/callback",
+    "/auth/confirm",
   ].some((route) => pathname.startsWith(route));
 
   // Redirect unauthenticated users to login (protect app routes)
