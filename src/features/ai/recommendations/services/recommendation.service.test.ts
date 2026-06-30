@@ -64,10 +64,10 @@ function level(overrides: Partial<InventoryLevel> = {}): InventoryLevel {
     id: "lvl-1",
     organizationId: "org-1",
     productId: "p-1",
-    warehouseId: "w-1",
+    branchId: "w-1",
     reservedQuantity: 0,
-    warehouseName: "Main",
-    warehouseCode: "WH-1",
+    branchName: "Main",
+    branchCode: "WH-1",
     ...overrides,
   };
 }

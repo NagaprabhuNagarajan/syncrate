@@ -53,7 +53,7 @@ function mapGoodsReceipt(row: DbGoodsReceipt): GoodsReceipt {
     organizationId: row.organization_id,
     grnNumber: row.grn_number,
     purchaseOrderId: row.purchase_order_id,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     receivedDate: new Date(row.received_date),
     status: row.status,
     notes: row.notes,

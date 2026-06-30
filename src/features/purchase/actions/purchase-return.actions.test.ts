@@ -69,7 +69,7 @@ const VALID_ITEMS = JSON.stringify([
 function returnFormData(overrides: Record<string, string> = {}): FormData {
   const form = new FormData();
   form.set("supplierId", "sup-1");
-  form.set("warehouseId", "wh-1");
+  form.set("branchId", "wh-1");
   form.set("reason", "damaged");
   form.set("items", VALID_ITEMS);
   for (const [key, value] of Object.entries(overrides)) {
@@ -85,7 +85,7 @@ function buildReturn(): PurchaseReturn {
     returnNumber: "PRET-00001",
     purchaseOrderId: null,
     supplierId: "sup-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status: "draft",
     returnDate: new Date(),
     reason: "damaged",
@@ -127,7 +127,7 @@ describe("createPurchaseReturnAction", () => {
   it("returns a validation error when items are missing", async () => {
     const form = new FormData();
     form.set("supplierId", "sup-1");
-    form.set("warehouseId", "wh-1");
+    form.set("branchId", "wh-1");
     form.set("reason", "damaged");
     const result = await createPurchaseReturnAction("org-1", form);
     expect(result.success).toBe(false);
@@ -136,10 +136,10 @@ describe("createPurchaseReturnAction", () => {
     }
   });
 
-  it("returns a validation error on schema failure (missing warehouse)", async () => {
+  it("returns a validation error on schema failure (missing branch)", async () => {
     const result = await createPurchaseReturnAction(
       "org-1",
-      returnFormData({ warehouseId: "" })
+      returnFormData({ branchId: "" })
     );
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -186,7 +186,7 @@ describe("createPurchaseReturnAction", () => {
     expect(mockService.createPurchaseReturn).toHaveBeenCalledWith(
       expect.objectContaining({
         supplierId: "sup-1",
-        warehouseId: "wh-1",
+        branchId: "wh-1",
         reason: "damaged",
         items: [
           expect.objectContaining({ productId: "p-1", quantity: 2, taxRate: 18 }),

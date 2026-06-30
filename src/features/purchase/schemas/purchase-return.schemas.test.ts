@@ -16,7 +16,7 @@ const validItem = {
 function validHeader(overrides: Record<string, unknown> = {}) {
   return {
     supplierId: "sup-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     reason: "damaged",
     items: [validItem],
     ...overrides,
@@ -103,9 +103,9 @@ describe("createPurchaseReturnSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("requires a warehouse", () => {
+  it("requires a branch", () => {
     const result = createPurchaseReturnSchema.safeParse(
-      validHeader({ warehouseId: "" })
+      validHeader({ branchId: "" })
     );
     expect(result.success).toBe(false);
   });

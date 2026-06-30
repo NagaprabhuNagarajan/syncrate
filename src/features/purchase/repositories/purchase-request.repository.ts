@@ -18,9 +18,9 @@ type DbPurchaseRequestItem =
 type DbPurchaseRequestItemInsert =
   Database["public"]["Tables"]["purchase_request_items"]["Insert"];
 
-/** A list row enriched with the joined warehouse name from `warehouses(name)`. */
+/** A list row enriched with the joined branch name from `branches(name)`. */
 type DbPurchaseRequestListRow = DbPurchaseRequest & {
-  warehouses: { name: string } | { name: string }[] | null;
+  branches: { name: string } | { name: string }[] | null;
 };
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -36,7 +36,7 @@ function mapPurchaseRequest(row: DbPurchaseRequest): PurchaseRequest {
     organizationId: row.organization_id,
     requestNumber: row.request_number,
     status: row.status,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     requiredDate: row.required_date ? new Date(row.required_date) : null,
     notes: row.notes,
     approvedBy: row.approved_by,
@@ -64,8 +64,8 @@ function mapItem(row: DbPurchaseRequestItem): PurchaseRequestItem {
   };
 }
 
-function readWarehouseName(
-  joined: DbPurchaseRequestListRow["warehouses"]
+function readBranchName(
+  joined: DbPurchaseRequestListRow["branches"]
 ): string | null {
   if (!joined) {
     return null;
@@ -158,7 +158,7 @@ export class PurchaseRequestRepository {
 
     let query = this.supabase
       .from("purchase_requests")
-      .select("*, warehouses(name)", { count: "exact" })
+      .select("*, branches(name)", { count: "exact" })
       .eq("organization_id", organizationId)
       .is("deleted_at", null);
 
@@ -185,7 +185,7 @@ export class PurchaseRequestRepository {
     return {
       items: rows.map((row) => ({
         ...mapPurchaseRequest(row),
-        warehouseName: readWarehouseName(row.warehouses),
+        branchName: readBranchName(row.branches),
       })),
       total: count ?? 0,
       page,

@@ -37,7 +37,7 @@ export interface ProductOption {
   readonly gstRate: number;
 }
 
-export interface WarehouseOption {
+export interface BranchOption {
   readonly id: string;
   readonly name: string;
 }
@@ -213,7 +213,7 @@ interface InvoiceFormProps {
   readonly orgState: string | null;
   readonly customers: readonly CustomerOption[];
   readonly products: readonly ProductOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly invoice?: InvoiceWithItems;
 }
 
@@ -222,7 +222,7 @@ export function InvoiceForm({
   orgState,
   customers,
   products,
-  warehouses,
+  branches,
   invoice,
 }: InvoiceFormProps) {
   const router = useRouter();
@@ -249,7 +249,7 @@ export function InvoiceForm({
       customerId: invoice?.customerId ?? "",
       salesOrderId: invoice?.salesOrderId ?? "",
       quotationId: invoice?.quotationId ?? "",
-      warehouseId: invoice?.warehouseId ?? "",
+      branchId: invoice?.branchId ?? "",
       invoiceDate: invoice
         ? invoice.invoiceDate.toISOString().slice(0, 10)
         : new Date().toISOString().slice(0, 10),
@@ -333,7 +333,7 @@ export function InvoiceForm({
     if (values.invoiceType) {fd.append("invoiceType", values.invoiceType);}
     if (values.salesOrderId?.trim()) {fd.append("salesOrderId", values.salesOrderId.trim());}
     if (values.quotationId?.trim()) {fd.append("quotationId", values.quotationId.trim());}
-    if (values.warehouseId?.trim()) {fd.append("warehouseId", values.warehouseId.trim());}
+    if (values.branchId?.trim()) {fd.append("branchId", values.branchId.trim());}
     if (values.invoiceDate) {fd.append("invoiceDate", values.invoiceDate);}
     if (values.dueDate) {fd.append("dueDate", values.dueDate);}
     if (values.supplyState?.trim()) {fd.append("supplyState", values.supplyState.trim());}
@@ -368,7 +368,7 @@ export function InvoiceForm({
       }
 
       const id = result.success ? result.data.id : invoice?.id;
-      router.push(id ? `/sales/invoices/${id}` : "/sales/invoices");
+      router.push(id ? `/invoices/${id}` : "/invoices");
     });
   });
 
@@ -553,20 +553,20 @@ export function InvoiceForm({
           </FormField>
         </div>
 
-        {/* Warehouse */}
-        {warehouses.length > 0 && (
+        {/* Branch */}
+        {branches.length > 0 && (
           <FormField
-            label="Dispatch from warehouse"
-            htmlFor="warehouseId"
-            error={errors.warehouseId?.message}
+            label="Dispatch from branch"
+            htmlFor="branchId"
+            error={errors.branchId?.message}
           >
             <select
-              id="warehouseId"
-              className={inputClass(!!errors.warehouseId)}
-              {...register("warehouseId")}
+              id="branchId"
+              className={inputClass(!!errors.branchId)}
+              {...register("branchId")}
             >
               <option value="">— Optional —</option>
-              {warehouses.map((w) => (
+              {branches.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.name}
                 </option>
@@ -846,7 +846,7 @@ export function InvoiceForm({
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/sales/invoices")}
+            onClick={() => router.push("/invoices")}
             disabled={isPending}
           >
             Cancel

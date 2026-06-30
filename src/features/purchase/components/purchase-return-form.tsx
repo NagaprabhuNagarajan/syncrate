@@ -32,7 +32,7 @@ export interface SupplierOption {
   readonly name: string;
 }
 
-export interface WarehouseOption {
+export interface BranchOption {
   readonly id: string;
   readonly name: string;
 }
@@ -54,7 +54,7 @@ interface LineItemValue {
 interface PurchaseReturnFormValues {
   returnNumber: string;
   supplierId: string;
-  warehouseId: string;
+  branchId: string;
   returnDate: string;
   reason: string;
   notes: string;
@@ -187,7 +187,7 @@ const cellClass = cn(
 interface PurchaseReturnFormProps {
   readonly organizationId: string;
   readonly suppliers: readonly SupplierOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly products: readonly ProductOption[];
   readonly purchaseReturn?: PurchaseReturnWithItems;
 }
@@ -195,7 +195,7 @@ interface PurchaseReturnFormProps {
 export function PurchaseReturnForm({
   organizationId,
   suppliers,
-  warehouses,
+  branches,
   products,
   purchaseReturn,
 }: PurchaseReturnFormProps) {
@@ -222,7 +222,7 @@ export function PurchaseReturnForm({
     defaultValues: {
       returnNumber: purchaseReturn?.returnNumber ?? "",
       supplierId: purchaseReturn?.supplierId ?? "",
-      warehouseId: purchaseReturn?.warehouseId ?? "",
+      branchId: purchaseReturn?.branchId ?? "",
       returnDate: purchaseReturn
         ? purchaseReturn.returnDate.toISOString().slice(0, 10)
         : new Date().toISOString().slice(0, 10),
@@ -282,7 +282,7 @@ export function PurchaseReturnForm({
       fd.append("returnNumber", values.returnNumber.trim());
     }
     fd.append("supplierId", values.supplierId);
-    fd.append("warehouseId", values.warehouseId);
+    fd.append("branchId", values.branchId);
     if (values.returnDate) {
       fd.append("returnDate", values.returnDate);
     }
@@ -393,21 +393,21 @@ export function PurchaseReturnForm({
             </select>
           </FormField>
           <FormField
-            label="Warehouse"
-            htmlFor="warehouseId"
+            label="Branch"
+            htmlFor="branchId"
             required
-            error={errors.warehouseId?.message}
-            hint="Stock is decreased from this warehouse on completion"
+            error={errors.branchId?.message}
+            hint="Stock is decreased from this branch on completion"
           >
             <select
-              id="warehouseId"
-              className={inputClass(!!errors.warehouseId)}
-              {...register("warehouseId")}
+              id="branchId"
+              className={inputClass(!!errors.branchId)}
+              {...register("branchId")}
             >
-              <option value="">— Select warehouse —</option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
+              <option value="">— Select branch —</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
                 </option>
               ))}
             </select>

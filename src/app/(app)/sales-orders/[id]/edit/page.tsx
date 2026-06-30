@@ -95,7 +95,7 @@ export default async function EditSalesOrderPage({
           organizationId={activeOrg.id}
           orgState={context.organization.state ?? ""}
           customers={options.customers}
-          warehouses={options.warehouses}
+          branches={options.branches}
           products={options.products}
           salesOrder={result.data}
         />

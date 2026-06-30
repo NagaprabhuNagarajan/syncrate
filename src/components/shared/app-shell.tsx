@@ -65,12 +65,12 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: "Suppliers", href: "/suppliers", icon: Truck },
   { label: "Products", href: "/products", icon: Package },
   { label: "Inventory", href: "/inventory", icon: Warehouse },
-  { label: "Purchases", href: "/purchases", icon: ShoppingCart },
-  { label: "Sales", href: "/sales/orders", icon: TrendingUp, activePrefix: "/sales" },
-  { label: "Invoices", href: "/sales/invoices", icon: FileText },
+  { label: "Purchase Order", href: "/purchases", icon: ShoppingCart },
+  { label: "Sales Order", href: "/sales-orders", icon: TrendingUp },
+  { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "Payments", href: "/payments", icon: CreditCard },
-  { label: "Network", href: "/cbn", icon: Network, activePrefix: "/cbn" },
-  { label: "Marketplace", href: "/marketplace", icon: Store, activePrefix: "/marketplace" },
+  { label: "Network", href: "/cbn", icon: Network },
+  { label: "Marketplace", href: "/marketplace", icon: Store },
   { label: "Reports", href: "/reports", icon: BarChart2 },
   { label: "AI Insights", href: "/ai", icon: Sparkles, badge: "Beta" },
 ];
@@ -217,7 +217,7 @@ function Sidebar({
 
       {/* Main nav */}
       <nav
-        className="flex-1 overflow-y-auto px-2 py-3 scrollbar-thin"
+        className="scrollbar-thin flex-1 overflow-y-auto px-2 py-3"
         aria-label="Main navigation"
       >
         <ul className="space-y-0.5">
@@ -349,7 +349,10 @@ function TopBar({
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild destructive>
               <form action={signOutAction} className="w-full">
-                <button type="submit" className="flex w-full items-center gap-2">
+                <button
+                  type="submit"
+                  className="flex w-full items-center gap-2"
+                >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
                   Sign out
                 </button>
@@ -408,7 +411,7 @@ function MobileDrawer({
               </button>
             </div>
             <nav
-              className="overflow-y-auto px-3 py-3 scrollbar-thin"
+              className="scrollbar-thin overflow-y-auto px-3 py-3"
               aria-label="Mobile navigation"
             >
               <ul className="space-y-0.5">
@@ -457,7 +460,7 @@ export function AppShell({
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar onMobileMenuOpen={() => setMobileOpen(true)} />
         <main
-          className="app-backdrop flex-1 overflow-y-auto scrollbar-thin"
+          className="app-backdrop scrollbar-thin flex-1 overflow-y-auto"
           id="main-content"
           tabIndex={-1}
         >

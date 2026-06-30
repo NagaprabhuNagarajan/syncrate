@@ -83,7 +83,7 @@ export class PurchaseRequestService {
       organization_id: organizationId,
       request_number: requestNumber,
       status: "draft",
-      warehouse_id: nz(input.warehouseId),
+      branch_id: nz(input.branchId),
       required_date: nz(input.requiredDate),
       notes: nz(input.notes),
       created_by: userId,
@@ -133,7 +133,7 @@ export class PurchaseRequestService {
     const header = await this.repo.updateHeader(
       purchaseRequestId,
       {
-        warehouse_id: nz(input.warehouseId),
+        branch_id: nz(input.branchId),
         required_date: nz(input.requiredDate),
         notes: nz(input.notes),
       },
@@ -257,7 +257,7 @@ export class PurchaseRequestService {
 
     const poInput: CreatePurchaseOrderInput = {
       supplierId,
-      warehouseId: existing.warehouseId ?? undefined,
+      branchId: existing.branchId ?? undefined,
       notes: existing.notes ?? undefined,
       items: existing.items.map((item) => ({
         productId: item.productId,

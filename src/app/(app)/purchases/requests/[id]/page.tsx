@@ -32,7 +32,7 @@ export async function generateMetadata({
 
 async function lookupName(
   supabase: AppSupabaseClient,
-  table: "warehouses",
+  table: "branches",
   id: string | null
 ): Promise<string | null> {
   if (!id) {
@@ -124,8 +124,8 @@ export default async function PurchaseRequestDetailPage({
 
   const request = result.data;
 
-  const [warehouseName, productNames, options] = await Promise.all([
-    lookupName(supabase, "warehouses", request.warehouseId),
+  const [branchName, productNames, options] = await Promise.all([
+    lookupName(supabase, "branches", request.branchId),
     lookupProductNames(
       supabase,
       request.items.map((item) => item.productId)
@@ -136,7 +136,7 @@ export default async function PurchaseRequestDetailPage({
   return (
     <PurchaseRequestDetail
       purchaseRequest={request}
-      warehouseName={warehouseName}
+      branchName={branchName}
       productNames={productNames}
       suppliers={options.suppliers}
       organizationId={activeOrg.id}

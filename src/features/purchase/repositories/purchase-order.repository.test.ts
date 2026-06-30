@@ -89,7 +89,7 @@ function buildDbOrder(overrides: Partial<DbPurchaseOrder> = {}): DbPurchaseOrder
     organization_id: "org-1",
     po_number: "PO-00001",
     supplier_id: "sup-1",
-    warehouse_id: "wh-1",
+    branch_id: "wh-1",
     status: "draft",
     order_date: "2026-06-01",
     expected_delivery_date: "2026-06-10",

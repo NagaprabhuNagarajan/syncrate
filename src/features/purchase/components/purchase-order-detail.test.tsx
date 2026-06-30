@@ -33,7 +33,7 @@ function makeOrder(
     organizationId: "org-1",
     poNumber: "PO-00001",
     supplierId: "sup-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status,
     orderDate: new Date("2026-06-01"),
     expectedDeliveryDate: null,
@@ -84,7 +84,7 @@ function renderDetail(
     <PurchaseOrderDetail
       purchaseOrder={order}
       supplierName="Acme Supply"
-      warehouseName="Main WH"
+      branchName="Main WH"
       productNames={{ "p-1": "Widget" }}
       organizationId="org-1"
       canManage={perms.canManage ?? false}

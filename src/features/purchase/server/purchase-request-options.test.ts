@@ -27,9 +27,9 @@ function createClient(byTable: Record<string, BuilderResult>): {
 }
 
 describe("fetchPurchaseRequestOptions", () => {
-  it("maps warehouses, products and suppliers with numeric coercion", async () => {
+  it("maps branches, products and suppliers with numeric coercion", async () => {
     const { client, fromMock } = createClient({
-      warehouses: { data: [{ id: "w1", name: "Main WH" }] },
+      branches: { data: [{ id: "w1", name: "Main WH" }] },
       products: {
         data: [{ id: "p1", name: "Widget", purchase_price: "100" }],
       },
@@ -38,24 +38,24 @@ describe("fetchPurchaseRequestOptions", () => {
 
     const options = await fetchPurchaseRequestOptions(client, "org-1");
 
-    expect(options.warehouses).toEqual([{ id: "w1", name: "Main WH" }]);
+    expect(options.branches).toEqual([{ id: "w1", name: "Main WH" }]);
     expect(options.products).toEqual([
       { id: "p1", name: "Widget", purchasePrice: 100 },
     ]);
     expect(options.suppliers).toEqual([{ id: "s1", name: "Acme Supply" }]);
-    expect(fromMock).toHaveBeenCalledWith("warehouses");
+    expect(fromMock).toHaveBeenCalledWith("branches");
     expect(fromMock).toHaveBeenCalledWith("products");
     expect(fromMock).toHaveBeenCalledWith("suppliers");
   });
 
   it("returns empty arrays when queries yield no data", async () => {
     const { client } = createClient({
-      warehouses: { data: null },
+      branches: { data: null },
       products: { data: null },
       suppliers: { data: null },
     });
 
     const options = await fetchPurchaseRequestOptions(client, "org-1");
-    expect(options).toEqual({ warehouses: [], products: [], suppliers: [] });
+    expect(options).toEqual({ branches: [], products: [], suppliers: [] });
   });
 });

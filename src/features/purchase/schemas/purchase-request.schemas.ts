@@ -40,7 +40,7 @@ export const createPurchaseRequestSchema = z.object({
     .trim()
     .optional()
     .or(z.literal("")),
-  warehouseId: z.string().trim().optional().or(z.literal("")),
+  branchId: z.string().trim().optional().or(z.literal("")),
   requiredDate: z.string().trim().optional().or(z.literal("")),
   notes: z
     .string()

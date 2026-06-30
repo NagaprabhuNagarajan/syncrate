@@ -32,7 +32,7 @@ function makeReturn(
     purchaseOrderId: null,
     supplierId: "sup-1",
     supplierName: "Acme Supply",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status: "draft",
     returnDate: new Date("2026-06-01"),
     reason: "damaged",

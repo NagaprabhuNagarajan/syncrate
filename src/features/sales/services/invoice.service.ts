@@ -231,7 +231,6 @@ export class InvoiceService {
       sales_order_id: nz(input.salesOrderId),
       quotation_id: nz(input.quotationId),
       branch_id: nz(input.branchId),
-      warehouse_id: nz(input.warehouseId),
       reference_number: nz(input.referenceNumber),
       invoice_date:
         nz(input.invoiceDate) ?? new Date().toISOString().slice(0, 10),
@@ -315,7 +314,6 @@ export class InvoiceService {
         sales_order_id: nz(input.salesOrderId),
         quotation_id: nz(input.quotationId),
         branch_id: nz(input.branchId),
-        warehouse_id: nz(input.warehouseId),
         reference_number: nz(input.referenceNumber),
         invoice_date:
           nz(input.invoiceDate) ??
@@ -470,7 +468,6 @@ export class InvoiceService {
       customerId: soData.customer_id,
       salesOrderId,
       branchId: soData.branch_id ?? undefined,
-      warehouseId: soData.warehouse_id ?? undefined,
       supplyState: soData.supply_state ?? undefined,
       isInterstate: soData.is_interstate,
       paymentTermsDays: soData.payment_terms_days,

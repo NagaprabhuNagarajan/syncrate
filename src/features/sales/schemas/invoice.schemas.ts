@@ -71,7 +71,6 @@ export const createInvoiceSchema = z.object({
   salesOrderId: z.string().trim().optional().or(z.literal("")),
   quotationId: z.string().trim().optional().or(z.literal("")),
   branchId: z.string().trim().optional().or(z.literal("")),
-  warehouseId: z.string().trim().optional().or(z.literal("")),
   invoiceDate: z.string().trim().optional().or(z.literal("")),
   dueDate: z.string().trim().optional().or(z.literal("")),
   paymentTermsDays: z.coerce

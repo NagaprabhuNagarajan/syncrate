@@ -108,7 +108,7 @@ export function InventoryReportView({ initialData, orgId }: InventoryReportViewP
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Inventory Report</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Current stock levels across all warehouses</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Current stock levels across all branches</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void fetchReport()} disabled={isLoading}>
           <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />

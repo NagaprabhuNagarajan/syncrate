@@ -61,7 +61,6 @@ export const createSalesOrderSchema = z.object({
     .min(1, "Customer is required"),
   quotationId: z.string().trim().optional().or(z.literal("")),
   branchId: z.string().trim().optional().or(z.literal("")),
-  warehouseId: z.string().trim().optional().or(z.literal("")),
   salespersonId: z.string().trim().optional().or(z.literal("")),
   referenceNumber: z
     .string()

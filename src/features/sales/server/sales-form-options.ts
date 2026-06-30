@@ -2,7 +2,7 @@ import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type { CustomerOption } from "@/features/sales/components/quotation-form";
 import type {
   ProductOption,
-  WarehouseOption,
+  BranchOption,
 } from "@/features/sales/components/sales-order-form";
 
 export interface QuotationFormOptions {
@@ -13,7 +13,7 @@ export interface QuotationFormOptions {
 export interface SalesOrderFormOptions {
   readonly customers: CustomerOption[];
   readonly products: ProductOption[];
-  readonly warehouses: WarehouseOption[];
+  readonly branches: BranchOption[];
 }
 
 async function fetchCustomers(
@@ -47,12 +47,12 @@ async function fetchProducts(
   }));
 }
 
-async function fetchWarehouses(
+async function fetchBranches(
   supabase: AppSupabaseClient,
   organizationId: string
-): Promise<WarehouseOption[]> {
+): Promise<BranchOption[]> {
   const { data } = await supabase
-    .from("warehouses")
+    .from("branches")
     .select("id,name")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
@@ -78,16 +78,16 @@ export async function fetchQuotationFormOptions(
 
 /**
  * Fetches the option lists the sales order form needs (customer, product,
- * and warehouse selects).
+ * and branch selects).
  */
 export async function fetchSalesOrderFormOptions(
   supabase: AppSupabaseClient,
   organizationId: string
 ): Promise<SalesOrderFormOptions> {
-  const [customers, products, warehouses] = await Promise.all([
+  const [customers, products, branches] = await Promise.all([
     fetchCustomers(supabase, organizationId),
     fetchProducts(supabase, organizationId),
-    fetchWarehouses(supabase, organizationId),
+    fetchBranches(supabase, organizationId),
   ]);
-  return { customers, products, warehouses };
+  return { customers, products, branches };
 }

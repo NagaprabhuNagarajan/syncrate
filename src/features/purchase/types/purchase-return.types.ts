@@ -4,7 +4,7 @@
  * A purchase return is a HEADER (commercial/document metadata) plus many LINE
  * ITEMS. Application-level types mirror the DB schema but use camelCase.
  *
- * Completing a return DECREASES stock (goods leave our warehouse back to the
+ * Completing a return DECREASES stock (goods leave our branch back to the
  * supplier) and REDUCES the payable owed to that supplier (a debit on the
  * supplier ledger).
  */
@@ -29,7 +29,7 @@ export interface PurchaseReturn {
   readonly returnNumber: string;
   readonly purchaseOrderId: string | null;
   readonly supplierId: string;
-  readonly warehouseId: string | null;
+  readonly branchId: string | null;
   readonly status: PurchaseReturnStatus;
   readonly returnDate: Date;
   readonly reason: PurchaseReturnReason;
@@ -89,7 +89,7 @@ export interface CreatePurchaseReturnInput {
   readonly returnNumber?: string;
   readonly purchaseOrderId?: string;
   readonly supplierId: string;
-  readonly warehouseId: string;
+  readonly branchId: string;
   readonly returnDate?: string;
   readonly reason: PurchaseReturnReason;
   readonly notes?: string;

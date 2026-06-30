@@ -33,7 +33,7 @@ function buildSerial(overrides: Partial<SerialNumber> = {}): SerialNumber {
     productId: "prod-1",
     productName: "Laptop",
     productCode: "LAP-1",
-    warehouseId: null,
+    branchId: null,
     batchId: null,
     serialNumber: "SN-0001",
     status: "in_stock",
@@ -101,7 +101,7 @@ describe("SerialService.createSerial", () => {
     mockRepo.create.mockResolvedValue(buildSerial());
 
     const result = await service.createSerial(
-      { productId: "prod-1", serialNumber: "  SN-0001  ", warehouseId: "" },
+      { productId: "prod-1", serialNumber: "  SN-0001  ", branchId: "" },
       "org-1",
       "user-1"
     );
@@ -113,7 +113,7 @@ describe("SerialService.createSerial", () => {
     >;
     expect(insertArg.serial_number).toBe("SN-0001");
     expect(insertArg.status).toBe("in_stock");
-    expect(insertArg.warehouse_id).toBeNull();
+    expect(insertArg.branch_id).toBeNull();
     expect(insertArg.created_by).toBe("user-1");
   });
 
@@ -229,7 +229,7 @@ describe("SerialService.updateSerial", () => {
 
     const result = await service.updateSerial(
       "ser-1",
-      { status: "sold", warehouseId: "", notes: "moved" },
+      { status: "sold", branchId: "", notes: "moved" },
       "org-1",
       "user-9"
     );
@@ -241,7 +241,7 @@ describe("SerialService.updateSerial", () => {
       string,
     ];
     expect(patch.status).toBe("sold");
-    expect(patch.warehouse_id).toBeNull();
+    expect(patch.branch_id).toBeNull();
     expect(patch.notes).toBe("moved");
   });
 

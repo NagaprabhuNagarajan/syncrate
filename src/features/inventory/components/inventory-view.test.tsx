@@ -35,15 +35,15 @@ function makeLevel(overrides: Partial<InventoryLevel> = {}): InventoryLevel {
     id: "lvl-1",
     organizationId: "org-1",
     productId: "prod-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     quantity: 4,
     reservedQuantity: 0,
     productName: "Cement Bag",
     productCode: "CEM-01",
     reorderLevel: 10,
     purchasePrice: 50,
-    warehouseName: "Main Depot",
-    warehouseCode: "WH-01",
+    branchName: "Main Depot",
+    branchCode: "WH-01",
     ...overrides,
   };
 }
@@ -53,7 +53,7 @@ function makeTx(overrides: Partial<InventoryTransaction> = {}): InventoryTransac
     id: "tx-1",
     organizationId: "org-1",
     productId: "prod-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     batchId: null,
     type: "adjustment",
     quantity: 5,
@@ -65,7 +65,7 @@ function makeTx(overrides: Partial<InventoryTransaction> = {}): InventoryTransac
     createdBy: "user-1",
     productName: "Cement Bag",
     productCode: "CEM-01",
-    warehouseName: "Main Depot",
+    branchName: "Main Depot",
     ...overrides,
   };
 }
@@ -82,7 +82,7 @@ function makeResult(
   };
 }
 
-const warehouses = [
+const branches = [
   { id: "wh-1", code: "WH-01", name: "Main Depot" },
   { id: "wh-2", code: "WH-02", name: "Second Depot" },
 ];
@@ -95,7 +95,7 @@ function renderView(props: Partial<Parameters<typeof InventoryView>[0]> = {}) {
       result={makeResult()}
       transactions={[makeTx()]}
       products={products}
-      warehouses={warehouses}
+      branches={branches}
       filters={{}}
       stockValue={200}
       canAdjust

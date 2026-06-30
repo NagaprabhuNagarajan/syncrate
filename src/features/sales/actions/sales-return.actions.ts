@@ -56,7 +56,7 @@ function readFormCandidate(formData: FormData): Record<string, unknown> {
     returnNumber: formData.get("returnNumber") || undefined,
     invoiceId: formData.get("invoiceId") || undefined,
     customerId: formData.get("customerId") || undefined,
-    warehouseId: formData.get("warehouseId") || undefined,
+    branchId: formData.get("branchId") || undefined,
     returnDate: formData.get("returnDate") || undefined,
     reason: formData.get("reason") || undefined,
     notes: formData.get("notes") || undefined,

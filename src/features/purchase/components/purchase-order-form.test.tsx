@@ -33,7 +33,7 @@ function renderForm() {
     <PurchaseOrderForm
       organizationId="org-1"
       suppliers={suppliers}
-      warehouses={[]}
+      branches={[]}
       products={products}
     />
   );
@@ -159,7 +159,7 @@ describe("PurchaseOrderForm", () => {
       <PurchaseOrderForm
         organizationId="org-1"
         suppliers={suppliers}
-        warehouses={[]}
+        branches={[]}
         products={[
           { id: "p-3", name: "Oddment", purchasePrice: 200, gstRate: 9 },
         ]}
@@ -183,7 +183,7 @@ describe("PurchaseOrderForm", () => {
       organizationId: "org-1",
       poNumber: "PO-00001",
       supplierId: "sup-1",
-      warehouseId: null,
+      branchId: null,
       status: "draft" as const,
       orderDate: new Date("2026-06-01"),
       expectedDeliveryDate: null,
@@ -224,7 +224,7 @@ describe("PurchaseOrderForm", () => {
       <PurchaseOrderForm
         organizationId="org-1"
         suppliers={suppliers}
-        warehouses={[]}
+        branches={[]}
         products={products}
         purchaseOrder={order}
       />

@@ -89,7 +89,7 @@ export async function createSerialAction(
   const parsed = createSerialSchema.safeParse({
     productId: str(formData.get("productId")),
     serialNumber: str(formData.get("serialNumber")),
-    warehouseId: str(formData.get("warehouseId")),
+    branchId: str(formData.get("branchId")),
     batchId: str(formData.get("batchId")),
     notes: str(formData.get("notes")),
   });
@@ -139,7 +139,7 @@ export async function bulkCreateSerialsAction(
   const parsed = bulkSerialSchema.safeParse({
     productId: str(formData.get("productId")),
     serials,
-    warehouseId: str(formData.get("warehouseId")),
+    branchId: str(formData.get("branchId")),
     batchId: str(formData.get("batchId")),
     notes: str(formData.get("notes")),
   });
@@ -161,7 +161,7 @@ export async function bulkCreateSerialsAction(
     organizationId,
     auth.userId,
     {
-      warehouseId: parsed.data.warehouseId ?? null,
+      branchId: parsed.data.branchId ?? null,
       batchId: parsed.data.batchId ?? null,
       notes: parsed.data.notes,
     }
@@ -195,8 +195,8 @@ export async function updateSerialAction(
 ): Promise<SerialActionResult<SerialNumber>> {
   const parsed = updateSerialSchema.safeParse({
     serialNumber: str(formData.get("serialNumber")),
-    warehouseId: formData.has("warehouseId")
-      ? (formData.get("warehouseId") ?? "")
+    branchId: formData.has("branchId")
+      ? (formData.get("branchId") ?? "")
       : undefined,
     batchId: formData.has("batchId")
       ? (formData.get("batchId") ?? "")

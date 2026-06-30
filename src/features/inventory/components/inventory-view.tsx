@@ -25,7 +25,7 @@ import type {
   InventoryTransactionType,
   ProductOption,
 } from "@/features/inventory/types/inventory.types";
-import type { WarehouseOption } from "@/features/warehouse/types/warehouse.types";
+import type { BranchOption } from "@/features/organization/server/branch-options";
 
 // ─────────────────────────────────────────────────────────────
 // Ledger presentation
@@ -90,10 +90,10 @@ interface InventoryViewProps {
   readonly result: InventoryLevelListResult;
   readonly transactions: readonly InventoryTransaction[];
   readonly products: readonly ProductOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly filters: {
     readonly search?: string;
-    readonly warehouseId?: string;
+    readonly branchId?: string;
     readonly lowStockOnly?: boolean;
   };
   readonly stockValue: number;
@@ -106,7 +106,7 @@ export function InventoryView({
   result,
   transactions,
   products,
-  warehouses,
+  branches,
   filters,
   stockValue,
   canAdjust,
@@ -138,10 +138,10 @@ export function InventoryView({
     pushWith({ search: searchInput.trim() || undefined });
   };
 
-  const handleWarehouseChange = (
+  const handleBranchChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ): void => {
-    pushWith({ warehouse: event.target.value || undefined });
+    pushWith({ branch: event.target.value || undefined });
   };
 
   const handleLowStockToggle = (
@@ -164,7 +164,7 @@ export function InventoryView({
     <div className="p-4 lg:p-6">
       <PageHeader
         title="Inventory"
-        description="Track stock levels and movements across your warehouses"
+        description="Track stock levels and movements across your branches"
         icon={Boxes}
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -173,7 +173,7 @@ export function InventoryView({
               type="button"
               variant="outline"
               onClick={() => setTransferOpen(true)}
-              disabled={products.length === 0 || warehouses.length < 2}
+              disabled={products.length === 0 || branches.length < 2}
             >
               <ArrowLeftRight className="mr-1.5 h-4 w-4" aria-hidden="true" />
               Transfer
@@ -184,7 +184,7 @@ export function InventoryView({
               type="button"
               variant="gradient"
               onClick={() => setAdjustOpen(true)}
-              disabled={products.length === 0 || warehouses.length === 0}
+              disabled={products.length === 0 || branches.length === 0}
             >
               <SlidersHorizontal className="mr-1.5 h-4 w-4" aria-hidden="true" />
               Adjust stock
@@ -204,7 +204,7 @@ export function InventoryView({
         <AdjustStockDialog
           organizationId={organizationId}
           products={products}
-          warehouses={warehouses}
+          branches={branches}
           onClose={() => setAdjustOpen(false)}
           onDone={() => {
             setAdjustOpen(false);
@@ -217,7 +217,7 @@ export function InventoryView({
         <TransferStockDialog
           organizationId={organizationId}
           products={products}
-          warehouses={warehouses}
+          branches={branches}
           onClose={() => setTransferOpen(false)}
           onDone={() => {
             setTransferOpen(false);
@@ -247,15 +247,15 @@ export function InventoryView({
           />
         </form>
         <select
-          aria-label="Filter by warehouse"
-          value={filters.warehouseId ?? ""}
-          onChange={handleWarehouseChange}
+          aria-label="Filter by branch"
+          value={filters.branchId ?? ""}
+          onChange={handleBranchChange}
           className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
-          <option value="">All warehouses</option>
-          {warehouses.map((warehouse) => (
-            <option key={warehouse.id} value={warehouse.id}>
-              {warehouse.name}
+          <option value="">All branches</option>
+          {branches.map((branch) => (
+            <option key={branch.id} value={branch.id}>
+              {branch.name}
             </option>
           ))}
         </select>
@@ -277,7 +277,7 @@ export function InventoryView({
             icon={Boxes}
             title="No stock to show"
             description={
-              filters.search || filters.warehouseId || filters.lowStockOnly
+              filters.search || filters.branchId || filters.lowStockOnly
                 ? "No stock matches your current filters."
                 : "Stock appears here once you record opening stock, purchases or adjustments."
             }
@@ -297,7 +297,7 @@ export function InventoryView({
                       Product
                     </th>
                     <th scope="col" className="px-3 py-2 font-medium">
-                      Warehouse
+                      Branch
                     </th>
                     <th
                       scope="col"
@@ -333,7 +333,7 @@ export function InventoryView({
                           </div>
                         </td>
                         <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                          {level.warehouseName}
+                          {level.branchName}
                         </td>
                         <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
                           {formatQuantity(level.quantity)}
@@ -396,7 +396,7 @@ export function InventoryView({
                       Product
                     </th>
                     <th scope="col" className="px-3 py-2 font-medium">
-                      Warehouse
+                      Branch
                     </th>
                     <th
                       scope="col"
@@ -427,7 +427,7 @@ export function InventoryView({
                         {tx.productName ?? "—"}
                       </td>
                       <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {tx.warehouseName ?? "—"}
+                        {tx.branchName ?? "—"}
                       </td>
                       <td
                         className={

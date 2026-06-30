@@ -44,7 +44,7 @@ function parseItems(value: FormDataEntryValue | null): unknown[] | null {
 function readFormCandidate(formData: FormData): Record<string, unknown> {
   return {
     supplierId: formData.get("supplierId") || undefined,
-    warehouseId: formData.get("warehouseId") || undefined,
+    branchId: formData.get("branchId") || undefined,
     orderDate: formData.get("orderDate") || undefined,
     expectedDeliveryDate: formData.get("expectedDeliveryDate") || undefined,
     currency: formData.get("currency") || undefined,

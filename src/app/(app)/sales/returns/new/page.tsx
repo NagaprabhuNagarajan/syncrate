@@ -42,12 +42,12 @@ async function loadProducts(
   }));
 }
 
-async function loadWarehouses(
+async function loadBranches(
   supabase: AppSupabaseClient,
   organizationId: string
 ) {
   const { data } = await supabase
-    .from("warehouses")
+    .from("branches")
     .select("id, name")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
@@ -103,10 +103,10 @@ export default async function NewSalesReturnPage({
     );
   }
 
-  const [customers, products, warehouses] = await Promise.all([
+  const [customers, products, branches] = await Promise.all([
     loadCustomers(supabase, activeOrg.id),
     loadProducts(supabase, activeOrg.id),
-    loadWarehouses(supabase, activeOrg.id),
+    loadBranches(supabase, activeOrg.id),
   ]);
 
   return (
@@ -115,7 +115,7 @@ export default async function NewSalesReturnPage({
         organizationId={activeOrg.id}
         customers={customers}
         products={products}
-        warehouses={warehouses}
+        branches={branches}
         defaultInvoiceId={params.invoiceId}
         defaultCustomerId={params.customerId}
       />

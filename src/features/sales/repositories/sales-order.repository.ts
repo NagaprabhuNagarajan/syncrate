@@ -46,7 +46,6 @@ function mapSalesOrder(row: DbSalesOrder): SalesOrder {
     customerId: row.customer_id,
     quotationId: row.quotation_id,
     branchId: row.branch_id,
-    warehouseId: row.warehouse_id,
     salespersonId: row.salesperson_id,
     referenceNumber: row.reference_number,
     orderDate: new Date(row.order_date),

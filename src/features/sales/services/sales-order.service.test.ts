@@ -60,7 +60,6 @@ function buildSalesOrder(overrides: Partial<SalesOrder> = {}): SalesOrder {
     customerId: "cust-1",
     quotationId: null,
     branchId: null,
-    warehouseId: null,
     salespersonId: null,
     referenceNumber: null,
     orderDate: new Date("2026-06-01"),

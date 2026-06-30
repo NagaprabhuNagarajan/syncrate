@@ -6,7 +6,7 @@ import { ArrowLeftRight, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { transferStockAction } from "@/features/inventory/actions/inventory.actions";
 import type { ProductOption } from "@/features/inventory/types/inventory.types";
-import type { WarehouseOption } from "@/features/warehouse/types/warehouse.types";
+import type { BranchOption } from "@/features/organization/server/branch-options";
 
 const selectClass =
   "block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-150 ease-out hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40";
@@ -14,7 +14,7 @@ const selectClass =
 interface TransferStockDialogProps {
   readonly organizationId: string;
   readonly products: readonly ProductOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly defaultProductId?: string;
   readonly onClose: () => void;
   readonly onDone: () => void;
@@ -23,14 +23,14 @@ interface TransferStockDialogProps {
 export function TransferStockDialog({
   organizationId,
   products,
-  warehouses,
+  branches,
   defaultProductId,
   onClose,
   onDone,
 }: TransferStockDialogProps) {
   const [productId, setProductId] = useState(defaultProductId ?? "");
-  const [fromWarehouseId, setFromWarehouseId] = useState("");
-  const [toWarehouseId, setToWarehouseId] = useState("");
+  const [fromBranchId, setFromBranchId] = useState("");
+  const [toBranchId, setToBranchId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,15 +40,15 @@ export function TransferStockDialog({
     event.preventDefault();
     setError(null);
 
-    if (fromWarehouseId && fromWarehouseId === toWarehouseId) {
-      setError("Source and destination warehouses must be different");
+    if (fromBranchId && fromBranchId === toBranchId) {
+      setError("Source and destination branches must be different");
       return;
     }
 
     const formData = new FormData();
     formData.append("productId", productId);
-    formData.append("fromWarehouseId", fromWarehouseId);
-    formData.append("toWarehouseId", toWarehouseId);
+    formData.append("fromBranchId", fromBranchId);
+    formData.append("toBranchId", toBranchId);
     formData.append("quantity", quantity);
     if (note.trim()) {
       formData.append("note", note.trim());
@@ -91,7 +91,7 @@ export function TransferStockDialog({
               Transfer stock
             </h2>
             <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-              Move stock between warehouses. This writes two ledger entries.
+              Move stock between branches. This writes two ledger entries.
             </p>
           </div>
         </div>
@@ -139,19 +139,19 @@ export function TransferStockDialog({
                 htmlFor="transfer-from"
                 className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
-                From warehouse
+                From branch
               </label>
               <select
                 id="transfer-from"
                 required
                 className={selectClass}
-                value={fromWarehouseId}
-                onChange={(event) => setFromWarehouseId(event.target.value)}
+                value={fromBranchId}
+                onChange={(event) => setFromBranchId(event.target.value)}
               >
                 <option value="">Source</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name} ({warehouse.code})
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
                   </option>
                 ))}
               </select>
@@ -161,19 +161,19 @@ export function TransferStockDialog({
                 htmlFor="transfer-to"
                 className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
-                To warehouse
+                To branch
               </label>
               <select
                 id="transfer-to"
                 required
                 className={selectClass}
-                value={toWarehouseId}
-                onChange={(event) => setToWarehouseId(event.target.value)}
+                value={toBranchId}
+                onChange={(event) => setToBranchId(event.target.value)}
               >
                 <option value="">Destination</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name} ({warehouse.code})
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
                   </option>
                 ))}
               </select>

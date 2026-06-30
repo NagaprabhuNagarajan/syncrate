@@ -35,7 +35,7 @@ function buildReturn(overrides: Partial<PurchaseReturn> = {}): PurchaseReturn {
     returnNumber: "PRET-00001",
     purchaseOrderId: null,
     supplierId: "sup-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status: "draft",
     returnDate: new Date("2026-06-01"),
     reason: "damaged",
@@ -59,7 +59,7 @@ function withItems(
 
 const MULTI_ITEM_INPUT: CreatePurchaseReturnInput = {
   supplierId: "sup-1",
-  warehouseId: "wh-1",
+  branchId: "wh-1",
   reason: "damaged",
   items: [
     { productId: "p-a", quantity: 10, unitPrice: 100, taxRate: 18 },
@@ -319,7 +319,7 @@ describe("PurchaseReturnService.completePurchaseReturn", () => {
   it("maps a validation RPC error to validation", async () => {
     mockRepo.completeReturnRpc.mockResolvedValue({
       data: null,
-      error: { message: "validation: warehouse required" },
+      error: { message: "validation: branch required" },
     });
     const result = await service.completePurchaseReturn("pret-1", "org-1", "u");
     if (!result.success) {

@@ -97,7 +97,7 @@ function buildSerial(): SerialNumber {
     productId: PROD,
     productName: "Laptop",
     productCode: "LAP-1",
-    warehouseId: null,
+    branchId: null,
     batchId: null,
     serialNumber: "SN-0001",
     status: "in_stock",

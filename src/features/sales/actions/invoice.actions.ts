@@ -60,7 +60,6 @@ function readFormCandidate(formData: FormData): Record<string, unknown> {
     salesOrderId: formData.get("salesOrderId") || undefined,
     quotationId: formData.get("quotationId") || undefined,
     branchId: formData.get("branchId") || undefined,
-    warehouseId: formData.get("warehouseId") || undefined,
     invoiceDate: formData.get("invoiceDate") || undefined,
     dueDate: formData.get("dueDate") || undefined,
     paymentTermsDays: formData.get("paymentTermsDays") || undefined,
@@ -153,7 +152,7 @@ export async function createInvoiceAction(
   );
 
   if (result.success) {
-    revalidatePath("/sales/invoices");
+    revalidatePath("/invoices");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
@@ -216,8 +215,8 @@ export async function updateInvoiceAction(
   );
 
   if (result.success) {
-    revalidatePath("/sales/invoices");
-    revalidatePath(`/sales/invoices/${invoiceId}`);
+    revalidatePath("/invoices");
+    revalidatePath(`/invoices/${invoiceId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
@@ -254,8 +253,8 @@ async function runTransition(
   const result = await run(service, auth.userId);
 
   if (result.success) {
-    revalidatePath("/sales/invoices");
-    revalidatePath(`/sales/invoices/${invoiceId}`);
+    revalidatePath("/invoices");
+    revalidatePath(`/invoices/${invoiceId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,

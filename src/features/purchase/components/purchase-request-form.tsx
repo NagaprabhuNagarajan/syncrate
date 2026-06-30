@@ -22,7 +22,7 @@ import { cn } from "@/utils/cn";
 // Option + form value shapes
 // ─────────────────────────────────────────────────────────────
 
-export interface PrWarehouseOption {
+export interface PrBranchOption {
   readonly id: string;
   readonly name: string;
 }
@@ -47,7 +47,7 @@ interface LineItemValue {
 
 interface PurchaseRequestFormValues {
   requestNumber: string;
-  warehouseId: string;
+  branchId: string;
   requiredDate: string;
   notes: string;
   items: LineItemValue[];
@@ -171,14 +171,14 @@ const cellClass = cn(
 
 interface PurchaseRequestFormProps {
   readonly organizationId: string;
-  readonly warehouses: readonly PrWarehouseOption[];
+  readonly branches: readonly PrBranchOption[];
   readonly products: readonly PrProductOption[];
   readonly purchaseRequest?: PurchaseRequestWithItems;
 }
 
 export function PurchaseRequestForm({
   organizationId,
-  warehouses,
+  branches,
   products,
   purchaseRequest,
 }: PurchaseRequestFormProps) {
@@ -204,7 +204,7 @@ export function PurchaseRequestForm({
     resolver,
     defaultValues: {
       requestNumber: purchaseRequest?.requestNumber ?? "",
-      warehouseId: purchaseRequest?.warehouseId ?? "",
+      branchId: purchaseRequest?.branchId ?? "",
       requiredDate: purchaseRequest?.requiredDate
         ? purchaseRequest.requiredDate.toISOString().slice(0, 10)
         : "",
@@ -253,8 +253,8 @@ export function PurchaseRequestForm({
     if (values.requestNumber.trim()) {
       fd.append("requestNumber", values.requestNumber.trim());
     }
-    if (values.warehouseId) {
-      fd.append("warehouseId", values.warehouseId);
+    if (values.branchId) {
+      fd.append("branchId", values.branchId);
     }
     if (values.requiredDate) {
       fd.append("requiredDate", values.requiredDate);
@@ -354,19 +354,19 @@ export function PurchaseRequestForm({
             />
           </FormField>
           <FormField
-            label="Warehouse"
-            htmlFor="warehouseId"
-            error={errors.warehouseId?.message}
+            label="Branch"
+            htmlFor="branchId"
+            error={errors.branchId?.message}
           >
             <select
-              id="warehouseId"
-              className={inputClass(!!errors.warehouseId)}
-              {...register("warehouseId")}
+              id="branchId"
+              className={inputClass(!!errors.branchId)}
+              {...register("branchId")}
             >
               <option value="">— None —</option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
                 </option>
               ))}
             </select>

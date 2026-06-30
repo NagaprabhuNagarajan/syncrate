@@ -36,7 +36,7 @@ export interface ProductOption {
   readonly gstRate: number;
 }
 
-export interface WarehouseOption {
+export interface BranchOption {
   readonly id: string;
   readonly name: string;
 }
@@ -171,7 +171,7 @@ interface SalesReturnFormProps {
   readonly organizationId: string;
   readonly customers: readonly CustomerOption[];
   readonly products: readonly ProductOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly salesReturn?: SalesReturnWithItems;
   /** Pre-populate the invoice reference. */
   readonly defaultInvoiceId?: string;
@@ -182,7 +182,7 @@ export function SalesReturnForm({
   organizationId,
   customers,
   products,
-  warehouses,
+  branches,
   salesReturn,
   defaultInvoiceId,
   defaultCustomerId,
@@ -211,7 +211,7 @@ export function SalesReturnForm({
       returnNumber: salesReturn?.returnNumber ?? "",
       invoiceId: salesReturn?.invoiceId ?? defaultInvoiceId ?? "",
       customerId: salesReturn?.customerId ?? defaultCustomerId ?? "",
-      warehouseId: salesReturn?.warehouseId ?? "",
+      branchId: salesReturn?.branchId ?? "",
       returnDate: salesReturn
         ? salesReturn.returnDate.toISOString().slice(0, 10)
         : new Date().toISOString().slice(0, 10),
@@ -267,7 +267,7 @@ export function SalesReturnForm({
     fd.append("reason", values.reason);
     if (values.returnNumber?.trim()) {fd.append("returnNumber", values.returnNumber.trim());}
     if (values.invoiceId?.trim()) {fd.append("invoiceId", values.invoiceId.trim());}
-    if (values.warehouseId?.trim()) {fd.append("warehouseId", values.warehouseId.trim());}
+    if (values.branchId?.trim()) {fd.append("branchId", values.branchId.trim());}
     if (values.returnDate) {fd.append("returnDate", values.returnDate);}
     if (values.notes?.trim()) {fd.append("notes", values.notes.trim());}
     if (isEdit && salesReturn) {
@@ -401,17 +401,17 @@ export function SalesReturnForm({
             />
           </FormField>
           <FormField
-            label="Return to warehouse"
-            htmlFor="warehouseId"
-            error={errors.warehouseId?.message}
+            label="Return to branch"
+            htmlFor="branchId"
+            error={errors.branchId?.message}
           >
             <select
-              id="warehouseId"
-              className={inputClass(!!errors.warehouseId)}
-              {...register("warehouseId")}
+              id="branchId"
+              className={inputClass(!!errors.branchId)}
+              {...register("branchId")}
             >
               <option value="">— Optional —</option>
-              {warehouses.map((w) => (
+              {branches.map((w) => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
             </select>

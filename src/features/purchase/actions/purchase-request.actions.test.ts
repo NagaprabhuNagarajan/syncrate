@@ -88,7 +88,7 @@ function buildRequest(): PurchaseRequest {
     organizationId: "org-1",
     requestNumber: "PR-00001",
     status: "draft",
-    warehouseId: null,
+    branchId: null,
     requiredDate: null,
     notes: null,
     approvedBy: null,
@@ -169,13 +169,13 @@ describe("createPurchaseRequestAction", () => {
 
     const result = await createPurchaseRequestAction(
       "org-1",
-      prFormData({ warehouseId: "wh-1" })
+      prFormData({ branchId: "wh-1" })
     );
 
     expect(result).toBe(success);
     expect(mockService.createPurchaseRequest).toHaveBeenCalledWith(
       expect.objectContaining({
-        warehouseId: "wh-1",
+        branchId: "wh-1",
         items: [expect.objectContaining({ productId: "p-1", quantity: 2 })],
       }),
       "org-1",
@@ -392,7 +392,7 @@ describe("convertPurchaseRequestAction", () => {
     organizationId: "org-1",
     poNumber: "PO-00001",
     supplierId: "sup-1",
-    warehouseId: null,
+    branchId: null,
     status: "draft",
     orderDate: new Date(),
     expectedDeliveryDate: null,

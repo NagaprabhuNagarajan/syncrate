@@ -27,7 +27,7 @@ export interface PurchaseOrder {
   readonly organizationId: string;
   readonly poNumber: string;
   readonly supplierId: string;
-  readonly warehouseId: string | null;
+  readonly branchId: string | null;
   readonly status: PurchaseOrderStatus;
   readonly orderDate: Date;
   readonly expectedDeliveryDate: Date | null;
@@ -93,7 +93,7 @@ export interface CreatePurchaseOrderItemInput {
 
 export interface CreatePurchaseOrderInput {
   readonly supplierId: string;
-  readonly warehouseId?: string;
+  readonly branchId?: string;
   readonly orderDate?: string;
   readonly expectedDeliveryDate?: string;
   readonly currency?: string;

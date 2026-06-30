@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
-import { WarehouseService } from "@/features/warehouse/services/warehouse.service";
+import { fetchBranchOptions } from "@/features/organization/server/branch-options";
 import { InventoryService } from "@/features/inventory/services/inventory.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { InventoryView } from "@/features/inventory/components/inventory-view";
@@ -10,7 +10,7 @@ import type { ProductOption } from "@/features/inventory/types/inventory.types";
 
 export const metadata: Metadata = {
   title: "Inventory",
-  description: "Track stock levels and movements across your warehouses",
+  description: "Track stock levels and movements across your branches",
 };
 
 function parsePage(value?: string): number {
@@ -24,7 +24,7 @@ export default async function InventoryPage({
   readonly searchParams: Promise<{
     org?: string;
     search?: string;
-    warehouse?: string;
+    branch?: string;
     low?: string;
     page?: string;
   }>;
@@ -72,23 +72,22 @@ export default async function InventoryPage({
   const canTransfer = context.permissions.includes("inventory.transfer");
 
   const search = params.search?.trim() || undefined;
-  const warehouseId = params.warehouse || undefined;
+  const branchId = params.branch || undefined;
   const lowStockOnly = params.low === "1";
   const page = parsePage(params.page);
 
   const inventoryService = new InventoryService(supabase);
-  const warehouseService = new WarehouseService(supabase);
 
-  const [result, transactions, warehouses, stockValue, productRows] =
+  const [result, transactions, branches, stockValue, productRows] =
     await Promise.all([
       inventoryService.listLevels(activeOrg.id, {
         search,
-        warehouseId,
+        branchId,
         lowStockOnly,
         page,
       }),
-      inventoryService.listTransactions(activeOrg.id, { warehouseId, limit: 50 }),
-      warehouseService.listWarehouseOptions(activeOrg.id),
+      inventoryService.listTransactions(activeOrg.id, { branchId, limit: 50 }),
+      fetchBranchOptions(supabase, activeOrg.id),
       inventoryService.getStockValue(activeOrg.id),
       supabase
         .from("products")
@@ -111,8 +110,8 @@ export default async function InventoryPage({
       result={result}
       transactions={transactions}
       products={products}
-      warehouses={warehouses}
-      filters={{ search, warehouseId, lowStockOnly }}
+      branches={branches}
+      filters={{ search, branchId, lowStockOnly }}
       stockValue={stockValue}
       canAdjust={canAdjust}
       canTransfer={canTransfer}

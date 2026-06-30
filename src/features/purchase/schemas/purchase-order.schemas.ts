@@ -46,7 +46,7 @@ export const createPurchaseOrderSchema = z.object({
   supplierId: z
     .string({ required_error: "Supplier is required" })
     .min(1, "Supplier is required"),
-  warehouseId: z.string().trim().optional().or(z.literal("")),
+  branchId: z.string().trim().optional().or(z.literal("")),
   orderDate: z.string().trim().optional().or(z.literal("")),
   expectedDeliveryDate: z.string().trim().optional().or(z.literal("")),
   currency: z

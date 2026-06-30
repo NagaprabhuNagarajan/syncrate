@@ -125,7 +125,7 @@ describe("createPurchaseOrderSchema", () => {
 
   it("allows empty optional fields", () => {
     const result = createPurchaseOrderSchema.safeParse(
-      validOrder({ warehouseId: "", orderDate: "", notes: "", terms: "" })
+      validOrder({ branchId: "", orderDate: "", notes: "", terms: "" })
     );
     expect(result.success).toBe(true);
   });

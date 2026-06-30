@@ -98,7 +98,7 @@ function buildDbReturn(
     return_number: "PRET-00001",
     purchase_order_id: "po-1",
     supplier_id: "sup-1",
-    warehouse_id: "wh-1",
+    branch_id: "wh-1",
     status: "draft",
     return_date: "2026-06-01",
     reason: "damaged",

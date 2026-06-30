@@ -10,7 +10,7 @@ const optionalText = (max = 500) => z.string().max(max).trim().optional();
 
 export const adjustStockSchema = z.object({
   productId: uuid,
-  warehouseId: uuid,
+  branchId: uuid,
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
     .refine((value) => value !== 0, "Quantity cannot be zero")
@@ -24,23 +24,23 @@ export const adjustStockSchema = z.object({
 export type AdjustStockFormValues = z.infer<typeof adjustStockSchema>;
 
 // ─────────────────────────────────────────────────────────────
-// Transfer stock — positive quantity, distinct warehouses
+// Transfer stock — positive quantity, distinct branches
 // ─────────────────────────────────────────────────────────────
 
 export const transferStockSchema = z
   .object({
     productId: uuid,
-    fromWarehouseId: uuid,
-    toWarehouseId: uuid,
+    fromBranchId: uuid,
+    toBranchId: uuid,
     quantity: z.coerce
       .number({ invalid_type_error: "Quantity must be a number" })
       .positive("Quantity must be greater than zero")
       .max(9_999_999_999, "Quantity is too large"),
     note: optionalText(500),
   })
-  .refine((data) => data.fromWarehouseId !== data.toWarehouseId, {
-    message: "Source and destination warehouses must be different",
-    path: ["toWarehouseId"],
+  .refine((data) => data.fromBranchId !== data.toBranchId, {
+    message: "Source and destination branches must be different",
+    path: ["toBranchId"],
   });
 
 export type TransferStockFormValues = z.infer<typeof transferStockSchema>;
@@ -51,7 +51,7 @@ export type TransferStockFormValues = z.infer<typeof transferStockSchema>;
 
 export const openingStockSchema = z.object({
   productId: uuid,
-  warehouseId: uuid,
+  branchId: uuid,
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
     .min(0, "Quantity cannot be negative")

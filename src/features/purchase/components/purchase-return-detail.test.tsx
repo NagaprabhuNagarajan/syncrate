@@ -31,7 +31,7 @@ function makeReturn(
     returnNumber: "PRET-00001",
     purchaseOrderId: null,
     supplierId: "sup-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status,
     returnDate: new Date("2026-06-01"),
     reason: "damaged",
@@ -69,7 +69,7 @@ function renderDetail(
     <PurchaseReturnDetail
       purchaseReturn={entry}
       supplierName="Acme Supply"
-      warehouseName="Main WH"
+      branchName="Main WH"
       productNames={{ "p-1": "Widget" }}
       organizationId="org-1"
       canComplete={perms.canComplete ?? false}

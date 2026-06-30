@@ -6,7 +6,7 @@ import {
   PurchaseReturnForm,
   type ProductOption,
   type SupplierOption,
-  type WarehouseOption,
+  type BranchOption,
 } from "./purchase-return-form";
 
 const { mockPush, createActionMock, updateActionMock } = vi.hoisted(() => ({
@@ -25,7 +25,7 @@ vi.mock("@/features/purchase/actions/purchase-return.actions", () => ({
 }));
 
 const suppliers: SupplierOption[] = [{ id: "sup-1", name: "Acme Supply" }];
-const warehouses: WarehouseOption[] = [{ id: "wh-1", name: "Main WH" }];
+const branches: BranchOption[] = [{ id: "wh-1", name: "Main WH" }];
 const products: ProductOption[] = [
   { id: "p-1", name: "Widget", purchasePrice: 100, gstRate: 18 },
   { id: "p-2", name: "Gadget", purchasePrice: 50, gstRate: 5 },
@@ -36,7 +36,7 @@ function renderForm() {
     <PurchaseReturnForm
       organizationId="org-1"
       suppliers={suppliers}
-      warehouses={warehouses}
+      branches={branches}
       products={products}
     />
   );
@@ -49,7 +49,7 @@ function buildEditReturn(version = 4): PurchaseReturnWithItems {
     returnNumber: "PRET-00001",
     purchaseOrderId: null,
     supplierId: "sup-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status: "draft",
     returnDate: new Date("2026-06-01"),
     reason: "supplier_recall",
@@ -140,7 +140,7 @@ describe("PurchaseReturnForm", () => {
     renderForm();
 
     await user.selectOptions(screen.getByLabelText(/supplier/i), "sup-1");
-    await user.selectOptions(screen.getByLabelText(/warehouse/i), "wh-1");
+    await user.selectOptions(screen.getByLabelText(/branch/i), "wh-1");
     await user.selectOptions(screen.getByLabelText(/reason/i), "damaged");
     await user.selectOptions(screen.getByLabelText("Product for line 1"), "p-1");
 
@@ -151,7 +151,7 @@ describe("PurchaseReturnForm", () => {
     await waitFor(() => expect(createActionMock).toHaveBeenCalled());
     const fd = createActionMock.mock.calls[0][1] as FormData;
     expect(fd.get("supplierId")).toBe("sup-1");
-    expect(fd.get("warehouseId")).toBe("wh-1");
+    expect(fd.get("branchId")).toBe("wh-1");
     expect(fd.get("reason")).toBe("damaged");
     const items = JSON.parse(fd.get("items") as string) as Array<
       Record<string, number | string>
@@ -172,7 +172,7 @@ describe("PurchaseReturnForm", () => {
       <PurchaseReturnForm
         organizationId="org-1"
         suppliers={suppliers}
-        warehouses={warehouses}
+        branches={branches}
         products={products}
         purchaseReturn={buildEditReturn(4)}
       />
@@ -200,7 +200,7 @@ describe("PurchaseReturnForm", () => {
     renderForm();
 
     await user.selectOptions(screen.getByLabelText(/supplier/i), "sup-1");
-    await user.selectOptions(screen.getByLabelText(/warehouse/i), "wh-1");
+    await user.selectOptions(screen.getByLabelText(/branch/i), "wh-1");
     await user.selectOptions(screen.getByLabelText("Product for line 1"), "p-1");
 
     await user.click(

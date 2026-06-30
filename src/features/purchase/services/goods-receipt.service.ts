@@ -175,7 +175,7 @@ export class GoodsReceiptService {
     const { data, error } = await this.repo.receiveGoodsRpc({
       p_organization_id: organizationId,
       p_purchase_order_id: po.id,
-      p_warehouse_id: input.warehouseId,
+      p_branch_id: input.branchId,
       p_grn_number: grnNumber,
       p_received_date:
         nz(input.receivedDate) ?? new Date().toISOString().slice(0, 10),

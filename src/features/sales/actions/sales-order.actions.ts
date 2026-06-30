@@ -44,7 +44,6 @@ function readFormCandidate(formData: FormData): Record<string, unknown> {
     customerId: formData.get("customerId") || undefined,
     quotationId: formData.get("quotationId") || undefined,
     branchId: formData.get("branchId") || undefined,
-    warehouseId: formData.get("warehouseId") || undefined,
     salespersonId: formData.get("salespersonId") || undefined,
     referenceNumber: formData.get("referenceNumber") || undefined,
     orderDate: formData.get("orderDate") || undefined,
@@ -120,7 +119,7 @@ export async function createSalesOrderAction(
   );
 
   if (result.success) {
-    revalidatePath("/sales/orders");
+    revalidatePath("/sales-orders");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
@@ -161,8 +160,8 @@ export async function updateSalesOrderAction(
   );
 
   if (result.success) {
-    revalidatePath("/sales/orders");
-    revalidatePath(`/sales/orders/${salesOrderId}`);
+    revalidatePath("/sales-orders");
+    revalidatePath(`/sales-orders/${salesOrderId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
@@ -197,8 +196,8 @@ async function runTransition(
   const result = await run(service, auth.userId);
 
   if (result.success) {
-    revalidatePath("/sales/orders");
-    revalidatePath(`/sales/orders/${salesOrderId}`);
+    revalidatePath("/sales-orders");
+    revalidatePath(`/sales-orders/${salesOrderId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
@@ -276,7 +275,7 @@ export async function convertQuotationToSalesOrderAction(
   );
 
   if (result.success) {
-    revalidatePath("/sales/orders");
+    revalidatePath("/sales-orders");
     revalidatePath("/sales/quotations");
     await new AuditService(supabase).log({
       organizationId,
@@ -315,9 +314,9 @@ export async function convertSOToInvoiceAction(
   );
 
   if (result.success) {
-    revalidatePath("/sales/orders");
-    revalidatePath(`/sales/orders/${salesOrderId}`);
-    revalidatePath("/sales/invoices");
+    revalidatePath("/sales-orders");
+    revalidatePath(`/sales-orders/${salesOrderId}`);
+    revalidatePath("/invoices");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,

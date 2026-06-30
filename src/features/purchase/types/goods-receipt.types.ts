@@ -2,7 +2,7 @@
  * Goods Receipt Note (GRN) domain types.
  *
  * A goods receipt records the physical delivery of goods against a purchase
- * order. It is a HEADER (which PO, which warehouse, when) plus many LINE ITEMS
+ * order. It is a HEADER (which PO, which branch, when) plus many LINE ITEMS
  * (how much of each product was received vs rejected). Completing a GRN drives
  * three side effects: an inventory `purchase` event per received line, a bump of
  * the matching `purchase_order_items.received_quantity`, and an advance of the
@@ -22,7 +22,7 @@ export interface GoodsReceipt {
   readonly organizationId: string;
   readonly grnNumber: string;
   readonly purchaseOrderId: string;
-  readonly warehouseId: string;
+  readonly branchId: string;
   readonly receivedDate: Date;
   readonly status: GoodsReceiptStatus;
   readonly notes: string | null;
@@ -74,7 +74,7 @@ export interface CreateGoodsReceiptItemInput {
 
 export interface CreateGoodsReceiptInput {
   readonly purchaseOrderId: string;
-  readonly warehouseId: string;
+  readonly branchId: string;
   readonly receivedDate?: string;
   readonly notes?: string;
   readonly items: readonly CreateGoodsReceiptItemInput[];

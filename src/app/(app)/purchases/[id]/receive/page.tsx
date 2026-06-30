@@ -129,7 +129,7 @@ export default async function ReceiveGoodsPage({
           organizationId={activeOrg.id}
           purchaseOrder={order}
           productNames={productNames}
-          warehouses={options.warehouses}
+          branches={options.branches}
         />
       </div>
     </div>

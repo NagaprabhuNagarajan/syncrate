@@ -37,13 +37,13 @@ function mapRpcError(message: string): InventoryActionResult<never> {
   if (message.includes("insufficient_stock")) {
     return fail(
       "insufficient_stock",
-      "The source warehouse does not hold enough stock for this transfer."
+      "The source branch does not hold enough stock for this transfer."
     );
   }
   if (message.includes("same_warehouse")) {
     return fail(
       "same_warehouse",
-      "Source and destination warehouses must be different."
+      "Source and destination branches must be different."
     );
   }
   if (message.includes("invalid_quantity")) {
@@ -117,7 +117,7 @@ export class InventoryService {
     const { data, error } = await this.repo.adjustStockRpc({
       p_organization_id: organizationId,
       p_product_id: input.productId,
-      p_warehouse_id: input.warehouseId,
+      p_branch_id: input.branchId,
       p_quantity: input.quantity,
       p_type: type,
       p_note: nz(input.reason),
@@ -137,7 +137,7 @@ export class InventoryService {
   // ── Transfer event ─────────────────────────────────────────
 
   /**
-   * Moves stock between two warehouses via the atomic `transfer_stock` RPC,
+   * Moves stock between two branches via the atomic `transfer_stock` RPC,
    * which writes BOTH immutable ledger rows (`transfer_out` at the source,
    * `transfer_in` at the destination) and updates both snapshots in a single
    * Postgres transaction. The RPC raises `invalid_quantity`, `same_warehouse`,
@@ -151,18 +151,18 @@ export class InventoryService {
     if (input.quantity <= 0) {
       return fail("validation", "Quantity must be greater than zero");
     }
-    if (input.fromWarehouseId === input.toWarehouseId) {
+    if (input.fromBranchId === input.toBranchId) {
       return fail(
         "same_warehouse",
-        "Source and destination warehouses must be different"
+        "Source and destination branches must be different"
       );
     }
 
     const { error } = await this.repo.transferStockRpc({
       p_organization_id: organizationId,
       p_product_id: input.productId,
-      p_from_warehouse_id: input.fromWarehouseId,
-      p_to_warehouse_id: input.toWarehouseId,
+      p_from_branch_id: input.fromBranchId,
+      p_to_branch_id: input.toBranchId,
       p_quantity: input.quantity,
       p_note: nz(input.note),
     });
@@ -177,7 +177,7 @@ export class InventoryService {
   // ── Opening stock helper ───────────────────────────────────
 
   /**
-   * Records opening stock for a (product, warehouse) pair via the atomic
+   * Records opening stock for a (product, branch) pair via the atomic
    * `adjust_stock` RPC with type `opening`. Returns the new snapshot quantity.
    */
   async setOpeningStock(
@@ -192,7 +192,7 @@ export class InventoryService {
     const { data, error } = await this.repo.adjustStockRpc({
       p_organization_id: organizationId,
       p_product_id: input.productId,
-      p_warehouse_id: input.warehouseId,
+      p_branch_id: input.branchId,
       p_quantity: input.quantity,
       p_type: "opening",
       p_note: nz(input.note),
@@ -217,9 +217,9 @@ export class InventoryService {
   /** Convenience used by callers needing the current quantity (defaults 0). */
   async getCurrentQuantity(
     productId: string,
-    warehouseId: string
+    branchId: string
   ): Promise<number> {
-    const level = await this.repo.getLevel(productId, warehouseId);
+    const level = await this.repo.getLevel(productId, branchId);
     return level?.quantity ?? 0;
   }
 }

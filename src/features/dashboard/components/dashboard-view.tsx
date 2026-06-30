@@ -286,7 +286,7 @@ const QUICK_ACTIONS: QuickActionProps[] = [
     label: "New Sales Invoice",
     description: "Create and send an invoice",
     icon: FileText,
-    href: "/sales/invoices/new",
+    href: "/invoices/new",
     color: "bg-gradient-info",
   },
   {

@@ -27,7 +27,6 @@ export interface SalesOrder {
   readonly customerId: string;
   readonly quotationId: string | null;
   readonly branchId: string | null;
-  readonly warehouseId: string | null;
   readonly salespersonId: string | null;
   readonly referenceNumber: string | null;
   readonly orderDate: Date;
@@ -116,7 +115,6 @@ export interface CreateSalesOrderInput {
   readonly customerId: string;
   readonly quotationId?: string;
   readonly branchId?: string;
-  readonly warehouseId?: string;
   readonly salespersonId?: string;
   readonly referenceNumber?: string;
   readonly orderDate?: string;

@@ -63,7 +63,7 @@ describe('getInventoryReport', () => {
     expect(report.totals.outOfStock).toBe(1);
   });
 
-  it('sums quantities across warehouses for same product', async () => {
+  it('sums quantities across branches for same product', async () => {
     const mockData = [
       {
         product_id: 'prod-1',

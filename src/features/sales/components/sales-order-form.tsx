@@ -28,7 +28,7 @@ export interface CustomerOption {
   readonly name: string;
 }
 
-export interface WarehouseOption {
+export interface BranchOption {
   readonly id: string;
   readonly name: string;
 }
@@ -55,7 +55,7 @@ interface LineItemValue {
 
 interface SalesOrderFormValues {
   customerId: string;
-  warehouseId: string;
+  branchId: string;
   orderDate: string;
   deliveryDate: string;
   paymentTermsDays: string;
@@ -219,7 +219,7 @@ interface SalesOrderFormProps {
   readonly organizationId: string;
   readonly orgState?: string;
   readonly customers: readonly CustomerOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly products: readonly ProductOption[];
   readonly salesOrder?: SalesOrderWithItems;
 }
@@ -228,7 +228,7 @@ export function SalesOrderForm({
   organizationId,
   orgState = "",
   customers,
-  warehouses,
+  branches,
   products,
   salesOrder,
 }: SalesOrderFormProps) {
@@ -254,7 +254,7 @@ export function SalesOrderForm({
     resolver,
     defaultValues: {
       customerId: salesOrder?.customerId ?? "",
-      warehouseId: salesOrder?.warehouseId ?? "",
+      branchId: salesOrder?.branchId ?? "",
       orderDate: salesOrder
         ? salesOrder.orderDate.toISOString().slice(0, 10)
         : new Date().toISOString().slice(0, 10),
@@ -338,7 +338,7 @@ export function SalesOrderForm({
 
     const fd = new FormData();
     fd.append("customerId", values.customerId);
-    if (values.warehouseId) {fd.append("warehouseId", values.warehouseId);}
+    if (values.branchId) {fd.append("branchId", values.branchId);}
     if (values.orderDate) {fd.append("orderDate", values.orderDate);}
     if (values.deliveryDate) {fd.append("deliveryDate", values.deliveryDate);}
     if (values.paymentTermsDays)
@@ -372,9 +372,9 @@ export function SalesOrderForm({
       }
 
       if (result.success) {
-        router.push(`/sales/orders/${result.data.id}`);
+        router.push(`/sales-orders/${result.data.id}`);
       } else {
-        router.push("/sales/orders");
+        router.push("/sales-orders");
       }
     });
   });
@@ -444,19 +444,19 @@ export function SalesOrderForm({
             </select>
           </FormField>
           <FormField
-            label="Warehouse"
-            htmlFor="warehouseId"
-            error={errors.warehouseId?.message}
+            label="Branch"
+            htmlFor="branchId"
+            error={errors.branchId?.message}
           >
             <select
-              id="warehouseId"
-              className={inputClass(!!errors.warehouseId)}
-              {...register("warehouseId")}
+              id="branchId"
+              className={inputClass(!!errors.branchId)}
+              {...register("branchId")}
             >
               <option value="">— None —</option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
                 </option>
               ))}
             </select>
@@ -770,7 +770,7 @@ export function SalesOrderForm({
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/sales/orders")}
+            onClick={() => router.push("/sales-orders")}
             disabled={isPending}
           >
             Cancel

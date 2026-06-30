@@ -46,7 +46,7 @@ function mapPurchaseOrder(row: DbPurchaseOrder): PurchaseOrder {
     organizationId: row.organization_id,
     poNumber: row.po_number,
     supplierId: row.supplier_id,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     status: row.status,
     orderDate: new Date(row.order_date),
     expectedDeliveryDate: row.expected_delivery_date

@@ -9,7 +9,7 @@ import {
   XCircle,
   AlertTriangle,
   Truck,
-  Warehouse,
+  Building2,
   Calendar,
   Tag,
 } from "lucide-react";
@@ -177,7 +177,7 @@ function InfoRow({
 interface PurchaseReturnDetailProps {
   readonly purchaseReturn: PurchaseReturnWithItems;
   readonly supplierName: string | null;
-  readonly warehouseName: string | null;
+  readonly branchName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
   readonly organizationId: string;
   readonly canComplete: boolean;
@@ -188,7 +188,7 @@ interface PurchaseReturnDetailProps {
 export function PurchaseReturnDetail({
   purchaseReturn,
   supplierName,
-  warehouseName,
+  branchName,
   productNames,
   organizationId,
   canComplete,
@@ -276,7 +276,7 @@ export function PurchaseReturnDetail({
           </h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <InfoRow icon={Truck} label="Supplier" value={supplierName} />
-            <InfoRow icon={Warehouse} label="Warehouse" value={warehouseName} />
+            <InfoRow icon={Building2} label="Building2" value={branchName} />
             <InfoRow
               icon={Calendar}
               label="Return date"

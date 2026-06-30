@@ -53,29 +53,29 @@ describe("createSerialSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("tolerates an empty warehouseId", () => {
+  it("tolerates an empty branchId", () => {
     const result = createSerialSchema.safeParse({
       productId: UUID,
       serialNumber: "SN-1",
-      warehouseId: "",
+      branchId: "",
     });
     expect(result.success).toBe(true);
   });
 
-  it("accepts a valid warehouse uuid", () => {
+  it("accepts a valid branch uuid", () => {
     const result = createSerialSchema.safeParse({
       productId: UUID,
       serialNumber: "SN-1",
-      warehouseId: UUID2,
+      branchId: UUID2,
     });
     expect(result.success).toBe(true);
   });
 
-  it("rejects an invalid warehouse uuid", () => {
+  it("rejects an invalid branch uuid", () => {
     const result = createSerialSchema.safeParse({
       productId: UUID,
       serialNumber: "SN-1",
-      warehouseId: "bad",
+      branchId: "bad",
     });
     expect(result.success).toBe(false);
   });

@@ -21,12 +21,12 @@ const PRODUCT = "prod-1";
 const WH_A = "wh-a";
 const WH_B = "wh-b";
 
-function level(quantity: number, warehouseId = WH_A): StockLevel {
+function level(quantity: number, branchId = WH_A): StockLevel {
   return {
-    id: `lvl-${warehouseId}`,
+    id: `lvl-${branchId}`,
     organizationId: "org-1",
     productId: PRODUCT,
-    warehouseId,
+    branchId,
     quantity,
     reservedQuantity: 0,
   };
@@ -48,7 +48,7 @@ describe("InventoryService.adjustStock", () => {
     mockRepo.adjustStockRpc.mockResolvedValue({ data: 15, error: null });
 
     const result = await service.adjustStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: 5, reason: "recount" },
+      { productId: PRODUCT, branchId: WH_A, quantity: 5, reason: "recount" },
       "org-1",
       "user-1"
     );
@@ -61,7 +61,7 @@ describe("InventoryService.adjustStock", () => {
     expect(mockRepo.adjustStockRpc).toHaveBeenCalledWith({
       p_organization_id: "org-1",
       p_product_id: PRODUCT,
-      p_warehouse_id: WH_A,
+      p_branch_id: WH_A,
       p_quantity: 5,
       p_type: "adjustment",
       p_note: "recount",
@@ -73,7 +73,7 @@ describe("InventoryService.adjustStock", () => {
     mockRepo.adjustStockRpc.mockResolvedValue({ data: 7, error: null });
 
     const result = await service.adjustStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: -3 },
+      { productId: PRODUCT, branchId: WH_A, quantity: -3 },
       "org-1",
       "user-1"
     );
@@ -95,7 +95,7 @@ describe("InventoryService.adjustStock", () => {
     });
 
     const result = await service.adjustStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: -5 },
+      { productId: PRODUCT, branchId: WH_A, quantity: -5 },
       "org-1",
       "user-1"
     );
@@ -113,7 +113,7 @@ describe("InventoryService.adjustStock", () => {
     });
 
     const result = await service.adjustStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: 5 },
+      { productId: PRODUCT, branchId: WH_A, quantity: 5 },
       "org-1",
       "user-1"
     );
@@ -128,7 +128,7 @@ describe("InventoryService.adjustStock", () => {
     mockRepo.adjustStockRpc.mockResolvedValue({ data: null, error: null });
 
     const result = await service.adjustStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: 5 },
+      { productId: PRODUCT, branchId: WH_A, quantity: 5 },
       "org-1",
       "user-1"
     );
@@ -141,7 +141,7 @@ describe("InventoryService.adjustStock", () => {
 
   it("rejects a zero quantity without calling the RPC", async () => {
     const result = await service.adjustStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: 0 },
+      { productId: PRODUCT, branchId: WH_A, quantity: 0 },
       "org-1",
       "user-1"
     );
@@ -164,8 +164,8 @@ describe("InventoryService.transferStock", () => {
     const result = await service.transferStock(
       {
         productId: PRODUCT,
-        fromWarehouseId: WH_A,
-        toWarehouseId: WH_B,
+        fromBranchId: WH_A,
+        toBranchId: WH_B,
         quantity: 8,
         note: "rebalance",
       },
@@ -178,8 +178,8 @@ describe("InventoryService.transferStock", () => {
     expect(mockRepo.transferStockRpc).toHaveBeenCalledWith({
       p_organization_id: "org-1",
       p_product_id: PRODUCT,
-      p_from_warehouse_id: WH_A,
-      p_to_warehouse_id: WH_B,
+      p_from_branch_id: WH_A,
+      p_to_branch_id: WH_B,
       p_quantity: 8,
       p_note: "rebalance",
     });
@@ -188,11 +188,11 @@ describe("InventoryService.transferStock", () => {
   it("maps an insufficient_stock RPC error", async () => {
     mockRepo.transferStockRpc.mockResolvedValue({
       data: null,
-      error: { message: "insufficient_stock at source warehouse" },
+      error: { message: "insufficient_stock at source branch" },
     });
 
     const result = await service.transferStock(
-      { productId: PRODUCT, fromWarehouseId: WH_A, toWarehouseId: WH_B, quantity: 99 },
+      { productId: PRODUCT, fromBranchId: WH_A, toBranchId: WH_B, quantity: 99 },
       "org-1",
       "user-1"
     );
@@ -210,7 +210,7 @@ describe("InventoryService.transferStock", () => {
     });
 
     const result = await service.transferStock(
-      { productId: PRODUCT, fromWarehouseId: WH_A, toWarehouseId: WH_B, quantity: 5 },
+      { productId: PRODUCT, fromBranchId: WH_A, toBranchId: WH_B, quantity: 5 },
       "org-1",
       "user-1"
     );
@@ -228,7 +228,7 @@ describe("InventoryService.transferStock", () => {
     });
 
     const result = await service.transferStock(
-      { productId: PRODUCT, fromWarehouseId: WH_A, toWarehouseId: WH_B, quantity: 5 },
+      { productId: PRODUCT, fromBranchId: WH_A, toBranchId: WH_B, quantity: 5 },
       "org-1",
       "user-1"
     );
@@ -246,7 +246,7 @@ describe("InventoryService.transferStock", () => {
     });
 
     const result = await service.transferStock(
-      { productId: PRODUCT, fromWarehouseId: WH_A, toWarehouseId: WH_B, quantity: 5 },
+      { productId: PRODUCT, fromBranchId: WH_A, toBranchId: WH_B, quantity: 5 },
       "org-1",
       "user-1"
     );
@@ -257,9 +257,9 @@ describe("InventoryService.transferStock", () => {
     }
   });
 
-  it("rejects a same-warehouse transfer without calling the RPC", async () => {
+  it("rejects a same-branch transfer without calling the RPC", async () => {
     const result = await service.transferStock(
-      { productId: PRODUCT, fromWarehouseId: WH_A, toWarehouseId: WH_A, quantity: 5 },
+      { productId: PRODUCT, fromBranchId: WH_A, toBranchId: WH_A, quantity: 5 },
       "org-1",
       "user-1"
     );
@@ -272,7 +272,7 @@ describe("InventoryService.transferStock", () => {
 
   it("rejects a non-positive quantity without calling the RPC", async () => {
     const result = await service.transferStock(
-      { productId: PRODUCT, fromWarehouseId: WH_A, toWarehouseId: WH_B, quantity: 0 },
+      { productId: PRODUCT, fromBranchId: WH_A, toBranchId: WH_B, quantity: 0 },
       "org-1",
       "user-1"
     );
@@ -293,7 +293,7 @@ describe("InventoryService.setOpeningStock", () => {
     mockRepo.adjustStockRpc.mockResolvedValue({ data: 50, error: null });
 
     const result = await service.setOpeningStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: 50 },
+      { productId: PRODUCT, branchId: WH_A, quantity: 50 },
       "org-1",
       "user-1"
     );
@@ -305,7 +305,7 @@ describe("InventoryService.setOpeningStock", () => {
     expect(mockRepo.adjustStockRpc).toHaveBeenCalledWith({
       p_organization_id: "org-1",
       p_product_id: PRODUCT,
-      p_warehouse_id: WH_A,
+      p_branch_id: WH_A,
       p_quantity: 50,
       p_type: "opening",
       p_note: null,
@@ -315,7 +315,7 @@ describe("InventoryService.setOpeningStock", () => {
 
   it("rejects a negative opening quantity without calling the RPC", async () => {
     const result = await service.setOpeningStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: -1 },
+      { productId: PRODUCT, branchId: WH_A, quantity: -1 },
       "org-1",
       "user-1"
     );
@@ -333,7 +333,7 @@ describe("InventoryService.setOpeningStock", () => {
     });
 
     const result = await service.setOpeningStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: 5 },
+      { productId: PRODUCT, branchId: WH_A, quantity: 5 },
       "org-1",
       "user-1"
     );
@@ -347,7 +347,7 @@ describe("InventoryService.setOpeningStock", () => {
     mockRepo.adjustStockRpc.mockResolvedValue({ data: null, error: null });
 
     const result = await service.setOpeningStock(
-      { productId: PRODUCT, warehouseId: WH_A, quantity: 5 },
+      { productId: PRODUCT, branchId: WH_A, quantity: 5 },
       "org-1",
       "user-1"
     );

@@ -16,7 +16,7 @@ beforeEach(() => {
 });
 
 const products = [{ id: "prod-1", name: "Cement Bag", code: "CEM-01" }];
-const warehouses = [{ id: "wh-1", code: "WH-01", name: "Main Depot" }];
+const branches = [{ id: "wh-1", code: "WH-01", name: "Main Depot" }];
 
 describe("AdjustStockDialog", () => {
   it("submits the adjustment and calls onDone", async () => {
@@ -28,14 +28,14 @@ describe("AdjustStockDialog", () => {
       <AdjustStockDialog
         organizationId="org-1"
         products={products}
-        warehouses={warehouses}
+        branches={branches}
         onClose={vi.fn()}
         onDone={onDone}
       />
     );
 
     await user.selectOptions(screen.getByLabelText("Product"), "prod-1");
-    await user.selectOptions(screen.getByLabelText("Warehouse"), "wh-1");
+    await user.selectOptions(screen.getByLabelText("Branch"), "wh-1");
     await user.type(screen.getByLabelText("Quantity change"), "-3");
     await user.click(screen.getByRole("button", { name: /apply adjustment/i }));
 
@@ -44,7 +44,7 @@ describe("AdjustStockDialog", () => {
     });
     const form = adjustActionMock.mock.calls[0][1] as FormData;
     expect(form.get("productId")).toBe("prod-1");
-    expect(form.get("warehouseId")).toBe("wh-1");
+    expect(form.get("branchId")).toBe("wh-1");
     expect(form.get("quantity")).toBe("-3");
     expect(onDone).toHaveBeenCalled();
   });
@@ -61,14 +61,14 @@ describe("AdjustStockDialog", () => {
       <AdjustStockDialog
         organizationId="org-1"
         products={products}
-        warehouses={warehouses}
+        branches={branches}
         onClose={vi.fn()}
         onDone={onDone}
       />
     );
 
     await user.selectOptions(screen.getByLabelText("Product"), "prod-1");
-    await user.selectOptions(screen.getByLabelText("Warehouse"), "wh-1");
+    await user.selectOptions(screen.getByLabelText("Branch"), "wh-1");
     await user.type(screen.getByLabelText("Quantity change"), "-99");
     await user.click(screen.getByRole("button", { name: /apply adjustment/i }));
 
@@ -83,7 +83,7 @@ describe("AdjustStockDialog", () => {
       <AdjustStockDialog
         organizationId="org-1"
         products={products}
-        warehouses={warehouses}
+        branches={branches}
         onClose={onClose}
         onDone={vi.fn()}
       />

@@ -27,7 +27,7 @@ export async function generateMetadata({
 
 async function lookupName(
   supabase: AppSupabaseClient,
-  table: "suppliers" | "warehouses",
+  table: "suppliers" | "branches",
   id: string | null
 ): Promise<string | null> {
   if (!id) {
@@ -119,9 +119,9 @@ export default async function PurchaseReturnDetailPage({
 
   const purchaseReturn = result.data;
 
-  const [supplierName, warehouseName, productNames] = await Promise.all([
+  const [supplierName, branchName, productNames] = await Promise.all([
     lookupName(supabase, "suppliers", purchaseReturn.supplierId),
-    lookupName(supabase, "warehouses", purchaseReturn.warehouseId),
+    lookupName(supabase, "branches", purchaseReturn.branchId),
     lookupProductNames(
       supabase,
       purchaseReturn.items.map((item) => item.productId)
@@ -132,7 +132,7 @@ export default async function PurchaseReturnDetailPage({
     <PurchaseReturnDetail
       purchaseReturn={purchaseReturn}
       supplierName={supplierName}
-      warehouseName={warehouseName}
+      branchName={branchName}
       productNames={productNames}
       organizationId={activeOrg.id}
       canComplete={context.permissions.includes("purchase.receive")}

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor } from "@/tests/utils";
 import { GoodsReceiptForm } from "./goods-receipt-form";
 import type { PurchaseOrderWithItems } from "@/features/purchase/types/purchase-order.types";
-import type { WarehouseOption } from "./purchase-order-form";
+import type { BranchOption } from "./purchase-order-form";
 
 const { mockPush, createActionMock } = vi.hoisted(() => ({
   mockPush: vi.fn(),
@@ -24,7 +24,7 @@ function buildPo(): PurchaseOrderWithItems {
     organizationId: "org-1",
     poNumber: "PO-00001",
     supplierId: "sup-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status: "approved",
     orderDate: new Date("2026-06-01"),
     expectedDeliveryDate: null,
@@ -62,9 +62,9 @@ function buildPo(): PurchaseOrderWithItems {
   };
 }
 
-const warehouses: WarehouseOption[] = [
-  { id: "wh-1", name: "Main warehouse" },
-  { id: "wh-2", name: "Backup warehouse" },
+const branches: BranchOption[] = [
+  { id: "wh-1", name: "Main branch" },
+  { id: "wh-2", name: "Backup branch" },
 ];
 
 function renderForm() {
@@ -73,7 +73,7 @@ function renderForm() {
       organizationId="org-1"
       purchaseOrder={buildPo()}
       productNames={{ "prod-a": "Widget" }}
-      warehouses={warehouses}
+      branches={branches}
     />
   );
 }
@@ -93,9 +93,9 @@ describe("GoodsReceiptForm", () => {
     expect(receiveInput.value).toBe("6");
   });
 
-  it("defaults the warehouse select to the PO warehouse", () => {
+  it("defaults the branch select to the PO branch", () => {
     renderForm();
-    const select = screen.getByLabelText(/warehouse/i) as HTMLSelectElement;
+    const select = screen.getByLabelText(/branch/i) as HTMLSelectElement;
     expect(select.value).toBe("wh-1");
   });
 
@@ -111,7 +111,7 @@ describe("GoodsReceiptForm", () => {
     const [orgId, formData] = createActionMock.mock.calls[0] as [string, FormData];
     expect(orgId).toBe("org-1");
     expect(formData.get("purchaseOrderId")).toBe("po-1");
-    expect(formData.get("warehouseId")).toBe("wh-1");
+    expect(formData.get("branchId")).toBe("wh-1");
     const items = JSON.parse(formData.get("items") as string) as Array<{
       purchaseOrderItemId: string;
       receivedQuantity: number;

@@ -47,7 +47,7 @@ function mapPurchaseReturn(row: DbPurchaseReturn): PurchaseReturn {
     returnNumber: row.return_number,
     purchaseOrderId: row.purchase_order_id,
     supplierId: row.supplier_id,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     status: row.status,
     returnDate: new Date(row.return_date),
     reason: row.reason,

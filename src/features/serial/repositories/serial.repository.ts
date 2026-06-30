@@ -30,7 +30,7 @@ function mapSerial(row: DbSerialWithProduct): SerialNumber {
     productId: row.product_id,
     productName: row.products?.name ?? null,
     productCode: row.products?.code ?? null,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     batchId: row.batch_id,
     serialNumber: row.serial_number,
     status: row.status,

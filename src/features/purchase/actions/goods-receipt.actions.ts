@@ -40,7 +40,7 @@ function parseItems(value: FormDataEntryValue | null): unknown[] | null {
 function readFormCandidate(formData: FormData): Record<string, unknown> {
   return {
     purchaseOrderId: formData.get("purchaseOrderId") || undefined,
-    warehouseId: formData.get("warehouseId") || undefined,
+    branchId: formData.get("branchId") || undefined,
     receivedDate: formData.get("receivedDate") || undefined,
     notes: formData.get("notes") || undefined,
     items: parseItems(formData.get("items")) ?? [],

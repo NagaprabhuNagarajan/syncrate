@@ -229,7 +229,6 @@ export class SalesOrderService {
       customer_id: input.customerId,
       quotation_id: nz(input.quotationId),
       branch_id: nz(input.branchId),
-      warehouse_id: nz(input.warehouseId),
       salesperson_id: nz(input.salespersonId),
       reference_number: nz(input.referenceNumber),
       order_date:
@@ -301,7 +300,6 @@ export class SalesOrderService {
         customer_id: input.customerId,
         quotation_id: nz(input.quotationId),
         branch_id: nz(input.branchId),
-        warehouse_id: nz(input.warehouseId),
         salesperson_id: nz(input.salespersonId),
         reference_number: nz(input.referenceNumber),
         order_date:

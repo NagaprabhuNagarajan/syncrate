@@ -714,7 +714,7 @@ type InventoryRow = {
   id: string;
   organization_id: string;
   product_id: string;
-  warehouse_id: string;
+  branch_id: string;
   quantity: number;
   reserved_quantity: number;
   created_at: string;
@@ -725,7 +725,7 @@ type InventoryTransactionsRow = {
   id: string;
   organization_id: string;
   product_id: string;
-  warehouse_id: string;
+  branch_id: string;
   batch_id: string | null;
   type:
     | "opening"
@@ -753,7 +753,7 @@ type SerialNumbersRow = AuditFields & {
   id: string;
   organization_id: string;
   product_id: string;
-  warehouse_id: string | null;
+  branch_id: string | null;
   batch_id: string | null;
   serial_number: string;
   status: "in_stock" | "reserved" | "sold" | "returned" | "damaged";
@@ -767,7 +767,7 @@ type PurchaseOrdersRow = AuditFields & {
   organization_id: string;
   po_number: string;
   supplier_id: string;
-  warehouse_id: string | null;
+  branch_id: string | null;
   status:
     | "draft"
     | "submitted"
@@ -811,7 +811,7 @@ type GoodsReceiptsRow = AuditFields & {
   organization_id: string;
   grn_number: string;
   purchase_order_id: string;
-  warehouse_id: string;
+  branch_id: string;
   received_date: string;
   status: "draft" | "completed";
   notes: string | null;
@@ -872,7 +872,7 @@ type PurchaseReturnsRow = AuditFields & {
   return_number: string;
   purchase_order_id: string | null;
   supplier_id: string;
-  warehouse_id: string | null;
+  branch_id: string | null;
   return_date: string;
   reason: "damaged" | "wrong_item" | "expired" | "quality_issue" | "other";
   status: "draft" | "completed" | "cancelled";
@@ -908,7 +908,7 @@ type PurchaseRequestsRow = AuditFields & {
     | "rejected"
     | "converted"
     | "cancelled";
-  warehouse_id: string | null;
+  branch_id: string | null;
   required_date: string | null;
   notes: string | null;
   approved_by: string | null;
@@ -1000,7 +1000,6 @@ type SalesOrdersRow = AuditFields & {
   customer_id: string;
   quotation_id: string | null;
   branch_id: string | null;
-  warehouse_id: string | null;
   salesperson_id: string | null;
   reference_number: string | null;
   order_date: string;
@@ -1060,7 +1059,6 @@ type InvoicesRow = AuditFields & {
   sales_order_id: string | null;
   quotation_id: string | null;
   branch_id: string | null;
-  warehouse_id: string | null;
   salesperson_id: string | null;
   reference_number: string | null;
   invoice_date: string;
@@ -1117,7 +1115,7 @@ type SalesReturnsRow = AuditFields & {
   return_number: string;
   invoice_id: string | null;
   customer_id: string;
-  warehouse_id: string | null;
+  branch_id: string | null;
   return_date: string;
   reason: SalesReturnReason;
   status: SalesReturnStatus;
@@ -1653,7 +1651,7 @@ export interface Database {
           id?: string;
           organization_id: string;
           product_id: string;
-          warehouse_id: string;
+          branch_id: string;
           quantity?: number;
           reserved_quantity?: number;
           created_at?: string;
@@ -1669,8 +1667,8 @@ export interface Database {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "inventory_warehouse_id_fkey";
-            columns: ["warehouse_id"];
+            foreignKeyName: "inventory_branch_id_fkey";
+            columns: ["branch_id"];
             isOneToOne: false;
             referencedRelation: "warehouses";
             referencedColumns: ["id"];
@@ -1685,7 +1683,7 @@ export interface Database {
           id?: string;
           organization_id: string;
           product_id: string;
-          warehouse_id: string;
+          branch_id: string;
           batch_id?: string | null;
           type: InventoryTransactionsRow["type"];
           quantity: number;
@@ -1715,7 +1713,7 @@ export interface Database {
           id?: string;
           organization_id: string;
           product_id: string;
-          warehouse_id?: string | null;
+          branch_id?: string | null;
           batch_id?: string | null;
           serial_number: string;
           status?: SerialNumbersRow["status"];
@@ -1743,7 +1741,7 @@ export interface Database {
           organization_id: string;
           po_number: string;
           supplier_id: string;
-          warehouse_id?: string | null;
+          branch_id?: string | null;
           status?: PurchaseOrdersRow["status"];
           order_date?: string;
           expected_delivery_date?: string | null;
@@ -1808,7 +1806,7 @@ export interface Database {
           organization_id: string;
           grn_number: string;
           purchase_order_id: string;
-          warehouse_id: string;
+          branch_id: string;
           received_date?: string;
           status?: GoodsReceiptsRow["status"];
           notes?: string | null;
@@ -1925,7 +1923,7 @@ export interface Database {
           return_number: string;
           purchase_order_id?: string | null;
           supplier_id: string;
-          warehouse_id?: string | null;
+          branch_id?: string | null;
           return_date?: string;
           reason?: PurchaseReturnsRow["reason"];
           status?: PurchaseReturnsRow["status"];
@@ -1983,7 +1981,7 @@ export interface Database {
           organization_id: string;
           request_number: string;
           status?: PurchaseRequestsRow["status"];
-          warehouse_id?: string | null;
+          branch_id?: string | null;
           required_date?: string | null;
           notes?: string | null;
           approved_by?: string | null;
@@ -2120,7 +2118,6 @@ export interface Database {
           customer_id: string;
           quotation_id?: string | null;
           branch_id?: string | null;
-          warehouse_id?: string | null;
           salesperson_id?: string | null;
           reference_number?: string | null;
           order_date?: string;
@@ -2208,7 +2205,6 @@ export interface Database {
           sales_order_id?: string | null;
           quotation_id?: string | null;
           branch_id?: string | null;
-          warehouse_id?: string | null;
           salesperson_id?: string | null;
           reference_number?: string | null;
           invoice_date?: string;
@@ -2293,7 +2289,7 @@ export interface Database {
           return_number: string;
           invoice_id?: string | null;
           customer_id: string;
-          warehouse_id?: string | null;
+          branch_id?: string | null;
           return_date?: string;
           reason?: SalesReturnReason;
           status?: SalesReturnStatus;
@@ -3484,7 +3480,7 @@ export interface Database {
         Args: {
           p_organization_id: string;
           p_product_id: string;
-          p_warehouse_id: string;
+          p_branch_id: string;
           p_quantity: number;
           p_type: string;
           p_note?: string | null;
@@ -3498,8 +3494,8 @@ export interface Database {
         Args: {
           p_organization_id: string;
           p_product_id: string;
-          p_from_warehouse_id: string;
-          p_to_warehouse_id: string;
+          p_from_branch_id: string;
+          p_to_branch_id: string;
           p_quantity: number;
           p_note?: string | null;
           p_batch_id?: string | null;
@@ -3510,7 +3506,7 @@ export interface Database {
         Args: {
           p_organization_id: string;
           p_purchase_order_id: string;
-          p_warehouse_id: string;
+          p_branch_id: string;
           p_grn_number: string;
           p_received_date: string | null;
           p_notes: string | null;

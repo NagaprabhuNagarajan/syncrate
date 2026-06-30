@@ -16,7 +16,7 @@ export interface SearchResultItem {
   readonly id: string;
   /** Primary label, e.g. invoice number, customer/product name. */
   readonly title: string;
-  /** Secondary detail, e.g. customer name, SKU, warehouse. */
+  /** Secondary detail, e.g. customer name, SKU, branch. */
   readonly subtitle: string | null;
   /** A short status/qualifier shown as a badge, e.g. "unpaid", "active". */
   readonly meta: string | null;

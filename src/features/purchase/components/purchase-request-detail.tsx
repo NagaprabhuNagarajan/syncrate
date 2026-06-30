@@ -12,7 +12,7 @@ import {
   XCircle,
   Ban,
   AlertTriangle,
-  Warehouse,
+  Building2,
   Calendar,
   ShoppingCart,
 } from "lucide-react";
@@ -65,7 +65,7 @@ function InfoRow({
   label,
   value,
 }: {
-  readonly icon: typeof Warehouse;
+  readonly icon: typeof Building2;
   readonly label: string;
   readonly value: string | null;
 }) {
@@ -386,7 +386,7 @@ function ConvertDialog({
 
 interface PurchaseRequestDetailProps {
   readonly purchaseRequest: PurchaseRequestWithItems;
-  readonly warehouseName: string | null;
+  readonly branchName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
   readonly suppliers: readonly PrSupplierOption[];
   readonly organizationId: string;
@@ -397,7 +397,7 @@ interface PurchaseRequestDetailProps {
 
 export function PurchaseRequestDetail({
   purchaseRequest,
-  warehouseName,
+  branchName,
   productNames,
   suppliers,
   organizationId,
@@ -485,7 +485,7 @@ export function PurchaseRequestDetail({
     <div className="p-4 lg:p-6">
       <PageHeader
         title={purchaseRequest.requestNumber}
-        description={warehouseName ?? undefined}
+        description={branchName ?? undefined}
         icon={ClipboardList}
       >
         {isDraft && canManage && (
@@ -581,7 +581,7 @@ export function PurchaseRequestDetail({
             Request details
           </h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoRow icon={Warehouse} label="Warehouse" value={warehouseName} />
+            <InfoRow icon={Building2} label="Building2" value={branchName} />
             <InfoRow
               icon={Calendar}
               label="Required by"

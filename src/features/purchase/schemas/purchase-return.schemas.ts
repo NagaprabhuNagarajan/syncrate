@@ -70,9 +70,9 @@ export const createPurchaseReturnSchema = z.object({
   supplierId: z
     .string({ required_error: "Supplier is required" })
     .min(1, "Supplier is required"),
-  warehouseId: z
-    .string({ required_error: "Warehouse is required" })
-    .min(1, "Warehouse is required"),
+  branchId: z
+    .string({ required_error: "Branch is required" })
+    .min(1, "Branch is required"),
   returnDate: z.string().trim().optional().or(z.literal("")),
   reason: z.enum(PURCHASE_RETURN_REASONS, {
     required_error: "Reason is required",

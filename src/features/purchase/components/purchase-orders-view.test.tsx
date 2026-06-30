@@ -31,7 +31,7 @@ function makeOrder(
     poNumber: "PO-00001",
     supplierId: "sup-1",
     supplierName: "Acme Supply",
-    warehouseId: null,
+    branchId: null,
     status: "draft",
     orderDate: new Date("2026-06-01"),
     expectedDeliveryDate: null,

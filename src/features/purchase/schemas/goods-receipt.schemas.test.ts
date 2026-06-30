@@ -69,7 +69,7 @@ describe("createGoodsReceiptSchema", () => {
   it("accepts a valid goods receipt payload", () => {
     const result = createGoodsReceiptSchema.safeParse({
       purchaseOrderId: "po-1",
-      warehouseId: "wh-1",
+      branchId: "wh-1",
       receivedDate: "2026-06-26",
       notes: "All good",
       items: [validLine],
@@ -80,16 +80,16 @@ describe("createGoodsReceiptSchema", () => {
   it("requires purchaseOrderId", () => {
     const result = createGoodsReceiptSchema.safeParse({
       purchaseOrderId: "",
-      warehouseId: "wh-1",
+      branchId: "wh-1",
       items: [validLine],
     });
     expect(result.success).toBe(false);
   });
 
-  it("requires warehouseId", () => {
+  it("requires branchId", () => {
     const result = createGoodsReceiptSchema.safeParse({
       purchaseOrderId: "po-1",
-      warehouseId: "",
+      branchId: "",
       items: [validLine],
     });
     expect(result.success).toBe(false);
@@ -98,7 +98,7 @@ describe("createGoodsReceiptSchema", () => {
   it("requires at least one line item", () => {
     const result = createGoodsReceiptSchema.safeParse({
       purchaseOrderId: "po-1",
-      warehouseId: "wh-1",
+      branchId: "wh-1",
       items: [],
     });
     expect(result.success).toBe(false);
@@ -107,7 +107,7 @@ describe("createGoodsReceiptSchema", () => {
   it("requires at least one line with a received quantity", () => {
     const result = createGoodsReceiptSchema.safeParse({
       purchaseOrderId: "po-1",
-      warehouseId: "wh-1",
+      branchId: "wh-1",
       items: [
         {
           purchaseOrderItemId: "poi-1",

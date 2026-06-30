@@ -63,7 +63,7 @@ export default async function NewPurchaseReturnPage({
         <PurchaseReturnForm
           organizationId={activeOrg.id}
           suppliers={options.suppliers}
-          warehouses={options.warehouses}
+          branches={options.branches}
           products={options.products}
         />
       </div>

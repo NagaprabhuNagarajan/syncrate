@@ -70,7 +70,7 @@ export async function adjustStockAction(
 ): Promise<InventoryActionResult<number>> {
   const parsed = adjustStockSchema.safeParse({
     productId: formData.get("productId"),
-    warehouseId: formData.get("warehouseId"),
+    branchId: formData.get("branchId"),
     quantity: formData.get("quantity"),
     reason: formData.get("reason") || undefined,
   });
@@ -103,7 +103,7 @@ export async function adjustStockAction(
       summary: `Adjusted stock by ${parsed.data.quantity} (new quantity ${result.data})`,
       metadata: {
         productId: parsed.data.productId,
-        warehouseId: parsed.data.warehouseId,
+        branchId: parsed.data.branchId,
         quantity: parsed.data.quantity,
       },
     });
@@ -121,8 +121,8 @@ export async function transferStockAction(
 ): Promise<InventoryActionResult<void>> {
   const parsed = transferStockSchema.safeParse({
     productId: formData.get("productId"),
-    fromWarehouseId: formData.get("fromWarehouseId"),
-    toWarehouseId: formData.get("toWarehouseId"),
+    fromBranchId: formData.get("fromBranchId"),
+    toBranchId: formData.get("toBranchId"),
     quantity: formData.get("quantity"),
     note: formData.get("note") || undefined,
   });
@@ -152,11 +152,11 @@ export async function transferStockAction(
       action: "inventory.transfer",
       entityType: "inventory",
       entityId: parsed.data.productId,
-      summary: `Transferred ${parsed.data.quantity} unit(s) between warehouses`,
+      summary: `Transferred ${parsed.data.quantity} unit(s) between branches`,
       metadata: {
         productId: parsed.data.productId,
-        warehouseId: parsed.data.fromWarehouseId,
-        toWarehouseId: parsed.data.toWarehouseId,
+        branchId: parsed.data.fromBranchId,
+        toBranchId: parsed.data.toBranchId,
         quantity: parsed.data.quantity,
       },
     });

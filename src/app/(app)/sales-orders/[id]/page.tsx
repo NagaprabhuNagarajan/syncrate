@@ -25,7 +25,7 @@ export async function generateMetadata({
 
 async function lookupName(
   supabase: AppSupabaseClient,
-  table: "customers" | "warehouses",
+  table: "customers" | "branches",
   id: string | null
 ): Promise<string | null> {
   if (!id) {return null;}
@@ -113,9 +113,9 @@ export default async function SalesOrderDetailPage({
 
   const so = result.data;
 
-  const [customerName, warehouseName, productNames] = await Promise.all([
+  const [customerName, branchName, productNames] = await Promise.all([
     lookupName(supabase, "customers", so.customerId),
-    lookupName(supabase, "warehouses", so.warehouseId),
+    lookupName(supabase, "branches", so.branchId),
     lookupProductNames(
       supabase,
       so.items.map((item) => item.productId)
@@ -126,7 +126,7 @@ export default async function SalesOrderDetailPage({
     <SalesOrderDetail
       salesOrder={so}
       customerName={customerName}
-      warehouseName={warehouseName}
+      branchName={branchName}
       productNames={productNames}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("sales.create")}

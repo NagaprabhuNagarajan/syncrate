@@ -63,7 +63,7 @@ export default async function NewSalesOrderPage({
         <SalesOrderForm
           organizationId={activeOrg.id}
           customers={options.customers}
-          warehouses={options.warehouses}
+          branches={options.branches}
           products={options.products}
         />
       </div>

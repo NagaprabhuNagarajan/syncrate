@@ -155,7 +155,7 @@ export class PurchaseOrderService {
       organization_id: organizationId,
       po_number: poNumber,
       supplier_id: input.supplierId,
-      warehouse_id: nz(input.warehouseId),
+      branch_id: nz(input.branchId),
       status: "draft",
       order_date: nz(input.orderDate) ?? new Date().toISOString().slice(0, 10),
       expected_delivery_date: nz(input.expectedDeliveryDate),
@@ -213,7 +213,7 @@ export class PurchaseOrderService {
       purchaseOrderId,
       {
         supplier_id: input.supplierId,
-        warehouse_id: nz(input.warehouseId),
+        branch_id: nz(input.branchId),
         order_date:
           nz(input.orderDate) ?? existing.orderDate.toISOString().slice(0, 10),
         expected_delivery_date: nz(input.expectedDeliveryDate),

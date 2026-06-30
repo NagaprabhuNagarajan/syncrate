@@ -47,7 +47,7 @@ function mapSalesReturn(row: DbSalesReturn): SalesReturn {
     returnNumber: row.return_number,
     invoiceId: row.invoice_id,
     customerId: row.customer_id,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     status: row.status,
     returnDate: new Date(row.return_date),
     reason: row.reason,
@@ -322,7 +322,7 @@ export class SalesReturnRepository {
   /**
    * Completes a return atomically via the `complete_sales_return` Postgres
    * function: in a single transaction it writes positive `sales_return` stock
-   * events per line (goods return to warehouse), credits the customer ledger
+   * events per line (goods return to branch), credits the customer ledger
    * (reduces receivable), auto-generates a credit note, and flips the status
    * to `completed`. Raises messages containing `not_found`, `invalid_status`,
    * `insufficient_stock` or `validation`.

@@ -35,7 +35,7 @@ beforeEach(() => {
 
 const PROD = "11111111-1111-1111-1111-111111111111";
 const PRODUCTS = [{ id: PROD, name: "Laptop", code: "LAP-1" }];
-const WAREHOUSES = [{ id: "22222222-2222-2222-2222-222222222222", name: "Main" }];
+const BRANCHES = [{ id: "22222222-2222-2222-2222-222222222222", name: "Main" }];
 
 function makeSerial(overrides: Partial<SerialNumber> = {}): SerialNumber {
   return {
@@ -44,7 +44,7 @@ function makeSerial(overrides: Partial<SerialNumber> = {}): SerialNumber {
     productId: PROD,
     productName: "Laptop",
     productCode: "LAP-1",
-    warehouseId: null,
+    branchId: null,
     batchId: null,
     serialNumber: "SN-0001",
     status: "in_stock",
@@ -68,7 +68,7 @@ describe("SerialForm (create)", () => {
       <SerialForm
         organizationId="org-1"
         products={PRODUCTS}
-        warehouses={WAREHOUSES}
+        branches={BRANCHES}
       />
     );
     expect(
@@ -86,7 +86,7 @@ describe("SerialForm (create)", () => {
       <SerialForm
         organizationId="org-1"
         products={PRODUCTS}
-        warehouses={WAREHOUSES}
+        branches={BRANCHES}
       />
     );
 
@@ -110,7 +110,7 @@ describe("SerialForm (create)", () => {
       <SerialForm
         organizationId="org-1"
         products={PRODUCTS}
-        warehouses={WAREHOUSES}
+        branches={BRANCHES}
         onSuccess={onSuccess}
       />
     );
@@ -145,7 +145,7 @@ describe("SerialForm (create)", () => {
       <SerialForm
         organizationId="org-1"
         products={PRODUCTS}
-        warehouses={WAREHOUSES}
+        branches={BRANCHES}
         onSuccess={onSuccess}
       />
     );
@@ -170,7 +170,7 @@ describe("SerialForm (create)", () => {
       <SerialForm
         organizationId="org-1"
         products={PRODUCTS}
-        warehouses={WAREHOUSES}
+        branches={BRANCHES}
       />
     );
 
@@ -192,7 +192,7 @@ describe("SerialForm (edit)", () => {
       <SerialForm
         organizationId="org-1"
         products={PRODUCTS}
-        warehouses={WAREHOUSES}
+        branches={BRANCHES}
         serial={makeSerial({ serialNumber: "SN-9", status: "reserved" })}
       />
     );
@@ -211,7 +211,7 @@ describe("SerialForm (edit)", () => {
       <SerialForm
         organizationId="org-1"
         products={PRODUCTS}
-        warehouses={WAREHOUSES}
+        branches={BRANCHES}
         serial={makeSerial()}
         onSuccess={onSuccess}
       />

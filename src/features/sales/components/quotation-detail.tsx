@@ -203,7 +203,7 @@ export function QuotationDetail({
   const org = searchParams.get("org");
   const withOrg = (path: string): string => (org ? `${path}?org=${org}` : path);
   const editHref = withOrg(`/sales/quotations/${quotation.id}/edit`);
-  const convertHref = withOrg(`/sales/orders/new?from=quotation&quotationId=${quotation.id}`);
+  const convertHref = withOrg(`/sales-orders/new?from=quotation&quotationId=${quotation.id}`);
 
   const { status } = quotation;
   const isDraft = status === "draft";

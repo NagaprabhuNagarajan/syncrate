@@ -304,7 +304,7 @@ export async function convertQuotationToSOAction(
 
   if (result.success) {
     revalidatePath("/sales/quotations");
-    revalidatePath("/sales/orders");
+    revalidatePath("/sales-orders");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,

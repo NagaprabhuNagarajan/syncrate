@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createGoodsReceiptAction } from "@/features/purchase/actions/goods-receipt.actions";
 import type { PurchaseOrderWithItems } from "@/features/purchase/types/purchase-order.types";
-import type { WarehouseOption } from "@/features/purchase/components/purchase-order-form";
+import type { BranchOption } from "@/features/purchase/components/purchase-order-form";
 import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ interface ReceiptLineValue {
 }
 
 interface GoodsReceiptFormValues {
-  warehouseId: string;
+  branchId: string;
   receivedDate: string;
   notes: string;
   items: ReceiptLineValue[];
@@ -63,14 +63,14 @@ interface GoodsReceiptFormProps {
   readonly organizationId: string;
   readonly purchaseOrder: PurchaseOrderWithItems;
   readonly productNames: Readonly<Record<string, string>>;
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
 }
 
 export function GoodsReceiptForm({
   organizationId,
   purchaseOrder,
   productNames,
-  warehouses,
+  branches,
 }: GoodsReceiptFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -95,7 +95,7 @@ export function GoodsReceiptForm({
 
   const { register, handleSubmit } = useForm<GoodsReceiptFormValues>({
     defaultValues: {
-      warehouseId: purchaseOrder.warehouseId ?? warehouses[0]?.id ?? "",
+      branchId: purchaseOrder.branchId ?? branches[0]?.id ?? "",
       receivedDate: new Date().toISOString().slice(0, 10),
       notes: "",
       items: meta.map((line) => ({
@@ -126,7 +126,7 @@ export function GoodsReceiptForm({
 
     const fd = new FormData();
     fd.append("purchaseOrderId", purchaseOrder.id);
-    fd.append("warehouseId", values.warehouseId);
+    fd.append("branchId", values.branchId);
     if (values.receivedDate) {
       fd.append("receivedDate", values.receivedDate);
     }
@@ -183,23 +183,23 @@ export function GoodsReceiptForm({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label
-              htmlFor="grn-warehouse"
+              htmlFor="grn-branch"
               className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Warehouse
+              Branch
               <span className="text-error-500 ml-0.5" aria-hidden="true">
                 *
               </span>
             </label>
             <select
-              id="grn-warehouse"
+              id="grn-branch"
               className={inputClass}
-              {...register("warehouseId")}
+              {...register("branchId")}
             >
-              {warehouses.length === 0 && <option value="">No warehouses</option>}
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
+              {branches.length === 0 && <option value="">No branches</option>}
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
                 </option>
               ))}
             </select>

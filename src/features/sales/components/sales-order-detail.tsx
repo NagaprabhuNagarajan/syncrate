@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   Calendar,
   Users,
-  Warehouse,
+  Building2,
   FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -176,7 +176,7 @@ function InfoRow({
 interface SalesOrderDetailProps {
   readonly salesOrder: SalesOrderWithItems;
   readonly customerName: string | null;
-  readonly warehouseName: string | null;
+  readonly branchName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
   readonly organizationId: string;
   readonly canManage: boolean;
@@ -187,7 +187,7 @@ interface SalesOrderDetailProps {
 export function SalesOrderDetail({
   salesOrder,
   customerName,
-  warehouseName,
+  branchName,
   productNames,
   organizationId,
   canManage,
@@ -202,9 +202,9 @@ export function SalesOrderDetail({
 
   const org = searchParams.get("org");
   const withOrg = (path: string): string => (org ? `${path}?org=${org}` : path);
-  const editHref = withOrg(`/sales/orders/${salesOrder.id}/edit`);
+  const editHref = withOrg(`/sales-orders/${salesOrder.id}/edit`);
   const newInvoiceHref = withOrg(
-    `/sales/invoices/new?from=so&soId=${salesOrder.id}`
+    `/invoices/new?from=so&soId=${salesOrder.id}`
   );
 
   const { status } = salesOrder;
@@ -314,9 +314,9 @@ export function SalesOrderDetail({
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <InfoRow icon={Users} label="Customer" value={customerName} />
             <InfoRow
-              icon={Warehouse}
-              label="Warehouse"
-              value={warehouseName}
+              icon={Building2}
+              label="Building2"
+              value={branchName}
             />
             <InfoRow
               icon={Calendar}

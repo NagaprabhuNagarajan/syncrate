@@ -27,10 +27,10 @@ function createClient(byTable: Record<string, BuilderResult>): {
 }
 
 describe("fetchPurchaseReturnOptions", () => {
-  it("maps suppliers, warehouses and products (coercing numeric columns)", async () => {
+  it("maps suppliers, branches and products (coercing numeric columns)", async () => {
     const { client, fromMock } = createClient({
       suppliers: { data: [{ id: "s1", name: "Supplier One" }] },
-      warehouses: { data: [{ id: "w1", name: "Main Warehouse" }] },
+      branches: { data: [{ id: "w1", name: "Main Branch" }] },
       products: {
         data: [
           {
@@ -46,36 +46,36 @@ describe("fetchPurchaseReturnOptions", () => {
     const options = await fetchPurchaseReturnOptions(client, "org-1");
 
     expect(options.suppliers).toEqual([{ id: "s1", name: "Supplier One" }]);
-    expect(options.warehouses).toEqual([{ id: "w1", name: "Main Warehouse" }]);
+    expect(options.branches).toEqual([{ id: "w1", name: "Main Branch" }]);
     expect(options.products).toEqual([
       { id: "p1", name: "Widget", purchasePrice: 9.99, gstRate: 12 },
     ]);
     expect(fromMock).toHaveBeenCalledWith("suppliers");
-    expect(fromMock).toHaveBeenCalledWith("warehouses");
+    expect(fromMock).toHaveBeenCalledWith("branches");
     expect(fromMock).toHaveBeenCalledWith("products");
   });
 
   it("returns empty arrays when queries yield no data", async () => {
     const { client } = createClient({
       suppliers: { data: [] },
-      warehouses: { data: [] },
+      branches: { data: [] },
       products: { data: [] },
     });
 
     const options = await fetchPurchaseReturnOptions(client, "org-1");
 
-    expect(options).toEqual({ suppliers: [], warehouses: [], products: [] });
+    expect(options).toEqual({ suppliers: [], branches: [], products: [] });
   });
 
   it("falls back to empty arrays when a query returns null data (error path)", async () => {
     const { client } = createClient({
       suppliers: { data: null },
-      warehouses: { data: null },
+      branches: { data: null },
       products: { data: null },
     });
 
     const options = await fetchPurchaseReturnOptions(client, "org-1");
 
-    expect(options).toEqual({ suppliers: [], warehouses: [], products: [] });
+    expect(options).toEqual({ suppliers: [], branches: [], products: [] });
   });
 });

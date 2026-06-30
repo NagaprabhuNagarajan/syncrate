@@ -45,7 +45,7 @@ const PRODUCTS = [
   { id: "prod-1", name: "Laptop", code: "LAP-1" },
   { id: "prod-2", name: "Printer", code: "PRN-1" },
 ];
-const WAREHOUSES = [{ id: "wh-1", name: "Main Warehouse" }];
+const BRANCHES = [{ id: "wh-1", name: "Main Branch" }];
 
 function makeSerial(overrides: Partial<SerialNumber> = {}): SerialNumber {
   return {
@@ -54,7 +54,7 @@ function makeSerial(overrides: Partial<SerialNumber> = {}): SerialNumber {
     productId: "prod-1",
     productName: "Laptop",
     productCode: "LAP-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     batchId: null,
     serialNumber: "SN-0001",
     status: "in_stock",
@@ -86,7 +86,7 @@ function renderView(props: Partial<Parameters<typeof SerialsView>[0]> = {}) {
       organizationId="org-1"
       result={makeResult()}
       products={PRODUCTS}
-      warehouses={WAREHOUSES}
+      branches={BRANCHES}
       filters={{}}
       canManage
       {...props}
@@ -105,7 +105,7 @@ describe("SerialsView", () => {
       screen.getByRole("heading", { name: /serial numbers/i })
     ).toBeInTheDocument();
     expect(screen.getByText("SN-0001")).toBeInTheDocument();
-    expect(screen.getByText("Main Warehouse")).toBeInTheDocument();
+    expect(screen.getByText("Main Branch")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /register serials/i })
     ).toBeInTheDocument();
@@ -243,10 +243,10 @@ describe("SerialsView", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders an em dash for a missing warehouse", () => {
+  it("renders an em dash for a missing branch", () => {
     renderView({
       result: makeResult({
-        items: [makeSerial({ warehouseId: null, notes: null })],
+        items: [makeSerial({ branchId: null, notes: null })],
       }),
     });
     expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(1);

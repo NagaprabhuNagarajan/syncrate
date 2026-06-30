@@ -34,7 +34,7 @@ function buildOrder(overrides: Partial<PurchaseOrder> = {}): PurchaseOrder {
     organizationId: "org-1",
     poNumber: "PO-00001",
     supplierId: "sup-1",
-    warehouseId: null,
+    branchId: null,
     status: "draft",
     orderDate: new Date("2026-06-01"),
     expectedDeliveryDate: null,

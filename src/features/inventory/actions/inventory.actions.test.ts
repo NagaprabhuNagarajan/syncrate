@@ -87,7 +87,7 @@ describe("adjustStockAction", () => {
   it("returns validation error on invalid input", async () => {
     const result = await adjustStockAction(
       "org-1",
-      fd({ productId: "x", warehouseId: WH_A, quantity: "1" })
+      fd({ productId: "x", branchId: WH_A, quantity: "1" })
     );
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -100,7 +100,7 @@ describe("adjustStockAction", () => {
     unauthenticated();
     const result = await adjustStockAction(
       "org-1",
-      fd({ productId: PRODUCT, warehouseId: WH_A, quantity: "5" })
+      fd({ productId: PRODUCT, branchId: WH_A, quantity: "5" })
     );
     expect(result).toEqual({
       success: false,
@@ -116,7 +116,7 @@ describe("adjustStockAction", () => {
     );
     const result = await adjustStockAction(
       "org-1",
-      fd({ productId: PRODUCT, warehouseId: WH_A, quantity: "5" })
+      fd({ productId: PRODUCT, branchId: WH_A, quantity: "5" })
     );
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -137,14 +137,14 @@ describe("adjustStockAction", () => {
 
     const result = await adjustStockAction(
       "org-1",
-      fd({ productId: PRODUCT, warehouseId: WH_A, quantity: "5", reason: "recount" })
+      fd({ productId: PRODUCT, branchId: WH_A, quantity: "5", reason: "recount" })
     );
 
     expect(result.success).toBe(true);
     expect(mockInventoryService.adjustStock).toHaveBeenCalledWith(
       expect.objectContaining({
         productId: PRODUCT,
-        warehouseId: WH_A,
+        branchId: WH_A,
         quantity: 5,
       }),
       "org-1",
@@ -155,7 +155,7 @@ describe("adjustStockAction", () => {
       expect.objectContaining({
         action: "inventory.adjust",
         entityType: "inventory",
-        metadata: { productId: PRODUCT, warehouseId: WH_A, quantity: 5 },
+        metadata: { productId: PRODUCT, branchId: WH_A, quantity: 5 },
       })
     );
   });
@@ -171,7 +171,7 @@ describe("adjustStockAction", () => {
     });
     await adjustStockAction(
       "org-1",
-      fd({ productId: PRODUCT, warehouseId: WH_A, quantity: "-5" })
+      fd({ productId: PRODUCT, branchId: WH_A, quantity: "-5" })
     );
     expect(revalidateMock).not.toHaveBeenCalled();
     expect(auditLogMock).not.toHaveBeenCalled();
@@ -183,13 +183,13 @@ describe("adjustStockAction", () => {
 // ─────────────────────────────────────────────────────────────
 
 describe("transferStockAction", () => {
-  it("returns validation error when warehouses are equal", async () => {
+  it("returns validation error when branches are equal", async () => {
     const result = await transferStockAction(
       "org-1",
       fd({
         productId: PRODUCT,
-        fromWarehouseId: WH_A,
-        toWarehouseId: WH_A,
+        fromBranchId: WH_A,
+        toBranchId: WH_A,
         quantity: "5",
       })
     );
@@ -209,8 +209,8 @@ describe("transferStockAction", () => {
       "org-1",
       fd({
         productId: PRODUCT,
-        fromWarehouseId: WH_A,
-        toWarehouseId: WH_B,
+        fromBranchId: WH_A,
+        toBranchId: WH_B,
         quantity: "5",
       })
     );
@@ -235,8 +235,8 @@ describe("transferStockAction", () => {
       "org-1",
       fd({
         productId: PRODUCT,
-        fromWarehouseId: WH_A,
-        toWarehouseId: WH_B,
+        fromBranchId: WH_A,
+        toBranchId: WH_B,
         quantity: "8",
       })
     );
@@ -244,8 +244,8 @@ describe("transferStockAction", () => {
     expect(result.success).toBe(true);
     expect(mockInventoryService.transferStock).toHaveBeenCalledWith(
       expect.objectContaining({
-        fromWarehouseId: WH_A,
-        toWarehouseId: WH_B,
+        fromBranchId: WH_A,
+        toBranchId: WH_B,
         quantity: 8,
       }),
       "org-1",

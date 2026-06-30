@@ -32,7 +32,7 @@ function makeReceipt(
     purchaseOrderId: "po-1",
     poNumber: "PO-00001",
     supplierName: "Acme Supply",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     receivedDate: new Date("2026-06-26"),
     status: "completed",
     notes: null,

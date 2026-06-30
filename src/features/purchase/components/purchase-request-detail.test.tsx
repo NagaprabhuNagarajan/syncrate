@@ -47,7 +47,7 @@ function makeRequest(
     organizationId: "org-1",
     requestNumber: "PR-00001",
     status,
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     requiredDate: new Date("2026-06-10"),
     notes: null,
     approvedBy: null,
@@ -86,7 +86,7 @@ function renderDetail(
   return render(
     <PurchaseRequestDetail
       purchaseRequest={request}
-      warehouseName="Main WH"
+      branchName="Main WH"
       productNames={{ "p-1": "Widget" }}
       suppliers={[{ id: "sup-1", name: "Acme Supply" }]}
       organizationId="org-1"

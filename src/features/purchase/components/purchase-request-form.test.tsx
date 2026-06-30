@@ -31,7 +31,7 @@ function renderForm(purchaseRequest?: PurchaseRequestWithItems) {
   return render(
     <PurchaseRequestForm
       organizationId="org-1"
-      warehouses={[{ id: "wh-1", name: "Main WH" }]}
+      branches={[{ id: "wh-1", name: "Main WH" }]}
       products={products}
       purchaseRequest={purchaseRequest}
     />
@@ -106,7 +106,7 @@ describe("PurchaseRequestForm", () => {
       organizationId: "org-1",
       requestNumber: "PR-00001",
       status: "draft",
-      warehouseId: "wh-1",
+      branchId: "wh-1",
       requiredDate: null,
       notes: null,
       approvedBy: null,

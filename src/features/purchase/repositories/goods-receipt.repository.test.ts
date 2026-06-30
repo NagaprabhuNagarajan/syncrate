@@ -86,7 +86,7 @@ function buildDbReceipt(
     organization_id: "org-1",
     grn_number: "GRN-00001",
     purchase_order_id: "po-1",
-    warehouse_id: "wh-1",
+    branch_id: "wh-1",
     received_date: "2026-06-01",
     status: "completed",
     notes: "ok",
@@ -289,7 +289,7 @@ describe("GoodsReceiptRepository", () => {
       const args = {
         p_organization_id: "org-1",
         p_purchase_order_id: "po-1",
-        p_warehouse_id: "wh-1",
+        p_branch_id: "wh-1",
         p_grn_number: "GRN-00001",
         p_received_date: "2026-06-26",
         p_notes: null,
@@ -319,7 +319,7 @@ describe("GoodsReceiptRepository", () => {
       const result = await new GoodsReceiptRepository(client).receiveGoodsRpc({
         p_organization_id: "org-1",
         p_purchase_order_id: "po-1",
-        p_warehouse_id: "wh-1",
+        p_branch_id: "wh-1",
         p_grn_number: "GRN-00001",
         p_received_date: null,
         p_notes: null,

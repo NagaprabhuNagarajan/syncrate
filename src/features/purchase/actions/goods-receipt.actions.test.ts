@@ -58,7 +58,7 @@ const VALID_ITEMS = JSON.stringify([
 function grnFormData(overrides: Record<string, string> = {}): FormData {
   const form = new FormData();
   form.set("purchaseOrderId", "po-1");
-  form.set("warehouseId", "wh-1");
+  form.set("branchId", "wh-1");
   form.set("items", VALID_ITEMS);
   for (const [key, value] of Object.entries(overrides)) {
     form.set(key, value);
@@ -71,7 +71,7 @@ const fullReceipt: GoodsReceiptWithItems = {
   organizationId: "org-1",
   grnNumber: "GRN-00001",
   purchaseOrderId: "po-1",
-  warehouseId: "wh-1",
+  branchId: "wh-1",
   receivedDate: new Date(),
   status: "completed",
   notes: null,
@@ -103,7 +103,7 @@ describe("createGoodsReceiptAction", () => {
   it("returns a validation error when items are missing", async () => {
     const form = new FormData();
     form.set("purchaseOrderId", "po-1");
-    form.set("warehouseId", "wh-1");
+    form.set("branchId", "wh-1");
     const result = await createGoodsReceiptAction("org-1", form);
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -111,10 +111,10 @@ describe("createGoodsReceiptAction", () => {
     }
   });
 
-  it("returns a validation error on schema failure (missing warehouse)", async () => {
+  it("returns a validation error on schema failure (missing branch)", async () => {
     const result = await createGoodsReceiptAction(
       "org-1",
-      grnFormData({ warehouseId: "" })
+      grnFormData({ branchId: "" })
     );
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -162,7 +162,7 @@ describe("createGoodsReceiptAction", () => {
     expect(mockService.createGoodsReceipt).toHaveBeenCalledWith(
       expect.objectContaining({
         purchaseOrderId: "po-1",
-        warehouseId: "wh-1",
+        branchId: "wh-1",
         items: [
           expect.objectContaining({
             purchaseOrderItemId: "poi-1",

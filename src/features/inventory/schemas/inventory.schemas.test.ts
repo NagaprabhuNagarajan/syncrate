@@ -13,7 +13,7 @@ describe("adjustStockSchema", () => {
   it("accepts a positive signed quantity", () => {
     const result = adjustStockSchema.safeParse({
       productId: PRODUCT,
-      warehouseId: WH_A,
+      branchId: WH_A,
       quantity: 5,
     });
     expect(result.success).toBe(true);
@@ -22,7 +22,7 @@ describe("adjustStockSchema", () => {
   it("accepts a negative signed quantity", () => {
     const result = adjustStockSchema.safeParse({
       productId: PRODUCT,
-      warehouseId: WH_A,
+      branchId: WH_A,
       quantity: -3,
     });
     expect(result.success).toBe(true);
@@ -31,7 +31,7 @@ describe("adjustStockSchema", () => {
   it("rejects a zero quantity", () => {
     const result = adjustStockSchema.safeParse({
       productId: PRODUCT,
-      warehouseId: WH_A,
+      branchId: WH_A,
       quantity: 0,
     });
     expect(result.success).toBe(false);
@@ -40,7 +40,7 @@ describe("adjustStockSchema", () => {
   it("coerces a numeric-string quantity", () => {
     const result = adjustStockSchema.safeParse({
       productId: PRODUCT,
-      warehouseId: WH_A,
+      branchId: WH_A,
       quantity: "-7",
     });
     expect(result.success).toBe(true);
@@ -52,7 +52,7 @@ describe("adjustStockSchema", () => {
   it("rejects an invalid product uuid", () => {
     const result = adjustStockSchema.safeParse({
       productId: "nope",
-      warehouseId: WH_A,
+      branchId: WH_A,
       quantity: 1,
     });
     expect(result.success).toBe(false);
@@ -60,21 +60,21 @@ describe("adjustStockSchema", () => {
 });
 
 describe("transferStockSchema", () => {
-  it("accepts a positive quantity across distinct warehouses", () => {
+  it("accepts a positive quantity across distinct branches", () => {
     const result = transferStockSchema.safeParse({
       productId: PRODUCT,
-      fromWarehouseId: WH_A,
-      toWarehouseId: WH_B,
+      fromBranchId: WH_A,
+      toBranchId: WH_B,
       quantity: 4,
     });
     expect(result.success).toBe(true);
   });
 
-  it("rejects identical source and destination warehouses", () => {
+  it("rejects identical source and destination branches", () => {
     const result = transferStockSchema.safeParse({
       productId: PRODUCT,
-      fromWarehouseId: WH_A,
-      toWarehouseId: WH_A,
+      fromBranchId: WH_A,
+      toBranchId: WH_A,
       quantity: 4,
     });
     expect(result.success).toBe(false);
@@ -83,8 +83,8 @@ describe("transferStockSchema", () => {
   it("rejects a non-positive quantity", () => {
     const result = transferStockSchema.safeParse({
       productId: PRODUCT,
-      fromWarehouseId: WH_A,
-      toWarehouseId: WH_B,
+      fromBranchId: WH_A,
+      toBranchId: WH_B,
       quantity: 0,
     });
     expect(result.success).toBe(false);
@@ -95,7 +95,7 @@ describe("openingStockSchema", () => {
   it("accepts a non-negative quantity", () => {
     const result = openingStockSchema.safeParse({
       productId: PRODUCT,
-      warehouseId: WH_A,
+      branchId: WH_A,
       quantity: 0,
     });
     expect(result.success).toBe(true);
@@ -104,7 +104,7 @@ describe("openingStockSchema", () => {
   it("rejects a negative quantity", () => {
     const result = openingStockSchema.safeParse({
       productId: PRODUCT,
-      warehouseId: WH_A,
+      branchId: WH_A,
       quantity: -1,
     });
     expect(result.success).toBe(false);

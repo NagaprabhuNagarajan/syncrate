@@ -61,7 +61,7 @@ export const createSalesReturnSchema = z.object({
   customerId: z
     .string({ required_error: "Customer is required" })
     .min(1, "Customer is required"),
-  warehouseId: z.string().trim().optional().or(z.literal("")),
+  branchId: z.string().trim().optional().or(z.literal("")),
   returnDate: z.string().trim().optional().or(z.literal("")),
   reason: z.enum(SALES_RETURN_REASONS, {
     required_error: "Return reason is required",

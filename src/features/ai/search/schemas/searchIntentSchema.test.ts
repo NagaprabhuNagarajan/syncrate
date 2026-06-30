@@ -59,7 +59,7 @@ describe("searchIntentSchema", () => {
 
   it("rejects an unknown entity", () => {
     const result = searchIntentSchema.safeParse(
-      buildIntent({ entity: "warehouse" as SearchIntent["entity"] })
+      buildIntent({ entity: "branch" as SearchIntent["entity"] })
     );
     expect(result.success).toBe(false);
   });

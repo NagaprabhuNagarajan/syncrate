@@ -46,7 +46,7 @@ function buildRequest(
     organizationId: "org-1",
     requestNumber: "PR-00001",
     status: "draft",
-    warehouseId: null,
+    branchId: null,
     requiredDate: null,
     notes: null,
     approvedBy: null,
@@ -353,7 +353,7 @@ const PO: PurchaseOrderWithItems = {
   organizationId: "org-1",
   poNumber: "PO-00001",
   supplierId: "sup-1",
-  warehouseId: null,
+  branchId: null,
   status: "draft",
   orderDate: new Date("2026-06-01"),
   expectedDeliveryDate: null,
@@ -376,7 +376,7 @@ const PO: PurchaseOrderWithItems = {
 describe("PurchaseRequestService.convertToPurchaseOrder", () => {
   it("creates a PO from an approved request and stamps converted_po_id", async () => {
     mockRepo.findWithItems.mockResolvedValue(
-      withItems(buildRequest({ status: "approved", warehouseId: "wh-1" }), [
+      withItems(buildRequest({ status: "approved", branchId: "wh-1" }), [
         SAMPLE_ITEM,
       ])
     );
@@ -398,11 +398,11 @@ describe("PurchaseRequestService.convertToPurchaseOrder", () => {
     }
     const poInput = createPurchaseOrderMock.mock.calls[0][0] as {
       supplierId: string;
-      warehouseId?: string;
+      branchId?: string;
       items: Array<{ productId: string; quantity: number; unitPrice: number }>;
     };
     expect(poInput.supplierId).toBe("sup-1");
-    expect(poInput.warehouseId).toBe("wh-1");
+    expect(poInput.branchId).toBe("wh-1");
     expect(poInput.items[0]).toMatchObject({
       productId: "p-a",
       quantity: 4,

@@ -32,7 +32,6 @@ export interface Invoice {
   readonly salesOrderId: string | null;
   readonly quotationId: string | null;
   readonly branchId: string | null;
-  readonly warehouseId: string | null;
   readonly salespersonId: string | null;
   readonly referenceNumber: string | null;
   readonly invoiceDate: Date;
@@ -124,7 +123,6 @@ export interface CreateInvoiceInput {
   readonly salesOrderId?: string;
   readonly quotationId?: string;
   readonly branchId?: string;
-  readonly warehouseId?: string;
   readonly invoiceDate?: string;
   readonly dueDate?: string;
   readonly paymentTermsDays?: number;

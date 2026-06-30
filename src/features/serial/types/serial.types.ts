@@ -17,7 +17,7 @@ export interface SerialNumber {
   /** Joined from the product for display; null if the product is missing. */
   readonly productName: string | null;
   readonly productCode: string | null;
-  readonly warehouseId: string | null;
+  readonly branchId: string | null;
   readonly batchId: string | null;
   readonly serialNumber: string;
   readonly status: SerialStatus;
@@ -36,7 +36,7 @@ export interface SerialNumber {
 export interface CreateSerialInput {
   readonly productId: string;
   readonly serialNumber: string;
-  readonly warehouseId?: string | null;
+  readonly branchId?: string | null;
   readonly batchId?: string | null;
   readonly notes?: string;
 }
@@ -44,14 +44,14 @@ export interface CreateSerialInput {
 export interface BulkCreateSerialInput {
   readonly productId: string;
   readonly serialNumbers: readonly string[];
-  readonly warehouseId?: string | null;
+  readonly branchId?: string | null;
   readonly batchId?: string | null;
   readonly notes?: string;
 }
 
 export interface UpdateSerialInput {
   readonly serialNumber?: string;
-  readonly warehouseId?: string | null;
+  readonly branchId?: string | null;
   readonly batchId?: string | null;
   readonly status?: SerialStatus;
   readonly notes?: string;

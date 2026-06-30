@@ -41,7 +41,7 @@ interface ProductJoin {
   purchase_price: number;
 }
 
-interface WarehouseJoin {
+interface BranchJoin {
   name: string;
   code: string;
 }
@@ -50,18 +50,18 @@ interface LevelRow {
   id: string;
   organization_id: string;
   product_id: string;
-  warehouse_id: string;
+  branch_id: string;
   quantity: number;
   reserved_quantity: number;
   products: ProductJoin | ProductJoin[] | null;
-  warehouses: WarehouseJoin | WarehouseJoin[] | null;
+  branches: BranchJoin | BranchJoin[] | null;
 }
 
 interface TransactionRow {
   id: string;
   organization_id: string;
   product_id: string;
-  warehouse_id: string;
+  branch_id: string;
   batch_id: string | null;
   type: InventoryTransactionType;
   quantity: number;
@@ -72,14 +72,14 @@ interface TransactionRow {
   created_at: string;
   created_by: string | null;
   products: Pick<ProductJoin, "name" | "code"> | ProductJoin[] | null;
-  warehouses: WarehouseJoin | WarehouseJoin[] | null;
+  branches: BranchJoin | BranchJoin[] | null;
 }
 
 interface RawLevelRow {
   id: string;
   organization_id: string;
   product_id: string;
-  warehouse_id: string;
+  branch_id: string;
   quantity: number;
   reserved_quantity: number;
 }
@@ -105,7 +105,7 @@ function mapRawLevel(row: RawLevelRow): StockLevel {
     id: row.id,
     organizationId: row.organization_id,
     productId: row.product_id,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     quantity: Number(row.quantity),
     reservedQuantity: Number(row.reserved_quantity),
   };
@@ -113,31 +113,31 @@ function mapRawLevel(row: RawLevelRow): StockLevel {
 
 function mapLevel(row: LevelRow): InventoryLevel {
   const product = one(row.products);
-  const warehouse = one(row.warehouses);
+  const branch = one(row.branches);
   return {
     id: row.id,
     organizationId: row.organization_id,
     productId: row.product_id,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     quantity: Number(row.quantity),
     reservedQuantity: Number(row.reserved_quantity),
     productName: product?.name ?? "",
     productCode: product?.code ?? "",
     reorderLevel: product ? Number(product.reorder_level) : 0,
     purchasePrice: product ? Number(product.purchase_price) : 0,
-    warehouseName: warehouse?.name ?? "",
-    warehouseCode: warehouse?.code ?? "",
+    branchName: branch?.name ?? "",
+    branchCode: branch?.code ?? "",
   };
 }
 
 function mapTransaction(row: TransactionRow): InventoryTransaction {
   const product = one(row.products);
-  const warehouse = one(row.warehouses);
+  const branch = one(row.branches);
   return {
     id: row.id,
     organizationId: row.organization_id,
     productId: row.product_id,
-    warehouseId: row.warehouse_id,
+    branchId: row.branch_id,
     batchId: row.batch_id,
     type: row.type,
     quantity: Number(row.quantity),
@@ -149,7 +149,7 @@ function mapTransaction(row: TransactionRow): InventoryTransaction {
     createdBy: row.created_by,
     productName: product?.name ?? null,
     productCode: product?.code ?? null,
-    warehouseName: warehouse?.name ?? null,
+    branchName: branch?.name ?? null,
   };
 }
 
@@ -158,24 +158,24 @@ function mapTransaction(row: TransactionRow): InventoryTransaction {
 // ─────────────────────────────────────────────────────────────
 
 const LEVEL_SELECT =
-  "id,organization_id,product_id,warehouse_id,quantity,reserved_quantity,products!inner(name,code,reorder_level,purchase_price),warehouses!inner(name,code)";
+  "id,organization_id,product_id,branch_id,quantity,reserved_quantity,products!inner(name,code,reorder_level,purchase_price),branches!inner(name,code)";
 
 const TX_SELECT =
-  "id,organization_id,product_id,warehouse_id,batch_id,type,quantity,running_balance,reference_type,reference_id,note,created_at,created_by,products(name,code),warehouses(name,code)";
+  "id,organization_id,product_id,branch_id,batch_id,type,quantity,running_balance,reference_type,reference_id,note,created_at,created_by,products(name,code),branches(name,code)";
 
 export class InventoryRepository {
   constructor(private readonly supabase: AppSupabaseClient) {}
 
-  /** Raw snapshot for one (product, warehouse) pair, or null if untracked. */
+  /** Raw snapshot for one (product, branch) pair, or null if untracked. */
   async getLevel(
     productId: string,
-    warehouseId: string
+    branchId: string
   ): Promise<StockLevel | null> {
     const { data, error } = await this.supabase
       .from("inventory")
-      .select("id,organization_id,product_id,warehouse_id,quantity,reserved_quantity")
+      .select("id,organization_id,product_id,branch_id,quantity,reserved_quantity")
       .eq("product_id", productId)
-      .eq("warehouse_id", warehouseId)
+      .eq("branch_id", branchId)
       .maybeSingle();
 
     if (error || !data) {
@@ -201,8 +201,8 @@ export class InventoryRepository {
       .select(LEVEL_SELECT, { count: "exact" })
       .eq("organization_id", organizationId);
 
-    if (params.warehouseId) {
-      query = query.eq("warehouse_id", params.warehouseId);
+    if (params.branchId) {
+      query = query.eq("branch_id", params.branchId);
     }
 
     if (params.search) {
@@ -255,8 +255,8 @@ export class InventoryRepository {
     if (params.productId) {
       query = query.eq("product_id", params.productId);
     }
-    if (params.warehouseId) {
-      query = query.eq("warehouse_id", params.warehouseId);
+    if (params.branchId) {
+      query = query.eq("branch_id", params.branchId);
     }
 
     const { data, error } = await query
@@ -280,7 +280,7 @@ export class InventoryRepository {
   }
 
   /**
-   * Moves stock between two warehouses atomically. The Postgres function writes
+   * Moves stock between two branches atomically. The Postgres function writes
    * both ledger rows and updates both snapshots in a single transaction, and
    * raises on `invalid_quantity`, `same_warehouse`, or `insufficient_stock`.
    */

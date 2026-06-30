@@ -26,7 +26,7 @@ export interface PurchaseRequest {
   readonly organizationId: string;
   readonly requestNumber: string;
   readonly status: PurchaseRequestStatus;
-  readonly warehouseId: string | null;
+  readonly branchId: string | null;
   readonly requiredDate: Date | null;
   readonly notes: string | null;
   readonly approvedBy: string | null;
@@ -60,9 +60,9 @@ export interface PurchaseRequestWithItems extends PurchaseRequest {
   readonly items: readonly PurchaseRequestItem[];
 }
 
-/** A list row enriched with the joined warehouse name. */
+/** A list row enriched with the joined branch name. */
 export interface PurchaseRequestListItem extends PurchaseRequest {
-  readonly warehouseName: string | null;
+  readonly branchName: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ export interface CreatePurchaseRequestItemInput {
 
 export interface CreatePurchaseRequestInput {
   readonly requestNumber?: string;
-  readonly warehouseId?: string;
+  readonly branchId?: string;
   readonly requiredDate?: string;
   readonly notes?: string;
   readonly items: readonly CreatePurchaseRequestItemInput[];

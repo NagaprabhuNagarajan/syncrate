@@ -95,7 +95,7 @@ export default async function EditPurchaseOrderPage({
           organizationId={activeOrg.id}
           purchaseOrder={result.data}
           suppliers={options.suppliers}
-          warehouses={options.warehouses}
+          branches={options.branches}
           products={options.products}
         />
       </div>

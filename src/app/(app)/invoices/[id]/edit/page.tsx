@@ -47,12 +47,12 @@ async function loadProducts(
   }));
 }
 
-async function loadWarehouses(
+async function loadBranches(
   supabase: AppSupabaseClient,
   organizationId: string
 ) {
   const { data } = await supabase
-    .from("warehouses")
+    .from("branches")
     .select("id, name")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
@@ -122,13 +122,13 @@ export default async function EditInvoicePage({
 
   // Only draft invoices can be edited
   if (invoice.status !== "draft") {
-    redirect(`/sales/invoices/${id}`);
+    redirect(`/invoices/${id}`);
   }
 
-  const [customers, products, warehouses] = await Promise.all([
+  const [customers, products, branches] = await Promise.all([
     loadCustomers(supabase, activeOrg.id),
     loadProducts(supabase, activeOrg.id),
-    loadWarehouses(supabase, activeOrg.id),
+    loadBranches(supabase, activeOrg.id),
   ]);
 
   const orgState = context.organization.state;
@@ -140,7 +140,7 @@ export default async function EditInvoicePage({
         orgState={orgState}
         customers={customers}
         products={products}
-        warehouses={warehouses}
+        branches={branches}
         invoice={invoice}
       />
     </div>

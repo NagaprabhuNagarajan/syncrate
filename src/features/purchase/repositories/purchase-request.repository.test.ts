@@ -90,7 +90,7 @@ function buildDbRequest(
     organization_id: "org-1",
     request_number: "PR-00001",
     status: "draft",
-    warehouse_id: "wh-1",
+    branch_id: "wh-1",
     required_date: "2026-06-10",
     notes: "note",
     approved_by: null,
@@ -229,39 +229,39 @@ describe("PurchaseRequestRepository", () => {
   });
 
   describe("list", () => {
-    it("maps rows, reads the joined warehouse name, applies defaults", async () => {
+    it("maps rows, reads the joined branch name, applies defaults", async () => {
       const rows = [
-        { ...buildDbRequest(), warehouses: { name: "Main WH" } },
+        { ...buildDbRequest(), branches: { name: "Main WH" } },
       ];
       const { client, builders } = createMockClient([
         { data: rows, error: null, count: 5 },
       ]);
       const result = await new PurchaseRequestRepository(client).list("org-1");
-      expect(result.items[0].warehouseName).toBe("Main WH");
+      expect(result.items[0].branchName).toBe("Main WH");
       expect(result.total).toBe(5);
       expect(result.pageSize).toBe(20);
       expect(builders[0].eq).toHaveBeenCalledWith("organization_id", "org-1");
       expect(builders[0].range).toHaveBeenCalledWith(0, 19);
     });
 
-    it("reads the warehouse name from an array join shape", async () => {
+    it("reads the branch name from an array join shape", async () => {
       const rows = [
-        { ...buildDbRequest(), warehouses: [{ name: "Depot" }] },
+        { ...buildDbRequest(), branches: [{ name: "Depot" }] },
       ];
       const { client } = createMockClient([
         { data: rows, error: null, count: 1 },
       ]);
       const result = await new PurchaseRequestRepository(client).list("org-1");
-      expect(result.items[0].warehouseName).toBe("Depot");
+      expect(result.items[0].branchName).toBe("Depot");
     });
 
-    it("defaults warehouse name to null when the join is empty", async () => {
-      const rows = [{ ...buildDbRequest(), warehouses: null }];
+    it("defaults branch name to null when the join is empty", async () => {
+      const rows = [{ ...buildDbRequest(), branches: null }];
       const { client } = createMockClient([
         { data: rows, error: null, count: 1 },
       ]);
       const result = await new PurchaseRequestRepository(client).list("org-1");
-      expect(result.items[0].warehouseName).toBeNull();
+      expect(result.items[0].branchName).toBeNull();
     });
 
     it("applies status filter, search, custom sort and pagination", async () => {

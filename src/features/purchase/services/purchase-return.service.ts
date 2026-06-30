@@ -164,7 +164,7 @@ export class PurchaseReturnService {
       return_number: returnNumber,
       purchase_order_id: nz(input.purchaseOrderId),
       supplier_id: input.supplierId,
-      warehouse_id: input.warehouseId,
+      branch_id: input.branchId,
       status: "draft",
       return_date:
         nz(input.returnDate) ?? new Date().toISOString().slice(0, 10),
@@ -222,7 +222,7 @@ export class PurchaseReturnService {
       {
         purchase_order_id: nz(input.purchaseOrderId),
         supplier_id: input.supplierId,
-        warehouse_id: input.warehouseId,
+        branch_id: input.branchId,
         return_date:
           nz(input.returnDate) ?? existing.returnDate.toISOString().slice(0, 10),
         reason: input.reason as DbReturnReason,

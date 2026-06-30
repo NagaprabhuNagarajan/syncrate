@@ -40,7 +40,7 @@ You may target exactly one of these entities:
 - invoice: sales invoices (statuses: draft, posted, cancelled; payment standing: unpaid, partial, paid, overdue)
 - customer: customers/CRM (statuses: active, inactive, blacklisted, archived)
 - product: catalog products (statuses: draft, active, discontinued, archived)
-- inventory: stock levels per product/warehouse (use lowStock=true for "below/at reorder level" or "low stock")
+- inventory: stock levels per product/branch (use lowStock=true for "below/at reorder level" or "low stock")
 - supplier: suppliers (statuses: active, inactive, archived)
 - customer_payment: payments received from customers
 - supplier_payment: payments made to suppliers
@@ -308,7 +308,7 @@ export class SmartSearchService {
       result.items.map((lvl) => ({
         id: lvl.id,
         title: lvl.productName,
-        subtitle: lvl.warehouseName,
+        subtitle: lvl.branchName,
         meta: `${lvl.quantity} in stock (reorder ${lvl.reorderLevel})`,
         amount: null,
       }))

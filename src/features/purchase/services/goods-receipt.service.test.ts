@@ -66,7 +66,7 @@ function buildPo(
     organizationId: "org-1",
     poNumber: "PO-00001",
     supplierId: "sup-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status: "approved" as PurchaseOrderStatus,
     orderDate: new Date("2026-06-01"),
     expectedDeliveryDate: null,
@@ -100,7 +100,7 @@ function buildReceipt(): GoodsReceipt {
     organizationId: "org-1",
     grnNumber: "GRN-00001",
     purchaseOrderId: "po-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     receivedDate: new Date("2026-06-26"),
     status: "completed",
     notes: null,
@@ -116,7 +116,7 @@ function fullReceipt(): GoodsReceiptWithItems {
 
 const PARTIAL_INPUT: CreateGoodsReceiptInput = {
   purchaseOrderId: "po-1",
-  warehouseId: "wh-1",
+  branchId: "wh-1",
   items: [
     { purchaseOrderItemId: "poi-a", productId: "prod-a", receivedQuantity: 4, rejectedQuantity: 0 },
     { purchaseOrderItemId: "poi-b", productId: "prod-b", receivedQuantity: 10, rejectedQuantity: 0 },
@@ -158,7 +158,7 @@ describe("GoodsReceiptService.createGoodsReceipt", () => {
     >;
     expect(args.p_organization_id).toBe("org-1");
     expect(args.p_purchase_order_id).toBe("po-1");
-    expect(args.p_warehouse_id).toBe("wh-1");
+    expect(args.p_branch_id).toBe("wh-1");
     expect(args.p_grn_number).toBe("GRN-00008"); // total 7 + 1
     expect(args.p_notes).toBe("delivered");
 
@@ -206,7 +206,7 @@ describe("GoodsReceiptService.createGoodsReceipt", () => {
     await service.createGoodsReceipt(
       {
         purchaseOrderId: "po-1",
-        warehouseId: "wh-1",
+        branchId: "wh-1",
         items: [
           { purchaseOrderItemId: "poi-a", productId: "prod-a", receivedQuantity: 0, rejectedQuantity: 3 },
           { purchaseOrderItemId: "poi-b", productId: "prod-b", receivedQuantity: 10, rejectedQuantity: 0 },
@@ -349,7 +349,7 @@ describe("GoodsReceiptService.createGoodsReceipt", () => {
     const result = await service.createGoodsReceipt(
       {
         purchaseOrderId: "po-1",
-        warehouseId: "wh-1",
+        branchId: "wh-1",
         items: [
           { purchaseOrderItemId: "ghost", productId: "prod-x", receivedQuantity: 5 },
         ],
@@ -369,7 +369,7 @@ describe("GoodsReceiptService.createGoodsReceipt", () => {
     const result = await service.createGoodsReceipt(
       {
         purchaseOrderId: "po-1",
-        warehouseId: "wh-1",
+        branchId: "wh-1",
         items: [
           { purchaseOrderItemId: "poi-a", productId: "prod-a", receivedQuantity: 0, rejectedQuantity: 0 },
         ],

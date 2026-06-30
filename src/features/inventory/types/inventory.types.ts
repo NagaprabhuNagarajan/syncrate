@@ -27,31 +27,31 @@ export interface ProductOption {
   readonly code: string;
 }
 
-/** Raw stock snapshot for a (product, warehouse) pair. */
+/** Raw stock snapshot for a (product, branch) pair. */
 export interface StockLevel {
   readonly id: string;
   readonly organizationId: string;
   readonly productId: string;
-  readonly warehouseId: string;
+  readonly branchId: string;
   readonly quantity: number;
   readonly reservedQuantity: number;
 }
 
-/** Stock snapshot enriched with product + warehouse details for listing. */
+/** Stock snapshot enriched with product + branch details for listing. */
 export interface InventoryLevel extends StockLevel {
   readonly productName: string;
   readonly productCode: string;
   readonly reorderLevel: number;
   readonly purchasePrice: number;
-  readonly warehouseName: string;
-  readonly warehouseCode: string;
+  readonly branchName: string;
+  readonly branchCode: string;
 }
 
 export interface InventoryTransaction {
   readonly id: string;
   readonly organizationId: string;
   readonly productId: string;
-  readonly warehouseId: string;
+  readonly branchId: string;
   readonly batchId: string | null;
   readonly type: InventoryTransactionType;
   readonly quantity: number;
@@ -63,7 +63,7 @@ export interface InventoryTransaction {
   readonly createdBy: string | null;
   readonly productName: string | null;
   readonly productCode: string | null;
-  readonly warehouseName: string | null;
+  readonly branchName: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ export interface InventoryTransaction {
 
 export interface AdjustStockInput {
   readonly productId: string;
-  readonly warehouseId: string;
+  readonly branchId: string;
   /** Signed delta — positive increases stock, negative decreases it. */
   readonly quantity: number;
   readonly reason?: string;
@@ -80,8 +80,8 @@ export interface AdjustStockInput {
 
 export interface TransferStockInput {
   readonly productId: string;
-  readonly fromWarehouseId: string;
-  readonly toWarehouseId: string;
+  readonly fromBranchId: string;
+  readonly toBranchId: string;
   /** Always positive. */
   readonly quantity: number;
   readonly note?: string;
@@ -89,7 +89,7 @@ export interface TransferStockInput {
 
 export interface OpeningStockInput {
   readonly productId: string;
-  readonly warehouseId: string;
+  readonly branchId: string;
   readonly quantity: number;
   readonly note?: string;
 }
@@ -99,7 +99,7 @@ export interface OpeningStockInput {
 // ─────────────────────────────────────────────────────────────
 
 export interface InventoryLevelListParams {
-  readonly warehouseId?: string;
+  readonly branchId?: string;
   readonly search?: string;
   readonly lowStockOnly?: boolean;
   readonly page?: number;
@@ -115,7 +115,7 @@ export interface InventoryLevelListResult {
 
 export interface InventoryTransactionListParams {
   readonly productId?: string;
-  readonly warehouseId?: string;
+  readonly branchId?: string;
   readonly limit?: number;
 }
 

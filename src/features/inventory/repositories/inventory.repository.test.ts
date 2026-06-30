@@ -80,7 +80,7 @@ describe("InventoryRepository.getLevel", () => {
           id: "lvl-1",
           organization_id: "org-1",
           product_id: "prod-1",
-          warehouse_id: "wh-1",
+          branch_id: "wh-1",
           quantity: 25,
           reserved_quantity: 3,
         },
@@ -94,12 +94,12 @@ describe("InventoryRepository.getLevel", () => {
       id: "lvl-1",
       organizationId: "org-1",
       productId: "prod-1",
-      warehouseId: "wh-1",
+      branchId: "wh-1",
       quantity: 25,
       reservedQuantity: 3,
     });
     expect(builders[0].eq).toHaveBeenCalledWith("product_id", "prod-1");
-    expect(builders[0].eq).toHaveBeenCalledWith("warehouse_id", "wh-1");
+    expect(builders[0].eq).toHaveBeenCalledWith("branch_id", "wh-1");
   });
 
   it("returns null when there is no level", async () => {
@@ -110,7 +110,7 @@ describe("InventoryRepository.getLevel", () => {
 });
 
 describe("InventoryRepository.listLevels", () => {
-  it("maps joined product/warehouse fields and returns the count", async () => {
+  it("maps joined product/branch fields and returns the count", async () => {
     const { client, builders } = createMockClient([
       {
         data: [
@@ -118,7 +118,7 @@ describe("InventoryRepository.listLevels", () => {
             id: "lvl-1",
             organization_id: "org-1",
             product_id: "prod-1",
-            warehouse_id: "wh-1",
+            branch_id: "wh-1",
             quantity: 4,
             reserved_quantity: 0,
             products: {
@@ -127,7 +127,7 @@ describe("InventoryRepository.listLevels", () => {
               reorder_level: 10,
               purchase_price: 50,
             },
-            warehouses: { name: "Main", code: "WH-01" },
+            branches: { name: "Main", code: "WH-01" },
           },
         ],
         error: null,
@@ -143,8 +143,8 @@ describe("InventoryRepository.listLevels", () => {
       productCode: "CEM",
       reorderLevel: 10,
       purchasePrice: 50,
-      warehouseName: "Main",
-      warehouseCode: "WH-01",
+      branchName: "Main",
+      branchCode: "WH-01",
       quantity: 4,
     });
     expect(builders[0].eq).toHaveBeenCalledWith("organization_id", "org-1");
@@ -161,13 +161,13 @@ describe("InventoryRepository.listLevels", () => {
             id: "lvl-1",
             organization_id: "org-1",
             product_id: "prod-1",
-            warehouse_id: "wh-1",
+            branch_id: "wh-1",
             quantity: 4,
             reserved_quantity: 0,
             products: [
               { name: "Cement", code: "CEM", reorder_level: 10, purchase_price: 50 },
             ],
-            warehouses: [{ name: "Main", code: "WH-01" }],
+            branches: [{ name: "Main", code: "WH-01" }],
           },
         ],
         error: null,
@@ -177,17 +177,17 @@ describe("InventoryRepository.listLevels", () => {
     const repo = new InventoryRepository(client);
     const result = await repo.listLevels("org-1");
     expect(result.items[0].productName).toBe("Cement");
-    expect(result.items[0].warehouseName).toBe("Main");
+    expect(result.items[0].branchName).toBe("Main");
   });
 
-  it("filters by warehouse and applies foreign-table search", async () => {
+  it("filters by branch and applies foreign-table search", async () => {
     const { client, builders } = createMockClient([
       { data: [], error: null, count: 0 },
     ]);
     const repo = new InventoryRepository(client);
 
-    await repo.listLevels("org-1", { warehouseId: "wh-1", search: "cem" });
-    expect(builders[0].eq).toHaveBeenCalledWith("warehouse_id", "wh-1");
+    await repo.listLevels("org-1", { branchId: "wh-1", search: "cem" });
+    expect(builders[0].eq).toHaveBeenCalledWith("branch_id", "wh-1");
     expect(builders[0].or).toHaveBeenCalledWith(
       "name.ilike.%cem%,code.ilike.%cem%",
       { foreignTable: "products" }
@@ -202,21 +202,21 @@ describe("InventoryRepository.listLevels", () => {
             id: "lvl-1",
             organization_id: "org-1",
             product_id: "prod-1",
-            warehouse_id: "wh-1",
+            branch_id: "wh-1",
             quantity: 2,
             reserved_quantity: 0,
             products: { name: "Low", code: "L", reorder_level: 10, purchase_price: 1 },
-            warehouses: { name: "Main", code: "WH-01" },
+            branches: { name: "Main", code: "WH-01" },
           },
           {
             id: "lvl-2",
             organization_id: "org-1",
             product_id: "prod-2",
-            warehouse_id: "wh-1",
+            branch_id: "wh-1",
             quantity: 99,
             reserved_quantity: 0,
             products: { name: "High", code: "H", reorder_level: 10, purchase_price: 1 },
-            warehouses: { name: "Main", code: "WH-01" },
+            branches: { name: "Main", code: "WH-01" },
           },
         ],
         error: null,
@@ -246,11 +246,11 @@ describe("InventoryRepository.listLevels", () => {
             id: "lvl-1",
             organization_id: "org-1",
             product_id: "prod-1",
-            warehouse_id: "wh-1",
+            branch_id: "wh-1",
             quantity: 4,
             reserved_quantity: 0,
             products: null,
-            warehouses: [],
+            branches: [],
           },
         ],
         error: null,
@@ -266,8 +266,8 @@ describe("InventoryRepository.listLevels", () => {
       productCode: "",
       reorderLevel: 0,
       purchasePrice: 0,
-      warehouseName: "",
-      warehouseCode: "",
+      branchName: "",
+      branchCode: "",
     });
   });
 });
@@ -281,7 +281,7 @@ describe("InventoryRepository.listTransactions", () => {
             id: "tx-1",
             organization_id: "org-1",
             product_id: "prod-1",
-            warehouse_id: "wh-1",
+            branch_id: "wh-1",
             batch_id: null,
             type: "adjustment",
             quantity: 5,
@@ -292,7 +292,7 @@ describe("InventoryRepository.listTransactions", () => {
             created_at: "2026-01-01T00:00:00.000Z",
             created_by: "user-1",
             products: { name: "Cement", code: "CEM" },
-            warehouses: { name: "Main", code: "WH-01" },
+            branches: { name: "Main", code: "WH-01" },
           },
         ],
         error: null,
@@ -302,7 +302,7 @@ describe("InventoryRepository.listTransactions", () => {
 
     const transactions = await repo.listTransactions("org-1", {
       productId: "prod-1",
-      warehouseId: "wh-1",
+      branchId: "wh-1",
       limit: 10,
     });
 
@@ -312,11 +312,11 @@ describe("InventoryRepository.listTransactions", () => {
       quantity: 5,
       runningBalance: 15,
       productName: "Cement",
-      warehouseName: "Main",
+      branchName: "Main",
     });
     expect(transactions[0].createdAt).toBeInstanceOf(Date);
     expect(builders[0].eq).toHaveBeenCalledWith("product_id", "prod-1");
-    expect(builders[0].eq).toHaveBeenCalledWith("warehouse_id", "wh-1");
+    expect(builders[0].eq).toHaveBeenCalledWith("branch_id", "wh-1");
     expect(builders[0].order).toHaveBeenCalledWith("created_at", {
       ascending: false,
     });
@@ -331,7 +331,7 @@ describe("InventoryRepository.listTransactions", () => {
     expect(await repo.listTransactions("org-1")).toEqual([]);
   });
 
-  it("maps null product/warehouse relations to null names", async () => {
+  it("maps null product/branch relations to null names", async () => {
     const { client } = createMockClient([
       {
         data: [
@@ -339,7 +339,7 @@ describe("InventoryRepository.listTransactions", () => {
             id: "tx-1",
             organization_id: "org-1",
             product_id: "prod-1",
-            warehouse_id: "wh-1",
+            branch_id: "wh-1",
             batch_id: null,
             type: "opening",
             quantity: 5,
@@ -350,7 +350,7 @@ describe("InventoryRepository.listTransactions", () => {
             created_at: "2026-01-01T00:00:00.000Z",
             created_by: null,
             products: null,
-            warehouses: null,
+            branches: null,
           },
         ],
         error: null,
@@ -362,7 +362,7 @@ describe("InventoryRepository.listTransactions", () => {
     expect(transactions[0]).toMatchObject({
       productName: null,
       productCode: null,
-      warehouseName: null,
+      branchName: null,
     });
   });
 });
@@ -375,7 +375,7 @@ describe("InventoryRepository.adjustStockRpc", () => {
     const result = await repo.adjustStockRpc({
       p_organization_id: "org-1",
       p_product_id: "prod-1",
-      p_warehouse_id: "wh-1",
+      p_branch_id: "wh-1",
       p_quantity: 5,
       p_type: "adjustment",
       p_note: "recount",
@@ -385,7 +385,7 @@ describe("InventoryRepository.adjustStockRpc", () => {
     expect(rpc).toHaveBeenCalledWith("adjust_stock", {
       p_organization_id: "org-1",
       p_product_id: "prod-1",
-      p_warehouse_id: "wh-1",
+      p_branch_id: "wh-1",
       p_quantity: 5,
       p_type: "adjustment",
       p_note: "recount",
@@ -404,7 +404,7 @@ describe("InventoryRepository.adjustStockRpc", () => {
     const result = await repo.adjustStockRpc({
       p_organization_id: "org-1",
       p_product_id: "prod-1",
-      p_warehouse_id: "wh-1",
+      p_branch_id: "wh-1",
       p_quantity: -5,
       p_type: "damage",
     });
@@ -422,8 +422,8 @@ describe("InventoryRepository.transferStockRpc", () => {
     const result = await repo.transferStockRpc({
       p_organization_id: "org-1",
       p_product_id: "prod-1",
-      p_from_warehouse_id: "wh-1",
-      p_to_warehouse_id: "wh-2",
+      p_from_branch_id: "wh-1",
+      p_to_branch_id: "wh-2",
       p_quantity: 8,
       p_note: "rebalance",
     });
@@ -431,8 +431,8 @@ describe("InventoryRepository.transferStockRpc", () => {
     expect(rpc).toHaveBeenCalledWith("transfer_stock", {
       p_organization_id: "org-1",
       p_product_id: "prod-1",
-      p_from_warehouse_id: "wh-1",
-      p_to_warehouse_id: "wh-2",
+      p_from_branch_id: "wh-1",
+      p_to_branch_id: "wh-2",
       p_quantity: 8,
       p_note: "rebalance",
     });
@@ -449,8 +449,8 @@ describe("InventoryRepository.transferStockRpc", () => {
     const result = await repo.transferStockRpc({
       p_organization_id: "org-1",
       p_product_id: "prod-1",
-      p_from_warehouse_id: "wh-1",
-      p_to_warehouse_id: "wh-2",
+      p_from_branch_id: "wh-1",
+      p_to_branch_id: "wh-2",
       p_quantity: 99,
     });
 

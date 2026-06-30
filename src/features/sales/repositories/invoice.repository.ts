@@ -48,7 +48,6 @@ function mapInvoice(row: DbInvoice): Invoice {
     salesOrderId: row.sales_order_id,
     quotationId: row.quotation_id,
     branchId: row.branch_id,
-    warehouseId: row.warehouse_id,
     salespersonId: row.salesperson_id,
     referenceNumber: row.reference_number,
     invoiceDate: new Date(row.invoice_date),

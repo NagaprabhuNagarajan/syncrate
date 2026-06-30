@@ -253,7 +253,7 @@ export class AssistantService {
       definition: {
         name: "check_inventory",
         description:
-          "Check current stock levels across warehouses. Optionally filter by a product search term. Returns quantity on hand and reorder level per product/warehouse.",
+          "Check current stock levels across branches. Optionally filter by a product search term. Returns quantity on hand and reorder level per product/branch.",
         input_schema: {
           type: "object",
           properties: SEARCH_QUERY_PROPERTY,
@@ -270,7 +270,7 @@ export class AssistantService {
           productId: l.productId,
           productCode: l.productCode,
           productName: l.productName,
-          warehouse: l.warehouseName,
+          branch: l.branchName,
           quantity: l.quantity,
           reorderLevel: l.reorderLevel,
         }));

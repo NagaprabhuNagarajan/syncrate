@@ -110,8 +110,8 @@ export function SalesOrdersView({
     return org ? `${path}?org=${org}` : path;
   };
 
-  const detailHref = (id: string): string => withOrg(`/sales/orders/${id}`);
-  const newHref = (): string => withOrg("/sales/orders/new");
+  const detailHref = (id: string): string => withOrg(`/sales-orders/${id}`);
+  const newHref = (): string => withOrg("/sales-orders/new");
 
   const pushWith = (patch: Record<string, string | undefined>): void => {
     const params = new URLSearchParams(searchParams.toString());
@@ -123,7 +123,7 @@ export function SalesOrdersView({
       }
     });
     const query = params.toString();
-    router.push(query ? `/sales/orders?${query}` : "/sales/orders");
+    router.push(query ? `/sales-orders?${query}` : "/sales-orders");
   };
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -170,7 +170,7 @@ export function SalesOrdersView({
           Quotations
         </Link>
         <Link
-          href={withOrg("/sales/invoices")}
+          href={withOrg("/invoices")}
           className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 shadow-sm transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-primary-600 dark:hover:text-primary-400"
         >
           Invoices

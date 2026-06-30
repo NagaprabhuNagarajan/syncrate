@@ -7,7 +7,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { SerialsView } from "@/features/serial/components/serials-view";
 import type {
   ProductOption,
-  WarehouseOption,
+  BranchOption,
 } from "@/features/serial/components/serial-form";
 import type { SerialStatus } from "@/features/serial/types/serial.types";
 
@@ -93,7 +93,7 @@ export default async function SerialNumbersPage({
   const productId = params.productId?.trim() || undefined;
   const page = parsePage(params.page);
 
-  const [{ data: productRows }, { data: warehouseRows }] = await Promise.all([
+  const [{ data: productRows }, { data: branchRows }] = await Promise.all([
     supabase
       .from("products")
       .select("id, name, code")
@@ -101,7 +101,7 @@ export default async function SerialNumbersPage({
       .is("deleted_at", null)
       .order("name", { ascending: true }),
     supabase
-      .from("warehouses")
+      .from("branches")
       .select("id, name")
       .eq("organization_id", activeOrg.id)
       .is("deleted_at", null)
@@ -113,7 +113,7 @@ export default async function SerialNumbersPage({
     name: p.name,
     code: p.code,
   }));
-  const warehouses: WarehouseOption[] = (warehouseRows ?? []).map((w) => ({
+  const branches: BranchOption[] = (branchRows ?? []).map((w) => ({
     id: w.id,
     name: w.name,
   }));
@@ -131,7 +131,7 @@ export default async function SerialNumbersPage({
       organizationId={activeOrg.id}
       result={result}
       products={products}
-      warehouses={warehouses}
+      branches={branches}
       filters={{ search, status, productId }}
       canManage={canManage}
     />

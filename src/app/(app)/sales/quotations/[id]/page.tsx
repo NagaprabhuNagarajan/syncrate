@@ -25,7 +25,7 @@ export async function generateMetadata({
 
 async function lookupName(
   supabase: AppSupabaseClient,
-  table: "customers" | "warehouses",
+  table: "customers" | "branches",
   id: string | null
 ): Promise<string | null> {
   if (!id) {return null;}

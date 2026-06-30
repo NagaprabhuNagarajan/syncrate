@@ -85,7 +85,7 @@ function buildOrder(): PurchaseOrder {
     organizationId: "org-1",
     poNumber: "PO-00001",
     supplierId: "sup-1",
-    warehouseId: null,
+    branchId: null,
     status: "draft",
     orderDate: new Date(),
     expectedDeliveryDate: null,

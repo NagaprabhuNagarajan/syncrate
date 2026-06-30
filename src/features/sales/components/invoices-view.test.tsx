@@ -49,7 +49,6 @@ function makeInvoice(
     salesOrderId: null,
     quotationId: null,
     branchId: null,
-    warehouseId: null,
     salespersonId: null,
     referenceNumber: null,
     invoiceDate: new Date("2026-01-15"),

@@ -8,7 +8,7 @@ import { adjustStockAction } from "@/features/inventory/actions/inventory.action
 import type {
   ProductOption,
 } from "@/features/inventory/types/inventory.types";
-import type { WarehouseOption } from "@/features/warehouse/types/warehouse.types";
+import type { BranchOption } from "@/features/organization/server/branch-options";
 import { cn } from "@/utils/cn";
 
 const selectClass =
@@ -17,9 +17,9 @@ const selectClass =
 interface AdjustStockDialogProps {
   readonly organizationId: string;
   readonly products: readonly ProductOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly defaultProductId?: string;
-  readonly defaultWarehouseId?: string;
+  readonly defaultBranchId?: string;
   readonly onClose: () => void;
   readonly onDone: () => void;
 }
@@ -27,14 +27,14 @@ interface AdjustStockDialogProps {
 export function AdjustStockDialog({
   organizationId,
   products,
-  warehouses,
+  branches,
   defaultProductId,
-  defaultWarehouseId,
+  defaultBranchId,
   onClose,
   onDone,
 }: AdjustStockDialogProps) {
   const [productId, setProductId] = useState(defaultProductId ?? "");
-  const [warehouseId, setWarehouseId] = useState(defaultWarehouseId ?? "");
+  const [branchId, setBranchId] = useState(defaultBranchId ?? "");
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export function AdjustStockDialog({
 
     const formData = new FormData();
     formData.append("productId", productId);
-    formData.append("warehouseId", warehouseId);
+    formData.append("branchId", branchId);
     formData.append("quantity", quantity);
     if (reason.trim()) {
       formData.append("reason", reason.trim());
@@ -134,22 +134,22 @@ export function AdjustStockDialog({
 
           <div>
             <label
-              htmlFor="adjust-warehouse"
+              htmlFor="adjust-branch"
               className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Warehouse
+              Branch
             </label>
             <select
-              id="adjust-warehouse"
+              id="adjust-branch"
               required
               className={selectClass}
-              value={warehouseId}
-              onChange={(event) => setWarehouseId(event.target.value)}
+              value={branchId}
+              onChange={(event) => setBranchId(event.target.value)}
             >
-              <option value="">Select a warehouse</option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name} ({warehouse.code})
+              <option value="">Select a branch</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
                 </option>
               ))}
             </select>

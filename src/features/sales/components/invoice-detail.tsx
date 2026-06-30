@@ -224,8 +224,8 @@ export function InvoiceDetail({
   const handleCancel = (): void =>
     run(() => cancelInvoiceAction(organizationId, invoice.id));
 
-  const pdfUrl = `/api/sales/invoices/${invoice.id}/pdf`;
-  const shareUrl = `/sales/invoices/${invoice.id}/share`;
+  const pdfUrl = `/api/invoices/${invoice.id}/pdf`;
+  const shareUrl = `/invoices/${invoice.id}/share`;
 
   return (
     <div className="p-4 lg:p-6">
@@ -237,7 +237,7 @@ export function InvoiceDetail({
         {isDraft && canManage && (
           <>
             <Button asChild variant="outline" size="sm">
-              <Link href={`/sales/invoices/${invoice.id}/edit`}>
+              <Link href={`/invoices/${invoice.id}/edit`}>
                 <Edit className="mr-1.5 h-4 w-4" aria-hidden="true" />
                 Edit
               </Link>

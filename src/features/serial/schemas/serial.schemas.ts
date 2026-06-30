@@ -39,7 +39,7 @@ export const serialStatusSchema = z.enum(SERIAL_STATUSES);
 export const createSerialSchema = z.object({
   productId: productIdSchema,
   serialNumber: serialNumberSchema,
-  warehouseId: optionalUuid,
+  branchId: optionalUuid,
   batchId: optionalUuid,
   notes: optionalNotes,
 });
@@ -56,7 +56,7 @@ export const bulkSerialSchema = z.object({
     .array(serialNumberSchema)
     .min(1, "Enter at least one serial number")
     .max(1000, "You can register at most 1000 serials at once"),
-  warehouseId: optionalUuid,
+  branchId: optionalUuid,
   batchId: optionalUuid,
   notes: optionalNotes,
 });
@@ -83,7 +83,7 @@ export function splitSerials(raw: string): string[] {
 
 export const updateSerialSchema = z.object({
   serialNumber: serialNumberSchema.optional(),
-  warehouseId: optionalUuid,
+  branchId: optionalUuid,
   batchId: optionalUuid,
   status: serialStatusSchema.optional(),
   notes: optionalNotes,

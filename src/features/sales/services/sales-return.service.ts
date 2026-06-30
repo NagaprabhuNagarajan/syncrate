@@ -159,7 +159,7 @@ export class SalesReturnService {
       return_number: returnNumber,
       invoice_id: nz(input.invoiceId),
       customer_id: input.customerId,
-      warehouse_id: nz(input.warehouseId),
+      branch_id: nz(input.branchId),
       status: "draft",
       return_date:
         nz(input.returnDate) ?? new Date().toISOString().slice(0, 10),
@@ -226,7 +226,7 @@ export class SalesReturnService {
       {
         invoice_id: nz(input.invoiceId),
         customer_id: input.customerId,
-        warehouse_id: nz(input.warehouseId),
+        branch_id: nz(input.branchId),
         return_date:
           nz(input.returnDate) ??
           existing.returnDate.toISOString().slice(0, 10),

@@ -122,8 +122,8 @@ export function InvoicesView({
     return org ? `${path}?org=${org}` : path;
   };
 
-  const detailHref = (id: string): string => withOrg(`/sales/invoices/${id}`);
-  const newHref = (): string => withOrg("/sales/invoices/new");
+  const detailHref = (id: string): string => withOrg(`/invoices/${id}`);
+  const newHref = (): string => withOrg("/invoices/new");
 
   const pushWith = (patch: Record<string, string | undefined>): void => {
     const params = new URLSearchParams(searchParams.toString());
@@ -135,7 +135,7 @@ export function InvoicesView({
       }
     });
     const query = params.toString();
-    router.push(query ? `/sales/invoices?${query}` : "/sales/invoices");
+    router.push(query ? `/invoices?${query}` : "/invoices");
   };
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {

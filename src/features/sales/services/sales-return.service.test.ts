@@ -56,7 +56,7 @@ function makeReturn(overrides: Partial<SalesReturn> = {}): SalesReturn {
     returnNumber: "SR-00001",
     invoiceId: null,
     customerId: "cust-1",
-    warehouseId: "wh-1",
+    branchId: "wh-1",
     status: "draft",
     returnDate: new Date("2026-01-20"),
     reason: "damaged",
@@ -121,7 +121,7 @@ describe("SalesReturnService", () => {
       const result = await service.createSalesReturn(
         {
           customerId: "cust-1",
-          warehouseId: "wh-1",
+          branchId: "wh-1",
           reason: "damaged",
           items: [{ productId: "prod-1", quantity: 5, unitPrice: 100, taxRate: 9 }],
         },

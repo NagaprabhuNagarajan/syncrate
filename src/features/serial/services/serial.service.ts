@@ -78,7 +78,7 @@ export class SerialService {
     const created = await this.repo.create({
       organization_id: organizationId,
       product_id: input.productId,
-      warehouse_id: nz(input.warehouseId),
+      branch_id: nz(input.branchId),
       batch_id: nz(input.batchId),
       serial_number: serialNumber,
       status: "in_stock",
@@ -106,7 +106,7 @@ export class SerialService {
     organizationId: string,
     userId: string,
     options: {
-      readonly warehouseId?: string | null;
+      readonly branchId?: string | null;
       readonly batchId?: string | null;
       readonly notes?: string;
     } = {}
@@ -136,7 +136,7 @@ export class SerialService {
         {
           productId,
           serialNumber,
-          warehouseId: options.warehouseId ?? null,
+          branchId: options.branchId ?? null,
           batchId: options.batchId ?? null,
           notes: options.notes,
         },
@@ -221,8 +221,8 @@ function buildUpdatePatch(
   if (input.serialNumber !== undefined && input.serialNumber.trim() !== "") {
     patch.serial_number = input.serialNumber.trim();
   }
-  if (input.warehouseId !== undefined) {
-    patch.warehouse_id = nz(input.warehouseId);
+  if (input.branchId !== undefined) {
+    patch.branch_id = nz(input.branchId);
   }
   if (input.batchId !== undefined) {
     patch.batch_id = nz(input.batchId);

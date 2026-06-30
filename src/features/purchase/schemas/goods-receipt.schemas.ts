@@ -41,9 +41,9 @@ export const createGoodsReceiptSchema = z.object({
   purchaseOrderId: z
     .string({ required_error: "Purchase order is required" })
     .min(1, "Purchase order is required"),
-  warehouseId: z
-    .string({ required_error: "Warehouse is required" })
-    .min(1, "Warehouse is required"),
+  branchId: z
+    .string({ required_error: "Branch is required" })
+    .min(1, "Branch is required"),
   receivedDate: z.string().trim().optional().or(z.literal("")),
   notes: z
     .string()

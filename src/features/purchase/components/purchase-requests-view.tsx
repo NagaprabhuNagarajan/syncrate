@@ -241,7 +241,7 @@ export function PurchaseRequestsView({
                       Request number
                     </th>
                     <th scope="col" className="px-3 py-2 font-medium">
-                      Warehouse
+                      Branch
                     </th>
                     <th scope="col" className="px-3 py-2 font-medium">
                       Status
@@ -271,7 +271,7 @@ export function PurchaseRequestsView({
                         </Link>
                       </td>
                       <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                        {request.warehouseName ?? "—"}
+                        {request.branchName ?? "—"}
                       </td>
                       <td className="px-3 py-2">
                         <Badge dot variant={PR_STATUS_VARIANT[request.status]}>

@@ -25,7 +25,7 @@ import {
   SerialForm,
   SERIAL_STATUS_LABELS,
   type ProductOption,
-  type WarehouseOption,
+  type BranchOption,
 } from "@/features/serial/components/serial-form";
 import type {
   SerialNumber,
@@ -61,7 +61,7 @@ interface SerialsViewProps {
   readonly organizationId: string;
   readonly result: SerialListResult;
   readonly products: readonly ProductOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly filters: {
     readonly search?: string;
     readonly status?: SerialStatus;
@@ -74,7 +74,7 @@ export function SerialsView({
   organizationId,
   result,
   products,
-  warehouses,
+  branches,
   filters,
   canManage,
 }: SerialsViewProps) {
@@ -86,11 +86,11 @@ export function SerialsView({
   const [rowError, setRowError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const warehouseNames = useMemo(() => {
+  const branchNames = useMemo(() => {
     const map = new Map<string, string>();
-    warehouses.forEach((w) => map.set(w.id, w.name));
+    branches.forEach((w) => map.set(w.id, w.name));
     return map;
-  }, [warehouses]);
+  }, [branches]);
 
   const { items, total, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -288,7 +288,7 @@ export function SerialsView({
                       Status
                     </th>
                     <th scope="col" className="px-3 py-2 font-medium">
-                      Warehouse
+                      Branch
                     </th>
                     <th scope="col" className="px-3 py-2 font-medium">
                       Notes
@@ -336,8 +336,8 @@ export function SerialsView({
                         </Badge>
                       </td>
                       <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {serial.warehouseId
-                          ? warehouseNames.get(serial.warehouseId) ?? "—"
+                        {serial.branchId
+                          ? branchNames.get(serial.branchId) ?? "—"
                           : "—"}
                       </td>
                       <td className="max-w-[16rem] truncate px-3 py-2 text-slate-600 dark:text-slate-400">
@@ -436,7 +436,7 @@ export function SerialsView({
             <SerialForm
               organizationId={organizationId}
               products={products}
-              warehouses={warehouses}
+              branches={branches}
               serial={editing ?? undefined}
               onCancel={closeDialogs}
               onSuccess={() => {

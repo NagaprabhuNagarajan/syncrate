@@ -12,7 +12,7 @@ import {
   XCircle,
   AlertTriangle,
   Truck,
-  Warehouse,
+  Building2,
   Calendar,
   PackageCheck,
   FileText,
@@ -179,7 +179,7 @@ function InfoRow({
 interface PurchaseOrderDetailProps {
   readonly purchaseOrder: PurchaseOrderWithItems;
   readonly supplierName: string | null;
-  readonly warehouseName: string | null;
+  readonly branchName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
   readonly organizationId: string;
   readonly canManage: boolean;
@@ -191,7 +191,7 @@ interface PurchaseOrderDetailProps {
 export function PurchaseOrderDetail({
   purchaseOrder,
   supplierName,
-  warehouseName,
+  branchName,
   productNames,
   organizationId,
   canManage,
@@ -336,7 +336,7 @@ export function PurchaseOrderDetail({
           </h2>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <InfoRow icon={Truck} label="Supplier" value={supplierName} />
-            <InfoRow icon={Warehouse} label="Warehouse" value={warehouseName} />
+            <InfoRow icon={Building2} label="Building2" value={branchName} />
             <InfoRow
               icon={Calendar}
               label="Order date"

@@ -30,8 +30,8 @@ function makeRequest(
     organizationId: "org-1",
     requestNumber: "PR-00001",
     status: "draft",
-    warehouseId: "wh-1",
-    warehouseName: "Main WH",
+    branchId: "wh-1",
+    branchName: "Main WH",
     requiredDate: new Date("2026-06-10"),
     notes: null,
     approvedBy: null,
@@ -54,7 +54,7 @@ function makeResult(
 }
 
 describe("PurchaseRequestsView", () => {
-  it("renders rows with request number, warehouse and status", () => {
+  it("renders rows with request number, branch and status", () => {
     render(
       <PurchaseRequestsView
         organizationId="org-1"

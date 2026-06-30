@@ -2,17 +2,17 @@ import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type {
   ProductOption,
   SupplierOption,
-  WarehouseOption,
+  BranchOption,
 } from "@/features/purchase/components/purchase-order-form";
 
 export interface PurchaseOrderFormOptions {
   readonly suppliers: SupplierOption[];
-  readonly warehouses: WarehouseOption[];
+  readonly branches: BranchOption[];
   readonly products: ProductOption[];
 }
 
 /**
- * Fetches the option lists the purchase order form needs (supplier, warehouse
+ * Fetches the option lists the purchase order form needs (supplier, branch
  * and product selects). Issues direct, narrow selects so the purchase pages do
  * not depend on in-flight sibling feature modules. Products carry their
  * purchase price and GST rate so line rows can pre-fill on selection.
@@ -22,7 +22,7 @@ export async function fetchPurchaseOrderOptions(
   organizationId: string
 ): Promise<PurchaseOrderFormOptions> {
   const selectNamed = async (
-    table: "suppliers" | "warehouses"
+    table: "suppliers" | "branches"
   ): Promise<{ id: string; name: string }[]> => {
     const { data } = await supabase
       .from(table)
@@ -48,11 +48,11 @@ export async function fetchPurchaseOrderOptions(
     }));
   };
 
-  const [suppliers, warehouses, products] = await Promise.all([
+  const [suppliers, branches, products] = await Promise.all([
     selectNamed("suppliers"),
-    selectNamed("warehouses"),
+    selectNamed("branches"),
     selectProducts(),
   ]);
 
-  return { suppliers, warehouses, products };
+  return { suppliers, branches, products };
 }

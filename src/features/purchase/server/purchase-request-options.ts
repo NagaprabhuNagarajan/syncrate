@@ -2,17 +2,17 @@ import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type {
   PrProductOption,
   PrSupplierOption,
-  PrWarehouseOption,
+  PrBranchOption,
 } from "@/features/purchase/components/purchase-request-form";
 
 export interface PurchaseRequestFormOptions {
-  readonly warehouses: PrWarehouseOption[];
+  readonly branches: PrBranchOption[];
   readonly products: PrProductOption[];
   readonly suppliers: PrSupplierOption[];
 }
 
 /**
- * Fetches the option lists the purchase request pages need: warehouse and
+ * Fetches the option lists the purchase request pages need: branch and
  * product selects for the form, plus suppliers for the "Convert to PO" supplier
  * picker on the detail page. Issues direct, narrow selects so the purchase
  * pages do not depend on in-flight sibling feature modules.
@@ -22,7 +22,7 @@ export async function fetchPurchaseRequestOptions(
   organizationId: string
 ): Promise<PurchaseRequestFormOptions> {
   const selectNamed = async (
-    table: "suppliers" | "warehouses"
+    table: "suppliers" | "branches"
   ): Promise<{ id: string; name: string }[]> => {
     const { data } = await supabase
       .from(table)
@@ -47,11 +47,11 @@ export async function fetchPurchaseRequestOptions(
     }));
   };
 
-  const [warehouses, products, suppliers] = await Promise.all([
-    selectNamed("warehouses"),
+  const [branches, products, suppliers] = await Promise.all([
+    selectNamed("branches"),
     selectProducts(),
     selectNamed("suppliers"),
   ]);
 
-  return { warehouses, products, suppliers };
+  return { branches, products, suppliers };
 }

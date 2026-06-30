@@ -219,7 +219,7 @@ describe("SmartSearchService.search", () => {
         {
           id: "l1",
           productName: "Widget",
-          warehouseName: "Main",
+          branchName: "Main",
           quantity: 2,
           reorderLevel: 10,
           purchasePrice: 50,

@@ -62,7 +62,7 @@ export default async function NewPurchaseRequestPage({
       <div className="mx-auto w-full max-w-5xl">
         <PurchaseRequestForm
           organizationId={activeOrg.id}
-          warehouses={options.warehouses}
+          branches={options.branches}
           products={options.products}
         />
       </div>

@@ -32,7 +32,7 @@ export interface ProductOption {
   readonly code: string;
 }
 
-export interface WarehouseOption {
+export interface BranchOption {
   readonly id: string;
   readonly name: string;
 }
@@ -60,7 +60,7 @@ const STATUS_OPTIONS: readonly SerialStatus[] = [
 interface SerialFormValues {
   productId: string;
   serialNumbers: string;
-  warehouseId: string;
+  branchId: string;
   notes: string;
   status?: SerialStatus;
 }
@@ -68,14 +68,14 @@ interface SerialFormValues {
 const createFormSchema = z.object({
   productId: z.string().uuid("Please select a product"),
   serialNumbers: z.string().trim().min(1, "Enter at least one serial number"),
-  warehouseId: z.string().optional(),
+  branchId: z.string().optional(),
   notes: z.string().max(2000).optional(),
 });
 
 const editFormSchema = z.object({
   productId: z.string().uuid("Please select a product"),
   serialNumbers: serialNumberSchema,
-  warehouseId: z.string().optional(),
+  branchId: z.string().optional(),
   notes: z.string().max(2000).optional(),
   status: serialStatusSchema,
 });
@@ -152,7 +152,7 @@ const inputClass = (hasError: boolean) =>
 interface SerialFormProps {
   readonly organizationId: string;
   readonly products: readonly ProductOption[];
-  readonly warehouses: readonly WarehouseOption[];
+  readonly branches: readonly BranchOption[];
   readonly serial?: SerialNumber;
   readonly onSuccess?: () => void;
   readonly onCancel?: () => void;
@@ -161,7 +161,7 @@ interface SerialFormProps {
 export function SerialForm({
   organizationId,
   products,
-  warehouses,
+  branches,
   serial,
   onSuccess,
   onCancel,
@@ -185,7 +185,7 @@ export function SerialForm({
     defaultValues: {
       productId: serial?.productId ?? "",
       serialNumbers: serial?.serialNumber ?? "",
-      warehouseId: serial?.warehouseId ?? "",
+      branchId: serial?.branchId ?? "",
       notes: serial?.notes ?? "",
       status: serial?.status ?? "in_stock",
     },
@@ -205,7 +205,7 @@ export function SerialForm({
 
     const fd = new FormData();
     fd.append("productId", values.productId);
-    fd.append("warehouseId", values.warehouseId ?? "");
+    fd.append("branchId", values.branchId ?? "");
     fd.append("notes", values.notes ?? "");
 
     startTransition(async () => {
@@ -356,19 +356,19 @@ export function SerialForm({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
-            label="Warehouse"
-            htmlFor="warehouseId"
-            error={errors.warehouseId?.message}
+            label="Branch"
+            htmlFor="branchId"
+            error={errors.branchId?.message}
           >
             <select
-              id="warehouseId"
-              className={inputClass(!!errors.warehouseId)}
-              {...register("warehouseId")}
+              id="branchId"
+              className={inputClass(!!errors.branchId)}
+              {...register("branchId")}
             >
               <option value="">Unassigned</option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
                 </option>
               ))}
             </select>
