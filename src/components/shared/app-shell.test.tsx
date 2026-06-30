@@ -167,15 +167,23 @@ describe("AppShell", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the sign-out control in the sidebar footer", () => {
+  it("exposes sign out via the account menu", async () => {
+    const user = userEvent.setup();
     render(
       <AppShell userId="user-1">
         <p>Page body</p>
       </AppShell>
     );
 
+    // Sign out lives in the top-bar account dropdown (not the sidebar).
     expect(
-      screen.getByRole("button", { name: /^sign out$/i })
+      screen.queryByRole("button", { name: /^sign out$/i })
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
+
+    expect(
+      await screen.findByRole("button", { name: /^sign out$/i })
     ).toBeInTheDocument();
   });
 });

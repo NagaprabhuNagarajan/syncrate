@@ -218,43 +218,44 @@ export function CreateOrganizationForm() {
           />
         </FormField>
 
-        {/* Business Type */}
-        <FormField
-          label="Business type"
-          htmlFor="businessType"
-          error={errors.businessType?.message}
-        >
-          <select
-            id="businessType"
-            className={inputClass(!!errors.businessType)}
-            {...register("businessType")}
+        {/* Business Type + GST Number */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField
+            label="Business type"
+            htmlFor="businessType"
+            error={errors.businessType?.message}
           >
-            <option value="">Select business type</option>
-            {BUSINESS_TYPES.map((bt) => (
-              <option key={bt.value} value={bt.value}>
-                {bt.label}
-              </option>
-            ))}
-          </select>
-        </FormField>
+            <select
+              id="businessType"
+              className={inputClass(!!errors.businessType)}
+              {...register("businessType")}
+            >
+              <option value="">Select business type</option>
+              {BUSINESS_TYPES.map((bt) => (
+                <option key={bt.value} value={bt.value}>
+                  {bt.label}
+                </option>
+              ))}
+            </select>
+          </FormField>
 
-        {/* GST Number */}
-        <FormField
-          label="GST number"
-          htmlFor="gstNumber"
-          error={errors.gstNumber?.message}
-          hint="22AAAAA0000A1Z5 format — leave blank if not registered"
-        >
-          <input
-            id="gstNumber"
-            type="text"
-            autoComplete="off"
-            aria-invalid={errors.gstNumber ? "true" : "false"}
-            className={cn(inputClass(!!errors.gstNumber), "uppercase")}
-            placeholder="22AAAAA0000A1Z5"
-            {...register("gstNumber")}
-          />
-        </FormField>
+          <FormField
+            label="GST number"
+            htmlFor="gstNumber"
+            error={errors.gstNumber?.message}
+            hint="Leave blank if not registered"
+          >
+            <input
+              id="gstNumber"
+              type="text"
+              autoComplete="off"
+              aria-invalid={errors.gstNumber ? "true" : "false"}
+              className={cn(inputClass(!!errors.gstNumber), "uppercase")}
+              placeholder="22AAAAA0000A1Z5"
+              {...register("gstNumber")}
+            />
+          </FormField>
+        </div>
 
         {/* Divider */}
         <div className="flex items-center gap-3 py-1">
