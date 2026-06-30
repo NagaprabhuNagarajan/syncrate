@@ -40,9 +40,6 @@ export default function OnboardingLayout({
           <div className="lg:hidden">
             <BrandLogo size={132} priority />
           </div>
-          <p className="mt-2 text-xs font-medium uppercase tracking-wider text-slate-400">
-            Account Setup
-          </p>
         </div>
 
         {/* Content */}

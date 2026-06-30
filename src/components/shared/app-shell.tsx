@@ -237,7 +237,7 @@ function Sidebar({
               <NavLink item={item} collapsed={collapsed} />
             </li>
           ))}
-          <li>
+          {/* <li>
             <form action={signOutAction}>
               <button
                 type="submit"
@@ -255,7 +255,7 @@ function Sidebar({
                 {!collapsed && <span>Sign out</span>}
               </button>
             </form>
-          </li>
+          </li> */}
         </ul>
       </div>
     </aside>
@@ -305,7 +305,7 @@ function TopBar({
               className="relative rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-slate-400 dark:hover:bg-slate-800"
               aria-label="Notifications"
             >
-              <Bell className="h-5 w-5" aria-hidden="true" />
+              <Bell className="h-4 w-4" aria-hidden="true" />
               <span
                 className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gradient-error"
                 aria-hidden="true"
@@ -332,7 +332,7 @@ function TopBar({
               className="ml-0.5 rounded-full outline-none ring-offset-background transition-shadow focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
               aria-label="Account menu"
             >
-              <Avatar className="h-8 w-8 ring-2 ring-white/60 dark:ring-slate-800">
+              <Avatar className="h-7 w-7 ring-2 ring-white/60 dark:ring-slate-800">
                 <AvatarFallback>U</AvatarFallback>
               </Avatar>
             </button>
