@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
     // Disabled until `next build` or `next dev` generates .next/types/app-router.d.ts.
     // Re-enable after the first build.
   },
+  // Recharts (v3) ships ESM-only deps (d3 / victory-vendor) that must be
+  // transpiled for the production build worker to resolve them.
+  transpilePackages: ["recharts"],
   images: {
     remotePatterns: [
       {

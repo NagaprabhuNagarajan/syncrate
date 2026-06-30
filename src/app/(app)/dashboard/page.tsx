@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
 import { getDashboardKpis } from "@/features/dashboard/services/dashboard.service";
+import { getDashboardAnalytics } from "@/features/dashboard/services/dashboard-analytics.service";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -38,7 +39,12 @@ export default async function DashboardPage({
     redirect("/create-organization");
   }
 
-  const kpis = await getDashboardKpis(supabase, activeOrg.id);
+  const [kpis, analytics] = await Promise.all([
+    getDashboardKpis(supabase, activeOrg.id),
+    getDashboardAnalytics(supabase, activeOrg.id),
+  ]);
 
-  return <DashboardView organization={activeOrg} kpis={kpis} />;
+  return (
+    <DashboardView organization={activeOrg} kpis={kpis} analytics={analytics} />
+  );
 }

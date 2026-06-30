@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@/tests/utils";
 import type { Organization } from "@/features/organization/types/organization.types";
 import type { DashboardKpis } from "@/features/dashboard/services/dashboard.service";
+import type { DashboardAnalytics } from "@/features/dashboard/services/dashboard-analytics.service";
 import { DashboardView } from "./dashboard-view";
 
 // ─────────────────────────────────────────────────────────────
@@ -54,11 +55,35 @@ function makeKpis(overrides: Partial<DashboardKpis> = {}): DashboardKpis {
   };
 }
 
+function makeAnalytics(
+  overrides: Partial<DashboardAnalytics> = {}
+): DashboardAnalytics {
+  return {
+    trend: [
+      { month: "Jan", sales: 100, purchases: 60 },
+      { month: "Feb", sales: 120, purchases: 70 },
+    ],
+    aging: [
+      { bucket: "0-30", receivable: 1000, payable: 500 },
+      { bucket: "31-60", receivable: 0, payable: 0 },
+      { bucket: "61-90", receivable: 0, payable: 0 },
+      { bucket: "90+", receivable: 0, payable: 0 },
+    ],
+    invoiceStatus: [{ status: "paid", label: "Paid", count: 2, amount: 5000 }],
+    topCustomers: [{ name: "Acme", amount: 5000 }],
+    topProducts: [{ name: "Widget", amount: 3000 }],
+    ...overrides,
+  };
+}
+
 function renderDashboard(
   org: Organization = makeOrg(),
-  kpis: DashboardKpis = makeKpis()
+  kpis: DashboardKpis = makeKpis(),
+  analytics: DashboardAnalytics = makeAnalytics()
 ) {
-  return render(<DashboardView organization={org} kpis={kpis} />);
+  return render(
+    <DashboardView organization={org} kpis={kpis} analytics={analytics} />
+  );
 }
 
 // ─────────────────────────────────────────────────────────────

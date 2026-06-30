@@ -20,6 +20,13 @@ import { Card } from "@/components/ui/card";
 import { AnimatedNumber } from "@/components/shared/animated-number";
 import type { Organization } from "@/features/organization/types/organization.types";
 import type { DashboardKpis, RecentActivityItem } from "@/features/dashboard/services/dashboard.service";
+import type { DashboardAnalytics } from "@/features/dashboard/services/dashboard-analytics.service";
+import {
+  SalesTrendChart,
+  AgingChart,
+  InvoiceStatusChart,
+  TopList,
+} from "@/features/dashboard/components/dashboard-charts";
 import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
@@ -306,15 +313,60 @@ const QUICK_ACTIONS: QuickActionProps[] = [
 ];
 
 // ─────────────────────────────────────────────────────────────
+// Panel (chart section wrapper)
+// ─────────────────────────────────────────────────────────────
+
+function Panel({
+  title,
+  subtitle,
+  delay = 0,
+  className,
+  children,
+}: {
+  readonly title: string;
+  readonly subtitle?: string;
+  readonly delay?: number;
+  readonly className?: string;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+      className={cn(
+        "rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900",
+        className
+      )}
+    >
+      <div className="mb-3">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
+        )}
+      </div>
+      {children}
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Dashboard View
 // ─────────────────────────────────────────────────────────────
 
 interface DashboardViewProps {
   readonly organization: Organization;
   readonly kpis: DashboardKpis;
+  readonly analytics: DashboardAnalytics;
 }
 
-export function DashboardView({ organization, kpis }: DashboardViewProps) {
+export function DashboardView({
+  organization,
+  kpis,
+  analytics,
+}: DashboardViewProps) {
   const growthPct =
     ((kpis.salesThisMonth - kpis.salesLastMonth) /
       Math.max(kpis.salesLastMonth, 1)) *
@@ -401,6 +453,58 @@ export function DashboardView({ organization, kpis }: DashboardViewProps) {
           gradient="bg-gradient-error"
           tint="bg-rose-400"
         />
+      </div>
+
+      {/* Trend + invoice status */}
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Panel
+          title="Sales & purchases"
+          subtitle="Last 6 months"
+          delay={0.15}
+          className="lg:col-span-2"
+        >
+          <SalesTrendChart data={analytics.trend} />
+          <div className="mt-2 flex items-center justify-center gap-5 text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#3b82f6]" /> Sales
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#8b5cf6]" /> Purchases
+            </span>
+          </div>
+        </Panel>
+        <Panel title="Invoice status" subtitle="Posted invoices" delay={0.2}>
+          <InvoiceStatusChart data={analytics.invoiceStatus} />
+        </Panel>
+      </div>
+
+      {/* Aging + top customers + top products */}
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Panel title="Receivables vs payables" subtitle="By age" delay={0.2}>
+          <AgingChart data={analytics.aging} />
+          <div className="mt-2 flex items-center justify-center gap-5 text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#16a34a]" /> Receivable
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#f59e0b]" /> Payable
+            </span>
+          </div>
+        </Panel>
+        <Panel title="Top customers" subtitle="By revenue" delay={0.25}>
+          <TopList
+            data={analytics.topCustomers}
+            emptyLabel="No sales yet"
+            accent="from-blue-500 to-indigo-500"
+          />
+        </Panel>
+        <Panel title="Top products" subtitle="By sales value" delay={0.3}>
+          <TopList
+            data={analytics.topProducts}
+            emptyLabel="No sales yet"
+            accent="from-violet-500 to-fuchsia-500"
+          />
+        </Panel>
       </div>
 
       {/* Bottom row */}
