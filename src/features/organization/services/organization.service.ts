@@ -48,15 +48,36 @@ function toSlug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
+/**
+ * Default measurement units seeded for every new organization so the product
+ * form is usable immediately (a fresh org otherwise has no units to pick).
+ * Categories/brands are business-specific and intentionally left empty.
+ */
+const DEFAULT_UNITS: readonly { name: string; symbol: string }[] = [
+  { name: "Piece", symbol: "Pcs" },
+  { name: "Numbers", symbol: "Nos" },
+  { name: "Kilogram", symbol: "kg" },
+  { name: "Gram", symbol: "g" },
+  { name: "Litre", symbol: "L" },
+  { name: "Millilitre", symbol: "ml" },
+  { name: "Metre", symbol: "m" },
+  { name: "Box", symbol: "Box" },
+  { name: "Dozen", symbol: "Dzn" },
+  { name: "Pack", symbol: "Pack" },
+  { name: "Hour", symbol: "Hr" },
+];
+
 // ─────────────────────────────────────────────────────────────
 // Service
 // ─────────────────────────────────────────────────────────────
 
 export class OrganizationService {
   private readonly repo: OrganizationRepository;
+  private readonly supabase: AppSupabaseClient;
 
   constructor(supabase: AppSupabaseClient) {
     this.repo = new OrganizationRepository(supabase);
+    this.supabase = supabase;
   }
 
   // ── Create Organization ──────────────────────────────────
@@ -104,7 +125,32 @@ export class OrganizationService {
       );
     }
 
+    // Seed default measurement units (best-effort — never block org creation).
+    await this.seedDefaultUnits(org.id, userId);
+
     return ok(org);
+  }
+
+  /**
+   * Inserts the default unit set for a freshly created organization.
+   * Best-effort: any failure is swallowed so it can never fail org creation.
+   */
+  private async seedDefaultUnits(
+    organizationId: string,
+    userId: string
+  ): Promise<void> {
+    try {
+      await this.supabase.from("units").insert(
+        DEFAULT_UNITS.map((u) => ({
+          organization_id: organizationId,
+          name: u.name,
+          symbol: u.symbol,
+          created_by: userId,
+        }))
+      );
+    } catch {
+      // Non-critical — the org is already created; units can be added manually.
+    }
   }
 
   // ── Get Organization ──────────────────────────────────────
