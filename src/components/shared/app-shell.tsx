@@ -199,22 +199,6 @@ function Sidebar({
         </button>
       </div>
 
-      {/* Org selector (placeholder) */}
-      {!collapsed && (
-        <button className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-2 text-left transition-colors hover:border-slate-300 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-700 dark:hover:bg-slate-800">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-brand text-[11px] font-bold text-white">
-            M
-          </span>
-          <span className="flex-1 truncate text-xs font-medium text-slate-600 dark:text-slate-300">
-            My Organization
-          </span>
-          <ChevronDown
-            className="h-3 w-3 shrink-0 text-slate-400 dark:text-slate-500"
-            aria-hidden="true"
-          />
-        </button>
-      )}
-
       {/* Main nav */}
       <nav
         className="scrollbar-thin flex-1 overflow-y-auto px-2 py-3"
