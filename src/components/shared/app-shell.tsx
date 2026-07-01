@@ -272,7 +272,7 @@ function TopBar({
         {/* Search trigger — opens the command palette (also ⌘K / Ctrl+K) */}
         <button
           onClick={onSearchOpen}
-          className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white/60 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-500 dark:hover:border-slate-700 md:flex md:w-72 lg:w-96"
+          className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white/60 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-500 dark:hover:border-slate-700 md:flex md:w-72 lg:w-92"
           aria-label="Search"
         >
           <Search className="h-4 w-4" aria-hidden="true" />
