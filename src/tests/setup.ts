@@ -24,6 +24,11 @@ if (typeof window !== "undefined" && !window.matchMedia) {
   });
 }
 
+// jsdom does not implement scrollIntoView (used by cmdk on active-item change)
+if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn();
+}
+
 // Mock Next.js router
 vi.mock("next/navigation", () => ({
   useRouter: () => ({

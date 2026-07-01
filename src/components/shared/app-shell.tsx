@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,6 +45,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { CommandPalette } from "@/components/shared/command-palette";
 
 // ─────────────────────────────────────────────────────────────
 // Navigation definition
@@ -252,8 +253,10 @@ function Sidebar({
 
 function TopBar({
   onMobileMenuOpen,
+  onSearchOpen,
 }: {
   readonly onMobileMenuOpen: () => void;
+  readonly onSearchOpen: () => void;
 }) {
   return (
     <header className="glass sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/70 px-4 dark:border-slate-800/70 sm:px-6">
@@ -266,14 +269,15 @@ function TopBar({
           <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
 
-        {/* Search trigger */}
+        {/* Search trigger — opens the command palette (also ⌘K / Ctrl+K) */}
         <button
-          className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white/60 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-500 dark:hover:border-slate-700 md:flex"
+          onClick={onSearchOpen}
+          className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white/60 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-500 dark:hover:border-slate-700 md:flex md:w-72 lg:w-96"
           aria-label="Search"
         >
           <Search className="h-4 w-4" aria-hidden="true" />
           <span>Search…</span>
-          <kbd className="ml-6 rounded border border-slate-200 bg-slate-50 px-1.5 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+          <kbd className="ml-auto rounded border border-slate-200 bg-slate-50 px-1.5 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800">
             ⌘K
           </kbd>
         </button>
@@ -426,6 +430,19 @@ export function AppShell({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Global ⌘K / Ctrl+K to toggle the command palette.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((prev) => !prev);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
@@ -442,7 +459,10 @@ export function AppShell({
 
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <TopBar onMobileMenuOpen={() => setMobileOpen(true)} />
+        <TopBar
+          onMobileMenuOpen={() => setMobileOpen(true)}
+          onSearchOpen={() => setPaletteOpen(true)}
+        />
         <main
           className="app-backdrop scrollbar-thin flex-1 overflow-y-auto"
           id="main-content"
@@ -451,6 +471,8 @@ export function AppShell({
           {children}
         </main>
       </div>
+
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
   );
 }

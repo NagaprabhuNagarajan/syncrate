@@ -14,10 +14,20 @@ const { mockSignOut, pathnameRef } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameRef.current,
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 vi.mock("@/features/identity/actions/auth.actions", () => ({
   signOutAction: mockSignOut,
+}));
+
+vi.mock("@/features/search/actions/search.actions", () => ({
+  globalSearchAction: vi.fn(async () => ({
+    customers: [],
+    suppliers: [],
+    products: [],
+    invoices: [],
+  })),
 }));
 
 beforeEach(() => {
