@@ -5,6 +5,7 @@ import { ProductsView } from "./products-view";
 import type {
   Product,
   ProductListResult,
+  ProductStats,
 } from "@/features/product/types/product.types";
 
 // ─────────────────────────────────────────────────────────────
@@ -59,6 +60,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     manufacturer: null,
     hsnCode: null,
     gstRate: 18,
+    gstRates: [18],
     taxInclusive: false,
     purchasePrice: 100,
     sellingPrice: 199.5,
@@ -98,6 +100,16 @@ function makeResult(
   };
 }
 
+function makeStats(overrides: Partial<ProductStats> = {}): ProductStats {
+  return {
+    total: 1,
+    active: 1,
+    draft: 0,
+    discontinued: 0,
+    ...overrides,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────
@@ -108,6 +120,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -128,6 +141,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage={false}
       />
@@ -142,6 +156,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult({ items: [], total: 0 })}
+        stats={makeStats({ total: 0, active: 0 })}
         filters={{}}
         canManage
       />
@@ -155,6 +170,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult({ items: [], total: 0 })}
+        stats={makeStats({ total: 0, active: 0 })}
         filters={{}}
         canManage
       />
@@ -169,6 +185,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -177,20 +194,33 @@ describe("ProductsView", () => {
     expect(mockPush).toHaveBeenCalledWith("/products?search=widget");
   });
 
+  it("clears the search filter when the field is emptied", async () => {
+    const user = userEvent.setup();
+    render(
+      <ProductsView
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{ search: "widget" }}
+        canManage
+      />
+    );
+    await user.clear(screen.getByLabelText(/search products/i));
+    expect(mockPush).toHaveBeenCalledWith("/products");
+  });
+
   it("updates the URL when the status filter changes", async () => {
     const user = userEvent.setup();
     render(
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
     );
-    await user.selectOptions(
-      screen.getByLabelText(/filter by status/i),
-      "discontinued"
-    );
+    await user.click(screen.getByRole("tab", { name: "Discontinued" }));
     expect(mockPush).toHaveBeenCalledWith("/products?status=discontinued");
   });
 
@@ -200,6 +230,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -222,6 +253,7 @@ describe("ProductsView", () => {
           page: 1,
           pageSize: 20,
         })}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -237,6 +269,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -250,6 +283,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult({ items: [makeProduct({ sku: null })] })}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -262,6 +296,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage={false}
       />
@@ -295,6 +330,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -326,6 +362,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -344,6 +381,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -367,6 +405,7 @@ describe("ProductsView", () => {
       <ProductsView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />

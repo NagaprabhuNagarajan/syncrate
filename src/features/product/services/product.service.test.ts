@@ -10,6 +10,7 @@ import { ProductService } from "./product.service";
 const { mockRepo } = vi.hoisted(() => ({
   mockRepo: {
     list: vi.fn(),
+    getStats: vi.fn(),
     findById: vi.fn(),
     findByField: vi.fn(),
     findAllForExport: vi.fn(),
@@ -42,6 +43,7 @@ function buildProduct(overrides: Partial<Product> = {}): Product {
     manufacturer: null,
     hsnCode: null,
     gstRate: 18,
+    gstRates: [18],
     taxInclusive: false,
     purchasePrice: 100,
     sellingPrice: 199.5,
@@ -93,6 +95,17 @@ describe("ProductService.listProducts", () => {
     const result = await service.listProducts("org-1", { search: "widget" });
     expect(result).toBe(listResult);
     expect(mockRepo.list).toHaveBeenCalledWith("org-1", { search: "widget" });
+  });
+});
+
+describe("ProductService.getProductStats", () => {
+  it("delegates to the repository", async () => {
+    const stats = { total: 5, active: 4, draft: 1, discontinued: 0 };
+    mockRepo.getStats.mockResolvedValue(stats);
+
+    const result = await service.getProductStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
   });
 });
 
@@ -155,6 +168,20 @@ describe("ProductService.createProduct", () => {
     const createArg = mockRepo.create.mock.calls[0]?.[0];
     expect(createArg.code).toBe("ABC-1");
     expect(mockRepo.list).not.toHaveBeenCalled();
+  });
+
+  it("stores multiple GST rates (deduped, sorted) with the first as the primary", async () => {
+    mockRepo.findByField.mockResolvedValue(null);
+    mockRepo.create.mockResolvedValue(buildProduct());
+
+    await service.createProduct(
+      { name: "Widget", gstRates: [18, 5, 18] },
+      "org-1",
+      "user-1"
+    );
+    const createArg = mockRepo.create.mock.calls[0]?.[0];
+    expect(createArg.gst_rates).toEqual([5, 18]);
+    expect(createArg.gst_rate).toBe(5);
   });
 
   it("fails with duplicate_code when the code already exists", async () => {
@@ -395,7 +422,7 @@ describe("ProductService.updateProduct", () => {
       "prod-1",
       {
         description: "",
-        type: "digital",
+        type: "service",
         status: "discontinued",
         gstRate: 5,
         taxInclusive: true,
@@ -411,7 +438,7 @@ describe("ProductService.updateProduct", () => {
     expect(result.success).toBe(true);
     const patch = mockRepo.update.mock.calls[0]?.[1];
     expect(patch.description).toBeNull();
-    expect(patch.type).toBe("digital");
+    expect(patch.type).toBe("service");
     expect(patch.status).toBe("discontinued");
     expect(patch.gst_rate).toBe(5);
     expect(patch.tax_inclusive).toBe(true);
@@ -420,6 +447,36 @@ describe("ProductService.updateProduct", () => {
     expect(patch.track_inventory).toBe(false);
     expect(patch.reorder_level).toBe(5);
     expect(patch.tags).toEqual(["seasonal"]);
+  });
+
+  it("stamps deleted_at/deleted_by when the status changes to archived", async () => {
+    mockRepo.update.mockResolvedValue(buildProduct({ status: "archived" }));
+
+    await service.updateProduct(
+      "prod-1",
+      { status: "archived" },
+      "org-1",
+      "user-9"
+    );
+
+    const patch = mockRepo.update.mock.calls[0]?.[1];
+    expect(typeof patch.deleted_at).toBe("string");
+    expect(patch.deleted_by).toBe("user-9");
+  });
+
+  it("clears deleted_at/deleted_by when the status changes away from archived", async () => {
+    mockRepo.update.mockResolvedValue(buildProduct({ status: "active" }));
+
+    await service.updateProduct(
+      "prod-1",
+      { status: "active" },
+      "org-1",
+      "user-9"
+    );
+
+    const patch = mockRepo.update.mock.calls[0]?.[1];
+    expect(patch.deleted_at).toBeNull();
+    expect(patch.deleted_by).toBeNull();
   });
 });
 

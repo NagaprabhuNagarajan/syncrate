@@ -5,6 +5,7 @@ import { OrganizationService } from "@/features/organization/services/organizati
 import { ProductService } from "@/features/product/services/product.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { ProductProfile } from "@/features/product/components/product-profile";
+import { fetchProductOptions } from "@/features/product/server/product-options";
 
 interface ProductDetailPageProps {
   readonly params: Promise<{ id: string }>;
@@ -88,11 +89,14 @@ export default async function ProductDetailPage({
     context.permissions.includes("product.update") ||
     context.permissions.includes("product.delete");
 
+  const options = await fetchProductOptions(supabase, activeOrg.id);
+
   return (
     <ProductProfile
       product={result.data}
       organizationId={activeOrg.id}
       canManage={canManage}
+      options={options}
     />
   );
 }

@@ -2,12 +2,8 @@
  * Product domain types — the central catalog (docs/PRD/4.md Module 6).
  */
 
-export type ProductType = "inventory" | "service" | "digital" | "bundle";
-export type ProductStatus =
-  | "draft"
-  | "active"
-  | "discontinued"
-  | "archived";
+export type ProductType = "inventory" | "service";
+export type ProductStatus = "draft" | "active" | "discontinued" | "archived";
 
 export type GstRate = 0 | 5 | 12 | 18 | 28;
 
@@ -26,7 +22,10 @@ export interface Product {
   readonly manufacturer: string | null;
   // Taxation
   readonly hsnCode: string | null;
+  /** Primary/default GST slab — the first of `gstRates`; used to prefill transactions. */
   readonly gstRate: number;
+  /** All applicable GST slabs for this product. */
+  readonly gstRates: readonly number[];
   readonly taxInclusive: boolean;
   // Pricing
   readonly purchasePrice: number;
@@ -71,6 +70,7 @@ export interface CreateProductInput {
   readonly manufacturer?: string;
   readonly hsnCode?: string;
   readonly gstRate?: number;
+  readonly gstRates?: readonly number[];
   readonly taxInclusive?: boolean;
   readonly purchasePrice?: number;
   readonly sellingPrice?: number;
@@ -116,6 +116,14 @@ export interface ProductListResult {
   readonly total: number;
   readonly page: number;
   readonly pageSize: number;
+}
+
+/** Aggregate counts for the products list header tiles. */
+export interface ProductStats {
+  readonly total: number;
+  readonly active: number;
+  readonly draft: number;
+  readonly discontinued: number;
 }
 
 export interface ProductImportRowError {

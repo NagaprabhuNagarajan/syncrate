@@ -5,56 +5,42 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Package,
   Pencil,
   Archive,
   AlertTriangle,
-  Barcode,
-  Factory,
+  ChevronLeft,
+  Wallet,
+  TrendingUp,
   Tag,
+  Boxes,
+  Layers,
+  FolderOpen,
+  Ruler,
+  Factory,
   Hash,
+  Percent,
+  CheckCircle2,
+  Barcode,
+  ArrowDownToLine,
+  ArrowUpToLine,
+  CalendarClock,
+  type LucideIcon,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PageHeader } from "@/components/shared/page-header";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { AnimatedNumber } from "@/components/shared/animated-number";
 import { archiveProductAction } from "@/features/product/actions/product.actions";
-import type {
-  Product,
-  ProductStatus,
-  ProductType,
-} from "@/features/product/types/product.types";
-
-const STATUS_VARIANT: Record<ProductStatus, BadgeProps["variant"]> = {
-  draft: "muted",
-  active: "success",
-  discontinued: "warning",
-  archived: "secondary",
-};
-
-const STATUS_LABEL: Record<ProductStatus, string> = {
-  draft: "Draft",
-  active: "Active",
-  discontinued: "Discontinued",
-  archived: "Archived",
-};
-
-const TYPE_LABEL: Record<ProductType, string> = {
-  inventory: "Inventory",
-  service: "Service",
-  digital: "Digital",
-  bundle: "Bundle",
-};
-
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
-
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
-}
+import {
+  STATUS_LABEL,
+  STATUS_VARIANT,
+  TYPE_LABEL,
+} from "@/features/product/utils/product-display";
+import { formatCurrency, formatDate } from "@/utils/format";
+import type { Product } from "@/features/product/types/product.types";
+import type { ProductOption } from "@/features/product/components/product-form";
+import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
 // Archive confirmation dialog
@@ -90,7 +76,7 @@ function ArchiveDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="archive-product-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start gap-4">
           <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
@@ -108,15 +94,17 @@ function ArchiveDialog({
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to archive{" "}
-              <span className="font-medium text-slate-700 dark:text-slate-300">{productName}</span>?
-              Archived products cannot be added to new transactions.
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {productName}
+              </span>
+              ? Archived products cannot be added to new transactions.
             </p>
           </div>
         </div>
 
         {error && (
           <div
-            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
@@ -148,6 +136,78 @@ function ArchiveDialog({
 }
 
 // ─────────────────────────────────────────────────────────────
+// KPI tile
+// ─────────────────────────────────────────────────────────────
+
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
+  emphasis,
+  suffix,
+  index,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly emphasis?: boolean;
+  readonly suffix?: string;
+  readonly index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+    >
+      <Card className="relative h-full overflow-hidden p-3">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-20 w-20 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-2.5">
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
+              tint
+            )}
+          >
+            <Icon className="h-4 w-4 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p
+              className={cn(
+                "font-bold leading-tight text-slate-900 dark:text-slate-100",
+                emphasis ? "text-lg" : "text-base"
+              )}
+            >
+              {suffix ? (
+                <>
+                  <AnimatedNumber value={value} />
+                  <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {suffix}
+                  </span>
+                </>
+              ) : (
+                formatCurrency(value, true)
+              )}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Info row
 // ─────────────────────────────────────────────────────────────
 
@@ -156,7 +216,7 @@ function InfoRow({
   label,
   value,
 }: {
-  readonly icon: typeof Tag;
+  readonly icon: LucideIcon;
   readonly label: string;
   readonly value: string | null;
 }) {
@@ -169,11 +229,38 @@ function InfoRow({
         className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
         aria-hidden="true"
       />
-      <div>
+      <div className="min-w-0">
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
+        <dd className="break-words text-slate-700 dark:text-slate-300">
+          {value}
+        </dd>
       </div>
     </div>
+  );
+}
+
+function SectionCard({
+  title,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {title}
+        </h2>
+        {children}
+      </Card>
+    </motion.div>
   );
 }
 
@@ -185,12 +272,14 @@ function PriceRow({
   readonly value: number;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="nums text-sm font-medium text-slate-900 dark:text-slate-100">
-        {formatCurrency(value)}
-      </dd>
-    </div>
+    <TableRow>
+      <TableCell className="text-slate-600 dark:text-slate-400">
+        {label}
+      </TableCell>
+      <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+        {formatCurrency(value, true)}
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -198,16 +287,35 @@ function PriceRow({
 // Product profile
 // ─────────────────────────────────────────────────────────────
 
+interface ProductProfileOptions {
+  readonly categories?: readonly ProductOption[];
+  readonly brands?: readonly ProductOption[];
+  readonly units?: readonly ProductOption[];
+  readonly suppliers?: readonly ProductOption[];
+}
+
 interface ProductProfileProps {
   readonly product: Product;
   readonly organizationId: string;
   readonly canManage: boolean;
+  readonly options?: ProductProfileOptions;
+}
+
+function resolveName(
+  options: readonly ProductOption[] | undefined,
+  id: string | null
+): string | null {
+  if (!id) {
+    return null;
+  }
+  return options?.find((option) => option.id === id)?.name ?? null;
 }
 
 export function ProductProfile({
   product,
   organizationId,
   canManage,
+  options,
 }: ProductProfileProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -216,9 +324,10 @@ export function ProductProfile({
   const [isPending, startTransition] = useTransition();
 
   const org = searchParams.get("org");
-  const editHref = org
-    ? `/products/${product.id}/edit?org=${org}`
-    : `/products/${product.id}/edit`;
+  const withOrg = (path: string): string =>
+    org ? `${path}${path.includes("?") ? "&" : "?"}org=${org}` : path;
+
+  const editHref = withOrg(`/products/${product.id}/edit`);
 
   const handleArchive = () => {
     setArchiveError(null);
@@ -229,142 +338,252 @@ export function ProductProfile({
         return;
       }
       setShowArchive(false);
-      router.push("/products");
+      router.push(withOrg("/products"));
     });
   };
 
+  const margin = product.sellingPrice - product.purchasePrice;
+  const categoryName = resolveName(options?.categories, product.categoryId);
+  const brandName = resolveName(options?.brands, product.brandId);
+  const unitName = resolveName(options?.units, product.unitId);
+
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title={product.name}
-        description={product.code}
-        icon={Package}
+      {/* Back link */}
+      <Link
+        href={withOrg("/products")}
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
-        {canManage && (
-          <>
-            <Button asChild variant="outline">
-              <Link href={editHref}>
-                <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Edit
-              </Link>
-            </Button>
-            {product.status !== "archived" && (
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700 dark:hover:text-error-300"
-                onClick={() => {
-                  setArchiveError(null);
-                  setShowArchive(true);
-                }}
-              >
-                <Archive className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Archive
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        Products
+      </Link>
+
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200/70 bg-white/80 px-4 py-3 backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/80 lg:-mx-6 lg:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                {product.name}
+              </h1>
+              <Badge dot variant={STATUS_VARIANT[product.status]}>
+                {STATUS_LABEL[product.status]}
+              </Badge>
+              <Badge variant="info">{TYPE_LABEL[product.type]}</Badge>
+            </div>
+            <p className="font-mono text-xs text-slate-400 dark:text-slate-500">
+              {product.code}
+            </p>
+          </div>
+
+          {canManage && (
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={editHref}>
+                  <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Edit
+                </Link>
               </Button>
-            )}
-          </>
-        )}
-      </PageHeader>
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Badge dot variant={STATUS_VARIANT[product.status]}>
-          {STATUS_LABEL[product.status]}
-        </Badge>
-        <Badge variant="info">{TYPE_LABEL[product.type]}</Badge>
-        {product.tags.map((tag) => (
-          <Badge key={tag} variant="muted">
-            {tag}
-          </Badge>
-        ))}
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Details */}
-        <Card className="p-5 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Product details
-          </h2>
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoRow
-              icon={Factory}
-              label="Manufacturer"
-              value={product.manufacturer}
-            />
-            <InfoRow icon={Hash} label="SKU" value={product.sku} />
-            <InfoRow
-              icon={Barcode}
-              label="Barcode"
-              value={product.barcode}
-            />
-            <InfoRow
-              icon={Tag}
-              label="Track inventory"
-              value={product.trackInventory ? "Yes" : "No"}
-            />
-          </dl>
-          {product.description && (
-            <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4">
-              <dt className="text-xs text-muted-foreground">Description</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
-                {product.description}
-              </dd>
+              {product.status !== "archived" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
+                  onClick={() => {
+                    setArchiveError(null);
+                    setShowArchive(true);
+                  }}
+                >
+                  <Archive className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Archive
+                </Button>
+              )}
             </div>
           )}
+        </div>
 
-          <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4">
-            <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              Tax
-            </h3>
-            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="flex items-center justify-between">
-                <dt className="text-sm text-muted-foreground">GST rate</dt>
-                <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {product.gstRate}%
-                </dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-sm text-muted-foreground">Tax inclusive</dt>
-                <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {product.taxInclusive ? "Yes" : "No"}
-                </dd>
-              </div>
-              {product.hsnCode && (
-                <div className="flex items-center justify-between">
-                  <dt className="text-sm text-muted-foreground">HSN code</dt>
-                  <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {product.hsnCode}
-                  </dd>
-                </div>
-              )}
-            </dl>
+        {product.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            {product.tags.map((tag) => (
+              <Badge key={tag} variant="muted" size="sm">
+                {tag}
+              </Badge>
+            ))}
           </div>
-        </Card>
+        )}
+      </div>
 
-        {/* Pricing */}
-        <Card className="p-5">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Pricing</h2>
-          <dl className="space-y-3">
-            <div>
-              <dt className="text-xs text-muted-foreground">Selling price</dt>
-              <dd className="nums text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                {formatCurrency(product.sellingPrice)}
-              </dd>
-            </div>
-            <div className="space-y-2.5 border-t border-slate-100 dark:border-slate-800 pt-3">
-              <PriceRow label="Purchase price" value={product.purchasePrice} />
-              <PriceRow label="Dealer price" value={product.dealerPrice} />
-              <PriceRow
-                label="Wholesale price"
-                value={product.wholesalePrice}
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiTile
+          icon={Wallet}
+          label="Selling price"
+          value={product.sellingPrice}
+          tint="bg-gradient-brand"
+          emphasis
+          index={0}
+        />
+        <KpiTile
+          icon={TrendingUp}
+          label="Margin"
+          value={margin}
+          tint={margin >= 0 ? "bg-gradient-success" : "bg-gradient-error"}
+          index={1}
+        />
+        <KpiTile
+          icon={Tag}
+          label="MRP"
+          value={product.retailPrice}
+          tint="bg-gradient-violet"
+          index={2}
+        />
+        <KpiTile
+          icon={Boxes}
+          label="Opening stock"
+          value={product.openingStock}
+          tint="bg-gradient-info"
+          suffix="units"
+          index={3}
+        />
+      </div>
+
+      {/* Two-column body */}
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Main column */}
+        <div className="space-y-4 lg:col-span-2">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.1 }}
+          >
+            <Card className="overflow-hidden">
+              <div className="px-5 py-4">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Pricing
+                </h2>
+              </div>
+              <Table
+                className="[&_td]:px-5 [&_th]:px-5"
+                wrapperClassName="rounded-none border-0 border-t border-slate-100 bg-transparent dark:border-slate-800"
+              >
+                <TableBody>
+                  <PriceRow
+                    label="Purchase price"
+                    value={product.purchasePrice}
+                  />
+                  <PriceRow
+                    label="Selling price"
+                    value={product.sellingPrice}
+                  />
+                  <PriceRow
+                    label="Retail price (MRP)"
+                    value={product.retailPrice}
+                  />
+                  <PriceRow
+                    label="Min. selling price"
+                    value={product.minSellingPrice}
+                  />
+                </TableBody>
+              </Table>
+            </Card>
+          </motion.div>
+
+          {product.description && (
+            <SectionCard title="Description" delay={0.15}>
+              <p className="whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
+                {product.description}
+              </p>
+            </SectionCard>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-4">
+          <SectionCard title="Classification" delay={0.1}>
+            <dl className="space-y-4">
+              <InfoRow
+                icon={Layers}
+                label="Type"
+                value={TYPE_LABEL[product.type]}
               />
-              <PriceRow label="Retail price / MRP" value={product.retailPrice} />
-              <PriceRow
-                label="Min. selling price"
-                value={product.minSellingPrice}
+              <InfoRow icon={FolderOpen} label="Category" value={categoryName} />
+              <InfoRow icon={Tag} label="Brand" value={brandName} />
+              <InfoRow icon={Ruler} label="Unit" value={unitName} />
+              <InfoRow
+                icon={Factory}
+                label="Manufacturer"
+                value={product.manufacturer}
               />
-            </div>
-          </dl>
-        </Card>
+            </dl>
+          </SectionCard>
+
+          <SectionCard title="Tax" delay={0.15}>
+            <dl className="space-y-4">
+              <InfoRow icon={Hash} label="HSN code" value={product.hsnCode} />
+              <InfoRow
+                icon={Percent}
+                label={product.gstRates.length > 1 ? "GST rates" : "GST rate"}
+                value={
+                  product.gstRates.length > 0
+                    ? product.gstRates.map((r) => `${r}%`).join(", ")
+                    : `${product.gstRate}%`
+                }
+              />
+              <InfoRow
+                icon={CheckCircle2}
+                label="Tax inclusive"
+                value={product.taxInclusive ? "Yes" : "No"}
+              />
+            </dl>
+          </SectionCard>
+
+          <SectionCard title="Inventory" delay={0.2}>
+            <dl className="space-y-4">
+              <InfoRow icon={Hash} label="SKU" value={product.sku} />
+              <InfoRow
+                icon={Barcode}
+                label="Barcode"
+                value={product.barcode}
+              />
+              <InfoRow
+                icon={Boxes}
+                label="Track inventory"
+                value={product.trackInventory ? "Yes" : "No"}
+              />
+              <InfoRow
+                icon={ArrowDownToLine}
+                label="Reorder level"
+                value={String(product.reorderLevel)}
+              />
+              <InfoRow
+                icon={ArrowUpToLine}
+                label="Max stock"
+                value={String(product.maxStock)}
+              />
+              <InfoRow
+                icon={Boxes}
+                label="Opening stock"
+                value={String(product.openingStock)}
+              />
+            </dl>
+          </SectionCard>
+
+          <SectionCard title="Details" delay={0.25}>
+            <dl className="space-y-4">
+              <InfoRow
+                icon={CalendarClock}
+                label="Added on"
+                value={formatDate(product.createdAt)}
+              />
+              <InfoRow
+                icon={CalendarClock}
+                label="Last updated"
+                value={formatDate(product.updatedAt)}
+              />
+            </dl>
+          </SectionCard>
+        </div>
       </div>
 
       <AnimatePresence>

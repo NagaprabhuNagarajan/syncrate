@@ -88,6 +88,7 @@ function buildDbProduct(overrides: Partial<DbProduct> = {}): DbProduct {
     manufacturer: "Acme",
     hsn_code: "3402",
     gst_rate: 18,
+    gst_rates: [18],
     tax_inclusive: false,
     purchase_price: 100,
     selling_price: 199.5,
@@ -152,6 +153,7 @@ describe("ProductRepository", () => {
         manufacturer: "Acme",
         hsnCode: "3402",
         gstRate: 18,
+        gstRates: [18],
         taxInclusive: false,
         purchasePrice: 100,
         sellingPrice: 199.5,
@@ -177,7 +179,9 @@ describe("ProductRepository", () => {
         createdBy: "user-1",
       });
       expect(builders[0].eq).toHaveBeenCalledWith("id", "prod-1");
-      expect(builders[0].is).toHaveBeenCalledWith("deleted_at", null);
+      // Archived (soft-deleted) products must still load, so no deleted_at
+      // constraint is applied.
+      expect(builders[0].is).not.toHaveBeenCalled();
     });
 
     it("converts numeric strings via Number()", async () => {
@@ -277,7 +281,8 @@ describe("ProductRepository", () => {
       expect(result.page).toBe(1);
       expect(result.pageSize).toBe(20);
       expect(builders[0].eq).toHaveBeenCalledWith("organization_id", "org-1");
-      expect(builders[0].is).toHaveBeenCalledWith("deleted_at", null);
+      // "All" view returns every status, so no deleted_at constraint is applied.
+      expect(builders[0].is).not.toHaveBeenCalled();
       expect(builders[0].order).toHaveBeenCalledWith("name", {
         ascending: true,
       });
@@ -311,6 +316,24 @@ describe("ProductRepository", () => {
         ascending: false,
       });
       expect(builders[0].range).toHaveBeenCalledWith(20, 29);
+    });
+
+    it("includes soft-deleted rows when filtering by the archived status", async () => {
+      const { client, builders } = createMockClient([
+        {
+          data: [buildDbProduct({ status: "archived" })],
+          error: null,
+          count: 1,
+        },
+      ]);
+      const repo = new ProductRepository(client);
+
+      const result = await repo.list("org-1", { status: "archived" });
+
+      expect(result.items).toHaveLength(1);
+      // Archived view filters by status and does NOT constrain deleted_at.
+      expect(builders[0].eq).toHaveBeenCalledWith("status", "archived");
+      expect(builders[0].is).not.toHaveBeenCalled();
     });
 
     it("applies category and brand filters", async () => {
@@ -362,6 +385,46 @@ describe("ProductRepository", () => {
 
       await repo.list("org-1", { page: 0, pageSize: 1000 });
       expect(builders[0].range).toHaveBeenCalledWith(0, 99);
+    });
+  });
+
+  describe("getStats", () => {
+    it("returns counts for total, active, draft and discontinued", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: 12 },
+        { data: null, error: null, count: 8 },
+        { data: null, error: null, count: 3 },
+        { data: null, error: null, count: 1 },
+      ]);
+      const repo = new ProductRepository(client);
+
+      const stats = await repo.getStats("org-1");
+
+      expect(stats).toEqual({
+        total: 12,
+        active: 8,
+        draft: 3,
+        discontinued: 1,
+      });
+    });
+
+    it("defaults each count to 0 when null", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+      ]);
+      const repo = new ProductRepository(client);
+
+      const stats = await repo.getStats("org-1");
+
+      expect(stats).toEqual({
+        total: 0,
+        active: 0,
+        draft: 0,
+        discontinued: 0,
+      });
     });
   });
 
@@ -463,7 +526,8 @@ describe("ProductRepository", () => {
       expect(patchArg.updated_by).toBe("user-9");
       expect(typeof patchArg.updated_at).toBe("string");
       expect(builders[0].eq).toHaveBeenCalledWith("id", "prod-1");
-      expect(builders[0].is).toHaveBeenCalledWith("deleted_at", null);
+      // Updates may target archived (soft-deleted) rows, e.g. to restore them.
+      expect(builders[0].is).not.toHaveBeenCalled();
     });
 
     it("returns null on error", async () => {
