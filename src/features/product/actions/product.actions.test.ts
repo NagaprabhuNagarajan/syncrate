@@ -104,6 +104,7 @@ function buildProduct(): Product {
     manufacturer: null,
     hsnCode: null,
     gstRate: 0,
+    gstRates: [0],
     taxInclusive: false,
     purchasePrice: 0,
     sellingPrice: 0,

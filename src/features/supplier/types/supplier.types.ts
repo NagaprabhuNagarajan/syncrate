@@ -134,6 +134,14 @@ export interface SupplierListResult {
   readonly pageSize: number;
 }
 
+/** Aggregate counts for the suppliers list header tiles. */
+export interface SupplierStats {
+  readonly total: number;
+  readonly active: number;
+  readonly newThisMonth: number;
+  readonly inactive: number;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Result types
 // ─────────────────────────────────────────────────────────────

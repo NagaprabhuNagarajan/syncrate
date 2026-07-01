@@ -23,6 +23,7 @@ interface MockBuilder {
   eq: Mock;
   is: Mock;
   or: Mock;
+  gte: Mock;
   order: Mock;
   range: Mock;
   update: Mock;
@@ -54,6 +55,7 @@ function createMockClient(results: QueryResult[]): MockClient {
       eq: vi.fn(() => builder),
       is: vi.fn(() => builder),
       or: vi.fn(() => builder),
+      gte: vi.fn(() => builder),
       order: vi.fn(() => builder),
       range: vi.fn(() => Promise.resolve(result)),
       update: vi.fn(() => builder),
@@ -141,7 +143,7 @@ function buildDbLedgerEntry(
 
 describe("SupplierRepository.findById", () => {
   it("maps a DB row to a domain supplier", async () => {
-    const { client } = createMockClient([
+    const { client, builders } = createMockClient([
       { data: buildDbSupplier(), error: null },
     ]);
     const repo = new SupplierRepository(client);
@@ -155,6 +157,9 @@ describe("SupplierRepository.findById", () => {
     expect(supplier?.rating).toBe(4.5);
     expect(supplier?.openingBalance).toBe(1000);
     expect(supplier?.createdAt).toBeInstanceOf(Date);
+    // Archived (soft-deleted) suppliers must still load, so no deleted_at
+    // constraint is applied.
+    expect(builders[0]?.is).not.toHaveBeenCalled();
   });
 
   it("returns null when the row is not found", async () => {
@@ -223,7 +228,7 @@ describe("SupplierRepository.findByGst", () => {
 
 describe("SupplierRepository.list", () => {
   it("returns mapped items with total count", async () => {
-    const { client } = createMockClient([
+    const { client, builders } = createMockClient([
       { data: [buildDbSupplier(), buildDbSupplier({ id: "s-2" })], count: 2, error: null },
     ]);
     const repo = new SupplierRepository(client);
@@ -234,6 +239,8 @@ describe("SupplierRepository.list", () => {
     expect(result.total).toBe(2);
     expect(result.page).toBe(1);
     expect(result.pageSize).toBe(20);
+    // "All" view returns every status, so no deleted_at constraint is applied.
+    expect(builders[0]?.is).not.toHaveBeenCalled();
   });
 
   it("applies the status filter and search term", async () => {
@@ -248,6 +255,20 @@ describe("SupplierRepository.list", () => {
     expect(builders[0]?.or).toHaveBeenCalledWith(
       expect.stringContaining("name.ilike.%acme%")
     );
+  });
+
+  it("includes soft-deleted rows when filtering by the archived status", async () => {
+    const { client, builders } = createMockClient([
+      { data: [buildDbSupplier({ status: "archived" })], count: 1, error: null },
+    ]);
+    const repo = new SupplierRepository(client);
+
+    const result = await repo.list("org-1", { status: "archived" });
+
+    expect(result.items).toHaveLength(1);
+    // Archived view filters by status and does NOT constrain deleted_at.
+    expect(builders[0]?.eq).toHaveBeenCalledWith("status", "archived");
+    expect(builders[0]?.is).not.toHaveBeenCalled();
   });
 
   it("clamps page size and computes range", async () => {
@@ -271,6 +292,46 @@ describe("SupplierRepository.list", () => {
     const result = await repo.list("org-1");
     expect(result.items).toEqual([]);
     expect(result.total).toBe(0);
+  });
+});
+
+describe("SupplierRepository.getStats", () => {
+  it("returns counts for total, active, inactive and new-this-month", async () => {
+    const { client } = createMockClient([
+      { data: null, error: null, count: 12 },
+      { data: null, error: null, count: 9 },
+      { data: null, error: null, count: 2 },
+      { data: null, error: null, count: 3 },
+    ]);
+    const repo = new SupplierRepository(client);
+
+    const stats = await repo.getStats("org-1");
+
+    expect(stats).toEqual({
+      total: 12,
+      active: 9,
+      inactive: 2,
+      newThisMonth: 3,
+    });
+  });
+
+  it("defaults each count to 0 when null", async () => {
+    const { client } = createMockClient([
+      { data: null, error: null, count: undefined },
+      { data: null, error: null, count: undefined },
+      { data: null, error: null, count: undefined },
+      { data: null, error: null, count: undefined },
+    ]);
+    const repo = new SupplierRepository(client);
+
+    const stats = await repo.getStats("org-1");
+
+    expect(stats).toEqual({
+      total: 0,
+      active: 0,
+      inactive: 0,
+      newThisMonth: 0,
+    });
   });
 });
 
@@ -358,6 +419,8 @@ describe("SupplierRepository.update", () => {
     expect(updateArg.name).toBe("New Name");
     expect(updateArg.updated_by).toBe("user-2");
     expect(updateArg.updated_at).toEqual(expect.any(String));
+    // Updates may target archived (soft-deleted) rows, e.g. to restore them.
+    expect(builders[0]?.is).not.toHaveBeenCalled();
   });
 
   it("returns null on error", async () => {

@@ -66,6 +66,10 @@ async function authorize(
 }
 
 function rawFromForm(formData: FormData) {
+  const gstRates = formData
+    .getAll("gstRates")
+    .map(String)
+    .filter((v) => v !== "");
   return {
     code: formData.get("code") || undefined,
     name: formData.get("name") || undefined,
@@ -77,6 +81,7 @@ function rawFromForm(formData: FormData) {
     manufacturer: formData.get("manufacturer") || undefined,
     hsnCode: formData.get("hsnCode") || undefined,
     gstRate: formData.get("gstRate") || undefined,
+    gstRates: gstRates.length > 0 ? gstRates : undefined,
     taxInclusive: formData.get("taxInclusive") === "on" ? true : undefined,
     trackInventory:
       formData.get("trackInventory") === "on" ? true : undefined,

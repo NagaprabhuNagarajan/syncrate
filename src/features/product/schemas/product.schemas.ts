@@ -42,7 +42,7 @@ export const createProductSchema = z.object({
     .max(200, "Name must be 200 characters or less")
     .trim(),
   description: z.string().max(2000).trim().optional(),
-  type: z.enum(["inventory", "service", "digital", "bundle"]).optional(),
+  type: z.enum(["inventory", "service"]).optional(),
   categoryId: optionalUuid,
   brandId: optionalUuid,
   unitId: optionalUuid,
@@ -58,6 +58,13 @@ export const createProductSchema = z.object({
     .refine((v) => [0, 5, 12, 18, 28].includes(v), {
       message: "GST must be 0, 5, 12, 18 or 28",
     })
+    .optional(),
+  gstRates: z
+    .array(
+      z.coerce.number().refine((v) => [0, 5, 12, 18, 28].includes(v), {
+        message: "GST must be 0, 5, 12, 18 or 28",
+      })
+    )
     .optional(),
   taxInclusive: z.boolean().optional(),
   purchasePrice: money.optional(),

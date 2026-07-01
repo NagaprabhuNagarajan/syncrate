@@ -41,12 +41,13 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     description: "A high quality widget",
     type: "inventory",
     status: "active",
-    categoryId: null,
-    brandId: null,
-    unitId: null,
+    categoryId: "cat-1",
+    brandId: "brand-1",
+    unitId: "unit-1",
     manufacturer: "Acme Corp",
     hsnCode: "3402",
     gstRate: 18,
+    gstRates: [18],
     taxInclusive: false,
     purchasePrice: 100,
     sellingPrice: 199.5,
@@ -74,12 +75,55 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
   };
 }
 
+const OPTIONS = {
+  categories: [{ id: "cat-1", name: "Hardware" }],
+  brands: [{ id: "brand-1", name: "Acme" }],
+  units: [{ id: "unit-1", name: "Piece" }],
+  suppliers: [{ id: "sup-1", name: "Supplier One" }],
+};
+
 // ─────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────
 
 describe("ProductProfile", () => {
-  it("renders product details, tax and pricing", () => {
+  it("renders the sticky header, KPI strip and pricing/tax details", () => {
+    render(
+      <ProductProfile
+        product={makeProduct()}
+        organizationId="org-1"
+        canManage
+        options={OPTIONS}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /premium widget/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("PROD-001")).toBeInTheDocument();
+    expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    expect(screen.getByText("SKU-001")).toBeInTheDocument();
+    expect(screen.getByText("featured")).toBeInTheDocument();
+    expect(screen.getByText("A high quality widget")).toBeInTheDocument();
+    expect(screen.getByText("18%")).toBeInTheDocument();
+  });
+
+  it("resolves category, brand and unit names from the options prop", () => {
+    render(
+      <ProductProfile
+        product={makeProduct()}
+        organizationId="org-1"
+        canManage
+        options={OPTIONS}
+      />
+    );
+
+    expect(screen.getByText("Hardware")).toBeInTheDocument();
+    expect(screen.getByText("Acme")).toBeInTheDocument();
+    expect(screen.getByText("Piece")).toBeInTheDocument();
+  });
+
+  it("gracefully omits classification rows when no options are provided", () => {
     render(
       <ProductProfile
         product={makeProduct()}
@@ -88,14 +132,8 @@ describe("ProductProfile", () => {
       />
     );
 
-    expect(
-      screen.getByRole("heading", { name: /premium widget/i })
-    ).toBeInTheDocument();
-    expect(screen.getByText("Acme Corp")).toBeInTheDocument();
-    expect(screen.getByText("SKU-001")).toBeInTheDocument();
-    expect(screen.getByText("featured")).toBeInTheDocument();
-    expect(screen.getByText("A high quality widget")).toBeInTheDocument();
-    expect(screen.getByText("18%")).toBeInTheDocument();
+    expect(screen.queryByText("Hardware")).not.toBeInTheDocument();
+    expect(screen.queryByText("Category")).not.toBeInTheDocument();
   });
 
   it("renders an edit link that preserves the org param", () => {

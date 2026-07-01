@@ -22,12 +22,7 @@ const PRODUCT_STATUSES: readonly ProductStatus[] = [
   "archived",
 ];
 
-const PRODUCT_TYPES: readonly ProductType[] = [
-  "inventory",
-  "service",
-  "digital",
-  "bundle",
-];
+const PRODUCT_TYPES: readonly ProductType[] = ["inventory", "service"];
 
 function parseStatus(value?: string): ProductStatus | undefined {
   if (value && PRODUCT_STATUSES.includes(value as ProductStatus)) {
@@ -108,17 +103,16 @@ export default async function ProductsPage({
   const page = parsePage(params.page);
 
   const productService = new ProductService(supabase);
-  const result = await productService.listProducts(activeOrg.id, {
-    search,
-    status,
-    type,
-    page,
-  });
+  const [result, stats] = await Promise.all([
+    productService.listProducts(activeOrg.id, { search, status, type, page }),
+    productService.getProductStats(activeOrg.id),
+  ]);
 
   return (
     <ProductsView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search, status, type }}
       canManage={canManage}
     />

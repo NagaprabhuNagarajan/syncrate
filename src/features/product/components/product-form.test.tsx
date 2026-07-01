@@ -46,6 +46,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     manufacturer: null,
     hsnCode: null,
     gstRate: 18,
+    gstRates: [18],
     taxInclusive: false,
     purchasePrice: 100,
     sellingPrice: 199.5,
@@ -73,11 +74,15 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
   };
 }
 
+// Ids must be valid UUIDs — the create schema validates category/brand/unit
+// selections with z.string().uuid().
 const OPTIONS = {
-  categories: [{ id: "cat-1", name: "Hardware" }],
-  brands: [{ id: "brand-1", name: "Acme" }],
-  units: [{ id: "unit-1", name: "Piece" }],
-  suppliers: [{ id: "sup-1", name: "Supplier One" }],
+  categories: [{ id: "11111111-1111-4111-8111-111111111111", name: "Hardware" }],
+  brands: [{ id: "22222222-2222-4222-8222-222222222222", name: "Acme" }],
+  units: [{ id: "33333333-3333-4333-8333-333333333333", name: "Piece" }],
+  suppliers: [
+    { id: "44444444-4444-4444-8444-444444444444", name: "Supplier One" },
+  ],
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -96,6 +101,14 @@ describe("ProductForm (create)", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the brand select alongside category and unit", () => {
+    render(<ProductForm organizationId="org-1" {...OPTIONS} />);
+    expect(screen.getByLabelText(/^brand$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^category$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^unit$/i)).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Acme" })).toBeInTheDocument();
+  });
+
   it("shows a validation error and does not submit when the name is empty", async () => {
     const user = userEvent.setup();
     render(<ProductForm organizationId="org-1" {...OPTIONS} />);
@@ -108,13 +121,18 @@ describe("ProductForm (create)", () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  it("submits FormData with an uppercased code, type, numbers and CSV tags", async () => {
+  it("submits FormData with an uppercased code, type, brand, pricing tiers and CSV tags", async () => {
     mockCreate.mockResolvedValue({ success: true, data: makeProduct() });
     const user = userEvent.setup();
     render(<ProductForm organizationId="org-1" {...OPTIONS} />);
 
     await user.type(screen.getByLabelText(/product name/i), "Premium Widget");
     await user.type(screen.getByLabelText(/product code/i), "prod-1");
+    await user.selectOptions(
+      screen.getByLabelText(/^brand$/i),
+      "22222222-2222-4222-8222-222222222222"
+    );
+    await user.type(screen.getByLabelText(/manufacturer/i), "Acme Corp");
     await user.type(screen.getByLabelText("Selling price (₹)"), "199.5");
     await user.type(screen.getByLabelText(/^tags$/i), "featured, seasonal");
     await user.click(screen.getByRole("button", { name: /create product/i }));
@@ -125,9 +143,42 @@ describe("ProductForm (create)", () => {
     expect(formData.get("name")).toBe("Premium Widget");
     expect(formData.get("code")).toBe("PROD-1");
     expect(formData.get("type")).toBe("inventory");
+    expect(formData.get("brandId")).toBe(
+      "22222222-2222-4222-8222-222222222222"
+    );
+    expect(formData.get("manufacturer")).toBe("Acme Corp");
     expect(formData.get("sellingPrice")).toBe("199.5");
     expect(formData.get("tags")).toBe("featured, seasonal");
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/products"));
+  });
+
+  it("submits the type chosen from the option cards", async () => {
+    mockCreate.mockResolvedValue({ success: true, data: makeProduct() });
+    const user = userEvent.setup();
+    render(<ProductForm organizationId="org-1" {...OPTIONS} />);
+
+    await user.type(screen.getByLabelText(/product name/i), "Repair Service");
+    await user.click(screen.getByRole("radio", { name: /service/i }));
+    await user.click(screen.getByRole("button", { name: /create product/i }));
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+    const [, formData] = mockCreate.mock.calls[0] as [string, FormData];
+    expect(formData.get("type")).toBe("service");
+  });
+
+  it("submits every GST rate selected from the multi-select", async () => {
+    mockCreate.mockResolvedValue({ success: true, data: makeProduct() });
+    const user = userEvent.setup();
+    render(<ProductForm organizationId="org-1" {...OPTIONS} />);
+
+    await user.type(screen.getByLabelText(/product name/i), "Taxable Widget");
+    await user.click(screen.getByRole("checkbox", { name: "18%" }));
+    await user.click(screen.getByRole("checkbox", { name: "5%" }));
+    await user.click(screen.getByRole("button", { name: /create product/i }));
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+    const [, formData] = mockCreate.mock.calls[0] as [string, FormData];
+    expect(formData.getAll("gstRates")).toEqual(["5", "18"]);
   });
 
   it("displays a server error returned by the action", async () => {
@@ -167,7 +218,7 @@ describe("ProductForm (create)", () => {
 });
 
 describe("ProductForm (edit)", () => {
-  it("pre-fills fields from the product and shows the status select", () => {
+  it("pre-fills fields from the product and shows the segmented status control", () => {
     render(
       <ProductForm
         organizationId="org-1"
@@ -207,5 +258,28 @@ describe("ProductForm (edit)", () => {
     expect(productId).toBe("prod-1");
     expect(formData.get("name")).toBe("Premium Widget");
     expect(formData.get("status")).toBe("active");
+  });
+
+  it("submits the status chosen from the segmented control", async () => {
+    mockUpdate.mockResolvedValue({ success: true, data: makeProduct() });
+    const user = userEvent.setup();
+    render(
+      <ProductForm
+        organizationId="org-1"
+        product={makeProduct()}
+        {...OPTIONS}
+      />
+    );
+
+    await user.click(screen.getByRole("radio", { name: "Discontinued" }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    const [, , formData] = mockUpdate.mock.calls[0] as [
+      string,
+      string,
+      FormData,
+    ];
+    expect(formData.get("status")).toBe("discontinued");
   });
 });

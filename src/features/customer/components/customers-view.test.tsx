@@ -184,6 +184,21 @@ describe("CustomersView", () => {
     expect(mockPush).toHaveBeenCalledWith("/customers?search=kumar");
   });
 
+  it("clears the search filter when the field is emptied", async () => {
+    const user = userEvent.setup();
+    render(
+      <CustomersView
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{ search: "kumar" }}
+        canManage
+      />
+    );
+    await user.clear(screen.getByLabelText(/search customers/i));
+    expect(mockPush).toHaveBeenCalledWith("/customers");
+  });
+
   it("updates the URL when the status filter changes", async () => {
     const user = userEvent.setup();
     render(

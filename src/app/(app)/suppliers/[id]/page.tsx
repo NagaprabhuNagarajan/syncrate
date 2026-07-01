@@ -65,6 +65,10 @@ export default async function SupplierDetailPage({
     notFound();
   }
 
+  const canManage =
+    context.permissions.includes("supplier.update") ||
+    context.permissions.includes("supplier.archive");
+
   const ledger = await service.getSupplierLedger(result.data);
 
   return (
@@ -72,6 +76,7 @@ export default async function SupplierDetailPage({
       organizationId={activeOrg.id}
       supplier={result.data}
       ledger={ledger}
+      canManage={canManage}
     />
   );
 }

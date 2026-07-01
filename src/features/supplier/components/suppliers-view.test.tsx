@@ -1,44 +1,61 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { render, screen, waitFor, within } from "@/tests/utils";
-import type { Supplier } from "@/features/supplier/types/supplier.types";
+import { render, screen } from "@/tests/utils";
 import { SuppliersView } from "./suppliers-view";
+import type {
+  Supplier,
+  SupplierListResult,
+  SupplierStats,
+} from "@/features/supplier/types/supplier.types";
 
 // ─────────────────────────────────────────────────────────────
 // Mocks
 // ─────────────────────────────────────────────────────────────
 
-const { mockArchiveSupplier, mockExportSuppliers, mockImportSuppliers } =
+const { mockPush, mockRefresh, searchParamsRef, exportActionMock, importActionMock } =
   vi.hoisted(() => ({
-    mockArchiveSupplier: vi.fn(),
-    mockExportSuppliers: vi.fn(),
-    mockImportSuppliers: vi.fn(),
+    mockPush: vi.fn(),
+    mockRefresh: vi.fn(),
+    searchParamsRef: { current: "" },
+    exportActionMock: vi.fn(),
+    importActionMock: vi.fn(),
   }));
 
-vi.mock("@/features/supplier/actions/supplier.actions", () => ({
-  archiveSupplierAction: mockArchiveSupplier,
-  exportSuppliersAction: mockExportSuppliers,
-  importSuppliersAction: mockImportSuppliers,
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush, replace: vi.fn(), refresh: mockRefresh }),
+  useSearchParams: () => new URLSearchParams(searchParamsRef.current),
 }));
 
-const ORG_ID = "org-1";
+vi.mock("@/features/supplier/actions/supplier.actions", () => ({
+  exportSuppliersAction: exportActionMock,
+  importSuppliersAction: importActionMock,
+}));
 
-function buildSupplier(overrides: Partial<Supplier> = {}): Supplier {
+beforeEach(() => {
+  vi.clearAllMocks();
+  searchParamsRef.current = "";
+});
+
+// ─────────────────────────────────────────────────────────────
+// Fixtures
+// ─────────────────────────────────────────────────────────────
+
+function makeSupplier(overrides: Partial<Supplier> = {}): Supplier {
   return {
     id: "supplier-1",
-    organizationId: ORG_ID,
-    code: "SUPP-00001",
+    organizationId: "org-1",
+    code: "SUPP-001",
     name: "Acme Industries",
     contactPerson: "Ramesh Kumar",
-    gstNumber: null,
+    gstNumber: "22AAAAA0000A1Z5",
     panNumber: null,
     mobile: "+91 98765 43210",
-    email: "acme@example.com",
+    email: null,
     website: null,
     addressLine1: null,
     addressLine2: null,
-    city: "Mumbai",
-    state: "Maharashtra",
+    city: null,
+    state: null,
     pincode: null,
     country: "IN",
     bankAccountName: null,
@@ -48,264 +65,341 @@ function buildSupplier(overrides: Partial<Supplier> = {}): Supplier {
     upiId: null,
     paymentTermsDays: 30,
     openingBalance: 0,
-    rating: 4.5,
+    rating: null,
     status: "active",
     tags: [],
     notes: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: "user-1",
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-01-01"),
+    createdBy: null,
     ...overrides,
   };
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
+function makeResult(
+  overrides: Partial<SupplierListResult> = {}
+): SupplierListResult {
+  return {
+    items: [makeSupplier()],
+    total: 1,
+    page: 1,
+    pageSize: 20,
+    ...overrides,
+  };
+}
+
+function makeStats(overrides: Partial<SupplierStats> = {}): SupplierStats {
+  return {
+    total: 1,
+    active: 1,
+    newThisMonth: 1,
+    inactive: 0,
+    ...overrides,
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────
 
 describe("SuppliersView", () => {
-  it("renders the empty state when there are no suppliers", () => {
-    render(<SuppliersView organizationId={ORG_ID} suppliers={[]} />);
+  it("renders the heading, table rows and add-supplier link when canManage", () => {
+    render(
+      <SuppliersView
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
 
+    expect(
+      screen.getByRole("heading", { name: /suppliers/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Acme Industries")).toBeInTheDocument();
+    expect(screen.getByText("SUPP-001")).toBeInTheDocument();
+    expect(screen.getByText("Active", { selector: "div" })).toBeInTheDocument();
+    const addLink = screen.getByRole("link", { name: /add supplier/i });
+    expect(addLink).toHaveAttribute("href", "/suppliers/new");
+  });
+
+  it("hides the add-supplier link when the user cannot manage", () => {
+    render(
+      <SuppliersView
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
+        canManage={false}
+      />
+    );
+    expect(
+      screen.queryByRole("link", { name: /add supplier/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders an empty state when there are no suppliers", () => {
+    render(
+      <SuppliersView
+        organizationId="org-1"
+        result={makeResult({ items: [], total: 0 })}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
     expect(screen.getByText(/no suppliers yet/i)).toBeInTheDocument();
-    // The "Add supplier" header link is always present.
-    expect(
-      screen.getByRole("link", { name: /add supplier/i })
-    ).toHaveAttribute("href", `/suppliers/new?org=${ORG_ID}`);
   });
 
-  it("renders supplier cards with key details and links", () => {
-    render(
-      <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[buildSupplier()]}
-      />
-    );
-
-    expect(
-      screen.getByRole("link", { name: "Acme Industries" })
-    ).toHaveAttribute("href", `/suppliers/supplier-1?org=${ORG_ID}`);
-    expect(screen.getByText("SUPP-00001")).toBeInTheDocument();
-    expect(screen.getByText(/4\.5/)).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /edit acme industries/i })
-    ).toHaveAttribute("href", `/suppliers/supplier-1/edit?org=${ORG_ID}`);
-  });
-
-  it("filters suppliers by search term", async () => {
+  it("navigates via the empty-state action when canManage", async () => {
     const user = userEvent.setup();
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[
-          buildSupplier(),
-          buildSupplier({ id: "s-2", name: "Beta Traders", code: "SUPP-2" }),
-        ]}
+        organizationId="org-1"
+        result={makeResult({ items: [], total: 0 })}
+        stats={makeStats()}
+        filters={{}}
+        canManage
       />
     );
-
-    await user.type(screen.getByLabelText(/search suppliers/i), "beta");
-
-    expect(
-      screen.getByRole("link", { name: "Beta Traders" })
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "Acme Industries" })
-    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /add supplier/i }));
+    expect(mockPush).toHaveBeenCalledWith("/suppliers/new");
   });
 
-  it("filters suppliers by status", async () => {
+  it("updates the URL when a search is submitted", async () => {
     const user = userEvent.setup();
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[
-          buildSupplier(),
-          buildSupplier({
-            id: "s-2",
-            name: "Inactive Co",
-            status: "inactive",
-          }),
-        ]}
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
+        canManage
       />
     );
-
-    await user.click(screen.getByRole("button", { name: /^inactive$/i }));
-
-    expect(
-      screen.getByRole("link", { name: "Inactive Co" })
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "Acme Industries" })
-    ).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText(/search suppliers/i), "acme{Enter}");
+    expect(mockPush).toHaveBeenCalledWith("/suppliers?search=acme");
   });
 
-  it("shows a no-match empty state when filters exclude all suppliers", async () => {
+  it("clears the search filter when the field is emptied", async () => {
     const user = userEvent.setup();
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[buildSupplier()]}
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{ search: "acme" }}
+        canManage
       />
     );
-
-    await user.type(screen.getByLabelText(/search suppliers/i), "zzzzz");
-
-    expect(screen.getByText(/no matching suppliers/i)).toBeInTheDocument();
+    await user.clear(screen.getByLabelText(/search suppliers/i));
+    expect(mockPush).toHaveBeenCalledWith("/suppliers");
   });
 
-  it("opens the archive dialog and calls the action on confirm", async () => {
-    mockArchiveSupplier.mockResolvedValue({ success: true, data: undefined });
+  it("updates the URL when the status filter changes", async () => {
     const user = userEvent.setup();
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[buildSupplier()]}
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
+        canManage
       />
     );
-
-    await user.click(
-      screen.getByRole("button", { name: /archive acme industries/i })
-    );
-
-    const dialog = screen.getByRole("dialog");
-    expect(
-      within(dialog).getByRole("heading", { name: /archive supplier/i })
-    ).toBeInTheDocument();
-
-    await user.click(
-      within(dialog).getByRole("button", { name: /archive supplier/i })
-    );
-
-    await waitFor(() =>
-      expect(mockArchiveSupplier).toHaveBeenCalledWith(ORG_ID, "supplier-1")
-    );
+    await user.click(screen.getByRole("tab", { name: "Inactive" }));
+    expect(mockPush).toHaveBeenCalledWith("/suppliers?status=inactive");
   });
 
-  it("surfaces an archive error in the dialog", async () => {
-    mockArchiveSupplier.mockResolvedValue({
-      success: false,
-      error: { code: "unknown", message: "Could not archive" },
-    });
+  it("paginates to the next page", async () => {
     const user = userEvent.setup();
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[buildSupplier()]}
+        organizationId="org-1"
+        result={makeResult({
+          items: [makeSupplier(), makeSupplier({ id: "supplier-2" })],
+          total: 45,
+          page: 1,
+          pageSize: 20,
+        })}
+        stats={makeStats()}
+        filters={{}}
+        canManage
       />
     );
-
-    await user.click(
-      screen.getByRole("button", { name: /archive acme industries/i })
-    );
-    const dialog = screen.getByRole("dialog");
-    await user.click(
-      within(dialog).getByRole("button", { name: /archive supplier/i })
-    );
-
-    expect(await screen.findByText(/could not archive/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /previous/i })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /next/i }));
+    expect(mockPush).toHaveBeenCalledWith("/suppliers?page=2");
   });
 
-  it("does not show an archive button for archived suppliers", () => {
+  it("navigates to the supplier detail when a row is clicked", async () => {
+    const user = userEvent.setup();
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[buildSupplier({ status: "archived" })]}
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
+        canManage
       />
     );
+    await user.click(screen.getByText("SUPP-001"));
+    expect(mockPush).toHaveBeenCalledWith("/suppliers/supplier-1");
+  });
 
+  it("renders an em dash for missing contact person and contact details", () => {
+    render(
+      <SuppliersView
+        organizationId="org-1"
+        result={makeResult({
+          items: [
+            makeSupplier({ contactPerson: null, mobile: null, email: null }),
+          ],
+        })}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
+    // Two "—" cells (contact person and the combined contact column) for the row.
+    expect(screen.getAllByText("—")).toHaveLength(2);
+  });
+
+  it("renders the payment terms in days", () => {
+    render(
+      <SuppliersView
+        organizationId="org-1"
+        result={makeResult({ items: [makeSupplier({ paymentTermsDays: 45 })] })}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
+    expect(screen.getByText("45 days")).toBeInTheDocument();
+  });
+
+  it("hides the export and import buttons when the user cannot manage", () => {
+    render(
+      <SuppliersView
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
+        canManage={false}
+      />
+    );
     expect(
-      screen.queryByRole("button", { name: /archive acme industries/i })
+      screen.queryByRole("button", { name: /export/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /import/i })
     ).not.toBeInTheDocument();
   });
 
-  it("hides Export and Import controls when canManage is false", () => {
-    render(<SuppliersView organizationId={ORG_ID} suppliers={[buildSupplier()]} />);
+  it("exports suppliers and triggers a CSV download", async () => {
+    const user = userEvent.setup();
+    exportActionMock.mockResolvedValue({ success: true, data: "code,name\r\nS1,Acme" });
 
-    expect(
-      screen.queryByRole("button", { name: /^export$/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /^import$/i })
-    ).not.toBeInTheDocument();
-  });
-
-  it("downloads a CSV when Export is clicked", async () => {
-    const createUrl = vi.fn(() => "blob:url");
-    const revokeUrl = vi.fn();
+    const createUrl = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:fake");
+    const revokeUrl = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => undefined);
     const clickSpy = vi
       .spyOn(HTMLAnchorElement.prototype, "click")
       .mockImplementation(() => undefined);
-    Object.defineProperty(URL, "createObjectURL", {
-      value: createUrl,
-      configurable: true,
-    });
-    Object.defineProperty(URL, "revokeObjectURL", {
-      value: revokeUrl,
-      configurable: true,
-    });
-    mockExportSuppliers.mockResolvedValue({
-      success: true,
-      data: "code,name\r\nSUPP-1,Acme",
-    });
 
-    const user = userEvent.setup();
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[buildSupplier()]}
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
         canManage
       />
     );
 
-    await user.click(screen.getByRole("button", { name: /^export$/i }));
+    await user.click(screen.getByRole("button", { name: /export/i }));
 
-    await waitFor(() =>
-      expect(mockExportSuppliers).toHaveBeenCalledWith(ORG_ID)
-    );
+    expect(exportActionMock).toHaveBeenCalledWith("org-1");
     expect(createUrl).toHaveBeenCalled();
     expect(clickSpy).toHaveBeenCalled();
+    expect(revokeUrl).toHaveBeenCalledWith("blob:fake");
+
+    createUrl.mockRestore();
+    revokeUrl.mockRestore();
     clickSpy.mockRestore();
   });
 
-  it("surfaces an export error", async () => {
-    mockExportSuppliers.mockResolvedValue({
-      success: false,
-      error: { code: "forbidden", message: "Export denied" },
-    });
-
+  it("surfaces an export error without downloading", async () => {
     const user = userEvent.setup();
+    exportActionMock.mockResolvedValue({
+      success: false,
+      error: { code: "forbidden", message: "Not allowed" },
+    });
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[buildSupplier()]}
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
         canManage
       />
     );
 
-    await user.click(screen.getByRole("button", { name: /^export$/i }));
+    await user.click(screen.getByRole("button", { name: /export/i }));
 
-    expect(await screen.findByText(/export denied/i)).toBeInTheDocument();
+    expect(await screen.findByText("Not allowed")).toBeInTheDocument();
+    expect(clickSpy).not.toHaveBeenCalled();
+    clickSpy.mockRestore();
   });
 
-  it("opens the import dialog from the Import button", async () => {
+  it("opens the import dialog when import is clicked", async () => {
     const user = userEvent.setup();
     render(
       <SuppliersView
-        organizationId={ORG_ID}
-        suppliers={[buildSupplier()]}
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
         canManage
       />
     );
+
+    expect(
+      screen.queryByRole("dialog", { name: /import suppliers/i })
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^import$/i }));
 
     expect(
       screen.getByRole("dialog", { name: /import suppliers/i })
     ).toBeInTheDocument();
+  });
+
+  it("preserves the active org param in links and navigation", async () => {
+    searchParamsRef.current = "org=org-9";
+    const user = userEvent.setup();
+    render(
+      <SuppliersView
+        organizationId="org-1"
+        result={makeResult()}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
+    expect(screen.getByRole("link", { name: /add supplier/i })).toHaveAttribute(
+      "href",
+      "/suppliers/new?org=org-9"
+    );
+    await user.click(screen.getByText("SUPP-001"));
+    expect(mockPush).toHaveBeenCalledWith("/suppliers/supplier-1?org=org-9");
   });
 });

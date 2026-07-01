@@ -11,6 +11,7 @@ import type {
   ProductImportRowError,
   ProductListParams,
   ProductListResult,
+  ProductStats,
   CreateProductInput,
   UpdateProductInput,
 } from "@/features/product/types/product.types";
@@ -40,6 +41,27 @@ function nuuid(value: string | undefined | null): string | null {
   return v;
 }
 
+const VALID_GST_SLABS = [0, 5, 12, 18, 28];
+
+/**
+ * Normalizes the applicable GST slabs: keeps only valid slabs, de-duplicates
+ * and sorts ascending. Falls back to a single scalar rate when no array is
+ * given (e.g. CSV import), so `gst_rates` is always populated.
+ */
+function normalizeGstRates(
+  rates: readonly number[] | undefined,
+  fallback?: number
+): number[] {
+  const source =
+    rates && rates.length > 0
+      ? rates
+      : fallback !== undefined
+        ? [fallback]
+        : [];
+  const valid = source.filter((r) => VALID_GST_SLABS.includes(r));
+  return Array.from(new Set(valid)).sort((a, b) => a - b);
+}
+
 export class ProductService {
   private readonly repo: ProductRepository;
 
@@ -52,6 +74,10 @@ export class ProductService {
     params?: ProductListParams
   ): Promise<ProductListResult> {
     return this.repo.list(organizationId, params);
+  }
+
+  async getProductStats(organizationId: string): Promise<ProductStats> {
+    return this.repo.getStats(organizationId);
   }
 
   async getProduct(id: string): Promise<ProductActionResult<Product>> {
@@ -105,7 +131,8 @@ export class ProductService {
       unit_id: nuuid(input.unitId),
       manufacturer: nz(input.manufacturer),
       hsn_code: nz(input.hsnCode),
-      gst_rate: input.gstRate ?? 0,
+      gst_rate: normalizeGstRates(input.gstRates, input.gstRate)[0] ?? 0,
+      gst_rates: normalizeGstRates(input.gstRates, input.gstRate),
       tax_inclusive: input.taxInclusive ?? false,
       purchase_price: input.purchasePrice ?? 0,
       selling_price: input.sellingPrice ?? 0,
@@ -159,11 +186,22 @@ export class ProductService {
       }
     }
 
-    const product = await this.repo.update(
-      productId,
-      buildUpdatePatch(input),
-      userId
-    );
+    const patch = buildUpdatePatch(input);
+
+    // Keep the soft-delete flag consistent with an explicit status change:
+    // archiving stamps deleted_at, and moving to any other status restores
+    // the record (editing is how an archived product is brought back).
+    if (input.status !== undefined) {
+      if (input.status === "archived") {
+        patch.deleted_at = new Date().toISOString();
+        patch.deleted_by = userId;
+      } else {
+        patch.deleted_at = null;
+        patch.deleted_by = null;
+      }
+    }
+
+    const product = await this.repo.update(productId, patch, userId);
     if (!product) {
       return fail("not_found", "Product not found or update failed");
     }
@@ -294,7 +332,11 @@ function buildUpdatePatch(input: UpdateProductInput): Record<string, unknown> {
   setUuid("unit_id", input.unitId);
   setText("manufacturer", input.manufacturer);
   setText("hsn_code", input.hsnCode);
-  setNum("gst_rate", input.gstRate);
+  if (input.gstRates !== undefined || input.gstRate !== undefined) {
+    const gstRates = normalizeGstRates(input.gstRates, input.gstRate);
+    patch.gst_rates = gstRates;
+    patch.gst_rate = gstRates[0] ?? 0;
+  }
   setBool("tax_inclusive", input.taxInclusive);
   setNum("purchase_price", input.purchasePrice);
   setNum("selling_price", input.sellingPrice);

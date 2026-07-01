@@ -1,31 +1,45 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { render, screen, waitFor, within } from "@/tests/utils";
+import { render, screen, waitFor } from "@/tests/utils";
+import { SupplierProfile } from "./supplier-profile";
 import type {
   Supplier,
   SupplierLedger,
 } from "@/features/supplier/types/supplier.types";
-import { SupplierProfile } from "./supplier-profile";
 
 // ─────────────────────────────────────────────────────────────
 // Mocks
 // ─────────────────────────────────────────────────────────────
 
-const { mockArchiveSupplier } = vi.hoisted(() => ({
-  mockArchiveSupplier: vi.fn(),
+const { mockArchive, mockPush, searchParamsRef } = vi.hoisted(() => ({
+  mockArchive: vi.fn(),
+  mockPush: vi.fn(),
+  searchParamsRef: { current: "" },
 }));
 
 vi.mock("@/features/supplier/actions/supplier.actions", () => ({
-  archiveSupplierAction: mockArchiveSupplier,
+  archiveSupplierAction: mockArchive,
 }));
 
-const ORG_ID = "org-1";
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush, replace: vi.fn(), refresh: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(searchParamsRef.current),
+}));
 
-function buildSupplier(overrides: Partial<Supplier> = {}): Supplier {
+beforeEach(() => {
+  vi.clearAllMocks();
+  searchParamsRef.current = "";
+});
+
+// ─────────────────────────────────────────────────────────────
+// Fixtures
+// ─────────────────────────────────────────────────────────────
+
+function makeSupplier(overrides: Partial<Supplier> = {}): Supplier {
   return {
     id: "supplier-1",
-    organizationId: ORG_ID,
-    code: "SUPP-00001",
+    organizationId: "org-1",
+    code: "SUPP-001",
     name: "Acme Industries",
     contactPerson: "Ramesh Kumar",
     gstNumber: "22AAAAA0000A1Z5",
@@ -50,148 +64,172 @@ function buildSupplier(overrides: Partial<Supplier> = {}): Supplier {
     status: "active",
     tags: ["preferred"],
     notes: "Reliable supplier",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: "user-1",
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-01-01"),
+    createdBy: null,
     ...overrides,
   };
 }
 
-const LEDGER: SupplierLedger = {
-  openingBalance: 1000,
-  outstanding: 1500,
-  entries: [
-    {
-      id: "entry-1",
-      supplierId: "supplier-1",
-      entryDate: new Date("2026-01-05T00:00:00Z"),
-      referenceType: "purchase",
-      referenceId: "po-1",
-      description: "Purchase order PO-1",
-      debit: 0,
-      credit: 500,
-      runningBalance: 1500,
-      createdAt: new Date("2026-01-05T00:00:00Z"),
-    },
-  ],
-};
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
+function makeLedger(overrides: Partial<SupplierLedger> = {}): SupplierLedger {
+  return {
+    openingBalance: 1000,
+    outstanding: 1000,
+    entries: [],
+    ...overrides,
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────
 
 describe("SupplierProfile", () => {
-  it("renders the supplier name, code, status, rating and tags", () => {
+  it("renders supplier details and an empty ledger state", () => {
     render(
       <SupplierProfile
-        organizationId={ORG_ID}
-        supplier={buildSupplier()}
-        ledger={LEDGER}
+        supplier={makeSupplier()}
+        ledger={makeLedger()}
+        organizationId="org-1"
+        canManage
       />
     );
 
     expect(
-      screen.getByRole("heading", { name: "Acme Industries" })
+      screen.getByRole("heading", { name: /acme industries/i })
     ).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
-    expect(screen.getByText(/4\.5 \/ 5/)).toBeInTheDocument();
-    expect(screen.getByText("preferred")).toBeInTheDocument();
-  });
-
-  it("renders contact, bank and notes details", () => {
-    render(
-      <SupplierProfile
-        organizationId={ORG_ID}
-        supplier={buildSupplier()}
-        ledger={LEDGER}
-      />
-    );
-
-    expect(screen.getByText("Ramesh Kumar")).toBeInTheDocument();
     expect(screen.getByText("acme@example.com")).toBeInTheDocument();
-    expect(screen.getByText("HDFC0001234")).toBeInTheDocument();
-    expect(screen.getByText("acme@okhdfcbank")).toBeInTheDocument();
-    expect(screen.getByText("Reliable supplier")).toBeInTheDocument();
-  });
-
-  it("renders payables outstanding and ledger entries", () => {
-    render(
-      <SupplierProfile
-        organizationId={ORG_ID}
-        supplier={buildSupplier()}
-        ledger={LEDGER}
-      />
-    );
-
-    expect(screen.getByText(/outstanding/i)).toBeInTheDocument();
-    expect(screen.getByText("Purchase order PO-1")).toBeInTheDocument();
-  });
-
-  it("shows an empty ledger message when there are no entries", () => {
-    render(
-      <SupplierProfile
-        organizationId={ORG_ID}
-        supplier={buildSupplier()}
-        ledger={{ openingBalance: 0, outstanding: 0, entries: [] }}
-      />
-    );
-
+    expect(screen.getByText("preferred")).toBeInTheDocument();
     expect(screen.getByText(/no ledger entries yet/i)).toBeInTheDocument();
   });
 
-  it("links to the edit page with the org param", () => {
+  it("renders ledger entries when present", () => {
     render(
       <SupplierProfile
-        organizationId={ORG_ID}
-        supplier={buildSupplier()}
-        ledger={LEDGER}
+        supplier={makeSupplier()}
+        ledger={makeLedger({
+          entries: [
+            {
+              id: "led-1",
+              supplierId: "supplier-1",
+              entryDate: new Date("2026-02-01"),
+              referenceType: "purchase_invoice",
+              referenceId: "inv-1",
+              description: "Invoice INV-001",
+              debit: 5000,
+              credit: 0,
+              runningBalance: 6000,
+              createdAt: new Date("2026-02-01"),
+            },
+          ],
+        })}
+        organizationId="org-1"
+        canManage
       />
     );
+    expect(screen.getByText("Invoice INV-001")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/no ledger entries yet/i)
+    ).not.toBeInTheDocument();
+  });
 
+  it("renders an edit link that preserves the org param", () => {
+    searchParamsRef.current = "org=org-9";
+    render(
+      <SupplierProfile
+        supplier={makeSupplier()}
+        ledger={makeLedger()}
+        organizationId="org-1"
+        canManage
+      />
+    );
     expect(screen.getByRole("link", { name: /edit/i })).toHaveAttribute(
       "href",
-      `/suppliers/supplier-1/edit?org=${ORG_ID}`
+      "/suppliers/supplier-1/edit?org=org-9"
     );
+  });
+
+  it("hides management actions when the user cannot manage", () => {
+    render(
+      <SupplierProfile
+        supplier={makeSupplier()}
+        ledger={makeLedger()}
+        organizationId="org-1"
+        canManage={false}
+      />
+    );
+    expect(
+      screen.queryByRole("link", { name: /edit/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Archive" })
+    ).not.toBeInTheDocument();
   });
 
   it("archives the supplier through the confirmation dialog", async () => {
-    mockArchiveSupplier.mockResolvedValue({ success: true, data: undefined });
+    mockArchive.mockResolvedValue({ success: true, data: undefined });
     const user = userEvent.setup();
     render(
       <SupplierProfile
-        organizationId={ORG_ID}
-        supplier={buildSupplier()}
-        ledger={LEDGER}
+        supplier={makeSupplier()}
+        ledger={makeLedger()}
+        organizationId="org-1"
+        canManage
       />
     );
 
-    await user.click(screen.getByRole("button", { name: /^archive$/i }));
+    await user.click(screen.getByRole("button", { name: "Archive" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-    const dialog = screen.getByRole("dialog");
     await user.click(
-      within(dialog).getByRole("button", { name: /archive supplier/i })
+      screen.getByRole("button", { name: "Archive supplier" })
     );
 
     await waitFor(() =>
-      expect(mockArchiveSupplier).toHaveBeenCalledWith(ORG_ID, "supplier-1")
+      expect(mockArchive).toHaveBeenCalledWith("org-1", "supplier-1")
     );
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/suppliers"));
   });
 
-  it("does not render an archive control for archived suppliers", () => {
+  it("shows an error when archiving fails", async () => {
+    mockArchive.mockResolvedValue({
+      success: false,
+      error: { code: "unknown", message: "Failed to archive supplier" },
+    });
+    const user = userEvent.setup();
     render(
       <SupplierProfile
-        organizationId={ORG_ID}
-        supplier={buildSupplier({ status: "archived" })}
-        ledger={LEDGER}
+        supplier={makeSupplier()}
+        ledger={makeLedger()}
+        organizationId="org-1"
+        canManage
       />
     );
 
+    await user.click(screen.getByRole("button", { name: "Archive" }));
+    await user.click(
+      screen.getByRole("button", { name: "Archive supplier" })
+    );
+
     expect(
-      screen.queryByRole("button", { name: /^archive$/i })
+      await screen.findByText(/failed to archive supplier/i)
+    ).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("hides the archive action for an already-archived supplier", () => {
+    render(
+      <SupplierProfile
+        supplier={makeSupplier({ status: "archived" })}
+        ledger={makeLedger()}
+        organizationId="org-1"
+        canManage
+      />
+    );
+    expect(
+      screen.queryByRole("button", { name: "Archive" })
     ).not.toBeInTheDocument();
+    // Edit remains available.
+    expect(screen.getByRole("link", { name: /edit/i })).toBeInTheDocument();
   });
 });

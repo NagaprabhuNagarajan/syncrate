@@ -652,7 +652,7 @@ type ProductsRow = AuditFields & {
   code: string;
   name: string;
   description: string | null;
-  type: "inventory" | "service" | "digital" | "bundle";
+  type: "inventory" | "service";
   status: "draft" | "active" | "discontinued" | "archived";
   category_id: string | null;
   brand_id: string | null;
@@ -660,6 +660,7 @@ type ProductsRow = AuditFields & {
   manufacturer: string | null;
   hsn_code: string | null;
   gst_rate: number;
+  gst_rates: number[];
   tax_inclusive: boolean;
   purchase_price: number;
   selling_price: number;
@@ -1555,6 +1556,7 @@ export interface Database {
           manufacturer?: string | null;
           hsn_code?: string | null;
           gst_rate?: number;
+          gst_rates?: number[];
           tax_inclusive?: boolean;
           purchase_price?: number;
           selling_price?: number;

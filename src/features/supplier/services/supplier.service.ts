@@ -10,6 +10,7 @@ import type {
   SupplierLedger,
   SupplierListParams,
   SupplierListResult,
+  SupplierStats,
   CreateSupplierInput,
   SupplierImportResult,
   UpdateSupplierInput,
@@ -79,6 +80,10 @@ export class SupplierService {
     params?: SupplierListParams
   ): Promise<SupplierListResult> {
     return this.repo.list(organizationId, params);
+  }
+
+  async getSupplierStats(organizationId: string): Promise<SupplierStats> {
+    return this.repo.getStats(organizationId);
   }
 
   async getSupplier(id: string): Promise<SupplierActionResult<Supplier>> {
@@ -194,11 +199,22 @@ export class SupplierService {
       }
     }
 
-    const supplier = await this.repo.update(
-      supplierId,
-      buildUpdatePatch(input),
-      userId
-    );
+    const patch = buildUpdatePatch(input);
+
+    // Keep the soft-delete flag consistent with an explicit status change:
+    // archiving stamps deleted_at, and moving to any other status restores
+    // the record (editing is how an archived supplier is brought back).
+    if (input.status !== undefined) {
+      if (input.status === "archived") {
+        patch.deleted_at = new Date().toISOString();
+        patch.deleted_by = userId;
+      } else {
+        patch.deleted_at = null;
+        patch.deleted_by = null;
+      }
+    }
+
+    const supplier = await this.repo.update(supplierId, patch, userId);
 
     if (!supplier) {
       return fail("not_found", "Supplier not found or update failed");

@@ -9,3 +9,4 @@
 - [Sprint 5 Sales & Invoicing](sprint-5-sales-invoicing.md) — GST engine, pricing/discount engines, atomic RPCs, PDF route, E2E spec, status enums, column pitfalls
 - [ESLint Pitfalls](feedback-eslint-pitfalls.md) — curly rule, no-non-null-assertion, consistent-type-imports — all frequently trip generated code
 - [Sprint 6 Payments & Reports](sprint-6-payments-reports.md) — payment RPC design, accounting directions, new DB tables, module boundaries
+- [Entity List/Detail/Form Revamp Template](feature-list-detail-revamp-template.md) — the customer→supplier premium CRUD pattern to mirror for any future entity revamp

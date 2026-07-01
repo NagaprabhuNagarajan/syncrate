@@ -4,6 +4,7 @@ import type {
   Product,
   ProductListParams,
   ProductListResult,
+  ProductStats,
 } from "@/features/product/types/product.types";
 
 type DbProduct = Database["public"]["Tables"]["products"]["Row"];
@@ -27,6 +28,7 @@ function mapProduct(row: DbProduct): Product {
     manufacturer: row.manufacturer,
     hsnCode: row.hsn_code,
     gstRate: Number(row.gst_rate),
+    gstRates: (row.gst_rates ?? []).map(Number),
     taxInclusive: row.tax_inclusive,
     purchasePrice: Number(row.purchase_price),
     sellingPrice: Number(row.selling_price),
@@ -61,11 +63,12 @@ export class ProductRepository {
   constructor(private readonly supabase: AppSupabaseClient) {}
 
   async findById(id: string): Promise<Product | null> {
+    // No deleted_at constraint: archived products are soft-deleted but must
+    // remain viewable and editable (e.g. to restore them).
     const { data, error } = await this.supabase
       .from("products")
       .select("*")
       .eq("id", id)
-      .is("deleted_at", null)
       .single();
     if (error || !data) {
       return null;
@@ -108,9 +111,13 @@ export class ProductRepository {
     let query = this.supabase
       .from("products")
       .select("*", { count: "exact" })
-      .eq("organization_id", organizationId)
-      .is("deleted_at", null);
+      .eq("organization_id", organizationId);
 
+    // Archiving is the only soft-delete path (it sets both status="archived"
+    // and deleted_at), so the status column alone fully describes a record.
+    // A specific status filter matches on status; the "All" view (no status)
+    // returns every record — including archived — by not constraining
+    // deleted_at.
     if (params.status) {
       query = query.eq("status", params.status);
     }
@@ -144,6 +151,33 @@ export class ProductRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Aggregate counts for the list header tiles. Runs the counts in parallel as
+   * head-only queries (no rows transferred). "Total" counts every record —
+   * including archived — to match the list's "All" view.
+   */
+  async getStats(organizationId: string): Promise<ProductStats> {
+    const base = () =>
+      this.supabase
+        .from("products")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId);
+
+    const [total, active, draft, discontinued] = await Promise.all([
+      base(),
+      base().eq("status", "active"),
+      base().eq("status", "draft"),
+      base().eq("status", "discontinued"),
+    ]);
+
+    return {
+      total: total.count ?? 0,
+      active: active.count ?? 0,
+      draft: draft.count ?? 0,
+      discontinued: discontinued.count ?? 0,
     };
   }
 
@@ -196,7 +230,6 @@ export class ProductRepository {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .is("deleted_at", null)
       .select("*")
       .single();
     if (error || !data) {
