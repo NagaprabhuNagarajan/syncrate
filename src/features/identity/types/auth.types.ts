@@ -31,35 +31,21 @@ export interface AuthError {
 
 export type AuthErrorCode =
   | "invalid_credentials"
-  | "email_not_confirmed"
   | "account_disabled"
   | "account_suspended"
   | "too_many_requests"
-  | "weak_password"
-  | "email_already_registered"
-  | "invalid_token"
-  | "token_expired"
+  | "otp_invalid"
+  | "otp_expired"
   | "unknown";
 
-export interface SignUpInput {
-  readonly email: string;
-  readonly password: string;
-  readonly fullName: string;
-}
-
-export interface SignInInput {
-  readonly email: string;
-  readonly password: string;
-  readonly rememberMe?: boolean;
-}
-
-export interface ForgotPasswordInput {
+/** Request a one-time login code to be emailed to this address. */
+export interface OtpRequestInput {
   readonly email: string;
 }
 
-export interface ResetPasswordInput {
-  readonly password: string;
-  readonly confirmPassword: string;
+/** Verify the 6-digit code the user received by email. */
+export interface OtpVerifyInput {
+  readonly email: string;
   readonly token: string;
 }
 

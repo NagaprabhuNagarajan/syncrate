@@ -1,19 +1,23 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Link from "next/link";
+import { useRef, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, LogIn, AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  loginSchema,
-  type LoginFormValues,
+  otpRequestSchema,
+  otpVerifySchema,
+  type OtpRequestFormValues,
+  type OtpVerifyFormValues,
 } from "@/features/identity/schemas/auth.schemas";
-import { signInAction } from "@/features/identity/actions/auth.actions";
+import {
+  requestOtpAction,
+  verifyOtpAction,
+} from "@/features/identity/actions/auth.actions";
 import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
@@ -77,48 +81,40 @@ function AlertBanner({ type, message }: AlertBannerProps) {
   );
 }
 
+const cardClass =
+  "rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 shadow-lg shadow-slate-200/50 dark:shadow-none";
+
 // ─────────────────────────────────────────────────────────────
-// Login Form
+// Step 1 — email entry
 // ─────────────────────────────────────────────────────────────
 
-export function LoginForm() {
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
-  const message = searchParams.get("message");
+interface EmailStepProps {
+  readonly onSent: (email: string) => void;
+}
 
-  const [showPassword, setShowPassword] = useState(false);
+function EmailStep({ onSent }: EmailStepProps) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  const successMessage =
-    message === "password-reset"
-      ? "Your password has been reset. Please log in."
-      : null;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "", rememberMe: false },
+  } = useForm<OtpRequestFormValues>({
+    resolver: zodResolver(otpRequestSchema),
+    defaultValues: { email: "" },
   });
 
   const onSubmit = handleSubmit((values) => {
     setServerError(null);
-
     const fd = new FormData();
     fd.append("email", values.email);
-    fd.append("password", values.password);
-    if (values.rememberMe) {
-      fd.append("rememberMe", "on");
-    }
-    fd.append("redirectTo", redirectTo);
 
     startTransition(async () => {
-      const result = await signInAction(fd);
-      // If result comes back (redirect would have happened), show the error
-      if (result && !result.success) {
+      const result = await requestOtpAction(fd);
+      if (result.success) {
+        onSent(values.email);
+      } else {
         setServerError(result.error.message);
       }
     });
@@ -129,28 +125,25 @@ export function LoginForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 shadow-lg shadow-slate-200/50 dark:shadow-none"
+      className={cardClass}
     >
-      {/* Heading */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          Welcome back
+          Welcome to Syncrate
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Sign in to your Syncrate account
+          Enter your email and we&apos;ll send you a login code — no password
+          needed.
         </p>
       </div>
 
-      {/* Alerts */}
-      <div className="mb-4 space-y-3">
-        {successMessage && (
-          <AlertBanner type="success" message={successMessage} />
-        )}
-        {serverError && <AlertBanner type="error" message={serverError} />}
-      </div>
+      {serverError && (
+        <div className="mb-4">
+          <AlertBanner type="error" message={serverError} />
+        </div>
+      )}
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
-        {/* Email */}
         <div>
           <label
             htmlFor="email"
@@ -162,71 +155,14 @@ export function LoginForm() {
             id="email"
             type="email"
             autoComplete="email"
+            autoFocus
             aria-invalid={errors.email ? "true" : "false"}
-            aria-describedby={errors.email ? "email-error" : undefined}
             placeholder="you@company.com"
             {...register("email")}
           />
           <FieldError message={errors.email?.message} />
         </div>
 
-        {/* Password */}
-        <div>
-          <div className="mb-1.5 flex items-center justify-between">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              Password
-            </label>
-            <Link
-              href="/forgot-password"
-              className="rounded text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          <div className="relative">
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              aria-invalid={errors.password ? "true" : "false"}
-              aria-describedby={errors.password ? "password-error" : undefined}
-              className="pr-10"
-              placeholder="Enter your password"
-              {...register("password")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Eye className="h-4 w-4" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-          <FieldError message={errors.password?.message} />
-        </div>
-
-        {/* Remember me */}
-        <div className="flex items-center gap-2.5">
-          <input
-            id="rememberMe"
-            type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-primary-600 dark:text-primary-400 focus:ring-primary-500"
-            {...register("rememberMe")}
-          />
-          <label htmlFor="rememberMe" className="text-sm text-slate-600 dark:text-slate-400">
-            Remember me for 30 days
-          </label>
-        </div>
-
-        {/* Submit */}
         <Button
           type="submit"
           size="lg"
@@ -235,21 +171,188 @@ export function LoginForm() {
           loading={isPending}
           disabled={isPending}
         >
-          <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
-          Sign in
+          <Mail className="mr-2 h-4 w-4" aria-hidden="true" />
+          Send login code
+        </Button>
+      </form>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Step 2 — code entry
+// ─────────────────────────────────────────────────────────────
+
+interface CodeStepProps {
+  readonly email: string;
+  readonly redirectTo: string;
+  readonly onChangeEmail: () => void;
+}
+
+function CodeStep({ email, redirectTo, onChangeEmail }: CodeStepProps) {
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [resentNote, setResentNote] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [isResending, startResend] = useTransition();
+  const submittedRef = useRef(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setFocus,
+    formState: { errors },
+  } = useForm<OtpVerifyFormValues>({
+    resolver: zodResolver(otpVerifySchema),
+    defaultValues: { email, token: "" },
+  });
+
+  const token = watch("token");
+
+  const onSubmit = handleSubmit((values) => {
+    setServerError(null);
+    setResentNote(null);
+    const fd = new FormData();
+    fd.append("email", values.email);
+    fd.append("token", values.token);
+    fd.append("redirectTo", redirectTo);
+
+    startTransition(async () => {
+      const result = await verifyOtpAction(fd);
+      // On success verifyOtpAction redirects, so control only returns on error.
+      if (result && !result.success) {
+        setServerError(result.error.message);
+      }
+    });
+  });
+
+  const onResend = () => {
+    setServerError(null);
+    setResentNote(null);
+    const fd = new FormData();
+    fd.append("email", email);
+    startResend(async () => {
+      const result = await requestOtpAction(fd);
+      if (result.success) {
+        setResentNote("A new code is on its way to your inbox.");
+        setFocus("token");
+      } else {
+        setServerError(result.error.message);
+      }
+    });
+  };
+
+  // Auto-submit once a full 6-digit code has been entered.
+  if (/^\d{6}$/.test(token ?? "") && !submittedRef.current && !isPending) {
+    submittedRef.current = true;
+    void onSubmit();
+  }
+  if (!/^\d{6}$/.test(token ?? "")) {
+    submittedRef.current = false;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className={cardClass}
+    >
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          Check your email
+        </h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          We sent a 6-digit code to{" "}
+          <span className="font-medium text-slate-700 dark:text-slate-200">
+            {email}
+          </span>
+          .
+        </p>
+      </div>
+
+      <div className="mb-4 space-y-3">
+        {resentNote && <AlertBanner type="success" message={resentNote} />}
+        {serverError && <AlertBanner type="error" message={serverError} />}
+      </div>
+
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
+        <input type="hidden" {...register("email")} />
+        <div>
+          <label
+            htmlFor="token"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
+          >
+            Login code
+          </label>
+          <Input
+            id="token"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            maxLength={6}
+            aria-invalid={errors.token ? "true" : "false"}
+            placeholder="123456"
+            className="text-center text-lg tracking-[0.5em] font-semibold nums"
+            {...register("token")}
+          />
+          <FieldError message={errors.token?.message} />
+        </div>
+
+        <Button
+          type="submit"
+          size="lg"
+          variant="gradient"
+          className="w-full"
+          loading={isPending}
+          disabled={isPending}
+        >
+          <ArrowRight className="mr-2 h-4 w-4" aria-hidden="true" />
+          Verify &amp; continue
         </Button>
       </form>
 
-      {/* Register link */}
-      <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/register"
-          className="rounded font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      <div className="mt-6 flex items-center justify-between text-sm">
+        <button
+          type="button"
+          onClick={onChangeEmail}
+          className="inline-flex items-center gap-1.5 rounded font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         >
-          Create one free
-        </Link>
-      </p>
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+          Change email
+        </button>
+        <button
+          type="button"
+          onClick={onResend}
+          disabled={isResending}
+          className="rounded font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        >
+          {isResending ? "Sending…" : "Resend code"}
+        </button>
+      </div>
     </motion.div>
   );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Login Form — passwordless, two-step (email → code)
+// ─────────────────────────────────────────────────────────────
+
+export function LoginForm() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
+
+  const [email, setEmail] = useState<string | null>(null);
+
+  if (email) {
+    return (
+      <CodeStep
+        email={email}
+        redirectTo={redirectTo}
+        onChangeEmail={() => setEmail(null)}
+      />
+    );
+  }
+
+  return <EmailStep onSent={setEmail} />;
 }

@@ -6,10 +6,8 @@ import type {
   AuthActionResult,
   AuthError,
   AuthErrorCode,
-  SignUpInput,
-  SignInInput,
-  ForgotPasswordInput,
-  ResetPasswordInput,
+  OtpRequestInput,
+  OtpVerifyInput,
 } from "@/features/identity/types/auth.types";
 
 // ─────────────────────────────────────────────────────────────
@@ -22,37 +20,49 @@ function mapSupabaseAuthError(message: string): AuthError {
   let code: AuthErrorCode = "unknown";
 
   if (
-    lower.includes("invalid login credentials") ||
-    lower.includes("invalid_credentials")
-  ) {
-    code = "invalid_credentials";
-  } else if (
-    lower.includes("email not confirmed") ||
-    lower.includes("email_not_confirmed")
-  ) {
-    code = "email_not_confirmed";
-  } else if (
-    lower.includes("user already registered") ||
-    lower.includes("already registered")
-  ) {
-    code = "email_already_registered";
-  } else if (
     lower.includes("too many requests") ||
-    lower.includes("rate limit")
+    lower.includes("rate limit") ||
+    lower.includes("email rate limit")
   ) {
     code = "too_many_requests";
-  } else if (lower.includes("weak password") || lower.includes("password")) {
-    code = "weak_password";
-  } else if (lower.includes("token") && lower.includes("expired")) {
-    code = "token_expired";
+  } else if (lower.includes("expired")) {
+    code = "otp_expired";
   } else if (
-    lower.includes("invalid token") ||
-    lower.includes("token is invalid")
+    lower.includes("invalid") &&
+    (lower.includes("otp") || lower.includes("token") || lower.includes("code"))
   ) {
-    code = "invalid_token";
+    code = "otp_invalid";
+  } else if (
+    lower.includes("token has expired or is invalid") ||
+    lower.includes("otp")
+  ) {
+    code = "otp_invalid";
   }
 
   return { code, message };
+}
+
+/** User-facing copy that never leaks provider internals. */
+function friendly(error: AuthError): AuthError {
+  switch (error.code) {
+    case "too_many_requests":
+      return {
+        code: error.code,
+        message: "Too many attempts. Please wait a minute and try again.",
+      };
+    case "otp_expired":
+      return {
+        code: error.code,
+        message: "That code has expired. Request a new one.",
+      };
+    case "otp_invalid":
+      return {
+        code: error.code,
+        message: "That code isn't valid. Check it and try again.",
+      };
+    default:
+      return error;
+  }
 }
 
 function ok<T>(data: T): AuthActionResult<T> {
@@ -74,43 +84,50 @@ export class AuthService {
     this.repo = new AuthRepository(supabase);
   }
 
-  // ── Sign up ───────────────────────────────────────────────
+  // ── Request email OTP ─────────────────────────────────────
 
-  async signUp(input: SignUpInput): Promise<AuthActionResult<void>> {
-    const appUrl =
-      process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
-    const { error } = await this.supabase.auth.signUp({
+  /**
+   * Sends a one-time login code to the given email. Passwordless: the same
+   * entry point serves both sign-up and sign-in — `shouldCreateUser` provisions
+   * a new auth user (and, via the on_auth_user_created trigger, a public.users
+   * row) on first login. No password is ever set.
+   */
+  async requestEmailOtp(
+    input: OtpRequestInput
+  ): Promise<AuthActionResult<void>> {
+    const { error } = await this.supabase.auth.signInWithOtp({
       email: input.email.toLowerCase().trim(),
-      password: input.password,
       options: {
-        // Where the email-confirmation link returns to. The /auth/callback
-        // route exchanges the token into a session; without it the link lands
-        // on a blank page and the user is never signed in.
-        emailRedirectTo: `${appUrl}/auth/callback`,
-        data: {
-          full_name: input.fullName.trim(),
-        },
+        shouldCreateUser: true,
       },
     });
 
     if (error) {
-      return fail(mapSupabaseAuthError(error.message));
+      return fail(friendly(mapSupabaseAuthError(error.message)));
     }
 
     return ok(undefined);
   }
 
-  // ── Sign in ───────────────────────────────────────────────
+  // ── Verify email OTP ──────────────────────────────────────
 
-  async signIn(input: SignInInput): Promise<AuthActionResult<AuthSession>> {
-    const { data, error } = await this.supabase.auth.signInWithPassword({
+  /**
+   * Verifies the 6-digit code and establishes a session. Enforces the same
+   * account-status gates as the old password sign-in.
+   */
+  async verifyEmailOtp(
+    input: OtpVerifyInput
+  ): Promise<AuthActionResult<AuthSession>> {
+    const { data, error } = await this.supabase.auth.verifyOtp({
       email: input.email.toLowerCase().trim(),
-      password: input.password,
+      token: input.token.trim(),
+      type: "email",
     });
 
     if (error || !data.session || !data.user) {
-      return fail(mapSupabaseAuthError(error?.message ?? "Sign-in failed"));
+      return fail(
+        friendly(mapSupabaseAuthError(error?.message ?? "Verification failed"))
+      );
     }
 
     const profile = await this.repo.findById(data.user.id);
@@ -181,44 +198,6 @@ export class AuthService {
       return null;
     }
     return this.repo.findById(data.user.id);
-  }
-
-  // ── Forgot password ───────────────────────────────────────
-
-  async forgotPassword(
-    input: ForgotPasswordInput,
-    redirectTo: string
-  ): Promise<AuthActionResult<void>> {
-    const { error } = await this.supabase.auth.resetPasswordForEmail(
-      input.email.toLowerCase().trim(),
-      { redirectTo }
-    );
-
-    // Supabase returns success even for non-existent email addresses, so
-    // email enumeration is prevented at the provider level. We still
-    // propagate real infrastructure errors (e.g. rate limiting) so the
-    // caller can surface them to the user.
-    if (error) {
-      return fail(mapSupabaseAuthError(error.message));
-    }
-
-    return ok(undefined);
-  }
-
-  // ── Reset password ────────────────────────────────────────
-
-  async resetPassword(
-    input: ResetPasswordInput
-  ): Promise<AuthActionResult<void>> {
-    const { error } = await this.supabase.auth.updateUser({
-      password: input.password,
-    });
-
-    if (error) {
-      return fail(mapSupabaseAuthError(error.message));
-    }
-
-    return ok(undefined);
   }
 
   // ── Update profile ────────────────────────────────────────

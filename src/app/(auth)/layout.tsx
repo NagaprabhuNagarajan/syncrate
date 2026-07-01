@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 /**
  * Auth layout — split screen: branded showcase panel (lg+) beside the form.
- * Shared by: /login, /register, /forgot-password, /reset-password, /verify-email
+ * Shared by the passwordless /login screen (and the /register redirect).
  */
 export default function AuthLayout({
   children,

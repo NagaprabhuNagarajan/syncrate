@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
-import { RegisterForm } from "@/features/identity/components/register-form";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Create Account",
-  description: "Create your free Syncrate account",
-};
-
+/**
+ * Registration is passwordless and unified with sign-in: the /login screen
+ * both signs users in and provisions new accounts via an emailed login code.
+ * This route is kept only to redirect any lingering links.
+ */
 export default function RegisterPage() {
-  return <RegisterForm />;
+  redirect("/login");
 }

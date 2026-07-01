@@ -16,7 +16,8 @@ type CookieToSet = {
  * 2. Redirect unauthenticated users from protected routes to login
  * 3. Redirect authenticated users away from auth pages
  *
- * Auth pages (public): /login, /register, /forgot-password, /reset-password
+ * Auth pages (public): /login (passwordless email OTP), /register (redirects
+ * to /login), plus the /auth/* callback routes.
  * Protected prefix: everything else under /(app)/...
  *
  * NOTE: We use process.env directly in middleware (cannot import from @/config/env)
@@ -66,9 +67,6 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = [
     "/login",
     "/register",
-    "/forgot-password",
-    "/reset-password",
-    "/verify-email",
     "/auth/callback",
     "/auth/confirm",
   ].some((route) => pathname.startsWith(route));

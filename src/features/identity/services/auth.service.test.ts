@@ -40,13 +40,11 @@ function buildUser(overrides: Partial<User> = {}): User {
 
 function buildAuthMock() {
   return {
-    signUp: vi.fn(),
-    signInWithPassword: vi.fn(),
+    signInWithOtp: vi.fn(),
+    verifyOtp: vi.fn(),
     signOut: vi.fn(),
     getSession: vi.fn(),
     getUser: vi.fn(),
-    resetPasswordForEmail: vi.fn(),
-    updateUser: vi.fn(),
   };
 }
 
@@ -61,54 +59,45 @@ beforeEach(() => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// signUp
+// requestEmailOtp
 // ─────────────────────────────────────────────────────────────
 
-describe("AuthService.signUp", () => {
-  it("succeeds and normalizes email + name before calling Supabase", async () => {
-    auth.signUp.mockResolvedValue({ data: {}, error: null });
+describe("AuthService.requestEmailOtp", () => {
+  it("sends a code, normalizes the email, and allows user creation", async () => {
+    auth.signInWithOtp.mockResolvedValue({ data: {}, error: null });
 
-    const result = await service.signUp({
+    const result = await service.requestEmailOtp({
       email: "  NEW@Example.com ",
-      password: "Password1",
-      fullName: "  New User  ",
     });
 
     expect(result.success).toBe(true);
-    expect(auth.signUp).toHaveBeenCalledWith({
+    expect(auth.signInWithOtp).toHaveBeenCalledWith({
       email: "new@example.com",
-      password: "Password1",
-      options: {
-        emailRedirectTo: expect.stringContaining("/auth/callback"),
-        data: { full_name: "New User" },
-      },
+      options: { shouldCreateUser: true },
     });
   });
 
-  it("maps an 'already registered' error to email_already_registered", async () => {
-    auth.signUp.mockResolvedValue({
+  it("maps a rate-limit error to too_many_requests with friendly copy", async () => {
+    auth.signInWithOtp.mockResolvedValue({
       data: {},
-      error: { message: "User already registered" },
+      error: { message: "email rate limit exceeded" },
     });
 
-    const result = await service.signUp({
-      email: "dupe@example.com",
-      password: "Password1",
-      fullName: "Dupe",
-    });
+    const result = await service.requestEmailOtp({ email: "x@example.com" });
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.code).toBe("email_already_registered");
+      expect(result.error.code).toBe("too_many_requests");
+      expect(result.error.message).toMatch(/wait/i);
     }
   });
 });
 
 // ─────────────────────────────────────────────────────────────
-// signIn
+// verifyEmailOtp
 // ─────────────────────────────────────────────────────────────
 
-describe("AuthService.signIn", () => {
+describe("AuthService.verifyEmailOtp", () => {
   const session = {
     access_token: "token-abc",
     expires_at: 12345,
@@ -116,15 +105,15 @@ describe("AuthService.signIn", () => {
   };
 
   it("returns a session for an active user", async () => {
-    auth.signInWithPassword.mockResolvedValue({
+    auth.verifyOtp.mockResolvedValue({
       data: { session, user: { id: "user-1" } },
       error: null,
     });
     mockRepo.findById.mockResolvedValue(buildUser());
 
-    const result = await service.signIn({
+    const result = await service.verifyEmailOtp({
       email: "user@example.com",
-      password: "Password1",
+      token: "123456",
     });
 
     expect(result.success).toBe(true);
@@ -133,35 +122,57 @@ describe("AuthService.signIn", () => {
       expect(result.data.expiresAt).toBe(12345);
       expect(result.data.user.id).toBe("user-1");
     }
+    expect(auth.verifyOtp).toHaveBeenCalledWith({
+      email: "user@example.com",
+      token: "123456",
+      type: "email",
+    });
   });
 
-  it("maps invalid credentials error", async () => {
-    auth.signInWithPassword.mockResolvedValue({
+  it("maps an expired code to otp_expired", async () => {
+    auth.verifyOtp.mockResolvedValue({
       data: { session: null, user: null },
-      error: { message: "Invalid login credentials" },
+      error: { message: "Token has expired" },
     });
 
-    const result = await service.signIn({
+    const result = await service.verifyEmailOtp({
       email: "user@example.com",
-      password: "wrong",
+      token: "000000",
     });
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.code).toBe("invalid_credentials");
+      expect(result.error.code).toBe("otp_expired");
+    }
+  });
+
+  it("maps an invalid code to otp_invalid", async () => {
+    auth.verifyOtp.mockResolvedValue({
+      data: { session: null, user: null },
+      error: { message: "Invalid OTP" },
+    });
+
+    const result = await service.verifyEmailOtp({
+      email: "user@example.com",
+      token: "999999",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("otp_invalid");
     }
   });
 
   it("fails when the profile cannot be found", async () => {
-    auth.signInWithPassword.mockResolvedValue({
+    auth.verifyOtp.mockResolvedValue({
       data: { session, user: { id: "user-1" } },
       error: null,
     });
     mockRepo.findById.mockResolvedValue(null);
 
-    const result = await service.signIn({
+    const result = await service.verifyEmailOtp({
       email: "user@example.com",
-      password: "Password1",
+      token: "123456",
     });
 
     expect(result.success).toBe(false);
@@ -171,16 +182,16 @@ describe("AuthService.signIn", () => {
   });
 
   it("signs out and fails for a suspended account", async () => {
-    auth.signInWithPassword.mockResolvedValue({
+    auth.verifyOtp.mockResolvedValue({
       data: { session, user: { id: "user-1" } },
       error: null,
     });
     mockRepo.findById.mockResolvedValue(buildUser({ status: "suspended" }));
     auth.signOut.mockResolvedValue({ error: null });
 
-    const result = await service.signIn({
+    const result = await service.verifyEmailOtp({
       email: "user@example.com",
-      password: "Password1",
+      token: "123456",
     });
 
     expect(result.success).toBe(false);
@@ -191,16 +202,16 @@ describe("AuthService.signIn", () => {
   });
 
   it("signs out and fails for an inactive account", async () => {
-    auth.signInWithPassword.mockResolvedValue({
+    auth.verifyOtp.mockResolvedValue({
       data: { session, user: { id: "user-1" } },
       error: null,
     });
     mockRepo.findById.mockResolvedValue(buildUser({ status: "inactive" }));
     auth.signOut.mockResolvedValue({ error: null });
 
-    const result = await service.signIn({
+    const result = await service.verifyEmailOtp({
       email: "user@example.com",
-      password: "Password1",
+      token: "123456",
     });
 
     expect(result.success).toBe(false);
@@ -273,69 +284,6 @@ describe("AuthService.getCurrentUser", () => {
     const user = buildUser();
     mockRepo.findById.mockResolvedValue(user);
     expect(await service.getCurrentUser()).toBe(user);
-  });
-});
-
-// ─────────────────────────────────────────────────────────────
-// forgotPassword / resetPassword
-// ─────────────────────────────────────────────────────────────
-
-describe("AuthService.forgotPassword", () => {
-  it("calls Supabase with a normalized email and the redirect URL", async () => {
-    auth.resetPasswordForEmail.mockResolvedValue({ error: null });
-
-    const result = await service.forgotPassword(
-      { email: "  USER@Example.com " },
-      "https://app/reset"
-    );
-
-    expect(result.success).toBe(true);
-    expect(auth.resetPasswordForEmail).toHaveBeenCalledWith(
-      "user@example.com",
-      { redirectTo: "https://app/reset" }
-    );
-  });
-
-  it("fails when Supabase returns an error", async () => {
-    auth.resetPasswordForEmail.mockResolvedValue({
-      error: { message: "rate limit" },
-    });
-    const result = await service.forgotPassword(
-      { email: "user@example.com" },
-      "https://app/reset"
-    );
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.code).toBe("too_many_requests");
-    }
-  });
-});
-
-describe("AuthService.resetPassword", () => {
-  it("succeeds when the password is updated", async () => {
-    auth.updateUser.mockResolvedValue({ error: null });
-    const result = await service.resetPassword({
-      password: "Password1",
-      confirmPassword: "Password1",
-      token: "tok",
-    });
-    expect(result.success).toBe(true);
-    expect(auth.updateUser).toHaveBeenCalledWith({ password: "Password1" });
-  });
-
-  it("fails when Supabase rejects the update", async () => {
-    auth.updateUser.mockResolvedValue({
-      error: { message: "weak password" },
-    });
-    const result = await service.resetPassword({
-      password: "Password1",
-      confirmPassword: "Password1",
-      token: "tok",
-    });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.code).toBe("weak_password");
-    }
   });
 });
 

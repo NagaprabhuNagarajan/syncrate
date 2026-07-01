@@ -113,19 +113,26 @@ describe("AppShell", () => {
       </AppShell>
     );
 
-    // Org selector is only visible when expanded.
-    expect(screen.getByText("My Organization")).toBeInTheDocument();
+    // Expanded by default: the collapse control is shown.
+    expect(
+      screen.getByRole("button", { name: /collapse sidebar/i })
+    ).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: /collapse sidebar/i })
     );
-    expect(screen.queryByText("My Organization")).not.toBeInTheDocument();
+    // Collapsed: the toggle flips to "expand" and the collapse control is gone.
     expect(
       screen.getByRole("button", { name: /expand sidebar/i })
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /collapse sidebar/i })
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /expand sidebar/i }));
-    expect(screen.getByText("My Organization")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /collapse sidebar/i })
+    ).toBeInTheDocument();
   });
 
   it("opens and closes the mobile navigation drawer", async () => {
