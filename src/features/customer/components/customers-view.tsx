@@ -206,6 +206,18 @@ export function CustomersView({
     pushWith({ search: searchInput.trim() || undefined, page: undefined });
   };
 
+  const handleSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value = event.target.value;
+    setSearchInput(value);
+    // Clearing the field (native ✕ or deleting the text) resets the list
+    // immediately, without waiting for a submit.
+    if (value === "" && filters.search) {
+      pushWith({ search: undefined, page: undefined });
+    }
+  };
+
   const copyToClipboard = (text: string): void => {
     void navigator.clipboard?.writeText(text);
   };
@@ -330,7 +342,7 @@ export function CustomersView({
             aria-label="Search customers"
             placeholder="Search name, code, company, mobile…"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-9"
           />
         </form>
