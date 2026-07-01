@@ -5,16 +5,40 @@ import { OrganizationService } from "@/features/organization/services/organizati
 import { SupplierService } from "@/features/supplier/services/supplier.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { SuppliersView } from "@/features/supplier/components/suppliers-view";
+import type { SupplierStatus } from "@/features/supplier/types/supplier.types";
 
 export const metadata: Metadata = {
   title: "Suppliers",
-  description: "Manage your organization's suppliers",
+  description: "Manage your suppliers and procurement contacts",
 };
+
+const SUPPLIER_STATUSES: readonly SupplierStatus[] = [
+  "active",
+  "inactive",
+  "archived",
+];
+
+function parseStatus(value?: string): SupplierStatus | undefined {
+  if (value && SUPPLIER_STATUSES.includes(value as SupplierStatus)) {
+    return value as SupplierStatus;
+  }
+  return undefined;
+}
+
+function parsePage(value?: string): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
 
 export default async function SuppliersPage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ org?: string }>;
+  readonly searchParams: Promise<{
+    org?: string;
+    search?: string;
+    status?: string;
+    page?: string;
+  }>;
 }) {
   const params = await searchParams;
   const supabase = await createServerSupabaseClient();
@@ -59,13 +83,22 @@ export default async function SuppliersPage({
     context.permissions.includes("supplier.create") ||
     context.permissions.includes("supplier.update");
 
-  const service = new SupplierService(supabase);
-  const result = await service.listSuppliers(activeOrg.id, { pageSize: 100 });
+  const search = params.search?.trim() || undefined;
+  const status = parseStatus(params.status);
+  const page = parsePage(params.page);
+
+  const supplierService = new SupplierService(supabase);
+  const [result, stats] = await Promise.all([
+    supplierService.listSuppliers(activeOrg.id, { search, status, page }),
+    supplierService.getSupplierStats(activeOrg.id),
+  ]);
 
   return (
     <SuppliersView
       organizationId={activeOrg.id}
-      suppliers={[...result.items]}
+      result={result}
+      stats={stats}
+      filters={{ search, status }}
       canManage={canManage}
     />
   );

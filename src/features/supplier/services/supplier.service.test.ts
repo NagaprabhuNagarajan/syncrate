@@ -14,6 +14,7 @@ import { SupplierService } from "./supplier.service";
 const { mockRepo } = vi.hoisted(() => ({
   mockRepo: {
     list: vi.fn(),
+    getStats: vi.fn(),
     findById: vi.fn(),
     findByCode: vi.fn(),
     findByGst: vi.fn(),
@@ -111,6 +112,16 @@ describe("SupplierService reads", () => {
 
     expect(result.total).toBe(1);
     expect(mockRepo.list).toHaveBeenCalledWith("org-1", { search: "acme" });
+  });
+
+  it("getSupplierStats delegates to the repository", async () => {
+    const service = new SupplierService(fakeSupabase);
+    const stats = { total: 5, active: 4, inactive: 1, newThisMonth: 2 };
+    mockRepo.getStats.mockResolvedValue(stats);
+
+    const result = await service.getSupplierStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
   });
 
   it("getSupplier returns the supplier when found", async () => {

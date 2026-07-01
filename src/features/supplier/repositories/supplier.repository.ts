@@ -5,6 +5,7 @@ import type {
   SupplierLedgerEntry,
   SupplierListParams,
   SupplierListResult,
+  SupplierStats,
 } from "@/features/supplier/types/supplier.types";
 
 type DbSupplier = Database["public"]["Tables"]["suppliers"]["Row"];
@@ -85,11 +86,12 @@ export class SupplierRepository {
   constructor(private readonly supabase: AppSupabaseClient) {}
 
   async findById(id: string): Promise<Supplier | null> {
+    // No deleted_at constraint: archived suppliers are soft-deleted but must
+    // remain viewable and editable (e.g. to restore them).
     const { data, error } = await this.supabase
       .from("suppliers")
       .select("*")
       .eq("id", id)
-      .is("deleted_at", null)
       .single();
 
     if (error || !data) {
@@ -151,9 +153,13 @@ export class SupplierRepository {
     let query = this.supabase
       .from("suppliers")
       .select("*", { count: "exact" })
-      .eq("organization_id", organizationId)
-      .is("deleted_at", null);
+      .eq("organization_id", organizationId);
 
+    // Archiving is the only soft-delete path (it sets both status="archived"
+    // and deleted_at), so the status column alone fully describes a record.
+    // A specific status filter matches on status; the "All" view (no status)
+    // returns every record — including archived — by not constraining
+    // deleted_at.
     if (params.status) {
       query = query.eq("status", params.status);
     }
@@ -180,6 +186,37 @@ export class SupplierRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Aggregate counts for the list header tiles. Runs the counts in parallel as
+   * head-only queries (no rows transferred). "Total" counts every record —
+   * including archived — to match the list's "All" view.
+   */
+  async getStats(organizationId: string): Promise<SupplierStats> {
+    const base = () =>
+      this.supabase
+        .from("suppliers")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const [total, active, inactive, newThisMonth] = await Promise.all([
+      base(),
+      base().eq("status", "active"),
+      base().eq("status", "inactive"),
+      base().gte("created_at", monthStart.toISOString()),
+    ]);
+
+    return {
+      total: total.count ?? 0,
+      active: active.count ?? 0,
+      inactive: inactive.count ?? 0,
+      newThisMonth: newThisMonth.count ?? 0,
     };
   }
 
@@ -224,7 +261,6 @@ export class SupplierRepository {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .is("deleted_at", null)
       .select("*")
       .single();
 

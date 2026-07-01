@@ -1,509 +1,583 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   Truck,
+  CheckCircle2,
+  Sparkles,
+  PauseCircle,
   Plus,
-  Pencil,
-  Archive,
-  AlertTriangle,
   Search,
-  Mail,
-  Phone,
-  Star,
+  ChevronLeft,
+  ChevronRight,
   Download,
   Upload,
+  MoreHorizontal,
+  Pencil,
+  Copy,
+  ArrowUpRight,
+  type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/shared/page-header";
-import { EmptyState } from "@/components/shared/empty-state";
+import { Card } from "@/components/ui/card";
 import {
-  archiveSupplierAction,
-  exportSuppliersAction,
-} from "@/features/supplier/actions/supplier.actions";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/shared/empty-state";
+import { AnimatedNumber } from "@/components/shared/animated-number";
+import { exportSuppliersAction } from "@/features/supplier/actions/supplier.actions";
+import { SupplierImportDialog } from "@/features/supplier/components/supplier-import-dialog";
+import {
+  STATUS_LABEL,
+  STATUS_VARIANT,
+} from "@/features/supplier/utils/supplier-display";
 import type {
   Supplier,
+  SupplierListResult,
+  SupplierStats,
   SupplierStatus,
 } from "@/features/supplier/types/supplier.types";
 import { cn } from "@/utils/cn";
-import { SupplierImportDialog } from "./supplier-import-dialog";
 
 // ─────────────────────────────────────────────────────────────
-// Status badge mapping
+// Filters
 // ─────────────────────────────────────────────────────────────
 
-const STATUS_VARIANT: Record<
-  SupplierStatus,
-  "success" | "muted" | "secondary"
-> = {
-  active: "success",
-  inactive: "muted",
-  archived: "secondary",
-};
-
-const STATUS_LABEL: Record<SupplierStatus, string> = {
-  active: "Active",
-  inactive: "Inactive",
-  archived: "Archived",
-};
-
-const STATUS_FILTERS: { value: SupplierStatus | "all"; label: string }[] = [
-  { value: "all", label: "All" },
+const STATUS_FILTERS: readonly { value: string; label: string }[] = [
+  { value: "", label: "All" },
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
   { value: "archived", label: "Archived" },
 ];
 
-function supplierHref(organizationId: string, path: string): string {
-  return `${path}?org=${organizationId}`;
-}
-
 // ─────────────────────────────────────────────────────────────
-// Supplier card
+// Stat tile
 // ─────────────────────────────────────────────────────────────
 
-interface SupplierCardProps {
-  readonly supplier: Supplier;
-  readonly index: number;
-  readonly organizationId: string;
-  readonly onArchive: (supplier: Supplier) => void;
-}
-
-function SupplierCard({
-  supplier,
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
   index,
-  organizationId,
-  onArchive,
-}: SupplierCardProps) {
-  const location = [supplier.city, supplier.state].filter(Boolean).join(", ");
-
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly index: number;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.05 }}
-      className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
-          <Truck className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <Link
-            href={supplierHref(organizationId, `/suppliers/${supplier.id}`)}
-            className="block truncate text-sm font-semibold text-slate-900 hover:text-primary-600 hover:underline dark:text-slate-100 dark:hover:text-primary-400"
-          >
-            {supplier.name}
-          </Link>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{supplier.code}</Badge>
-            <Badge dot variant={STATUS_VARIANT[supplier.status]}>
-              {STATUS_LABEL[supplier.status]}
-            </Badge>
-            {supplier.rating !== null && (
-              <span className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                <Star
-                  className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
-                  aria-hidden="true"
-                />
-                {supplier.rating.toFixed(1)}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <dl className="mt-4 space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
-        {supplier.contactPerson && (
-          <div>
-            <dt className="inline font-medium text-slate-400 dark:text-slate-500">Contact: </dt>
-            <dd className="inline">{supplier.contactPerson}</dd>
-          </div>
-        )}
-        {supplier.mobile && (
-          <div className="flex items-center gap-1.5">
-            <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <dd>{supplier.mobile}</dd>
-          </div>
-        )}
-        {supplier.email && (
-          <div className="flex items-center gap-1.5">
-            <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <dd className="truncate">{supplier.email}</dd>
-          </div>
-        )}
-        {location && (
-          <div>
-            <dt className="inline font-medium text-slate-400 dark:text-slate-500">Location: </dt>
-            <dd className="inline">{location}</dd>
-          </div>
-        )}
-      </dl>
-
-      <div className="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
-        <Button
-          asChild
-          type="button"
-          variant="outline"
-          size="sm"
-          aria-label={`Edit ${supplier.name}`}
-        >
-          <Link
-            href={supplierHref(
-              organizationId,
-              `/suppliers/${supplier.id}/edit`
+      <Card className="relative overflow-hidden p-4">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
+              tint
             )}
           >
-            <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-            Edit
-          </Link>
-        </Button>
-        {supplier.status !== "archived" && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
-            onClick={() => onArchive(supplier)}
-            aria-label={`Archive ${supplier.name}`}
-          >
-            <Archive className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-            Archive
-          </Button>
-        )}
-      </div>
+            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <AnimatedNumber value={value} />
+            </p>
+          </div>
+        </div>
+      </Card>
     </motion.div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Archive confirmation dialog
-// ─────────────────────────────────────────────────────────────
-
-interface ArchiveDialogProps {
-  readonly supplier: Supplier;
-  readonly isPending: boolean;
-  readonly error: string | null;
-  readonly onConfirm: () => void;
-  readonly onCancel: () => void;
-}
-
-function ArchiveDialog({
-  supplier,
-  isPending,
-  error,
-  onConfirm,
-  onCancel,
-}: ArchiveDialogProps) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button
-        type="button"
-        aria-label="Close dialog"
-        className="absolute inset-0 bg-slate-900/40"
-        onClick={onCancel}
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.18 }}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="archive-supplier-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
-      >
-        <div className="flex items-start gap-4">
-          <div className="bg-error-50 flex h-11 w-11 shrink-0 items-center justify-center rounded-full dark:bg-error-500/10">
-            <AlertTriangle
-              className="text-error-600 h-5 w-5 dark:text-error-400"
-              aria-hidden="true"
-            />
-          </div>
-          <div>
-            <h2
-              id="archive-supplier-title"
-              className="text-base font-semibold text-slate-900 dark:text-slate-100"
-            >
-              Archive supplier
-            </h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Are you sure you want to archive{" "}
-              <span className="font-medium text-slate-700 dark:text-slate-300">
-                {supplier.name}
-              </span>
-              ? Archived suppliers remain available for historical reports.
-            </p>
-          </div>
-        </div>
-
-        {error && (
-          <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
-
-        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={onConfirm}
-            loading={isPending}
-            disabled={isPending}
-          >
-            Archive supplier
-          </Button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// Suppliers view
+// Props
 // ─────────────────────────────────────────────────────────────
 
 interface SuppliersViewProps {
   readonly organizationId: string;
-  readonly suppliers: Supplier[];
-  readonly canManage?: boolean;
+  readonly result: SupplierListResult;
+  readonly stats: SupplierStats;
+  readonly filters: {
+    readonly search?: string;
+    readonly status?: SupplierStatus;
+  };
+  readonly canManage: boolean;
 }
 
 export function SuppliersView({
   organizationId,
-  suppliers,
-  canManage = false,
+  result,
+  stats,
+  filters,
+  canManage,
 }: SuppliersViewProps) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<SupplierStatus | "all">(
-    "all"
-  );
-  const [archiveTarget, setArchiveTarget] = useState<Supplier | null>(null);
-  const [archiveError, setArchiveError] = useState<string | null>(null);
-  const [isArchiving, startArchiveTransition] = useTransition();
-  const [isImportOpen, setIsImportOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const [importOpen, setImportOpen] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
-  const [isExporting, startExportTransition] = useTransition();
+  const [isExporting, startExport] = useTransition();
 
-  const handleExport = () => {
+  const { items, total, page, pageSize } = result;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(total, page * pageSize);
+  const hasFilters = Boolean(filters.search || filters.status);
+  const org = searchParams.get("org");
+
+  const withOrg = (path: string): string =>
+    org ? `${path}${path.includes("?") ? "&" : "?"}org=${org}` : path;
+
+  const detailHref = (id: string): string => withOrg(`/suppliers/${id}`);
+  const editHref = (id: string): string => withOrg(`/suppliers/${id}/edit`);
+  const newHref = (): string => withOrg("/suppliers/new");
+
+  const pushWith = (patch: Record<string, string | undefined>): void => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(patch).forEach(([key, value]) => {
+      if (value === undefined || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    const query = params.toString();
+    router.push(query ? `/suppliers?${query}` : "/suppliers");
+  };
+
+  const handleExport = (): void => {
     setExportError(null);
-    startExportTransition(async () => {
-      const result = await exportSuppliersAction(organizationId);
-      if (!result.success) {
-        setExportError(result.error.message);
+    startExport(async () => {
+      const response = await exportSuppliersAction(organizationId);
+      if (!response.success) {
+        setExportError(response.error.message);
         return;
       }
-      const blob = new Blob([result.data], { type: "text/csv;charset=utf-8;" });
+      const blob = new Blob([response.data], {
+        type: "text/csv;charset=utf-8;",
+      });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "suppliers.csv";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "suppliers.csv";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     });
   };
 
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return suppliers.filter((s) => {
-      if (statusFilter !== "all" && s.status !== statusFilter) {
-        return false;
-      }
-      if (!term) {
-        return true;
-      }
-      return [s.name, s.code, s.contactPerson, s.mobile, s.email]
-        .filter(Boolean)
-        .some((field) => field?.toLowerCase().includes(term));
-    });
-  }, [suppliers, search, statusFilter]);
-
-  const handleArchiveConfirm = () => {
-    if (!archiveTarget) {
-      return;
-    }
-    setArchiveError(null);
-    startArchiveTransition(async () => {
-      const result = await archiveSupplierAction(
-        organizationId,
-        archiveTarget.id
-      );
-      if (!result.success) {
-        setArchiveError(result.error.message);
-        return;
-      }
-      setArchiveTarget(null);
-      router.refresh();
-    });
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    pushWith({ search: searchInput.trim() || undefined, page: undefined });
   };
 
-  const closeArchiveDialog = () => {
-    setArchiveTarget(null);
-    setArchiveError(null);
+  const handleSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value = event.target.value;
+    setSearchInput(value);
+    // Clearing the field (native ✕ or deleting the text) resets the list
+    // immediately, without waiting for a submit.
+    if (value === "" && filters.search) {
+      pushWith({ search: undefined, page: undefined });
+    }
+  };
+
+  const copyToClipboard = (text: string): void => {
+    void navigator.clipboard?.writeText(text);
   };
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Suppliers"
-        description="Manage your supplier relationships and procurement contacts"
-        icon={Truck}
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div className="flex flex-wrap items-center gap-2">
-          {canManage && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleExport}
-                loading={isExporting}
-                disabled={isExporting}
-              >
-                <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Export
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsImportOpen(true)}
-              >
-                <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Import
-              </Button>
-            </>
-          )}
-          <Button asChild type="button" variant="gradient">
-            <Link href={supplierHref(organizationId, "/suppliers/new")}>
-              <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Add supplier
-            </Link>
-          </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <Truck className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Suppliers
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {stats.total}
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Manage your suppliers and procurement contacts
+            </p>
+          </div>
         </div>
-      </PageHeader>
+
+        {canManage && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExport}
+              loading={isExporting}
+            >
+              <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Export
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setImportOpen(true)}
+            >
+              <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Import
+            </Button>
+            <Button asChild variant="gradient">
+              <Link href={newHref()}>
+                <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Add supplier
+              </Link>
+            </Button>
+          </div>
+        )}
+      </motion.div>
 
       {exportError && (
-        <div
-          className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm"
+        <p
           role="alert"
+          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {exportError}
-        </div>
+        </p>
       )}
 
-      {suppliers.length > 0 && (
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:max-w-xs">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search suppliers"
-              aria-label="Search suppliers"
-              className="pl-9"
-            />
-          </div>
-          <div
-            className="flex flex-wrap items-center gap-1.5"
-            role="group"
-            aria-label="Filter by status"
-          >
-            {STATUS_FILTERS.map((f) => (
+      {importOpen && (
+        <SupplierImportDialog
+          organizationId={organizationId}
+          onClose={() => setImportOpen(false)}
+          onImported={() => router.refresh()}
+        />
+      )}
+
+      {/* Stat tiles */}
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          icon={Truck}
+          label="Total"
+          value={stats.total}
+          tint="bg-gradient-brand"
+          index={0}
+        />
+        <StatTile
+          icon={CheckCircle2}
+          label="Active"
+          value={stats.active}
+          tint="bg-gradient-success"
+          index={1}
+        />
+        <StatTile
+          icon={Sparkles}
+          label="New this month"
+          value={stats.newThisMonth}
+          tint="bg-gradient-info"
+          index={2}
+        />
+        <StatTile
+          icon={PauseCircle}
+          label="Inactive"
+          value={stats.inactive}
+          tint="bg-gradient-error"
+          index={3}
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <form
+          onSubmit={handleSearchSubmit}
+          role="search"
+          className="relative w-full lg:max-w-sm"
+        >
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            aria-label="Search suppliers"
+            placeholder="Search name, code, contact, mobile…"
+            value={searchInput}
+            onChange={handleSearchChange}
+            className="pl-9"
+          />
+        </form>
+
+        <div
+          className="flex flex-wrap items-center gap-1.5"
+          role="tablist"
+          aria-label="Filter by status"
+        >
+          {STATUS_FILTERS.map((option) => {
+            const active = (filters.status ?? "") === option.value;
+            return (
               <button
-                key={f.value}
+                key={option.value || "all"}
                 type="button"
-                onClick={() => setStatusFilter(f.value)}
-                aria-pressed={statusFilter === f.value}
+                role="tab"
+                aria-selected={active}
+                onClick={() =>
+                  pushWith({
+                    status: option.value || undefined,
+                    page: undefined,
+                  })
+                }
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                  statusFilter === f.value
-                    ? "border-primary-600 bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300"
-                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-700"
+                  active
+                    ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
                 )}
               >
-                {f.label}
+                {option.label}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      )}
+      </div>
 
-      <div className="mt-6">
-        {suppliers.length === 0 ? (
+      {/* Table / empty state */}
+      <div className="mt-4">
+        {items.length === 0 ? (
           <EmptyState
             icon={Truck}
-            title="No suppliers yet"
-            description="Add your first supplier to start managing procurement and payables."
-            action={{
-              label: "Add supplier",
-              icon: Plus,
-              onClick: () =>
-                router.push(supplierHref(organizationId, "/suppliers/new")),
-            }}
-          />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            icon={Search}
-            title="No matching suppliers"
-            description="Try adjusting your search or status filter."
+            title={hasFilters ? "No matching suppliers" : "No suppliers yet"}
+            description={
+              hasFilters
+                ? "No suppliers match your current filters. Try adjusting your search or clearing the filters."
+                : "Add your first supplier to start managing procurement and payables."
+            }
+            action={
+              hasFilters
+                ? {
+                    label: "Clear filters",
+                    onClick: () => router.push(withOrg("/suppliers")),
+                  }
+                : canManage
+                  ? {
+                      label: "Add supplier",
+                      icon: Plus,
+                      onClick: () => router.push(newHref()),
+                    }
+                  : undefined
+            }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((supplier, i) => (
-              <SupplierCard
-                key={supplier.id}
-                supplier={supplier}
-                index={i}
-                organizationId={organizationId}
-                onArchive={(s) => {
-                  setArchiveError(null);
-                  setArchiveTarget(s);
-                }}
-              />
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Table wrapperClassName="shadow-card">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead>Contact person</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Payment terms</TableHead>
+                  <TableHead className="w-10">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((supplier: Supplier) => (
+                  <TableRow
+                    key={supplier.id}
+                    onClick={() => router.push(detailHref(supplier.id))}
+                    className="group cursor-pointer"
+                  >
+                    <TableCell>
+                      <div className="min-w-0">
+                        <Link
+                          href={detailHref(supplier.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="block truncate font-medium text-slate-900 hover:text-primary-600 hover:underline dark:text-slate-100 dark:hover:text-primary-400"
+                        >
+                          {supplier.name}
+                        </Link>
+                        <span className="block truncate font-mono text-xs text-slate-400 dark:text-slate-500">
+                          {supplier.code}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {supplier.contactPerson ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      {supplier.mobile || supplier.email ? (
+                        <div className="min-w-0">
+                          {supplier.mobile && (
+                            <span className="block truncate text-slate-700 dark:text-slate-300">
+                              {supplier.mobile}
+                            </span>
+                          )}
+                          {supplier.email && (
+                            <span className="block truncate text-xs text-slate-400 dark:text-slate-500">
+                              {supplier.email}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500">
+                          —
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge dot variant={STATUS_VARIANT[supplier.status]}>
+                        {STATUS_LABEL[supplier.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-700 dark:text-slate-300">
+                      {supplier.paymentTermsDays} days
+                    </TableCell>
+                    <TableCell
+                      className="text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Actions for ${supplier.name}`}
+                            className="rounded-md p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                          >
+                            <MoreHorizontal
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={detailHref(supplier.id)}>
+                              <ArrowUpRight
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
+                              Open
+                            </Link>
+                          </DropdownMenuItem>
+                          {canManage && (
+                            <DropdownMenuItem asChild>
+                              <Link href={editHref(supplier.id)}>
+                                <Pencil
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onSelect={() => copyToClipboard(supplier.code)}
+                          >
+                            <Copy className="h-4 w-4" aria-hidden="true" />
+                            Copy code
+                          </DropdownMenuItem>
+                          {supplier.email && (
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                copyToClipboard(supplier.email ?? "")
+                              }
+                            >
+                              <Copy className="h-4 w-4" aria-hidden="true" />
+                              Copy email
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </motion.div>
         )}
       </div>
 
-      <AnimatePresence>
-        {archiveTarget && (
-          <ArchiveDialog
-            supplier={archiveTarget}
-            isPending={isArchiving}
-            error={archiveError}
-            onConfirm={handleArchiveConfirm}
-            onCancel={closeArchiveDialog}
-          />
-        )}
-      </AnimatePresence>
-
-      {isImportOpen && (
-        <SupplierImportDialog
-          organizationId={organizationId}
-          onClose={() => setIsImportOpen(false)}
-          onImported={() => router.refresh()}
-        />
+      {/* Pagination */}
+      {items.length > 0 && (
+        <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+          <p className="text-sm text-muted-foreground">
+            Showing{" "}
+            <span className="font-medium text-foreground">{rangeStart}</span>–
+            <span className="font-medium text-foreground">{rangeEnd}</span> of{" "}
+            <span className="font-medium text-foreground">{total}</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() =>
+                pushWith({ page: page <= 2 ? undefined : String(page - 1) })
+              }
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => pushWith({ page: String(page + 1) })}
+            >
+              Next
+              <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

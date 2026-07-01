@@ -5,34 +5,21 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Download, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { formatCurrency, formatDate } from "@/utils/format";
 import type {
   Supplier,
   SupplierLedger,
   SupplierLedgerEntry,
 } from "@/features/supplier/types/supplier.types";
-
-// ─────────────────────────────────────────────────────────────
-// Formatters
-// ─────────────────────────────────────────────────────────────
-
-const inrFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
-
-function formatINR(value: number): string {
-  return inrFormatter.format(value);
-}
-
-function formatDate(value: Date): string {
-  return new Date(value).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 // ─────────────────────────────────────────────────────────────
 // Reference type mapping
@@ -130,14 +117,14 @@ export function SupplierLedgerView({ supplier, ledger }: SupplierLedgerViewProps
       </div>
 
       {/* Outstanding balance card */}
-      <Card className="mb-6 p-5">
+      <Card hover className="mb-6 p-5">
         <div className="flex flex-wrap items-center gap-8">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Outstanding Balance
             </p>
             <p className="nums mt-1 text-3xl font-bold text-slate-900 dark:text-slate-100">
-              {formatINR(ledger.outstanding)}
+              {formatCurrency(ledger.outstanding, true)}
             </p>
           </div>
           <div className="h-10 w-px bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
@@ -145,25 +132,25 @@ export function SupplierLedgerView({ supplier, ledger }: SupplierLedgerViewProps
             <div>
               <p className="text-xs text-muted-foreground">Opening Balance</p>
               <p className="nums mt-0.5 font-semibold text-slate-700 dark:text-slate-300">
-                {formatINR(ledger.openingBalance)}
+                {formatCurrency(ledger.openingBalance, true)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Debits</p>
               <p className="nums mt-0.5 font-semibold text-red-600 dark:text-red-400">
-                {formatINR(totalDebits)}
+                {formatCurrency(totalDebits, true)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Credits</p>
               <p className="nums mt-0.5 font-semibold text-emerald-600 dark:text-emerald-400">
-                {formatINR(totalCredits)}
+                {formatCurrency(totalCredits, true)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Closing Balance</p>
               <p className="nums mt-0.5 font-semibold text-slate-900 dark:text-slate-100">
-                {formatINR(ledger.outstanding)}
+                {formatCurrency(ledger.outstanding, true)}
               </p>
             </div>
           </div>
@@ -178,58 +165,42 @@ export function SupplierLedgerView({ supplier, ledger }: SupplierLedgerViewProps
           description="Ledger entries will appear here once this supplier has invoices, payments, or adjustments."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                <tr>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Date
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Reference
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Description
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Debit
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Credit
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Balance
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {ledger.entries.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-400">
-                      {formatDate(entry.entryDate)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-slate-700 dark:text-slate-300">
-                      {mapRefType(entry.referenceType)}
-                    </td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                      {entry.description ?? "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right nums font-medium text-red-600 dark:text-red-400">
-                      {entry.debit > 0 ? formatINR(entry.debit) : "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right nums font-medium text-emerald-600 dark:text-emerald-400">
-                      {entry.credit > 0 ? formatINR(entry.credit) : "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right nums font-semibold text-slate-900 dark:text-slate-100">
-                      {formatINR(entry.runningBalance)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Table wrapperClassName="shadow-card">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Reference</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Debit</TableHead>
+              <TableHead className="text-right">Credit</TableHead>
+              <TableHead className="text-right">Balance</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ledger.entries.map((entry) => (
+              <TableRow key={entry.id}>
+                <TableCell className="whitespace-nowrap text-slate-600 dark:text-slate-400">
+                  {formatDate(entry.entryDate)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-slate-700 dark:text-slate-300">
+                  {mapRefType(entry.referenceType)}
+                </TableCell>
+                <TableCell className="text-slate-600 dark:text-slate-400">
+                  {entry.description ?? "—"}
+                </TableCell>
+                <TableCell className="nums whitespace-nowrap text-right font-medium text-red-600 dark:text-red-400">
+                  {entry.debit > 0 ? formatCurrency(entry.debit, true) : "—"}
+                </TableCell>
+                <TableCell className="nums whitespace-nowrap text-right font-medium text-emerald-600 dark:text-emerald-400">
+                  {entry.credit > 0 ? formatCurrency(entry.credit, true) : "—"}
+                </TableCell>
+                <TableCell className="nums whitespace-nowrap text-right font-semibold text-slate-900 dark:text-slate-100">
+                  {formatCurrency(entry.runningBalance, true)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </motion.div>
   );
