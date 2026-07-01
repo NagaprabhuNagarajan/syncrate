@@ -127,6 +127,14 @@ export interface CustomerListResult {
   readonly pageSize: number;
 }
 
+/** Aggregate counts for the customers list header tiles. */
+export interface CustomerStats {
+  readonly total: number;
+  readonly active: number;
+  readonly blacklisted: number;
+  readonly newThisMonth: number;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Result types
 // ─────────────────────────────────────────────────────────────

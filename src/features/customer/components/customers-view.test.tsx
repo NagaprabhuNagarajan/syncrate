@@ -5,6 +5,7 @@ import { CustomersView } from "./customers-view";
 import type {
   Customer,
   CustomerListResult,
+  CustomerStats,
 } from "@/features/customer/types/customer.types";
 
 // ─────────────────────────────────────────────────────────────
@@ -89,6 +90,16 @@ function makeResult(
   };
 }
 
+function makeStats(overrides: Partial<CustomerStats> = {}): CustomerStats {
+  return {
+    total: 1,
+    active: 1,
+    blacklisted: 0,
+    newThisMonth: 1,
+    ...overrides,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────
@@ -99,6 +110,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -119,6 +131,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage={false}
       />
@@ -133,11 +146,12 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult({ items: [], total: 0 })}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
     );
-    expect(screen.getByText(/no customers found/i)).toBeInTheDocument();
+    expect(screen.getByText(/no customers yet/i)).toBeInTheDocument();
   });
 
   it("navigates via the empty-state action when canManage", async () => {
@@ -146,6 +160,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult({ items: [], total: 0 })}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -160,6 +175,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -174,14 +190,12 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
     );
-    await user.selectOptions(
-      screen.getByLabelText(/filter by status/i),
-      "blacklisted"
-    );
+    await user.click(screen.getByRole("tab", { name: "Blacklisted" }));
     expect(mockPush).toHaveBeenCalledWith("/customers?status=blacklisted");
   });
 
@@ -196,6 +210,7 @@ describe("CustomersView", () => {
           page: 1,
           pageSize: 20,
         })}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -211,6 +226,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -219,21 +235,22 @@ describe("CustomersView", () => {
     expect(mockPush).toHaveBeenCalledWith("/customers/cust-1");
   });
 
-  it("renders an em dash for missing company, mobile and GST", () => {
+  it("renders an em dash for missing company and contact", () => {
     render(
       <CustomersView
         organizationId="org-1"
         result={makeResult({
           items: [
-            makeCustomer({ company: null, mobile: null, gstNumber: null }),
+            makeCustomer({ company: null, mobile: null, email: null }),
           ],
         })}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
     );
-    // Three "—" cells (company, mobile, GST) for the single row.
-    expect(screen.getAllByText("—")).toHaveLength(3);
+    // Two "—" cells (company and the combined contact column) for the row.
+    expect(screen.getAllByText("—")).toHaveLength(2);
   });
 
   it("hides the export and import buttons when the user cannot manage", () => {
@@ -241,6 +258,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage={false}
       />
@@ -271,6 +289,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -302,6 +321,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -320,6 +340,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -343,6 +364,7 @@ describe("CustomersView", () => {
       <CustomersView
         organizationId="org-1"
         result={makeResult()}
+        stats={makeStats()}
         filters={{}}
         canManage
       />

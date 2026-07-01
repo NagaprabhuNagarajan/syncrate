@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Users, AlertCircle } from "lucide-react";
+import { Users, AlertCircle, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   createCustomerSchema,
   updateCustomerSchema,
@@ -80,6 +81,14 @@ const NUMBER_FIELDS = [
   "openingBalance",
 ] as const;
 
+const BILLING_TO_SHIPPING = [
+  ["billingAddressLine1", "shippingAddressLine1"],
+  ["billingAddressLine2", "shippingAddressLine2"],
+  ["billingCity", "shippingCity"],
+  ["billingState", "shippingState"],
+  ["billingPincode", "shippingPincode"],
+] as const;
+
 const CUSTOMER_STATUSES: { value: CustomerStatus; label: string }[] = [
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
@@ -87,8 +96,16 @@ const CUSTOMER_STATUSES: { value: CustomerStatus; label: string }[] = [
   { value: "archived", label: "Archived" },
 ];
 
+/** Dot color per status, mirroring the badge palette used elsewhere. */
+const STATUS_DOT: Record<CustomerStatus, string> = {
+  active: "bg-success",
+  inactive: "bg-slate-400 dark:bg-slate-500",
+  blacklisted: "bg-destructive",
+  archived: "bg-slate-500 dark:bg-slate-600",
+};
+
 // ─────────────────────────────────────────────────────────────
-// Field helpers (mirror create-organization-form / branch-form)
+// Field helpers
 // ─────────────────────────────────────────────────────────────
 
 function FieldError({ message }: { readonly message?: string }) {
@@ -137,21 +154,50 @@ function FormField({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
+      {hint && !error && (
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>
+      )}
       <FieldError message={error} />
     </div>
   );
 }
 
-function SectionTitle({ children }: { readonly children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  action,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly action?: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-      <span className="text-xs font-medium tracking-wide text-slate-400 dark:text-slate-500">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
+          {action}
+        </div>
         {children}
-      </span>
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-    </div>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -188,14 +234,15 @@ export function CustomerForm({
   const [isPending, startTransition] = useTransition();
 
   const resolver = (
-    isEdit
-      ? zodResolver(updateCustomerSchema)
-      : zodResolver(createCustomerSchema)
+    isEdit ? zodResolver(updateCustomerSchema) : zodResolver(createCustomerSchema)
   ) as unknown as Resolver<CustomerFormValues>;
 
   const {
     register,
     handleSubmit,
+    getValues,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CustomerFormValues>({
     resolver,
@@ -226,6 +273,14 @@ export function CustomerForm({
       status: customer?.status ?? "active",
     },
   });
+
+  const currentStatus = watch("status");
+
+  const copyBillingToShipping = (): void => {
+    BILLING_TO_SHIPPING.forEach(([from, to]) => {
+      setValue(to, getValues(from), { shouldDirty: true });
+    });
+  };
 
   const onSubmit = handleSubmit((values) => {
     setServerError(null);
@@ -274,28 +329,28 @@ export function CustomerForm({
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-lg shadow-slate-200/50 dark:shadow-none sm:p-5"
-    >
+    <div>
       {/* Header */}
-      <div className="mb-4 flex items-start gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-5 flex items-start gap-3"
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
           <Users className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {isEdit ? "Edit customer" : "Add customer"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update the details for this customer"
               : "Create a new customer record for your organization"}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {serverError && (
         <motion.div
@@ -312,407 +367,505 @@ export function CustomerForm({
         </motion.div>
       )}
 
-      <form onSubmit={onSubmit} noValidate className="space-y-3">
-        {/* Identity */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField
-            label="Customer name"
-            htmlFor="name"
-            required
-            error={errors.name?.message}
-          >
-            <input
-              id="name"
-              type="text"
-              autoFocus
-              aria-invalid={errors.name ? "true" : "false"}
-              className={inputClass(!!errors.name)}
-              placeholder="Kumar Traders"
-              {...register("name")}
-            />
-          </FormField>
-          <FormField
-            label="Customer code"
-            htmlFor="code"
-            error={errors.code?.message}
-            hint="Leave blank to auto-generate"
-          >
-            <input
-              id="code"
-              type="text"
-              autoComplete="off"
-              aria-invalid={errors.code ? "true" : "false"}
-              className={cn(inputClass(!!errors.code), "uppercase")}
-              placeholder="CUST-00001"
-              {...register("code")}
-            />
-          </FormField>
-        </div>
-
-        <FormField
-          label="Company"
-          htmlFor="company"
-          error={errors.company?.message}
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
+        {/* Basic info */}
+        <Section
+          title="Basic information"
+          description="The customer's name and identifier."
+          delay={0.05}
         >
-          <input
-            id="company"
-            type="text"
-            className={inputClass(!!errors.company)}
-            placeholder="Kumar Traders Pvt. Ltd."
-            {...register("company")}
-          />
-        </FormField>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormField
+                label="Customer name"
+                htmlFor="name"
+                required
+                error={errors.name?.message}
+              >
+                <input
+                  id="name"
+                  type="text"
+                  autoFocus
+                  aria-invalid={errors.name ? "true" : "false"}
+                  className={inputClass(!!errors.name)}
+                  placeholder="Kumar Traders"
+                  {...register("name")}
+                />
+              </FormField>
+              <FormField
+                label="Customer code"
+                htmlFor="code"
+                error={errors.code?.message}
+                hint="Leave blank to auto-generate"
+              >
+                <input
+                  id="code"
+                  type="text"
+                  autoComplete="off"
+                  aria-invalid={errors.code ? "true" : "false"}
+                  className={cn(inputClass(!!errors.code), "uppercase")}
+                  placeholder="CUST-00001"
+                  {...register("code")}
+                />
+              </FormField>
+            </div>
+            <FormField
+              label="Company"
+              htmlFor="company"
+              error={errors.company?.message}
+            >
+              <input
+                id="company"
+                type="text"
+                className={inputClass(!!errors.company)}
+                placeholder="Kumar Traders Pvt. Ltd."
+                {...register("company")}
+              />
+            </FormField>
+          </div>
+        </Section>
 
-        {/* Tax */}
-        <SectionTitle>Tax details</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField
-            label="GST number"
-            htmlFor="gstNumber"
-            error={errors.gstNumber?.message}
-            hint="22AAAAA0000A1Z5 format"
-          >
-            <input
-              id="gstNumber"
-              type="text"
-              autoComplete="off"
-              className={cn(inputClass(!!errors.gstNumber), "uppercase")}
-              placeholder="22AAAAA0000A1Z5"
-              {...register("gstNumber")}
-            />
-          </FormField>
-          <FormField
-            label="PAN number"
-            htmlFor="panNumber"
-            error={errors.panNumber?.message}
-          >
-            <input
-              id="panNumber"
-              type="text"
-              autoComplete="off"
-              className={cn(inputClass(!!errors.panNumber), "uppercase")}
-              placeholder="AAAAA0000A"
-              {...register("panNumber")}
-            />
-          </FormField>
-        </div>
+        {/* Tax details */}
+        <Section
+          title="Tax details"
+          description="Used on invoices and for GST reporting."
+          delay={0.1}
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormField
+              label="GST number"
+              htmlFor="gstNumber"
+              error={errors.gstNumber?.message}
+              hint="22AAAAA0000A1Z5 format"
+            >
+              <input
+                id="gstNumber"
+                type="text"
+                autoComplete="off"
+                className={cn(inputClass(!!errors.gstNumber), "uppercase")}
+                placeholder="22AAAAA0000A1Z5"
+                {...register("gstNumber")}
+              />
+            </FormField>
+            <FormField
+              label="PAN number"
+              htmlFor="panNumber"
+              error={errors.panNumber?.message}
+            >
+              <input
+                id="panNumber"
+                type="text"
+                autoComplete="off"
+                className={cn(inputClass(!!errors.panNumber), "uppercase")}
+                placeholder="AAAAA0000A"
+                {...register("panNumber")}
+              />
+            </FormField>
+          </div>
+        </Section>
 
         {/* Contact */}
-        <SectionTitle>Contact</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField
-            label="Mobile"
-            htmlFor="mobile"
-            error={errors.mobile?.message}
-          >
-            <input
-              id="mobile"
-              type="tel"
-              autoComplete="tel"
-              className={inputClass(!!errors.mobile)}
-              placeholder="+91 98765 43210"
-              {...register("mobile")}
-            />
-          </FormField>
-          <FormField label="Email" htmlFor="email" error={errors.email?.message}>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              className={inputClass(!!errors.email)}
-              placeholder="contact@company.com"
-              {...register("email")}
-            />
-          </FormField>
-        </div>
-        <FormField
-          label="Website"
-          htmlFor="website"
-          error={errors.website?.message}
+        <Section
+          title="Contact"
+          description="How you reach this customer."
+          delay={0.12}
         >
-          <input
-            id="website"
-            type="url"
-            className={inputClass(!!errors.website)}
-            placeholder="https://company.com"
-            {...register("website")}
-          />
-        </FormField>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormField
+                label="Mobile"
+                htmlFor="mobile"
+                error={errors.mobile?.message}
+              >
+                <input
+                  id="mobile"
+                  type="tel"
+                  autoComplete="tel"
+                  className={inputClass(!!errors.mobile)}
+                  placeholder="+91 98765 43210"
+                  {...register("mobile")}
+                />
+              </FormField>
+              <FormField
+                label="Email"
+                htmlFor="email"
+                error={errors.email?.message}
+              >
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  className={inputClass(!!errors.email)}
+                  placeholder="contact@company.com"
+                  {...register("email")}
+                />
+              </FormField>
+            </div>
+            <FormField
+              label="Website"
+              htmlFor="website"
+              error={errors.website?.message}
+            >
+              <input
+                id="website"
+                type="url"
+                className={inputClass(!!errors.website)}
+                placeholder="https://company.com"
+                {...register("website")}
+              />
+            </FormField>
+          </div>
+        </Section>
 
         {/* Billing address */}
-        <SectionTitle>Billing address</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField
-            label="Address line 1"
-            htmlFor="billingAddressLine1"
-            error={errors.billingAddressLine1?.message}
-          >
-            <input
-              id="billingAddressLine1"
-              type="text"
-              className={inputClass(!!errors.billingAddressLine1)}
-              placeholder="Street address, building name"
-              {...register("billingAddressLine1")}
-            />
-          </FormField>
-          <FormField
-            label="Address line 2"
-            htmlFor="billingAddressLine2"
-            error={errors.billingAddressLine2?.message}
-          >
-            <input
-              id="billingAddressLine2"
-              type="text"
-              className={inputClass(!!errors.billingAddressLine2)}
-              placeholder="Area, landmark"
-              {...register("billingAddressLine2")}
-            />
-          </FormField>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <FormField
-            label="City"
-            htmlFor="billingCity"
-            error={errors.billingCity?.message}
-          >
-            <input
-              id="billingCity"
-              type="text"
-              className={inputClass(!!errors.billingCity)}
-              placeholder="Mumbai"
-              {...register("billingCity")}
-            />
-          </FormField>
-          <FormField
-            label="State"
-            htmlFor="billingState"
-            error={errors.billingState?.message}
-          >
-            <input
-              id="billingState"
-              type="text"
-              className={inputClass(!!errors.billingState)}
-              placeholder="Maharashtra"
-              {...register("billingState")}
-            />
-          </FormField>
-          <FormField
-            label="Pincode"
-            htmlFor="billingPincode"
-            error={errors.billingPincode?.message}
-          >
-            <input
-              id="billingPincode"
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              className={inputClass(!!errors.billingPincode)}
-              placeholder="400001"
-              {...register("billingPincode")}
-            />
-          </FormField>
-        </div>
+        <Section title="Billing address" delay={0.14}>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormField
+                label="Address line 1"
+                htmlFor="billingAddressLine1"
+                error={errors.billingAddressLine1?.message}
+              >
+                <input
+                  id="billingAddressLine1"
+                  type="text"
+                  className={inputClass(!!errors.billingAddressLine1)}
+                  placeholder="Street address, building name"
+                  {...register("billingAddressLine1")}
+                />
+              </FormField>
+              <FormField
+                label="Address line 2"
+                htmlFor="billingAddressLine2"
+                error={errors.billingAddressLine2?.message}
+              >
+                <input
+                  id="billingAddressLine2"
+                  type="text"
+                  className={inputClass(!!errors.billingAddressLine2)}
+                  placeholder="Area, landmark"
+                  {...register("billingAddressLine2")}
+                />
+              </FormField>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <FormField
+                label="City"
+                htmlFor="billingCity"
+                error={errors.billingCity?.message}
+              >
+                <input
+                  id="billingCity"
+                  type="text"
+                  className={inputClass(!!errors.billingCity)}
+                  placeholder="Mumbai"
+                  {...register("billingCity")}
+                />
+              </FormField>
+              <FormField
+                label="State"
+                htmlFor="billingState"
+                error={errors.billingState?.message}
+              >
+                <input
+                  id="billingState"
+                  type="text"
+                  className={inputClass(!!errors.billingState)}
+                  placeholder="Maharashtra"
+                  {...register("billingState")}
+                />
+              </FormField>
+              <FormField
+                label="Pincode"
+                htmlFor="billingPincode"
+                error={errors.billingPincode?.message}
+              >
+                <input
+                  id="billingPincode"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className={inputClass(!!errors.billingPincode)}
+                  placeholder="400001"
+                  {...register("billingPincode")}
+                />
+              </FormField>
+            </div>
+          </div>
+        </Section>
 
         {/* Shipping address */}
-        <SectionTitle>Shipping address</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField
-            label="Address line 1"
-            htmlFor="shippingAddressLine1"
-            error={errors.shippingAddressLine1?.message}
-          >
-            <input
-              id="shippingAddressLine1"
-              type="text"
-              className={inputClass(!!errors.shippingAddressLine1)}
-              placeholder="Street address, building name"
-              {...register("shippingAddressLine1")}
-            />
-          </FormField>
-          <FormField
-            label="Address line 2"
-            htmlFor="shippingAddressLine2"
-            error={errors.shippingAddressLine2?.message}
-          >
-            <input
-              id="shippingAddressLine2"
-              type="text"
-              className={inputClass(!!errors.shippingAddressLine2)}
-              placeholder="Area, landmark"
-              {...register("shippingAddressLine2")}
-            />
-          </FormField>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <FormField
-            label="City"
-            htmlFor="shippingCity"
-            error={errors.shippingCity?.message}
-          >
-            <input
-              id="shippingCity"
-              type="text"
-              className={inputClass(!!errors.shippingCity)}
-              placeholder="Mumbai"
-              {...register("shippingCity")}
-            />
-          </FormField>
-          <FormField
-            label="State"
-            htmlFor="shippingState"
-            error={errors.shippingState?.message}
-          >
-            <input
-              id="shippingState"
-              type="text"
-              className={inputClass(!!errors.shippingState)}
-              placeholder="Maharashtra"
-              {...register("shippingState")}
-            />
-          </FormField>
-          <FormField
-            label="Pincode"
-            htmlFor="shippingPincode"
-            error={errors.shippingPincode?.message}
-          >
-            <input
-              id="shippingPincode"
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              className={inputClass(!!errors.shippingPincode)}
-              placeholder="400001"
-              {...register("shippingPincode")}
-            />
-          </FormField>
-        </div>
+        <Section
+          title="Shipping address"
+          delay={0.16}
+          action={
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={copyBillingToShipping}
+            >
+              <Copy className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+              Same as billing
+            </Button>
+          }
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormField
+                label="Address line 1"
+                htmlFor="shippingAddressLine1"
+                error={errors.shippingAddressLine1?.message}
+              >
+                <input
+                  id="shippingAddressLine1"
+                  type="text"
+                  className={inputClass(!!errors.shippingAddressLine1)}
+                  placeholder="Street address, building name"
+                  {...register("shippingAddressLine1")}
+                />
+              </FormField>
+              <FormField
+                label="Address line 2"
+                htmlFor="shippingAddressLine2"
+                error={errors.shippingAddressLine2?.message}
+              >
+                <input
+                  id="shippingAddressLine2"
+                  type="text"
+                  className={inputClass(!!errors.shippingAddressLine2)}
+                  placeholder="Area, landmark"
+                  {...register("shippingAddressLine2")}
+                />
+              </FormField>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <FormField
+                label="City"
+                htmlFor="shippingCity"
+                error={errors.shippingCity?.message}
+              >
+                <input
+                  id="shippingCity"
+                  type="text"
+                  className={inputClass(!!errors.shippingCity)}
+                  placeholder="Mumbai"
+                  {...register("shippingCity")}
+                />
+              </FormField>
+              <FormField
+                label="State"
+                htmlFor="shippingState"
+                error={errors.shippingState?.message}
+              >
+                <input
+                  id="shippingState"
+                  type="text"
+                  className={inputClass(!!errors.shippingState)}
+                  placeholder="Maharashtra"
+                  {...register("shippingState")}
+                />
+              </FormField>
+              <FormField
+                label="Pincode"
+                htmlFor="shippingPincode"
+                error={errors.shippingPincode?.message}
+              >
+                <input
+                  id="shippingPincode"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className={inputClass(!!errors.shippingPincode)}
+                  placeholder="400001"
+                  {...register("shippingPincode")}
+                />
+              </FormField>
+            </div>
+          </div>
+        </Section>
 
         {/* Commercial terms */}
-        <SectionTitle>Commercial terms</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField
-            label="Credit limit (₹)"
-            htmlFor="creditLimit"
-            error={errors.creditLimit?.message}
-          >
-            <input
-              id="creditLimit"
-              type="number"
-              min={0}
-              step="0.01"
-              className={inputClass(!!errors.creditLimit)}
-              placeholder="0"
-              {...register("creditLimit")}
-            />
-          </FormField>
-          <FormField
-            label="Payment terms (days)"
-            htmlFor="paymentTermsDays"
-            error={errors.paymentTermsDays?.message}
-          >
-            <input
-              id="paymentTermsDays"
-              type="number"
-              min={0}
-              max={365}
-              className={inputClass(!!errors.paymentTermsDays)}
-              placeholder="0"
-              {...register("paymentTermsDays")}
-            />
-          </FormField>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField
-            label="Preferred payment method"
-            htmlFor="preferredPaymentMethod"
-            error={errors.preferredPaymentMethod?.message}
-          >
-            <input
-              id="preferredPaymentMethod"
-              type="text"
-              className={inputClass(!!errors.preferredPaymentMethod)}
-              placeholder="UPI, NEFT, Cash…"
-              {...register("preferredPaymentMethod")}
-            />
-          </FormField>
-          <FormField
-            label="Opening balance (₹)"
-            htmlFor="openingBalance"
-            error={errors.openingBalance?.message}
-          >
-            <input
-              id="openingBalance"
-              type="number"
-              min={0}
-              step="0.01"
-              className={inputClass(!!errors.openingBalance)}
-              placeholder="0"
-              {...register("openingBalance")}
-            />
-          </FormField>
-        </div>
+        <Section
+          title="Commercial terms"
+          description="Credit and payment defaults for this customer."
+          delay={0.18}
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormField
+                label="Credit limit (₹)"
+                htmlFor="creditLimit"
+                error={errors.creditLimit?.message}
+              >
+                <input
+                  id="creditLimit"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  className={inputClass(!!errors.creditLimit)}
+                  placeholder="0"
+                  {...register("creditLimit")}
+                />
+              </FormField>
+              <FormField
+                label="Payment terms (days)"
+                htmlFor="paymentTermsDays"
+                error={errors.paymentTermsDays?.message}
+              >
+                <input
+                  id="paymentTermsDays"
+                  type="number"
+                  min={0}
+                  max={365}
+                  className={inputClass(!!errors.paymentTermsDays)}
+                  placeholder="0"
+                  {...register("paymentTermsDays")}
+                />
+              </FormField>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormField
+                label="Preferred payment method"
+                htmlFor="preferredPaymentMethod"
+                error={errors.preferredPaymentMethod?.message}
+              >
+                <input
+                  id="preferredPaymentMethod"
+                  type="text"
+                  className={inputClass(!!errors.preferredPaymentMethod)}
+                  placeholder="UPI, NEFT, Cash…"
+                  {...register("preferredPaymentMethod")}
+                />
+              </FormField>
+              <FormField
+                label="Opening balance (₹)"
+                htmlFor="openingBalance"
+                error={errors.openingBalance?.message}
+              >
+                <input
+                  id="openingBalance"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  className={inputClass(!!errors.openingBalance)}
+                  placeholder="0"
+                  {...register("openingBalance")}
+                />
+              </FormField>
+            </div>
+          </div>
+        </Section>
 
         {/* Classification */}
-        <SectionTitle>Classification</SectionTitle>
-        {isEdit && (
-          <FormField
-            label="Status"
-            htmlFor="status"
-            error={errors.status?.message}
-          >
-            <select
-              id="status"
-              className={inputClass(!!errors.status)}
-              {...register("status")}
+        <Section
+          title="Classification"
+          description="Organize and tag this customer."
+          delay={0.2}
+        >
+          <div className="space-y-3">
+            {isEdit && (
+              <FormField
+                label="Status"
+                htmlFor="status"
+                error={errors.status?.message}
+                hint="Set to a non-archived status to restore an archived customer"
+              >
+                <div
+                  id="status"
+                  role="radiogroup"
+                  aria-label="Status"
+                  className="flex flex-wrap gap-2"
+                >
+                  {CUSTOMER_STATUSES.map((s) => {
+                    const selected = currentStatus === s.value;
+                    return (
+                      <button
+                        key={s.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() =>
+                          setValue("status", s.value, { shouldDirty: true })
+                        }
+                        className={cn(
+                          "inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                          selected
+                            ? "border-primary bg-primary/5 text-slate-900 ring-1 ring-primary/40 dark:text-slate-100"
+                            : "border-input bg-background text-slate-600 hover:border-slate-400 dark:text-slate-300 dark:hover:border-slate-600"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "h-2 w-2 rounded-full",
+                            STATUS_DOT[s.value]
+                          )}
+                          aria-hidden="true"
+                        />
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </FormField>
+            )}
+            <FormField
+              label="Tags"
+              htmlFor="tags"
+              hint="Separate tags with commas"
             >
-              {CUSTOMER_STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        )}
-        <FormField label="Tags" htmlFor="tags" hint="Separate tags with commas">
-          <input
-            id="tags"
-            type="text"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            className={inputClass(false)}
-            placeholder="vip, wholesale, priority"
-          />
-        </FormField>
-        <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
-          <textarea
-            id="notes"
-            rows={3}
-            className={inputClass(!!errors.notes)}
-            placeholder="Internal notes about this customer"
-            {...register("notes")}
-          />
-        </FormField>
+              <input
+                id="tags"
+                type="text"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                className={inputClass(false)}
+                placeholder="vip, wholesale, priority"
+              />
+            </FormField>
+            <FormField
+              label="Notes"
+              htmlFor="notes"
+              error={errors.notes?.message}
+            >
+              <textarea
+                id="notes"
+                rows={3}
+                className={inputClass(!!errors.notes)}
+                placeholder="Internal notes about this customer"
+                {...register("notes")}
+              />
+            </FormField>
+          </div>
+        </Section>
 
-        {/* Actions */}
-        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel ?? (() => router.push("/customers"))}
-            disabled={isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="gradient"
-            loading={isPending}
-            disabled={isPending}
-          >
-            {isEdit ? "Save changes" : "Create customer"}
-          </Button>
+        {/* Sticky action bar */}
+        <div className="sticky bottom-4 z-10 flex flex-col-reverse gap-3 rounded-xl border border-slate-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:flex-row sm:items-center sm:justify-between">
+          <p className="hidden text-xs text-muted-foreground sm:block">
+            {isEdit
+              ? "Changes are saved when you submit."
+              : "Only the name is required to create a customer."}
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel ?? (() => router.push("/customers"))}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="gradient"
+              loading={isPending}
+              disabled={isPending}
+            >
+              {isEdit ? "Save changes" : "Create customer"}
+            </Button>
+          </div>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

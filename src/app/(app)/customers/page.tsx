@@ -89,16 +89,16 @@ export default async function CustomersPage({
   const page = parsePage(params.page);
 
   const customerService = new CustomerService(supabase);
-  const result = await customerService.listCustomers(activeOrg.id, {
-    search,
-    status,
-    page,
-  });
+  const [result, stats] = await Promise.all([
+    customerService.listCustomers(activeOrg.id, { search, status, page }),
+    customerService.getCustomerStats(activeOrg.id),
+  ]);
 
   return (
     <CustomersView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search, status }}
       canManage={canManage}
     />

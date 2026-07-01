@@ -6,60 +6,121 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Users,
+  UserCheck,
+  UserPlus,
+  Ban,
   Plus,
   Search,
   ChevronLeft,
   ChevronRight,
   Download,
   Upload,
+  MoreHorizontal,
+  Pencil,
+  Copy,
+  ArrowUpRight,
+  type LucideIcon,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/shared/page-header";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
+import { AnimatedNumber } from "@/components/shared/animated-number";
 import { exportCustomersAction } from "@/features/customer/actions/customer.actions";
 import { CustomerImportDialog } from "@/features/customer/components/customer-import-dialog";
+import {
+  STATUS_LABEL,
+  STATUS_VARIANT,
+} from "@/features/customer/utils/customer-display";
+import { formatCurrency } from "@/utils/format";
 import type {
   Customer,
   CustomerListResult,
+  CustomerStats,
   CustomerStatus,
 } from "@/features/customer/types/customer.types";
+import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
-// Status presentation
+// Filters
 // ─────────────────────────────────────────────────────────────
 
-const STATUS_VARIANT: Record<CustomerStatus, BadgeProps["variant"]> = {
-  active: "success",
-  inactive: "muted",
-  blacklisted: "destructive",
-  archived: "secondary",
-};
-
-const STATUS_LABEL: Record<CustomerStatus, string> = {
-  active: "Active",
-  inactive: "Inactive",
-  blacklisted: "Blacklisted",
-  archived: "Archived",
-};
-
-const STATUS_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: "", label: "All statuses" },
+const STATUS_FILTERS: readonly { value: string; label: string }[] = [
+  { value: "", label: "All" },
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
   { value: "blacklisted", label: "Blacklisted" },
   { value: "archived", label: "Archived" },
 ];
 
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
+// ─────────────────────────────────────────────────────────────
+// Stat tile
+// ─────────────────────────────────────────────────────────────
 
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
+  index,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+    >
+      <Card className="relative overflow-hidden p-4">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
+              tint
+            )}
+          >
+            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <AnimatedNumber value={value} />
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -69,6 +130,7 @@ function formatCurrency(value: number): string {
 interface CustomersViewProps {
   readonly organizationId: string;
   readonly result: CustomerListResult;
+  readonly stats: CustomerStats;
   readonly filters: {
     readonly search?: string;
     readonly status?: CustomerStatus;
@@ -79,6 +141,7 @@ interface CustomersViewProps {
 export function CustomersView({
   organizationId,
   result,
+  stats,
   filters,
   canManage,
 }: CustomersViewProps) {
@@ -88,6 +151,33 @@ export function CustomersView({
   const [importOpen, setImportOpen] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [isExporting, startExport] = useTransition();
+
+  const { items, total, page, pageSize } = result;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(total, page * pageSize);
+  const hasFilters = Boolean(filters.search || filters.status);
+  const org = searchParams.get("org");
+
+  const withOrg = (path: string): string =>
+    org ? `${path}${path.includes("?") ? "&" : "?"}org=${org}` : path;
+
+  const detailHref = (id: string): string => withOrg(`/customers/${id}`);
+  const editHref = (id: string): string => withOrg(`/customers/${id}/edit`);
+  const newHref = (): string => withOrg("/customers/new");
+
+  const pushWith = (patch: Record<string, string | undefined>): void => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(patch).forEach(([key, value]) => {
+      if (value === undefined || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    const query = params.toString();
+    router.push(query ? `/customers?${query}` : "/customers");
+  };
 
   const handleExport = (): void => {
     setExportError(null);
@@ -111,57 +201,41 @@ export function CustomersView({
     });
   };
 
-  const { items, total, page, pageSize } = result;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  // Builds the customer detail href while preserving the active org param.
-  const detailHref = (customerId: string): string => {
-    const org = searchParams.get("org");
-    return org
-      ? `/customers/${customerId}?org=${org}`
-      : `/customers/${customerId}`;
-  };
-
-  const newHref = (): string => {
-    const org = searchParams.get("org");
-    return org ? `/customers/new?org=${org}` : "/customers/new";
-  };
-
-  const pushWith = (patch: Record<string, string | undefined>): void => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(patch).forEach(([key, value]) => {
-      if (value === undefined || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    });
-    const query = params.toString();
-    router.push(query ? `/customers?${query}` : "/customers");
-  };
-
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     pushWith({ search: searchInput.trim() || undefined, page: undefined });
   };
 
-  const handleStatusChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ): void => {
-    pushWith({ status: event.target.value || undefined, page: undefined });
-  };
-
-  const goToPage = (next: number): void => {
-    pushWith({ page: next <= 1 ? undefined : String(next) });
+  const copyToClipboard = (text: string): void => {
+    void navigator.clipboard?.writeText(text);
   };
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Customers"
-        description="Manage your customers and their commercial details"
-        icon={Users}
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <Users className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Customers
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {stats.total}
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Manage your customers and their commercial details
+            </p>
+          </div>
+        </div>
+
         {canManage && (
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -189,7 +263,7 @@ export function CustomersView({
             </Button>
           </div>
         )}
-      </PageHeader>
+      </motion.div>
 
       {exportError && (
         <p
@@ -208,12 +282,44 @@ export function CustomersView({
         />
       )}
 
+      {/* Stat tiles */}
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          icon={Users}
+          label="Total"
+          value={stats.total}
+          tint="bg-gradient-brand"
+          index={0}
+        />
+        <StatTile
+          icon={UserCheck}
+          label="Active"
+          value={stats.active}
+          tint="bg-gradient-success"
+          index={1}
+        />
+        <StatTile
+          icon={UserPlus}
+          label="New this month"
+          value={stats.newThisMonth}
+          tint="bg-gradient-info"
+          index={2}
+        />
+        <StatTile
+          icon={Ban}
+          label="Blacklisted"
+          value={stats.blacklisted}
+          tint="bg-gradient-error"
+          index={3}
+        />
+      </div>
+
       {/* Filters */}
-      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
-          className="relative flex-1"
+          className="relative w-full lg:max-w-sm"
         >
           <Search
             className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -222,24 +328,44 @@ export function CustomersView({
           <Input
             type="search"
             aria-label="Search customers"
-            placeholder="Search by name, code, company, mobile or GST"
+            placeholder="Search name, code, company, mobile…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
           />
         </form>
-        <select
+
+        <div
+          className="flex flex-wrap items-center gap-1.5"
+          role="tablist"
           aria-label="Filter by status"
-          value={filters.status ?? ""}
-          onChange={handleStatusChange}
-          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
-          {STATUS_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          {STATUS_FILTERS.map((option) => {
+            const active = (filters.status ?? "") === option.value;
+            return (
+              <button
+                key={option.value || "all"}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() =>
+                  pushWith({
+                    status: option.value || undefined,
+                    page: undefined,
+                  })
+                }
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  active
+                    ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
+                )}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Table / empty state */}
@@ -247,20 +373,25 @@ export function CustomersView({
         {items.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="No customers found"
+            title={hasFilters ? "No matching customers" : "No customers yet"}
             description={
-              filters.search || filters.status
-                ? "No customers match your current filters. Try adjusting your search."
+              hasFilters
+                ? "No customers match your current filters. Try adjusting your search or clearing the filters."
                 : "Add your first customer to start managing relationships and outstanding balances."
             }
             action={
-              canManage
+              hasFilters
                 ? {
-                    label: "Add customer",
-                    icon: Plus,
-                    onClick: () => router.push(newHref()),
+                    label: "Clear filters",
+                    onClick: () => router.push(withOrg("/customers")),
                   }
-                : undefined
+                : canManage
+                  ? {
+                      label: "Add customer",
+                      icon: Plus,
+                      onClick: () => router.push(newHref()),
+                    }
+                  : undefined
             }
           />
         ) : (
@@ -268,79 +399,134 @@ export function CustomersView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Code
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Name
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Company
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Mobile
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      GST
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Status
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-3 py-2 text-right font-medium"
-                    >
-                      Credit limit
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {items.map((customer: Customer) => (
-                    <tr
-                      key={customer.id}
-                      onClick={() => router.push(detailHref(customer.id))}
-                      className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    >
-                      <td className="px-3 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">
-                        {customer.code}
-                      </td>
-                      <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100">
+            <Table wrapperClassName="shadow-card">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Credit limit</TableHead>
+                  <TableHead className="w-10">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((customer: Customer) => (
+                  <TableRow
+                    key={customer.id}
+                    onClick={() => router.push(detailHref(customer.id))}
+                    className="group cursor-pointer"
+                  >
+                    <TableCell>
+                      <div className="min-w-0">
                         <Link
                           href={detailHref(customer.id)}
                           onClick={(e) => e.stopPropagation()}
-                          className="hover:text-primary-600 hover:underline dark:hover:text-primary-400"
+                          className="block truncate font-medium text-slate-900 hover:text-primary-600 hover:underline dark:text-slate-100 dark:hover:text-primary-400"
                         >
                           {customer.name}
                         </Link>
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {customer.company ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {customer.mobile ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {customer.gstNumber ?? "—"}
-                      </td>
-                      <td className="px-3 py-2">
-                        <Badge dot variant={STATUS_VARIANT[customer.status]}>
-                          {STATUS_LABEL[customer.status]}
-                        </Badge>
-                      </td>
-                      <td className="nums px-3 py-2 text-right text-slate-700 dark:text-slate-300">
-                        {formatCurrency(customer.creditLimit)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <span className="block truncate font-mono text-xs text-slate-400 dark:text-slate-500">
+                          {customer.code}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {customer.company ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      {customer.mobile || customer.email ? (
+                        <div className="min-w-0">
+                          {customer.mobile && (
+                            <span className="block truncate text-slate-700 dark:text-slate-300">
+                              {customer.mobile}
+                            </span>
+                          )}
+                          {customer.email && (
+                            <span className="block truncate text-xs text-slate-400 dark:text-slate-500">
+                              {customer.email}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500">
+                          —
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge dot variant={STATUS_VARIANT[customer.status]}>
+                        {STATUS_LABEL[customer.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-700 dark:text-slate-300">
+                      {formatCurrency(customer.creditLimit)}
+                    </TableCell>
+                    <TableCell
+                      className="text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Actions for ${customer.name}`}
+                            className="rounded-md p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                          >
+                            <MoreHorizontal
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={detailHref(customer.id)}>
+                              <ArrowUpRight
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
+                              Open
+                            </Link>
+                          </DropdownMenuItem>
+                          {canManage && (
+                            <DropdownMenuItem asChild>
+                              <Link href={editHref(customer.id)}>
+                                <Pencil
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onSelect={() => copyToClipboard(customer.code)}
+                          >
+                            <Copy className="h-4 w-4" aria-hidden="true" />
+                            Copy code
+                          </DropdownMenuItem>
+                          {customer.email && (
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                copyToClipboard(customer.email ?? "")
+                              }
+                            >
+                              <Copy className="h-4 w-4" aria-hidden="true" />
+                              Copy email
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </motion.div>
         )}
       </div>
@@ -349,8 +535,10 @@ export function CustomersView({
       {items.length > 0 && (
         <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            {total} {total === 1 ? "customer" : "customers"} · Page {page} of{" "}
-            {totalPages}
+            Showing{" "}
+            <span className="font-medium text-foreground">{rangeStart}</span>–
+            <span className="font-medium text-foreground">{rangeEnd}</span> of{" "}
+            <span className="font-medium text-foreground">{total}</span>
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -358,17 +546,22 @@ export function CustomersView({
               variant="outline"
               size="sm"
               disabled={page <= 1}
-              onClick={() => goToPage(page - 1)}
+              onClick={() =>
+                pushWith({ page: page <= 2 ? undefined : String(page - 1) })
+              }
             >
               <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
               Previous
             </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
             <Button
               type="button"
               variant="outline"
               size="sm"
               disabled={page >= totalPages}
-              onClick={() => goToPage(page + 1)}
+              onClick={() => pushWith({ page: String(page + 1) })}
             >
               Next
               <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
