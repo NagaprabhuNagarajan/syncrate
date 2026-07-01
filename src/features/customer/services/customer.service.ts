@@ -12,6 +12,7 @@ import type {
   CustomerLedger,
   CustomerListParams,
   CustomerListResult,
+  CustomerStats,
   CreateCustomerInput,
   UpdateCustomerInput,
 } from "@/features/customer/types/customer.types";
@@ -51,6 +52,10 @@ export class CustomerService {
     params?: CustomerListParams
   ): Promise<CustomerListResult> {
     return this.repo.list(organizationId, params);
+  }
+
+  async getCustomerStats(organizationId: string): Promise<CustomerStats> {
+    return this.repo.getStats(organizationId);
   }
 
   async getCustomer(
@@ -172,11 +177,22 @@ export class CustomerService {
       }
     }
 
-    const customer = await this.repo.update(
-      customerId,
-      buildUpdatePatch(input),
-      userId
-    );
+    const patch = buildUpdatePatch(input);
+
+    // Keep the soft-delete flag consistent with an explicit status change:
+    // archiving stamps deleted_at, and moving to any other status restores
+    // the record (editing is how an archived customer is brought back).
+    if (input.status !== undefined) {
+      if (input.status === "archived") {
+        patch.deleted_at = new Date().toISOString();
+        patch.deleted_by = userId;
+      } else {
+        patch.deleted_at = null;
+        patch.deleted_by = null;
+      }
+    }
+
+    const customer = await this.repo.update(customerId, patch, userId);
 
     if (!customer) {
       return fail("not_found", "Customer not found or update failed");

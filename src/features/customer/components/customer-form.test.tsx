@@ -186,4 +186,21 @@ describe("CustomerForm (edit)", () => {
     expect(formData.get("name")).toBe("Kumar Traders");
     expect(formData.get("status")).toBe("active");
   });
+
+  it("submits the status chosen from the segmented control", async () => {
+    mockUpdate.mockResolvedValue({ success: true, data: makeCustomer() });
+    const user = userEvent.setup();
+    render(<CustomerForm organizationId="org-1" customer={makeCustomer()} />);
+
+    await user.click(screen.getByRole("radio", { name: "Blacklisted" }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    const [, , formData] = mockUpdate.mock.calls[0] as [
+      string,
+      string,
+      FormData,
+    ];
+    expect(formData.get("status")).toBe("blacklisted");
+  });
 });

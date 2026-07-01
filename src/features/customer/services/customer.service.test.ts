@@ -21,6 +21,7 @@ const { mockRepo } = vi.hoisted(() => ({
     update: vi.fn(),
     softDelete: vi.fn(),
     findLedgerEntries: vi.fn(),
+    getStats: vi.fn(),
   },
 }));
 
@@ -112,6 +113,17 @@ describe("CustomerService.listCustomers", () => {
     const result = await service.listCustomers("org-1", { search: "acme" });
     expect(result).toBe(listResult);
     expect(mockRepo.list).toHaveBeenCalledWith("org-1", { search: "acme" });
+  });
+});
+
+describe("CustomerService.getCustomerStats", () => {
+  it("delegates to the repository", async () => {
+    const stats = { total: 5, active: 4, blacklisted: 1, newThisMonth: 2 };
+    mockRepo.getStats.mockResolvedValue(stats);
+
+    const result = await service.getCustomerStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
   });
 });
 
@@ -359,6 +371,42 @@ describe("CustomerService.updateCustomer", () => {
     );
     expect(result.success).toBe(true);
     expect(mockRepo.findByCode).not.toHaveBeenCalled();
+  });
+
+  it("restores an archived customer by clearing deleted_at when status changes", async () => {
+    mockRepo.update.mockResolvedValue(
+      buildCustomer({ id: "cust-1", status: "active" })
+    );
+
+    const result = await service.updateCustomer(
+      "cust-1",
+      { status: "active" },
+      "org-1",
+      "user-1"
+    );
+    expect(result.success).toBe(true);
+    const patch = mockRepo.update.mock.calls[0]?.[1];
+    expect(patch.status).toBe("active");
+    expect(patch.deleted_at).toBeNull();
+    expect(patch.deleted_by).toBeNull();
+  });
+
+  it("stamps deleted_at/deleted_by when the status is set to archived", async () => {
+    mockRepo.update.mockResolvedValue(
+      buildCustomer({ id: "cust-1", status: "archived" })
+    );
+
+    const result = await service.updateCustomer(
+      "cust-1",
+      { status: "archived" },
+      "org-1",
+      "user-1"
+    );
+    expect(result.success).toBe(true);
+    const patch = mockRepo.update.mock.calls[0]?.[1];
+    expect(patch.status).toBe("archived");
+    expect(typeof patch.deleted_at).toBe("string");
+    expect(patch.deleted_by).toBe("user-1");
   });
 
   it("fails with duplicate_gst when the GST belongs to a different customer", async () => {

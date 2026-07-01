@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Users,
   Pencil,
   Archive,
   AlertTriangle,
@@ -13,50 +12,40 @@ import {
   Phone,
   Globe,
   MapPin,
+  ChevronLeft,
+  Wallet,
+  CreditCard,
+  Landmark,
+  CalendarClock,
+  FileText,
+  Hash,
+  Building2,
+  type LucideIcon,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PageHeader } from "@/components/shared/page-header";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { AnimatedNumber } from "@/components/shared/animated-number";
 import { archiveCustomerAction } from "@/features/customer/actions/customer.actions";
+import {
+  STATUS_LABEL,
+  STATUS_VARIANT,
+} from "@/features/customer/utils/customer-display";
+import { formatCurrency, formatDate } from "@/utils/format";
 import type {
   Customer,
   CustomerLedger,
-  CustomerStatus,
 } from "@/features/customer/types/customer.types";
-
-const STATUS_VARIANT: Record<CustomerStatus, BadgeProps["variant"]> = {
-  active: "success",
-  inactive: "muted",
-  blacklisted: "destructive",
-  archived: "secondary",
-};
-
-const STATUS_LABEL: Record<CustomerStatus, string> = {
-  active: "Active",
-  inactive: "Inactive",
-  blacklisted: "Blacklisted",
-  archived: "Archived",
-};
-
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
-
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
-}
-
-function formatDate(value: Date): string {
-  return new Date(value).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
 // Archive confirmation dialog
@@ -110,8 +99,10 @@ function ArchiveDialog({
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to archive{" "}
-              <span className="font-medium text-slate-700 dark:text-slate-300">{customerName}</span>?
-              Archived customers cannot receive new invoices.
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {customerName}
+              </span>
+              ? Archived customers cannot receive new invoices.
             </p>
           </div>
         </div>
@@ -150,6 +141,78 @@ function ArchiveDialog({
 }
 
 // ─────────────────────────────────────────────────────────────
+// KPI tile
+// ─────────────────────────────────────────────────────────────
+
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
+  emphasis,
+  suffix,
+  index,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly emphasis?: boolean;
+  readonly suffix?: string;
+  readonly index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+    >
+      <Card className="relative h-full overflow-hidden p-3">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-20 w-20 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-2.5">
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
+              tint
+            )}
+          >
+            <Icon className="h-4 w-4 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p
+              className={cn(
+                "font-bold leading-tight text-slate-900 dark:text-slate-100",
+                emphasis ? "text-lg" : "text-base"
+              )}
+            >
+              {suffix ? (
+                <>
+                  <AnimatedNumber value={value} />
+                  <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {suffix}
+                  </span>
+                </>
+              ) : (
+                formatCurrency(value, true)
+              )}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Info row
 // ─────────────────────────────────────────────────────────────
 
@@ -158,7 +221,7 @@ function InfoRow({
   label,
   value,
 }: {
-  readonly icon: typeof Mail;
+  readonly icon: LucideIcon;
   readonly label: string;
   readonly value: string | null;
 }) {
@@ -171,11 +234,38 @@ function InfoRow({
         className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
         aria-hidden="true"
       />
-      <div>
+      <div className="min-w-0">
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
+        <dd className="break-words text-slate-700 dark:text-slate-300">
+          {value}
+        </dd>
       </div>
     </div>
+  );
+}
+
+function SectionCard({
+  title,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {title}
+        </h2>
+        {children}
+      </Card>
+    </motion.div>
   );
 }
 
@@ -203,19 +293,39 @@ export function CustomerProfile({
   const [isPending, startTransition] = useTransition();
 
   const org = searchParams.get("org");
-  const editHref = org
-    ? `/customers/${customer.id}/edit?org=${org}`
-    : `/customers/${customer.id}/edit`;
+  const withOrg = (path: string): string =>
+    org ? `${path}${path.includes("?") ? "&" : "?"}org=${org}` : path;
 
-  const billingAddress = [
+  const editHref = withOrg(`/customers/${customer.id}/edit`);
+  const ledgerHref = withOrg(`/customers/${customer.id}/ledger`);
+
+  const formatAddress = (
+    line1: string | null,
+    line2: string | null,
+    city: string | null,
+    state: string | null,
+    pincode: string | null
+  ): string | null => {
+    const value = [line1, line2, city, state, pincode]
+      .filter(Boolean)
+      .join(", ");
+    return value || null;
+  };
+
+  const billingAddress = formatAddress(
     customer.billingAddressLine1,
     customer.billingAddressLine2,
     customer.billingCity,
     customer.billingState,
-    customer.billingPincode,
-  ]
-    .filter(Boolean)
-    .join(", ");
+    customer.billingPincode
+  );
+  const shippingAddress = formatAddress(
+    customer.shippingAddressLine1,
+    customer.shippingAddressLine2,
+    customer.shippingCity,
+    customer.shippingState,
+    customer.shippingPincode
+  );
 
   const handleArchive = () => {
     setArchiveError(null);
@@ -226,183 +336,276 @@ export function CustomerProfile({
         return;
       }
       setShowArchive(false);
-      router.push("/customers");
+      router.push(withOrg("/customers"));
     });
   };
 
+  const outstandingPositive = ledger.outstanding > 0;
+
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader title={customer.name} description={customer.code} icon={Users}>
-        {canManage && (
-          <>
-            <Button asChild variant="outline">
-              <Link href={editHref}>
-                <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Edit
-              </Link>
-            </Button>
-            {customer.status !== "archived" && (
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
-                onClick={() => {
-                  setArchiveError(null);
-                  setShowArchive(true);
-                }}
-              >
-                <Archive className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Archive
+      {/* Back link */}
+      <Link
+        href={withOrg("/customers")}
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+      >
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        Customers
+      </Link>
+
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200/70 bg-white/80 px-4 py-3 backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/80 lg:-mx-6 lg:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                {customer.name}
+              </h1>
+              <Badge dot variant={STATUS_VARIANT[customer.status]}>
+                {STATUS_LABEL[customer.status]}
+              </Badge>
+            </div>
+            <p className="font-mono text-xs text-slate-400 dark:text-slate-500">
+              {customer.code}
+              {customer.company ? ` · ${customer.company}` : ""}
+            </p>
+          </div>
+
+          {canManage && (
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={editHref}>
+                  <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Edit
+                </Link>
               </Button>
-            )}
-          </>
-        )}
-      </PageHeader>
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Badge dot variant={STATUS_VARIANT[customer.status]}>
-          {STATUS_LABEL[customer.status]}
-        </Badge>
-        {customer.tags.map((tag) => (
-          <Badge key={tag} variant="info">
-            {tag}
-          </Badge>
-        ))}
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Details */}
-        <Card className="p-5 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Customer details
-          </h2>
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoRow icon={Users} label="Company" value={customer.company} />
-            <InfoRow icon={Phone} label="Mobile" value={customer.mobile} />
-            <InfoRow icon={Mail} label="Email" value={customer.email} />
-            <InfoRow icon={Globe} label="Website" value={customer.website} />
-            <InfoRow icon={Users} label="GST number" value={customer.gstNumber} />
-            <InfoRow icon={Users} label="PAN number" value={customer.panNumber} />
-            <InfoRow
-              icon={MapPin}
-              label="Billing address"
-              value={billingAddress || null}
-            />
-            <InfoRow
-              icon={Users}
-              label="Preferred payment"
-              value={customer.preferredPaymentMethod}
-            />
-          </dl>
-          {customer.notes && (
-            <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-800">
-              <dt className="text-xs text-muted-foreground">Notes</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
-                {customer.notes}
-              </dd>
+              {customer.status !== "archived" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
+                  onClick={() => {
+                    setArchiveError(null);
+                    setShowArchive(true);
+                  }}
+                >
+                  <Archive className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Archive
+                </Button>
+              )}
             </div>
           )}
-        </Card>
-
-        {/* Financials */}
-        <Card hover className="p-5">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Financials
-          </h2>
-          <dl className="space-y-4">
-            <div>
-              <dt className="text-xs text-muted-foreground">Outstanding</dt>
-              <dd className="nums text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                {formatCurrency(ledger.outstanding)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Opening balance</dt>
-              <dd className="nums text-base font-medium text-slate-700 dark:text-slate-300">
-                {formatCurrency(ledger.openingBalance)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Credit limit</dt>
-              <dd className="nums text-base font-medium text-slate-700 dark:text-slate-300">
-                {formatCurrency(customer.creditLimit)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Payment terms</dt>
-              <dd className="nums text-base font-medium text-slate-700 dark:text-slate-300">
-                {customer.paymentTermsDays} days
-              </dd>
-            </div>
-          </dl>
-        </Card>
-      </div>
-
-      {/* Ledger */}
-      <div className="mt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Ledger</h2>
-          <Link
-            href={`/customers/${customer.id}/ledger`}
-            className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-          >
-            View full ledger →
-          </Link>
         </div>
-        {ledger.entries.length === 0 ? (
-          <EmptyState
-            icon={Users}
-            title="No ledger entries yet"
-            description="Ledger entries appear here once this customer has sales, payments or adjustments."
-          />
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Date
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Description
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      Debit
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      Credit
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      Balance
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {ledger.entries.map((entry) => (
-                    <tr key={entry.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {formatDate(entry.entryDate)}
-                      </td>
-                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                        {entry.description ?? "—"}
-                      </td>
-                      <td className="nums px-3 py-2 text-right text-slate-700 dark:text-slate-300">
-                        {formatCurrency(entry.debit)}
-                      </td>
-                      <td className="nums px-3 py-2 text-right text-slate-700 dark:text-slate-300">
-                        {formatCurrency(entry.credit)}
-                      </td>
-                      <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
-                        {formatCurrency(entry.runningBalance)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+
+        {customer.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            {customer.tags.map((tag) => (
+              <Badge key={tag} variant="info" size="sm">
+                {tag}
+              </Badge>
+            ))}
           </div>
         )}
+      </div>
+
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiTile
+          icon={Wallet}
+          label="Outstanding"
+          value={ledger.outstanding}
+          tint={
+            outstandingPositive ? "bg-gradient-error" : "bg-gradient-success"
+          }
+          emphasis
+          index={0}
+        />
+        <KpiTile
+          icon={CreditCard}
+          label="Credit limit"
+          value={customer.creditLimit}
+          tint="bg-gradient-brand"
+          index={1}
+        />
+        <KpiTile
+          icon={Landmark}
+          label="Opening balance"
+          value={customer.openingBalance}
+          tint="bg-gradient-violet"
+          index={2}
+        />
+        <KpiTile
+          icon={CalendarClock}
+          label="Payment terms"
+          value={customer.paymentTermsDays}
+          tint="bg-gradient-info"
+          suffix="days"
+          index={3}
+        />
+      </div>
+
+      {/* Two-column body */}
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Main column */}
+        <div className="space-y-4 lg:col-span-2">
+          {customer.notes && (
+            <SectionCard title="Notes" delay={0.1}>
+              <p className="whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
+                {customer.notes}
+              </p>
+            </SectionCard>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.15 }}
+          >
+            <Card className="overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Ledger
+                </h2>
+                {ledger.entries.length > 0 && (
+                  <Link
+                    href={ledgerHref}
+                    className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                  >
+                    View full ledger →
+                  </Link>
+                )}
+              </div>
+              {ledger.entries.length === 0 ? (
+                <div className="px-5 pb-5">
+                  <EmptyState
+                    icon={FileText}
+                    title="No ledger entries yet"
+                    description="Ledger entries appear here once this customer has sales, payments or adjustments."
+                  />
+                </div>
+              ) : (
+                <Table
+                  className="[&_td]:px-5 [&_th]:px-5"
+                  wrapperClassName="rounded-none border-0 border-t border-slate-100 bg-transparent dark:border-slate-800"
+                >
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-right">Debit</TableHead>
+                      <TableHead className="text-right">Credit</TableHead>
+                      <TableHead className="text-right">Balance</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ledger.entries.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell className="whitespace-nowrap text-slate-600 dark:text-slate-400">
+                          {formatDate(entry.entryDate)}
+                        </TableCell>
+                        <TableCell className="text-slate-700 dark:text-slate-300">
+                          {entry.description ?? "—"}
+                        </TableCell>
+                        <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                          {formatCurrency(entry.debit, true)}
+                        </TableCell>
+                        <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                          {formatCurrency(entry.credit, true)}
+                        </TableCell>
+                        <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                          {formatCurrency(entry.runningBalance, true)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-4">
+          <SectionCard title="Contact" delay={0.1}>
+            {customer.mobile ||
+            customer.email ||
+            customer.website ||
+            customer.gstNumber ||
+            customer.panNumber ||
+            customer.preferredPaymentMethod ? (
+              <dl className="space-y-4">
+                <InfoRow icon={Phone} label="Mobile" value={customer.mobile} />
+                <InfoRow icon={Mail} label="Email" value={customer.email} />
+                <InfoRow
+                  icon={Globe}
+                  label="Website"
+                  value={customer.website}
+                />
+                <InfoRow
+                  icon={Hash}
+                  label="GST number"
+                  value={customer.gstNumber}
+                />
+                <InfoRow
+                  icon={Hash}
+                  label="PAN number"
+                  value={customer.panNumber}
+                />
+                <InfoRow
+                  icon={Wallet}
+                  label="Preferred payment"
+                  value={customer.preferredPaymentMethod}
+                />
+              </dl>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No contact details on file.
+              </p>
+            )}
+          </SectionCard>
+
+          <SectionCard title="Addresses" delay={0.15}>
+            {billingAddress || shippingAddress ? (
+              <dl className="space-y-4">
+                <InfoRow
+                  icon={MapPin}
+                  label="Billing address"
+                  value={billingAddress}
+                />
+                <InfoRow
+                  icon={Building2}
+                  label="Shipping address"
+                  value={shippingAddress}
+                />
+              </dl>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No addresses on file.
+              </p>
+            )}
+          </SectionCard>
+
+          <SectionCard title="Details" delay={0.2}>
+            <dl className="space-y-4">
+              <InfoRow
+                icon={CalendarClock}
+                label="Added on"
+                value={formatDate(customer.createdAt)}
+              />
+              <InfoRow
+                icon={CalendarClock}
+                label="Last updated"
+                value={formatDate(customer.updatedAt)}
+              />
+              <InfoRow
+                icon={Landmark}
+                label="Billing country"
+                value={customer.billingCountry}
+              />
+            </dl>
+          </SectionCard>
+        </div>
       </div>
 
       <AnimatePresence>

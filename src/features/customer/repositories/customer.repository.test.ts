@@ -23,6 +23,7 @@ interface MockBuilder {
   eq: Mock;
   is: Mock;
   or: Mock;
+  gte: Mock;
   order: Mock;
   range: Mock;
   insert: Mock;
@@ -54,6 +55,7 @@ function createMockClient(results: QueryResult[]): MockClient {
       eq: vi.fn(() => builder),
       is: vi.fn(() => builder),
       or: vi.fn(() => builder),
+      gte: vi.fn(() => builder),
       order: vi.fn(() => builder),
       range: vi.fn(() => builder),
       insert: vi.fn(() => builder),
@@ -191,7 +193,9 @@ describe("CustomerRepository", () => {
         createdBy: "user-1",
       });
       expect(builders[0].eq).toHaveBeenCalledWith("id", "cust-1");
-      expect(builders[0].is).toHaveBeenCalledWith("deleted_at", null);
+      // Archived (soft-deleted) customers must still load, so no deleted_at
+      // constraint is applied.
+      expect(builders[0].is).not.toHaveBeenCalled();
     });
 
     it("converts numeric strings via Number()", async () => {
@@ -300,7 +304,8 @@ describe("CustomerRepository", () => {
       expect(result.page).toBe(1);
       expect(result.pageSize).toBe(20);
       expect(builders[0].eq).toHaveBeenCalledWith("organization_id", "org-1");
-      expect(builders[0].is).toHaveBeenCalledWith("deleted_at", null);
+      // "All" view returns every status, so no deleted_at constraint is applied.
+      expect(builders[0].is).not.toHaveBeenCalled();
       expect(builders[0].order).toHaveBeenCalledWith("name", {
         ascending: true,
       });
@@ -332,6 +337,20 @@ describe("CustomerRepository", () => {
         ascending: false,
       });
       expect(builders[0].range).toHaveBeenCalledWith(20, 29);
+    });
+
+    it("includes soft-deleted rows when filtering by the archived status", async () => {
+      const { client, builders } = createMockClient([
+        { data: [buildDbCustomer({ status: "archived" })], error: null, count: 1 },
+      ]);
+      const repo = new CustomerRepository(client);
+
+      const result = await repo.list("org-1", { status: "archived" });
+
+      expect(result.items).toHaveLength(1);
+      // Archived view filters by status and does NOT constrain deleted_at.
+      expect(builders[0].eq).toHaveBeenCalledWith("status", "archived");
+      expect(builders[0].is).not.toHaveBeenCalled();
     });
 
     it("skips the search filter when the sanitized term is empty", async () => {
@@ -373,6 +392,46 @@ describe("CustomerRepository", () => {
       await repo.list("org-1", { page: 0, pageSize: 1000 });
       // page clamped to 1, pageSize clamped to 100 → range(0, 99)
       expect(builders[0].range).toHaveBeenCalledWith(0, 99);
+    });
+  });
+
+  describe("getStats", () => {
+    it("returns counts for total, active, blacklisted and new-this-month", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: 12 },
+        { data: null, error: null, count: 9 },
+        { data: null, error: null, count: 2 },
+        { data: null, error: null, count: 3 },
+      ]);
+      const repo = new CustomerRepository(client);
+
+      const stats = await repo.getStats("org-1");
+
+      expect(stats).toEqual({
+        total: 12,
+        active: 9,
+        blacklisted: 2,
+        newThisMonth: 3,
+      });
+    });
+
+    it("defaults each count to 0 when null", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+      ]);
+      const repo = new CustomerRepository(client);
+
+      const stats = await repo.getStats("org-1");
+
+      expect(stats).toEqual({
+        total: 0,
+        active: 0,
+        blacklisted: 0,
+        newThisMonth: 0,
+      });
     });
   });
 
@@ -486,7 +545,8 @@ describe("CustomerRepository", () => {
       expect(patchArg.updated_by).toBe("user-9");
       expect(typeof patchArg.updated_at).toBe("string");
       expect(builders[0].eq).toHaveBeenCalledWith("id", "cust-1");
-      expect(builders[0].is).toHaveBeenCalledWith("deleted_at", null);
+      // Updates may target archived (soft-deleted) rows, e.g. to restore them.
+      expect(builders[0].is).not.toHaveBeenCalled();
     });
 
     it("returns null on error", async () => {

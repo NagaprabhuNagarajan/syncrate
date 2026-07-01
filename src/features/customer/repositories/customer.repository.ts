@@ -5,6 +5,7 @@ import type {
   CustomerLedgerEntry,
   CustomerListParams,
   CustomerListResult,
+  CustomerStats,
 } from "@/features/customer/types/customer.types";
 
 type DbCustomer = Database["public"]["Tables"]["customers"]["Row"];
@@ -87,11 +88,12 @@ export class CustomerRepository {
   constructor(private readonly supabase: AppSupabaseClient) {}
 
   async findById(id: string): Promise<Customer | null> {
+    // No deleted_at constraint: archived customers are soft-deleted but must
+    // remain viewable and editable (e.g. to restore them).
     const { data, error } = await this.supabase
       .from("customers")
       .select("*")
       .eq("id", id)
-      .is("deleted_at", null)
       .single();
 
     if (error || !data) {
@@ -153,9 +155,13 @@ export class CustomerRepository {
     let query = this.supabase
       .from("customers")
       .select("*", { count: "exact" })
-      .eq("organization_id", organizationId)
-      .is("deleted_at", null);
+      .eq("organization_id", organizationId);
 
+    // Archiving is the only soft-delete path (it sets both status="archived"
+    // and deleted_at), so the status column alone fully describes a record.
+    // A specific status filter matches on status; the "All" view (no status)
+    // returns every record — including archived — by not constraining
+    // deleted_at.
     if (params.status) {
       query = query.eq("status", params.status);
     }
@@ -182,6 +188,37 @@ export class CustomerRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Aggregate counts for the list header tiles. Runs the counts in parallel as
+   * head-only queries (no rows transferred). "Total" counts every record —
+   * including archived — to match the list's "All" view.
+   */
+  async getStats(organizationId: string): Promise<CustomerStats> {
+    const base = () =>
+      this.supabase
+        .from("customers")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const [total, active, blacklisted, newThisMonth] = await Promise.all([
+      base(),
+      base().eq("status", "active"),
+      base().eq("status", "blacklisted"),
+      base().gte("created_at", monthStart.toISOString()),
+    ]);
+
+    return {
+      total: total.count ?? 0,
+      active: active.count ?? 0,
+      blacklisted: blacklisted.count ?? 0,
+      newThisMonth: newThisMonth.count ?? 0,
     };
   }
 
@@ -244,7 +281,6 @@ export class CustomerRepository {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .is("deleted_at", null)
       .select("*")
       .single();
 
