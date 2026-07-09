@@ -7,6 +7,7 @@ import type {
   BatchErrorCode,
   BatchListParams,
   BatchListResult,
+  BatchStats,
   CreateBatchInput,
 } from "@/features/inventory/types/batch.types";
 
@@ -47,6 +48,10 @@ export class BatchService {
       return fail("not_found", "Batch not found");
     }
     return ok(batch);
+  }
+
+  async getBatchStats(organizationId: string): Promise<BatchStats> {
+    return this.repo.getStats(organizationId);
   }
 
   async createBatch(

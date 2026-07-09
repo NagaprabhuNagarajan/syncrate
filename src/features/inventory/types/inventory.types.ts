@@ -140,3 +140,11 @@ export interface InventoryError {
 export type InventoryActionResult<T = void> =
   | { readonly success: true; readonly data: T }
   | { readonly success: false; readonly error: InventoryError };
+
+/** Aggregate counts for the inventory list header tiles. */
+export interface InventoryStats {
+  readonly totalSkus: number;
+  readonly stockValue: number;
+  readonly lowStock: number;
+  readonly outOfStock: number;
+}

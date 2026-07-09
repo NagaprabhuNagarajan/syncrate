@@ -272,6 +272,75 @@ describe("InventoryRepository.listLevels", () => {
   });
 });
 
+describe("InventoryRepository.getStats", () => {
+  it("computes totalSkus, stockValue, lowStock and outOfStock in one scan", async () => {
+    const { client, builders } = createMockClient([
+      {
+        data: [
+          {
+            quantity: 0,
+            products: { reorder_level: 10, purchase_price: 5 },
+          },
+          {
+            quantity: 4,
+            products: { reorder_level: 10, purchase_price: 5 },
+          },
+          {
+            quantity: 99,
+            products: { reorder_level: 10, purchase_price: 2 },
+          },
+        ],
+        error: null,
+      },
+    ]);
+    const repo = new InventoryRepository(client);
+
+    const stats = await repo.getStats("org-1");
+
+    expect(stats).toEqual({
+      totalSkus: 3,
+      stockValue: 0 * 5 + 4 * 5 + 99 * 2,
+      lowStock: 2, // quantity 0 and quantity 4 are both <= reorder level 10
+      outOfStock: 1,
+    });
+    expect(builders[0].eq).toHaveBeenCalledWith("organization_id", "org-1");
+  });
+
+  it("handles embedded product relations returned as arrays", async () => {
+    const { client } = createMockClient([
+      {
+        data: [
+          {
+            quantity: 4,
+            products: [{ reorder_level: 10, purchase_price: 5 }],
+          },
+        ],
+        error: null,
+      },
+    ]);
+    const repo = new InventoryRepository(client);
+
+    const stats = await repo.getStats("org-1");
+    expect(stats.stockValue).toBe(20);
+    expect(stats.lowStock).toBe(1);
+  });
+
+  it("returns all-zero stats on error", async () => {
+    const { client } = createMockClient([
+      { data: null, error: { message: "boom" } },
+    ]);
+    const repo = new InventoryRepository(client);
+
+    const stats = await repo.getStats("org-1");
+    expect(stats).toEqual({
+      totalSkus: 0,
+      stockValue: 0,
+      lowStock: 0,
+      outOfStock: 0,
+    });
+  });
+});
+
 describe("InventoryRepository.listTransactions", () => {
   it("maps transactions and applies filters + limit", async () => {
     const { client, builders } = createMockClient([

@@ -153,6 +153,46 @@ describe("BatchRepository.list", () => {
   });
 });
 
+describe("BatchRepository.getStats", () => {
+  it("returns counts for total, active, expired and depleted", async () => {
+    const { client } = createMockClient([
+      { data: null, error: null, count: 10 },
+      { data: null, error: null, count: 6 },
+      { data: null, error: null, count: 3 },
+      { data: null, error: null, count: 1 },
+    ]);
+    const repo = new BatchRepository(client);
+
+    const stats = await repo.getStats("org-1");
+
+    expect(stats).toEqual({
+      total: 10,
+      active: 6,
+      expired: 3,
+      depleted: 1,
+    });
+  });
+
+  it("defaults each count to 0 when null", async () => {
+    const { client } = createMockClient([
+      { data: null, error: null, count: null },
+      { data: null, error: null, count: null },
+      { data: null, error: null, count: null },
+      { data: null, error: null, count: null },
+    ]);
+    const repo = new BatchRepository(client);
+
+    const stats = await repo.getStats("org-1");
+
+    expect(stats).toEqual({
+      total: 0,
+      active: 0,
+      expired: 0,
+      depleted: 0,
+    });
+  });
+});
+
 describe("BatchRepository.create", () => {
   it("inserts and maps the batch", async () => {
     const { client, builders } = createMockClient([

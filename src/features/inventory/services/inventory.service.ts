@@ -7,6 +7,7 @@ import type {
   InventoryErrorCode,
   InventoryLevelListParams,
   InventoryLevelListResult,
+  InventoryStats,
   InventoryTransaction,
   InventoryTransactionListParams,
   OpeningStockInput,
@@ -85,13 +86,17 @@ export class InventoryService {
 
   /** Total stock value (Σ quantity × purchase price) across all levels. */
   async getStockValue(organizationId: string): Promise<number> {
-    const { items } = await this.repo.listLevels(organizationId, {
-      pageSize: 100,
-    });
-    return items.reduce(
-      (total, item) => total + item.quantity * item.purchasePrice,
-      0
-    );
+    const stats = await this.repo.getStats(organizationId);
+    return stats.stockValue;
+  }
+
+  /**
+   * Aggregate counts for the inventory list header tiles (total SKUs, stock
+   * value, low stock, out of stock), computed in a single scan over all
+   * stock levels for the organization.
+   */
+  async getInventoryStats(organizationId: string): Promise<InventoryStats> {
+    return this.repo.getStats(organizationId);
   }
 
   // ── Adjustment event ───────────────────────────────────────
