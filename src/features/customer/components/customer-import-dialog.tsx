@@ -12,7 +12,57 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { importCustomersAction } from "@/features/customer/actions/customer.actions";
+import { objectsToCsv } from "@/utils/csv";
+import { downloadTextFile } from "@/utils/download";
 import type { CustomerImportResult } from "@/features/customer/types/customer.types";
+
+// Mirrors the importer's expected columns (customer.service CSV contract).
+const SAMPLE_COLUMNS = [
+  "code",
+  "name",
+  "company",
+  "gstNumber",
+  "panNumber",
+  "mobile",
+  "email",
+  "website",
+  "billingCity",
+  "billingState",
+  "billingPincode",
+  "creditLimit",
+  "paymentTermsDays",
+  "openingBalance",
+  "status",
+  "tags",
+  "notes",
+] as const;
+
+const SAMPLE_ROW: Record<(typeof SAMPLE_COLUMNS)[number], string> = {
+  code: "CUST-00001",
+  name: "Kumar Traders",
+  company: "Kumar Traders Pvt Ltd",
+  gstNumber: "22AAAAA0000A1Z5",
+  panNumber: "AAAAA0000A",
+  mobile: "+91 98765 43210",
+  email: "contact@kumartraders.com",
+  website: "https://kumartraders.com",
+  billingCity: "Mumbai",
+  billingState: "Maharashtra",
+  billingPincode: "400001",
+  creditLimit: "50000",
+  paymentTermsDays: "30",
+  openingBalance: "0",
+  status: "active",
+  tags: "vip;wholesale",
+  notes: "Prefers morning deliveries",
+};
+
+function downloadSample(): void {
+  downloadTextFile(
+    "customers-import-sample.csv",
+    objectsToCsv(SAMPLE_COLUMNS, [SAMPLE_ROW])
+  );
+}
 
 interface CustomerImportDialogProps {
   readonly organizationId: string;
@@ -109,6 +159,16 @@ export function CustomerImportDialog({
                 onChange={handleFileChange}
                 className="block w-full cursor-pointer rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 shadow-sm file:mr-3 file:border-0 file:bg-slate-50 dark:file:bg-slate-900 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-slate-700 dark:file:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Not sure about the format?{" "}
+                <button
+                  type="button"
+                  onClick={downloadSample}
+                  className="font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
+                >
+                  Download sample CSV
+                </button>
+              </p>
             </div>
           )}
 

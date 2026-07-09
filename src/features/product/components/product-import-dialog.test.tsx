@@ -37,6 +37,32 @@ describe("ProductImportDialog", () => {
     expect(screen.getByLabelText(/csv file/i)).toBeInTheDocument();
   });
 
+  it("downloads a sample CSV template", async () => {
+    const user = userEvent.setup();
+    const createUrl = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:sample");
+    const revokeUrl = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => undefined);
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+
+    render(<ProductImportDialog organizationId="org-1" onClose={vi.fn()} />);
+    await user.click(
+      screen.getByRole("button", { name: /download sample csv/i })
+    );
+
+    expect(createUrl).toHaveBeenCalledOnce();
+    expect(createUrl.mock.calls[0][0]).toBeInstanceOf(Blob);
+    expect(clickSpy).toHaveBeenCalled();
+
+    createUrl.mockRestore();
+    revokeUrl.mockRestore();
+    clickSpy.mockRestore();
+  });
+
   it("validates that a file is chosen before importing", async () => {
     const user = userEvent.setup();
     render(<ProductImportDialog organizationId="org-1" onClose={vi.fn()} />);
