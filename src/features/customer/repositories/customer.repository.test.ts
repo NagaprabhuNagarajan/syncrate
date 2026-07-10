@@ -598,6 +598,35 @@ describe("CustomerRepository", () => {
     });
   });
 
+  describe("restore", () => {
+    it("clears deleted_at/deleted_by and sets status active", async () => {
+      const { client, builders } = createMockClient([
+        { data: null, error: null },
+      ]);
+      const repo = new CustomerRepository(client);
+
+      const result = await repo.restore("cust-1", "user-9");
+      expect(result).toBe(true);
+      const patchArg = builders[0].update.mock.calls[0][0] as Record<
+        string,
+        unknown
+      >;
+      expect(patchArg.deleted_at).toBeNull();
+      expect(patchArg.deleted_by).toBeNull();
+      expect(patchArg.status).toBe("active");
+      expect(patchArg.updated_by).toBe("user-9");
+      expect(builders[0].eq).toHaveBeenCalledWith("id", "cust-1");
+    });
+
+    it("returns false when the update errors", async () => {
+      const { client } = createMockClient([
+        { data: null, error: { message: "boom" } },
+      ]);
+      const repo = new CustomerRepository(client);
+      expect(await repo.restore("cust-1", "user-9")).toBe(false);
+    });
+  });
+
   describe("findLedgerEntries", () => {
     it("maps ledger entries with numeric and date conversions", async () => {
       const rows = [

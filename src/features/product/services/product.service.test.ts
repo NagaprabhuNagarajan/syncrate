@@ -17,6 +17,7 @@ const { mockRepo } = vi.hoisted(() => ({
     create: vi.fn(),
     update: vi.fn(),
     softDelete: vi.fn(),
+    restore: vi.fn(),
   },
 }));
 
@@ -514,6 +515,32 @@ describe("ProductService.archiveProduct", () => {
     const result = await service.archiveProduct("prod-1", "user-1");
     expect(result.success).toBe(true);
     expect(mockRepo.softDelete).toHaveBeenCalledWith("prod-1", "user-1");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// restoreProduct
+// ─────────────────────────────────────────────────────────────
+
+describe("ProductService.restoreProduct", () => {
+  it("returns not_found when the product does not exist", async () => {
+    mockRepo.findById.mockResolvedValue(null);
+
+    const result = await service.restoreProduct("prod-1", "user-1");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+    expect(mockRepo.restore).not.toHaveBeenCalled();
+  });
+
+  it("restores an archived product", async () => {
+    mockRepo.findById.mockResolvedValue(buildProduct({ status: "archived" }));
+    mockRepo.restore.mockResolvedValue(true);
+
+    const result = await service.restoreProduct("prod-1", "user-1");
+    expect(result.success).toBe(true);
+    expect(mockRepo.restore).toHaveBeenCalledWith("prod-1", "user-1");
   });
 });
 

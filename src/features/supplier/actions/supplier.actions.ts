@@ -243,6 +243,33 @@ export async function archiveSupplierAction(
   return result;
 }
 
+export async function restoreSupplierAction(
+  organizationId: string,
+  supplierId: string
+): Promise<SupplierActionResult<void>> {
+  const supabase = await createServerSupabaseClient();
+  const auth = await authorize(supabase, organizationId, "supplier.update");
+  if (!auth.ok) {
+    return auth.result;
+  }
+
+  const service = new SupplierService(supabase);
+  const result = await service.restoreSupplier(supplierId, auth.userId);
+
+  if (result.success) {
+    revalidatePath("/suppliers");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: auth.userId,
+      action: "supplier.restore",
+      entityType: "supplier",
+      entityId: supplierId,
+      summary: "Restored supplier",
+    });
+  }
+  return result;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Export (CSV)
 // ─────────────────────────────────────────────────────────────

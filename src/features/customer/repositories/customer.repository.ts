@@ -305,6 +305,22 @@ export class CustomerRepository {
     return !error;
   }
 
+  /** Restores an archived (soft-deleted) customer back to active. */
+  async restore(id: string, restoredBy: string): Promise<boolean> {
+    const { error } = await this.supabase
+      .from("customers")
+      .update({
+        deleted_at: null,
+        deleted_by: null,
+        status: "active",
+        updated_by: restoredBy,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    return !error;
+  }
+
   async findLedgerEntries(
     customerId: string
   ): Promise<CustomerLedgerEntry[]> {

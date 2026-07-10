@@ -19,6 +19,8 @@ import {
   Pencil,
   Copy,
   ArrowUpRight,
+  Archive,
+  ArchiveRestore,
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +44,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AnimatedNumber } from "@/components/shared/animated-number";
-import { exportCustomersAction } from "@/features/customer/actions/customer.actions";
+import {
+  exportCustomersAction,
+  archiveCustomerAction,
+  restoreCustomerAction,
+} from "@/features/customer/actions/customer.actions";
 import { CustomerImportDialog } from "@/features/customer/components/customer-import-dialog";
 import {
   STATUS_LABEL,
@@ -222,6 +228,33 @@ export function CustomersView({
     void navigator.clipboard?.writeText(text);
   };
 
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [, startAction] = useTransition();
+
+  const handleArchive = (customerId: string): void => {
+    setActionError(null);
+    startAction(async () => {
+      const res = await archiveCustomerAction(organizationId, customerId);
+      if (!res.success) {
+        setActionError(res.error.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  const handleRestore = (customerId: string): void => {
+    setActionError(null);
+    startAction(async () => {
+      const res = await restoreCustomerAction(organizationId, customerId);
+      if (!res.success) {
+        setActionError(res.error.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
   return (
     <div className="p-4 lg:p-6">
       {/* Header */}
@@ -277,12 +310,12 @@ export function CustomersView({
         )}
       </motion.div>
 
-      {exportError && (
+      {(exportError || actionError) && (
         <p
           role="alert"
           className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
-          {exportError}
+          {exportError ?? actionError}
         </p>
       )}
 
@@ -531,6 +564,33 @@ export function CustomersView({
                               <Copy className="h-4 w-4" aria-hidden="true" />
                               Copy email
                             </DropdownMenuItem>
+                          )}
+                          {canManage && (
+                            <>
+                              <DropdownMenuSeparator />
+                              {customer.status === "archived" ? (
+                                <DropdownMenuItem
+                                  onSelect={() => handleRestore(customer.id)}
+                                >
+                                  <ArchiveRestore
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
+                                  Unarchive
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  destructive
+                                  onSelect={() => handleArchive(customer.id)}
+                                >
+                                  <Archive
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
+                                  Archive
+                                </DropdownMenuItem>
+                              )}
+                            </>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>

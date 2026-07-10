@@ -20,6 +20,7 @@ const { mockRepo } = vi.hoisted(() => ({
     create: vi.fn(),
     update: vi.fn(),
     softDelete: vi.fn(),
+    restore: vi.fn(),
     findLedgerEntries: vi.fn(),
     getStats: vi.fn(),
   },
@@ -524,6 +525,28 @@ describe("CustomerService.archiveCustomer", () => {
     const result = await service.archiveCustomer("cust-1", "user-1");
     expect(result.success).toBe(true);
     expect(mockRepo.softDelete).toHaveBeenCalledWith("cust-1", "user-1");
+  });
+});
+
+describe("CustomerService.restoreCustomer", () => {
+  it("returns not_found when the customer does not exist", async () => {
+    mockRepo.findById.mockResolvedValue(null);
+
+    const result = await service.restoreCustomer("cust-1", "user-1");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+    expect(mockRepo.restore).not.toHaveBeenCalled();
+  });
+
+  it("restores an archived customer", async () => {
+    mockRepo.findById.mockResolvedValue(buildCustomer({ status: "archived" }));
+    mockRepo.restore.mockResolvedValue(true);
+
+    const result = await service.restoreCustomer("cust-1", "user-1");
+    expect(result.success).toBe(true);
+    expect(mockRepo.restore).toHaveBeenCalledWith("cust-1", "user-1");
   });
 });
 

@@ -458,6 +458,34 @@ describe("SupplierRepository.softDelete", () => {
   });
 });
 
+describe("SupplierRepository.restore", () => {
+  it("clears deleted_at/deleted_by, sets status active and updated_by", async () => {
+    const { client, builders } = createMockClient([{ data: null, error: null }]);
+    const repo = new SupplierRepository(client);
+
+    const ok = await repo.restore("supplier-1", "user-2");
+
+    expect(ok).toBe(true);
+    const updateArg = builders[0]?.update.mock.calls[0]?.[0] as Record<
+      string,
+      unknown
+    >;
+    expect(updateArg.deleted_at).toBeNull();
+    expect(updateArg.deleted_by).toBeNull();
+    expect(updateArg.status).toBe("active");
+    expect(updateArg.updated_by).toBe("user-2");
+    expect(builders[0]?.eq).toHaveBeenCalledWith("id", "supplier-1");
+  });
+
+  it("returns false on error", async () => {
+    const { client } = createMockClient([
+      { data: null, error: { message: "fail" } },
+    ]);
+    const repo = new SupplierRepository(client);
+    expect(await repo.restore("supplier-1", "user-2")).toBe(false);
+  });
+});
+
 describe("SupplierRepository.findLedgerEntries", () => {
   it("maps ledger entries", async () => {
     const { client } = createMockClient([

@@ -19,6 +19,8 @@ import {
   Pencil,
   Copy,
   ArrowUpRight,
+  Archive,
+  ArchiveRestore,
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +44,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AnimatedNumber } from "@/components/shared/animated-number";
-import { exportProductsAction } from "@/features/product/actions/product.actions";
+import {
+  exportProductsAction,
+  archiveProductAction,
+  restoreProductAction,
+} from "@/features/product/actions/product.actions";
 import { ProductImportDialog } from "@/features/product/components/product-import-dialog";
 import {
   STATUS_LABEL,
@@ -239,6 +245,33 @@ export function ProductsView({
     void navigator.clipboard?.writeText(text);
   };
 
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [, startAction] = useTransition();
+
+  const handleArchive = (productId: string): void => {
+    setActionError(null);
+    startAction(async () => {
+      const res = await archiveProductAction(organizationId, productId);
+      if (!res.success) {
+        setActionError(res.error.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  const handleRestore = (productId: string): void => {
+    setActionError(null);
+    startAction(async () => {
+      const res = await restoreProductAction(organizationId, productId);
+      if (!res.success) {
+        setActionError(res.error.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
   return (
     <div className="p-4 lg:p-6">
       {/* Header */}
@@ -294,12 +327,12 @@ export function ProductsView({
         )}
       </motion.div>
 
-      {exportError && (
+      {(exportError || actionError) && (
         <p
           role="alert"
           className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
-          {exportError}
+          {exportError ?? actionError}
         </p>
       )}
 
@@ -546,6 +579,33 @@ export function ProductsView({
                               <Copy className="h-4 w-4" aria-hidden="true" />
                               Copy SKU
                             </DropdownMenuItem>
+                          )}
+                          {canManage && (
+                            <>
+                              <DropdownMenuSeparator />
+                              {product.status === "archived" ? (
+                                <DropdownMenuItem
+                                  onSelect={() => handleRestore(product.id)}
+                                >
+                                  <ArchiveRestore
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
+                                  Unarchive
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  destructive
+                                  onSelect={() => handleArchive(product.id)}
+                                >
+                                  <Archive
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
+                                  Archive
+                                </DropdownMenuItem>
+                              )}
+                            </>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>

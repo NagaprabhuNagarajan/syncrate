@@ -208,6 +208,33 @@ export async function archiveProductAction(
   return result;
 }
 
+export async function restoreProductAction(
+  organizationId: string,
+  productId: string
+): Promise<ProductActionResult<void>> {
+  const supabase = await createServerSupabaseClient();
+  const auth = await authorize(supabase, organizationId, "product.update");
+  if (!auth.ok) {
+    return auth.result;
+  }
+
+  const service = new ProductService(supabase);
+  const result = await service.restoreProduct(productId, auth.userId);
+
+  if (result.success) {
+    revalidatePath("/products");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: auth.userId,
+      action: "product.restore",
+      entityType: "product",
+      entityId: productId,
+      summary: "Restored product",
+    });
+  }
+  return result;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Export (CSV)
 // ─────────────────────────────────────────────────────────────

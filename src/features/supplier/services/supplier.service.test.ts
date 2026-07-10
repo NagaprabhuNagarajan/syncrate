@@ -21,6 +21,7 @@ const { mockRepo } = vi.hoisted(() => ({
     create: vi.fn(),
     update: vi.fn(),
     softDelete: vi.fn(),
+    restore: vi.fn(),
     findLedgerEntries: vi.fn(),
     findAllForExport: vi.fn(),
   },
@@ -420,6 +421,36 @@ describe("SupplierService.archiveSupplier", () => {
     if (!result.success) {
       expect(result.error).toMatchObject({ code: "unknown" });
     }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Restore
+// ─────────────────────────────────────────────────────────────
+
+describe("SupplierService.restoreSupplier", () => {
+  it("returns not_found when supplier does not exist", async () => {
+    const service = new SupplierService(fakeSupabase);
+    mockRepo.findById.mockResolvedValue(null);
+
+    const result = await service.restoreSupplier("supplier-1", "user-1");
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toMatchObject({ code: "not_found" });
+    }
+    expect(mockRepo.restore).not.toHaveBeenCalled();
+  });
+
+  it("restores an archived supplier", async () => {
+    const service = new SupplierService(fakeSupabase);
+    mockRepo.findById.mockResolvedValue(buildSupplier({ status: "archived" }));
+    mockRepo.restore.mockResolvedValue(true);
+
+    const result = await service.restoreSupplier("supplier-1", "user-1");
+
+    expect(result.success).toBe(true);
+    expect(mockRepo.restore).toHaveBeenCalledWith("supplier-1", "user-1");
   });
 });
 

@@ -285,6 +285,22 @@ export class SupplierRepository {
     return !error;
   }
 
+  /** Restores an archived (soft-deleted) supplier back to active. */
+  async restore(id: string, restoredBy: string): Promise<boolean> {
+    const { error } = await this.supabase
+      .from("suppliers")
+      .update({
+        deleted_at: null,
+        deleted_by: null,
+        status: "active",
+        updated_by: restoredBy,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    return !error;
+  }
+
   async findLedgerEntries(supplierId: string): Promise<SupplierLedgerEntry[]> {
     const { data, error } = await this.supabase
       .from("supplier_ledger_entries")

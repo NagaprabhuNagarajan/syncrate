@@ -9,6 +9,7 @@ import {
   createSupplierAction,
   updateSupplierAction,
   archiveSupplierAction,
+  restoreSupplierAction,
   exportSuppliersAction,
   importSuppliersAction,
 } from "./supplier.actions";
@@ -29,6 +30,7 @@ const {
     createSupplier: vi.fn(),
     updateSupplier: vi.fn(),
     archiveSupplier: vi.fn(),
+    restoreSupplier: vi.fn(),
     exportSuppliersCsv: vi.fn(),
     importSuppliers: vi.fn(),
   },
@@ -382,6 +384,50 @@ describe("archiveSupplierAction", () => {
     await archiveSupplierAction(ORG_ID, "supplier-1");
 
     expect(mockAuditLog).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// restoreSupplierAction
+// ─────────────────────────────────────────────────────────────
+
+describe("restoreSupplierAction", () => {
+  it("returns forbidden when the user lacks supplier.update", async () => {
+    authedAs("user-1");
+    grant(["supplier.view"]);
+
+    const result = await restoreSupplierAction(ORG_ID, "supplier-1");
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("forbidden");
+    }
+    expect(mockSupplierService.restoreSupplier).not.toHaveBeenCalled();
+  });
+
+  it("restores, revalidates and audits on success", async () => {
+    authedAs("user-1");
+    grant(["supplier.update"]);
+    mockSupplierService.restoreSupplier.mockResolvedValue({
+      success: true,
+      data: undefined,
+    });
+
+    const result = await restoreSupplierAction(ORG_ID, "supplier-1");
+
+    expect(result.success).toBe(true);
+    expect(mockSupplierService.restoreSupplier).toHaveBeenCalledWith(
+      "supplier-1",
+      "user-1"
+    );
+    expect(revalidateMock).toHaveBeenCalledWith("/suppliers");
+    expect(mockAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "supplier.restore",
+        entityType: "supplier",
+        entityId: "supplier-1",
+      })
+    );
   });
 });
 

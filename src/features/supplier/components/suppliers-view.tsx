@@ -19,6 +19,8 @@ import {
   Pencil,
   Copy,
   ArrowUpRight,
+  Archive,
+  ArchiveRestore,
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +44,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AnimatedNumber } from "@/components/shared/animated-number";
-import { exportSuppliersAction } from "@/features/supplier/actions/supplier.actions";
+import {
+  exportSuppliersAction,
+  archiveSupplierAction,
+  restoreSupplierAction,
+} from "@/features/supplier/actions/supplier.actions";
 import { SupplierImportDialog } from "@/features/supplier/components/supplier-import-dialog";
 import {
   STATUS_LABEL,
@@ -220,6 +226,33 @@ export function SuppliersView({
     void navigator.clipboard?.writeText(text);
   };
 
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [, startAction] = useTransition();
+
+  const handleArchive = (supplierId: string): void => {
+    setActionError(null);
+    startAction(async () => {
+      const res = await archiveSupplierAction(organizationId, supplierId);
+      if (!res.success) {
+        setActionError(res.error.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  const handleRestore = (supplierId: string): void => {
+    setActionError(null);
+    startAction(async () => {
+      const res = await restoreSupplierAction(organizationId, supplierId);
+      if (!res.success) {
+        setActionError(res.error.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
   return (
     <div className="p-4 lg:p-6">
       {/* Header */}
@@ -275,12 +308,12 @@ export function SuppliersView({
         )}
       </motion.div>
 
-      {exportError && (
+      {(exportError || actionError) && (
         <p
           role="alert"
           className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
         >
-          {exportError}
+          {exportError ?? actionError}
         </p>
       )}
 
@@ -529,6 +562,33 @@ export function SuppliersView({
                               <Copy className="h-4 w-4" aria-hidden="true" />
                               Copy email
                             </DropdownMenuItem>
+                          )}
+                          {canManage && (
+                            <>
+                              <DropdownMenuSeparator />
+                              {supplier.status === "archived" ? (
+                                <DropdownMenuItem
+                                  onSelect={() => handleRestore(supplier.id)}
+                                >
+                                  <ArchiveRestore
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
+                                  Unarchive
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  destructive
+                                  onSelect={() => handleArchive(supplier.id)}
+                                >
+                                  <Archive
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
+                                  Archive
+                                </DropdownMenuItem>
+                              )}
+                            </>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
