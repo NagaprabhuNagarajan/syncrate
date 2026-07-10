@@ -65,12 +65,16 @@ export default async function GoodsReceiptsPage({
   const page = Math.max(1, Number.parseInt(query.page ?? "1", 10) || 1);
 
   const service = new GoodsReceiptService(supabase);
-  const result = await service.listGoodsReceipts(activeOrg.id, { search, page });
+  const [result, stats] = await Promise.all([
+    service.listGoodsReceipts(activeOrg.id, { search, page }),
+    service.getGoodsReceiptStats(activeOrg.id),
+  ]);
 
   return (
     <GoodsReceiptsView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search }}
     />
   );

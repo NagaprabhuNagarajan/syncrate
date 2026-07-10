@@ -11,6 +11,7 @@ import { PurchaseOrderService } from "./purchase-order.service";
 const { mockRepo } = vi.hoisted(() => ({
   mockRepo: {
     list: vi.fn(),
+    getStats: vi.fn(),
     findById: vi.fn(),
     findByNumber: vi.fn(),
     findItems: vi.fn(),
@@ -286,6 +287,30 @@ describe("PurchaseOrderService.approvePurchaseOrder", () => {
   });
 });
 
+describe("PurchaseOrderService.orderPurchaseOrder", () => {
+  it("marks an approved order as ordered", async () => {
+    mockRepo.findById.mockResolvedValue(buildOrder({ status: "approved" }));
+    mockRepo.updateStatus.mockResolvedValue(buildOrder({ status: "ordered" }));
+    const result = await service.orderPurchaseOrder("po-1", "org-1", "user-1");
+    expect(result.success).toBe(true);
+    expect(mockRepo.updateStatus).toHaveBeenCalledWith(
+      "po-1",
+      "ordered",
+      "user-1",
+      false
+    );
+  });
+
+  it("rejects ordering a non-approved order", async () => {
+    mockRepo.findById.mockResolvedValue(buildOrder({ status: "submitted" }));
+    const result = await service.orderPurchaseOrder("po-1", "org-1", "u");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("invalid_status");
+    }
+  });
+});
+
 describe("PurchaseOrderService.cancelPurchaseOrder", () => {
   it("cancels a draft order", async () => {
     mockRepo.findById.mockResolvedValue(buildOrder({ status: "draft" }));
@@ -331,5 +356,13 @@ describe("PurchaseOrderService reads", () => {
     const result = await service.listPurchaseOrders("org-1", { status: "draft" });
     expect(result).toBe(listResult);
     expect(mockRepo.list).toHaveBeenCalledWith("org-1", { status: "draft" });
+  });
+
+  it("getPurchaseOrderStats delegates to the repository", async () => {
+    const stats = { totalValue: 100, draft: 1, awaitingApproval: 2, open: 3 };
+    mockRepo.getStats.mockResolvedValue(stats);
+    const result = await service.getPurchaseOrderStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
   });
 });

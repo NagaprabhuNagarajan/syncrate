@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
   PURCHASE_TAX_RATES,
-  purchaseInvoiceItemSchema,
-  createPurchaseInvoiceSchema,
-  updatePurchaseInvoiceSchema,
-} from "./purchase-invoice.schemas";
+  billItemSchema,
+  createBillSchema,
+  updateBillSchema,
+} from "./bill.schemas";
 
 describe("PURCHASE_TAX_RATES", () => {
   it("contains the supported GST slabs", () => {
@@ -12,9 +12,9 @@ describe("PURCHASE_TAX_RATES", () => {
   });
 });
 
-describe("purchaseInvoiceItemSchema", () => {
+describe("billItemSchema", () => {
   it("accepts a valid line item and coerces numeric strings", () => {
-    const parsed = purchaseInvoiceItemSchema.safeParse({
+    const parsed = billItemSchema.safeParse({
       productId: "p-1",
       quantity: "3",
       unitPrice: "100.5",
@@ -29,7 +29,7 @@ describe("purchaseInvoiceItemSchema", () => {
   });
 
   it("rejects a missing product", () => {
-    const parsed = purchaseInvoiceItemSchema.safeParse({
+    const parsed = billItemSchema.safeParse({
       productId: "",
       quantity: 1,
       unitPrice: 1,
@@ -38,7 +38,7 @@ describe("purchaseInvoiceItemSchema", () => {
   });
 
   it("rejects a non-positive quantity", () => {
-    const parsed = purchaseInvoiceItemSchema.safeParse({
+    const parsed = billItemSchema.safeParse({
       productId: "p-1",
       quantity: 0,
       unitPrice: 1,
@@ -47,7 +47,7 @@ describe("purchaseInvoiceItemSchema", () => {
   });
 
   it("rejects a negative unit price", () => {
-    const parsed = purchaseInvoiceItemSchema.safeParse({
+    const parsed = billItemSchema.safeParse({
       productId: "p-1",
       quantity: 1,
       unitPrice: -5,
@@ -56,7 +56,7 @@ describe("purchaseInvoiceItemSchema", () => {
   });
 
   it("rejects a tax rate outside the allowed slabs", () => {
-    const parsed = purchaseInvoiceItemSchema.safeParse({
+    const parsed = billItemSchema.safeParse({
       productId: "p-1",
       quantity: 1,
       unitPrice: 1,
@@ -66,7 +66,7 @@ describe("purchaseInvoiceItemSchema", () => {
   });
 
   it("allows an omitted tax rate", () => {
-    const parsed = purchaseInvoiceItemSchema.safeParse({
+    const parsed = billItemSchema.safeParse({
       productId: "p-1",
       quantity: 1,
       unitPrice: 1,
@@ -75,18 +75,18 @@ describe("purchaseInvoiceItemSchema", () => {
   });
 });
 
-describe("createPurchaseInvoiceSchema", () => {
+describe("createBillSchema", () => {
   const valid = {
     supplierId: "sup-1",
     items: [{ productId: "p-1", quantity: 2, unitPrice: 50, taxRate: 5 }],
   };
 
   it("accepts a minimal valid invoice", () => {
-    expect(createPurchaseInvoiceSchema.safeParse(valid).success).toBe(true);
+    expect(createBillSchema.safeParse(valid).success).toBe(true);
   });
 
   it("accepts optional header fields", () => {
-    const parsed = createPurchaseInvoiceSchema.safeParse({
+    const parsed = createBillSchema.safeParse({
       ...valid,
       invoiceNumber: "PINV-9",
       supplierInvoiceNumber: "ABC-1",
@@ -99,7 +99,7 @@ describe("createPurchaseInvoiceSchema", () => {
   });
 
   it("requires a supplier", () => {
-    const parsed = createPurchaseInvoiceSchema.safeParse({
+    const parsed = createBillSchema.safeParse({
       ...valid,
       supplierId: "",
     });
@@ -107,14 +107,14 @@ describe("createPurchaseInvoiceSchema", () => {
   });
 
   it("requires at least one line item", () => {
-    const parsed = createPurchaseInvoiceSchema.safeParse({
+    const parsed = createBillSchema.safeParse({
       ...valid,
       items: [],
     });
     expect(parsed.success).toBe(false);
   });
 
-  it("updatePurchaseInvoiceSchema mirrors the create schema", () => {
-    expect(updatePurchaseInvoiceSchema).toBe(createPurchaseInvoiceSchema);
+  it("updateBillSchema mirrors the create schema", () => {
+    expect(updateBillSchema).toBe(createBillSchema);
   });
 });

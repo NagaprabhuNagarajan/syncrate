@@ -2,25 +2,25 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
-import { PurchaseInvoiceService } from "@/features/purchase/services/purchase-invoice.service";
+import { BillService } from "@/features/purchase/services/bill.service";
 import { ErrorState } from "@/components/shared/error-state";
-import { PurchaseInvoicesView } from "@/features/purchase/components/purchase-invoices-view";
-import type { PurchaseInvoiceStatus } from "@/features/purchase/types/purchase-invoice.types";
+import { BillsView } from "@/features/purchase/components/bills-view";
+import type { BillStatus } from "@/features/purchase/types/bill.types";
 
 export const metadata: Metadata = {
-  title: "Purchase invoices",
+  title: "Bills",
   description: "Record and post supplier bills against your business",
 };
 
-const PINV_STATUSES: readonly PurchaseInvoiceStatus[] = [
+const BILL_STATUSES: readonly BillStatus[] = [
   "draft",
   "posted",
   "cancelled",
 ];
 
-function parseStatus(value?: string): PurchaseInvoiceStatus | undefined {
-  if (value && PINV_STATUSES.includes(value as PurchaseInvoiceStatus)) {
-    return value as PurchaseInvoiceStatus;
+function parseStatus(value?: string): BillStatus | undefined {
+  if (value && BILL_STATUSES.includes(value as BillStatus)) {
+    return value as BillStatus;
   }
   return undefined;
 }
@@ -30,7 +30,7 @@ function parsePage(value?: string): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
-export default async function PurchaseInvoicesPage({
+export default async function BillsPage({
   searchParams,
 }: {
   readonly searchParams: Promise<{
@@ -73,7 +73,7 @@ export default async function PurchaseInvoicesPage({
       <div className="p-6 lg:p-8">
         <ErrorState
           title="Access denied"
-          message="You do not have permission to view purchase invoices for this organization."
+          message="You do not have permission to view bills for this organization."
         />
       </div>
     );
@@ -85,17 +85,17 @@ export default async function PurchaseInvoicesPage({
   const status = parseStatus(params.status);
   const page = parsePage(params.page);
 
-  const service = new PurchaseInvoiceService(supabase);
-  const result = await service.listPurchaseInvoices(activeOrg.id, {
-    search,
-    status,
-    page,
-  });
+  const service = new BillService(supabase);
+  const [result, stats] = await Promise.all([
+    service.listBills(activeOrg.id, { search, status, page }),
+    service.getBillStats(activeOrg.id),
+  ]);
 
   return (
-    <PurchaseInvoicesView
+    <BillsView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search, status }}
       canManage={canManage}
     />

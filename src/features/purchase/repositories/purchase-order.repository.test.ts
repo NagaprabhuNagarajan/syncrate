@@ -21,6 +21,7 @@ interface QueryResult {
 interface MockBuilder {
   select: Mock;
   eq: Mock;
+  neq: Mock;
   is: Mock;
   or: Mock;
   ilike: Mock;
@@ -56,6 +57,7 @@ function createMockClient(results: QueryResult[]): MockClient {
     } = {
       select: vi.fn(() => builder),
       eq: vi.fn(() => builder),
+      neq: vi.fn(() => builder),
       is: vi.fn(() => builder),
       or: vi.fn(() => builder),
       ilike: vi.fn(() => builder),
@@ -337,6 +339,51 @@ describe("PurchaseOrderRepository", () => {
         pageSize: 1000,
       });
       expect(builders[0].range).toHaveBeenCalledWith(0, 99);
+    });
+  });
+
+  describe("getStats", () => {
+    it("aggregates status counts and sums total_amount for non-cancelled orders", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: 3 }, // draft
+        { data: null, error: null, count: 2 }, // submitted (awaitingApproval)
+        { data: null, error: null, count: 4 }, // approved
+        { data: null, error: null, count: 1 }, // ordered
+        { data: null, error: null, count: 5 }, // partially_received
+        {
+          data: [{ total_amount: 100 }, { total_amount: 250.5 }],
+          error: null,
+        }, // value rows
+      ]);
+      const stats = await new PurchaseOrderRepository(client).getStats(
+        "org-1"
+      );
+      expect(stats).toEqual({
+        totalValue: 350.5,
+        draft: 3,
+        awaitingApproval: 2,
+        open: 10, // approved + ordered + partially_received
+      });
+    });
+
+    it("defaults counts to 0 and totalValue to 0 when data is missing", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: undefined },
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+        { data: null, error: null },
+      ]);
+      const stats = await new PurchaseOrderRepository(client).getStats(
+        "org-1"
+      );
+      expect(stats).toEqual({
+        totalValue: 0,
+        draft: 0,
+        awaitingApproval: 0,
+        open: 0,
+      });
     });
   });
 

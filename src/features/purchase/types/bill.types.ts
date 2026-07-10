@@ -1,25 +1,25 @@
 /**
- * Purchase Invoice domain types.
+ * Bill domain types.
  *
- * A purchase invoice is a supplier bill: a HEADER (commercial/document
+ * A bill is a supplier bill: a HEADER (commercial/document
  * metadata) plus many LINE ITEMS. Application-level types mirror the DB schema
- * but use camelCase. Posting a purchase invoice writes the supplier ledger.
+ * but use camelCase. Posting a bill writes the supplier ledger.
  */
 
-export type PurchaseInvoiceStatus = "draft" | "posted" | "cancelled";
+export type BillStatus = "draft" | "posted" | "cancelled";
 
 // ─────────────────────────────────────────────────────────────
 // Header
 // ─────────────────────────────────────────────────────────────
 
-export interface PurchaseInvoice {
+export interface Bill {
   readonly id: string;
   readonly organizationId: string;
   readonly invoiceNumber: string;
   readonly supplierInvoiceNumber: string | null;
   readonly purchaseOrderId: string | null;
   readonly supplierId: string;
-  readonly status: PurchaseInvoiceStatus;
+  readonly status: BillStatus;
   readonly invoiceDate: Date;
   readonly dueDate: Date | null;
   readonly subtotal: number;
@@ -38,13 +38,13 @@ export interface PurchaseInvoice {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Line item (purchase invoice items carry NO per-line discount)
+// Line item (bill items carry NO per-line discount)
 // ─────────────────────────────────────────────────────────────
 
-export interface PurchaseInvoiceItem {
+export interface BillItem {
   readonly id: string;
   readonly organizationId: string;
-  readonly purchaseInvoiceId: string;
+  readonly billId: string;
   readonly productId: string;
   readonly description: string | null;
   readonly quantity: number;
@@ -56,13 +56,13 @@ export interface PurchaseInvoiceItem {
   readonly createdBy: string | null;
 }
 
-/** Header + its line items — the canonical "full" purchase invoice shape. */
-export interface PurchaseInvoiceWithItems extends PurchaseInvoice {
-  readonly items: readonly PurchaseInvoiceItem[];
+/** Header + its line items — the canonical "full" bill shape. */
+export interface BillWithItems extends Bill {
+  readonly items: readonly BillItem[];
 }
 
 /** A list row enriched with the joined supplier name. */
-export interface PurchaseInvoiceListItem extends PurchaseInvoice {
+export interface BillListItem extends Bill {
   readonly supplierName: string | null;
 }
 
@@ -70,7 +70,7 @@ export interface PurchaseInvoiceListItem extends PurchaseInvoice {
 // Inputs / commands
 // ─────────────────────────────────────────────────────────────
 
-export interface CreatePurchaseInvoiceItemInput {
+export interface CreateBillItemInput {
   readonly productId: string;
   readonly description?: string;
   readonly quantity: number;
@@ -78,7 +78,7 @@ export interface CreatePurchaseInvoiceItemInput {
   readonly taxRate?: number;
 }
 
-export interface CreatePurchaseInvoiceInput {
+export interface CreateBillInput {
   readonly supplierId: string;
   readonly invoiceNumber?: string;
   readonly supplierInvoiceNumber?: string;
@@ -86,43 +86,53 @@ export interface CreatePurchaseInvoiceInput {
   readonly invoiceDate?: string;
   readonly dueDate?: string;
   readonly notes?: string;
-  readonly items: readonly CreatePurchaseInvoiceItemInput[];
+  readonly items: readonly CreateBillItemInput[];
 }
 
 /** Update replaces the whole document (header + items); same shape as create. */
-export type UpdatePurchaseInvoiceInput = CreatePurchaseInvoiceInput;
+export type UpdateBillInput = CreateBillInput;
 
 // ─────────────────────────────────────────────────────────────
 // Listing / search
 // ─────────────────────────────────────────────────────────────
 
-export type PurchaseInvoiceSortField =
+export type BillSortField =
   | "invoice_number"
   | "invoice_date"
   | "created_at"
   | "total_amount";
 
-export interface PurchaseInvoiceListParams {
+export interface BillListParams {
   readonly search?: string;
-  readonly status?: PurchaseInvoiceStatus;
+  readonly status?: BillStatus;
   readonly page?: number;
   readonly pageSize?: number;
-  readonly sortBy?: PurchaseInvoiceSortField;
+  readonly sortBy?: BillSortField;
   readonly sortDir?: "asc" | "desc";
 }
 
-export interface PurchaseInvoiceListResult {
-  readonly items: readonly PurchaseInvoiceListItem[];
+export interface BillListResult {
+  readonly items: readonly BillListItem[];
   readonly total: number;
   readonly page: number;
   readonly pageSize: number;
+}
+
+/** Aggregate counts/sums for the list header stat tiles. */
+export interface BillStats {
+  /** Sum of total_amount across all non-cancelled invoices. */
+  readonly totalValue: number;
+  readonly draft: number;
+  readonly posted: number;
+  /** Posted invoices past their due date with an outstanding balance. */
+  readonly overdue: number;
 }
 
 // ─────────────────────────────────────────────────────────────
 // Result types
 // ─────────────────────────────────────────────────────────────
 
-export type PurchaseInvoiceErrorCode =
+export type BillErrorCode =
   | "not_found"
   | "forbidden"
   | "validation"
@@ -130,11 +140,11 @@ export type PurchaseInvoiceErrorCode =
   | "conflict"
   | "unknown";
 
-export interface PurchaseInvoiceError {
-  readonly code: PurchaseInvoiceErrorCode;
+export interface BillError {
+  readonly code: BillErrorCode;
   readonly message: string;
 }
 
-export type PurchaseInvoiceActionResult<T = void> =
+export type BillActionResult<T = void> =
   | { readonly success: true; readonly data: T }
-  | { readonly success: false; readonly error: PurchaseInvoiceError };
+  | { readonly success: false; readonly error: BillError };

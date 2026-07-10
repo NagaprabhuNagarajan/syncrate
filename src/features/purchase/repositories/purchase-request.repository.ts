@@ -5,6 +5,7 @@ import type {
   PurchaseRequestItem,
   PurchaseRequestListParams,
   PurchaseRequestListResult,
+  PurchaseRequestStats,
   PurchaseRequestStatus,
   PurchaseRequestWithItems,
 } from "@/features/purchase/types/purchase-request.types";
@@ -190,6 +191,34 @@ export class PurchaseRequestRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Aggregate status counts for the list header tiles. Requisitions have no
+   * authoritative monetary total, so all four tiles are head-only counts run
+   * in parallel — no row data is fetched.
+   */
+  async getStats(organizationId: string): Promise<PurchaseRequestStats> {
+    const base = () =>
+      this.supabase
+        .from("purchase_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null);
+
+    const [draft, awaitingApproval, approved, converted] = await Promise.all([
+      base().eq("status", "draft"),
+      base().eq("status", "submitted"),
+      base().eq("status", "approved"),
+      base().eq("status", "converted"),
+    ]);
+
+    return {
+      draft: draft.count ?? 0,
+      awaitingApproval: awaitingApproval.count ?? 0,
+      approved: approved.count ?? 0,
+      converted: converted.count ?? 0,
     };
   }
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
-import { fetchPurchaseInvoiceOptions } from "./purchase-invoice-options";
+import { fetchBillOptions } from "./bill-options";
 
 interface BuilderResult {
   data: Array<Record<string, unknown>> | null;
@@ -26,7 +26,7 @@ function createClient(byTable: Record<string, BuilderResult>): {
   };
 }
 
-describe("fetchPurchaseInvoiceOptions", () => {
+describe("fetchBillOptions", () => {
   it("maps suppliers and products (coercing numeric columns) into options", async () => {
     const { client, fromMock } = createClient({
       suppliers: { data: [{ id: "s1", name: "Supplier One" }] },
@@ -42,7 +42,7 @@ describe("fetchPurchaseInvoiceOptions", () => {
       },
     });
 
-    const options = await fetchPurchaseInvoiceOptions(client, "org-1");
+    const options = await fetchBillOptions(client, "org-1");
 
     expect(options.suppliers).toEqual([{ id: "s1", name: "Supplier One" }]);
     expect(options.products).toEqual([
@@ -58,7 +58,7 @@ describe("fetchPurchaseInvoiceOptions", () => {
       products: { data: [] },
     });
 
-    const options = await fetchPurchaseInvoiceOptions(client, "org-1");
+    const options = await fetchBillOptions(client, "org-1");
 
     expect(options).toEqual({ suppliers: [], products: [] });
   });
@@ -69,7 +69,7 @@ describe("fetchPurchaseInvoiceOptions", () => {
       products: { data: null },
     });
 
-    const options = await fetchPurchaseInvoiceOptions(client, "org-1");
+    const options = await fetchBillOptions(client, "org-1");
 
     expect(options).toEqual({ suppliers: [], products: [] });
   });

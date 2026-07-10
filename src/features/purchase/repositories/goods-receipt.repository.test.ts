@@ -24,6 +24,7 @@ interface MockBuilder {
   is: Mock;
   ilike: Mock;
   in: Mock;
+  gte: Mock;
   order: Mock;
   range: Mock;
   single: Mock;
@@ -58,6 +59,7 @@ function createMockClient(
       is: vi.fn(() => builder),
       ilike: vi.fn(() => builder),
       in: vi.fn(() => builder),
+      gte: vi.fn(() => builder),
       order: vi.fn(() => builder),
       range: vi.fn(() => builder),
       single: vi.fn(() => Promise.resolve(result)),
@@ -327,6 +329,35 @@ describe("GoodsReceiptRepository", () => {
       });
       expect(result.data).toBeNull();
       expect(result.error).toEqual({ message: "invalid_status" });
+    });
+  });
+
+  describe("getStats", () => {
+    it("returns the counts from each head-count query", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: 12 },
+        { data: null, error: null, count: 3 },
+        { data: null, error: null, count: 9 },
+        { data: null, error: null, count: 2 },
+      ]);
+      const stats = await new GoodsReceiptRepository(client).getStats("org-1");
+      expect(stats).toEqual({
+        total: 12,
+        thisMonth: 3,
+        completed: 9,
+        draft: 2,
+      });
+    });
+
+    it("defaults counts to 0 when the query returns a null/undefined count", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: undefined },
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: undefined },
+      ]);
+      const stats = await new GoodsReceiptRepository(client).getStats("org-1");
+      expect(stats).toEqual({ total: 0, thisMonth: 0, completed: 0, draft: 0 });
     });
   });
 });

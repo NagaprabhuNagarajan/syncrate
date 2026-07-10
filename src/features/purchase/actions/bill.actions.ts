@@ -2,28 +2,28 @@
 
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { PurchaseInvoiceService } from "@/features/purchase/services/purchase-invoice.service";
+import { BillService } from "@/features/purchase/services/bill.service";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { AuditService } from "@/features/audit/services/audit.service";
 import {
-  createPurchaseInvoiceSchema,
-  updatePurchaseInvoiceSchema,
-} from "@/features/purchase/schemas/purchase-invoice.schemas";
+  createBillSchema,
+  updateBillSchema,
+} from "@/features/purchase/schemas/bill.schemas";
 import type {
-  PurchaseInvoice,
-  PurchaseInvoiceActionResult,
-  PurchaseInvoiceWithItems,
-} from "@/features/purchase/types/purchase-invoice.types";
+  Bill,
+  BillActionResult,
+  BillWithItems,
+} from "@/features/purchase/types/bill.types";
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────
 
-function forbidden(message: string): PurchaseInvoiceActionResult<never> {
+function forbidden(message: string): BillActionResult<never> {
   return { success: false, error: { code: "forbidden", message } };
 }
 
-function invalid(message: string): PurchaseInvoiceActionResult<never> {
+function invalid(message: string): BillActionResult<never> {
   return { success: false, error: { code: "validation", message } };
 }
 
@@ -50,7 +50,7 @@ function parseVersion(value: FormDataEntryValue | null): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
-/** Builds the schema-shaped candidate object from a purchase invoice FormData. */
+/** Builds the schema-shaped candidate object from a bill FormData. */
 function readFormCandidate(formData: FormData): Record<string, unknown> {
   return {
     supplierId: formData.get("supplierId") || undefined,
@@ -74,7 +74,7 @@ async function authorize(
   permission: string
 ): Promise<
   | { ok: true; userId: string }
-  | { ok: false; result: PurchaseInvoiceActionResult<never> }
+  | { ok: false; result: BillActionResult<never> }
 > {
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) {
@@ -106,15 +106,15 @@ async function authorize(
 // Create
 // ─────────────────────────────────────────────────────────────
 
-export async function createPurchaseInvoiceAction(
+export async function createBillAction(
   organizationId: string,
   formData: FormData
-): Promise<PurchaseInvoiceActionResult<PurchaseInvoiceWithItems>> {
+): Promise<BillActionResult<BillWithItems>> {
   if (parseItems(formData.get("items")) === null) {
     return invalid("Line items are missing or malformed");
   }
 
-  const parsed = createPurchaseInvoiceSchema.safeParse(
+  const parsed = createBillSchema.safeParse(
     readFormCandidate(formData)
   );
   if (!parsed.success) {
@@ -127,22 +127,22 @@ export async function createPurchaseInvoiceAction(
     return auth.result;
   }
 
-  const service = new PurchaseInvoiceService(supabase);
-  const result = await service.createPurchaseInvoice(
+  const service = new BillService(supabase);
+  const result = await service.createBill(
     parsed.data,
     organizationId,
     auth.userId
   );
 
   if (result.success) {
-    revalidatePath("/purchases/invoices");
+    revalidatePath("/purchases/bills");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
-      action: "purchase_invoice.create",
-      entityType: "purchase_invoice",
+      action: "bill.create",
+      entityType: "bill",
       entityId: result.data.id,
-      summary: `Created purchase invoice ${result.data.invoiceNumber}`,
+      summary: `Created bill ${result.data.invoiceNumber}`,
     });
   }
   return result;
@@ -152,16 +152,16 @@ export async function createPurchaseInvoiceAction(
 // Update (draft only)
 // ─────────────────────────────────────────────────────────────
 
-export async function updatePurchaseInvoiceAction(
+export async function updateBillAction(
   organizationId: string,
-  purchaseInvoiceId: string,
+  billId: string,
   formData: FormData
-): Promise<PurchaseInvoiceActionResult<PurchaseInvoiceWithItems>> {
+): Promise<BillActionResult<BillWithItems>> {
   if (parseItems(formData.get("items")) === null) {
     return invalid("Line items are missing or malformed");
   }
 
-  const parsed = updatePurchaseInvoiceSchema.safeParse(
+  const parsed = updateBillSchema.safeParse(
     readFormCandidate(formData)
   );
   if (!parsed.success) {
@@ -174,9 +174,9 @@ export async function updatePurchaseInvoiceAction(
     return auth.result;
   }
 
-  const service = new PurchaseInvoiceService(supabase);
-  const result = await service.updatePurchaseInvoice(
-    purchaseInvoiceId,
+  const service = new BillService(supabase);
+  const result = await service.updateBill(
+    billId,
     parsed.data,
     organizationId,
     auth.userId,
@@ -184,15 +184,15 @@ export async function updatePurchaseInvoiceAction(
   );
 
   if (result.success) {
-    revalidatePath("/purchases/invoices");
-    revalidatePath(`/purchases/invoices/${purchaseInvoiceId}`);
+    revalidatePath("/purchases/bills");
+    revalidatePath(`/purchases/bills/${billId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
-      action: "purchase_invoice.update",
-      entityType: "purchase_invoice",
-      entityId: purchaseInvoiceId,
-      summary: `Updated purchase invoice ${result.data.invoiceNumber}`,
+      action: "bill.update",
+      entityType: "bill",
+      entityId: billId,
+      summary: `Updated bill ${result.data.invoiceNumber}`,
     });
   }
   return result;
@@ -204,62 +204,62 @@ export async function updatePurchaseInvoiceAction(
 
 async function runTransition(
   organizationId: string,
-  purchaseInvoiceId: string,
+  billId: string,
   permission: string,
   auditAction: string,
   run: (
-    service: PurchaseInvoiceService,
+    service: BillService,
     userId: string
-  ) => Promise<PurchaseInvoiceActionResult<PurchaseInvoice>>
-): Promise<PurchaseInvoiceActionResult<PurchaseInvoice>> {
+  ) => Promise<BillActionResult<Bill>>
+): Promise<BillActionResult<Bill>> {
   const supabase = await createServerSupabaseClient();
   const auth = await authorize(supabase, organizationId, permission);
   if (!auth.ok) {
     return auth.result;
   }
 
-  const service = new PurchaseInvoiceService(supabase);
+  const service = new BillService(supabase);
   const result = await run(service, auth.userId);
 
   if (result.success) {
-    revalidatePath("/purchases/invoices");
-    revalidatePath(`/purchases/invoices/${purchaseInvoiceId}`);
+    revalidatePath("/purchases/bills");
+    revalidatePath(`/purchases/bills/${billId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
       action: auditAction,
-      entityType: "purchase_invoice",
-      entityId: purchaseInvoiceId,
+      entityType: "bill",
+      entityId: billId,
       summary: `${auditAction} ${result.data.invoiceNumber}`,
     });
   }
   return result;
 }
 
-export async function postPurchaseInvoiceAction(
+export async function postBillAction(
   organizationId: string,
-  purchaseInvoiceId: string
-): Promise<PurchaseInvoiceActionResult<PurchaseInvoice>> {
+  billId: string
+): Promise<BillActionResult<Bill>> {
   return runTransition(
     organizationId,
-    purchaseInvoiceId,
+    billId,
     "purchase.create",
-    "purchase_invoice.post",
+    "bill.post",
     (service, userId) =>
-      service.postPurchaseInvoice(purchaseInvoiceId, organizationId, userId)
+      service.postBill(billId, organizationId, userId)
   );
 }
 
-export async function cancelPurchaseInvoiceAction(
+export async function cancelBillAction(
   organizationId: string,
-  purchaseInvoiceId: string
-): Promise<PurchaseInvoiceActionResult<PurchaseInvoice>> {
+  billId: string
+): Promise<BillActionResult<Bill>> {
   return runTransition(
     organizationId,
-    purchaseInvoiceId,
+    billId,
     "purchase.cancel",
-    "purchase_invoice.cancel",
+    "bill.cancel",
     (service, userId) =>
-      service.cancelPurchaseInvoice(purchaseInvoiceId, organizationId, userId)
+      service.cancelBill(billId, organizationId, userId)
   );
 }

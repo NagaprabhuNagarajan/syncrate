@@ -137,6 +137,15 @@ export interface PurchaseOrderListResult {
   readonly pageSize: number;
 }
 
+/** Aggregate counts/sums for the list header stat tiles. */
+export interface PurchaseOrderStats {
+  /** Sum of total_amount across all non-cancelled orders. */
+  readonly totalValue: number;
+  readonly draft: number;
+  readonly awaitingApproval: number;
+  readonly open: number;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Result types
 // ─────────────────────────────────────────────────────────────

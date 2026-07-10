@@ -3,18 +3,24 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { ErrorState } from "@/components/shared/error-state";
-import { PurchaseInvoiceForm } from "@/features/purchase/components/purchase-invoice-form";
-import { fetchPurchaseInvoiceOptions } from "@/features/purchase/server/purchase-invoice-options";
+import { BillForm } from "@/features/purchase/components/bill-form";
+import type { BillPrefill } from "@/features/purchase/components/bill-form";
+import { fetchBillOptions } from "@/features/purchase/server/bill-options";
+import { PurchaseOrderService } from "@/features/purchase/services/purchase-order.service";
 
 export const metadata: Metadata = {
-  title: "New purchase invoice",
+  title: "New bill",
   description: "Record a supplier bill against your business",
 };
 
-export default async function NewPurchaseInvoicePage({
+export default async function NewBillPage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ org?: string; fromOcr?: string }>;
+  readonly searchParams: Promise<{
+    org?: string;
+    fromOcr?: string;
+    fromPurchaseOrder?: string;
+  }>;
 }) {
   const query = await searchParams;
   const supabase = await createServerSupabaseClient();
@@ -49,22 +55,48 @@ export default async function NewPurchaseInvoicePage({
       <div className="p-6 lg:p-8">
         <ErrorState
           title="Access denied"
-          message="You do not have permission to create purchase invoices for this organization."
+          message="You do not have permission to create bills for this organization."
         />
       </div>
     );
   }
 
-  const options = await fetchPurchaseInvoiceOptions(supabase, activeOrg.id);
+  const options = await fetchBillOptions(supabase, activeOrg.id);
+
+  // Prefill from a purchase order when arriving via "Create bill" on a PO.
+  let prefill: BillPrefill | undefined;
+  if (query.fromPurchaseOrder) {
+    const poResult = await new PurchaseOrderService(supabase).getPurchaseOrder(
+      query.fromPurchaseOrder
+    );
+    if (
+      poResult.success &&
+      poResult.data.organizationId === activeOrg.id
+    ) {
+      const po = poResult.data;
+      prefill = {
+        supplierId: po.supplierId,
+        purchaseOrderId: po.id,
+        items: po.items.map((item) => ({
+          productId: item.productId,
+          description: item.description ?? "",
+          quantity: String(item.quantity),
+          unitPrice: String(item.unitPrice),
+          taxRate: String(item.taxRate),
+        })),
+      };
+    }
+  }
 
   return (
     <div className="p-6 lg:p-8">
       <div className="mx-auto w-full max-w-5xl">
-        <PurchaseInvoiceForm
+        <BillForm
           organizationId={activeOrg.id}
           suppliers={options.suppliers}
           products={options.products}
           fromOcr={query.fromOcr === "1"}
+          prefill={prefill}
         />
       </div>
     </div>

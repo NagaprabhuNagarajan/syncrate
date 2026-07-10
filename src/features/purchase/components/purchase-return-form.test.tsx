@@ -85,6 +85,38 @@ beforeEach(() => {
 });
 
 describe("PurchaseReturnForm", () => {
+  it("prefills supplier, branch and line items from a purchase order", () => {
+    const { container } = render(
+      <PurchaseReturnForm
+        organizationId="org-1"
+        suppliers={suppliers}
+        branches={branches}
+        products={products}
+        prefill={{
+          supplierId: "sup-1",
+          branchId: "wh-1",
+          items: [
+            {
+              productId: "p-1",
+              quantity: "4",
+              unitPrice: "90",
+              taxRate: "18",
+            },
+          ],
+        }}
+      />
+    );
+    expect(
+      (container.querySelector("#supplierId") as HTMLSelectElement).value
+    ).toBe("sup-1");
+    expect(
+      (container.querySelector("#branchId") as HTMLSelectElement).value
+    ).toBe("wh-1");
+    expect(screen.getByLabelText("Product for line 1")).toHaveValue("p-1");
+    expect(screen.getByLabelText("Quantity for line 1")).toHaveValue(4);
+    expect(screen.getByLabelText("Unit price for line 1")).toHaveValue(90);
+  });
+
   it("starts with a single line item row", () => {
     renderForm();
     expect(screen.getByLabelText("Product for line 1")).toBeInTheDocument();

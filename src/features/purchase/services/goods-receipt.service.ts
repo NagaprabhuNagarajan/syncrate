@@ -8,7 +8,9 @@ import type {
   GoodsReceiptError,
   GoodsReceiptErrorCode,
   GoodsReceiptListParams,
+  GoodsReceiptListItem,
   GoodsReceiptListResult,
+  GoodsReceiptStats,
   GoodsReceiptWithItems,
 } from "@/features/purchase/types/goods-receipt.types";
 import type {
@@ -98,6 +100,13 @@ export class GoodsReceiptService {
     return this.repo.list(organizationId, params);
   }
 
+  /** Goods receipts recorded against a purchase order (for the PO detail page). */
+  async listReceiptsForPurchaseOrder(
+    purchaseOrderId: string
+  ): Promise<GoodsReceiptListItem[]> {
+    return this.repo.findByPurchaseOrder(purchaseOrderId);
+  }
+
   async getGoodsReceipt(
     id: string
   ): Promise<GoodsReceiptActionResult<GoodsReceiptWithItems>> {
@@ -106,6 +115,10 @@ export class GoodsReceiptService {
       return fail("not_found", "Goods receipt not found");
     }
     return ok(receipt);
+  }
+
+  async getGoodsReceiptStats(organizationId: string): Promise<GoodsReceiptStats> {
+    return this.repo.getStats(organizationId);
   }
 
   // ── Create ─────────────────────────────────────────────────

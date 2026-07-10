@@ -16,10 +16,12 @@ import { GoodsReceiptService } from "./goods-receipt.service";
 const { mockGrnRepo, mockPoRepo } = vi.hoisted(() => ({
   mockGrnRepo: {
     list: vi.fn(),
+    findByPurchaseOrder: vi.fn(),
     findById: vi.fn(),
     findItems: vi.fn(),
     findWithItems: vi.fn(),
     receiveGoodsRpc: vi.fn(),
+    getStats: vi.fn(),
   },
   mockPoRepo: {
     findWithItems: vi.fn(),
@@ -414,5 +416,21 @@ describe("GoodsReceiptService reads", () => {
     const result = await service.listGoodsReceipts("org-1", { search: "g" });
     expect(result).toBe(listResult);
     expect(mockGrnRepo.list).toHaveBeenCalledWith("org-1", { search: "g" });
+  });
+
+  it("getGoodsReceiptStats delegates to the repository", async () => {
+    const stats = { total: 12, thisMonth: 3, completed: 9, draft: 2 };
+    mockGrnRepo.getStats.mockResolvedValue(stats);
+    const result = await service.getGoodsReceiptStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockGrnRepo.getStats).toHaveBeenCalledWith("org-1");
+  });
+
+  it("listReceiptsForPurchaseOrder delegates to the repository", async () => {
+    const receipts = [{ id: "grn-1" }];
+    mockGrnRepo.findByPurchaseOrder.mockResolvedValue(receipts);
+    const result = await service.listReceiptsForPurchaseOrder("po-1");
+    expect(result).toBe(receipts);
+    expect(mockGrnRepo.findByPurchaseOrder).toHaveBeenCalledWith("po-1");
   });
 });

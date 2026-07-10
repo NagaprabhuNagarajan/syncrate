@@ -1,31 +1,33 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type { Database } from "@/types/database.types";
-import { PurchaseInvoiceRepository } from "@/features/purchase/repositories/purchase-invoice.repository";
+import { BillRepository } from "@/features/purchase/repositories/bill.repository";
 import type {
-  CreatePurchaseInvoiceInput,
-  CreatePurchaseInvoiceItemInput,
-  PurchaseInvoice,
-  PurchaseInvoiceActionResult,
-  PurchaseInvoiceError,
-  PurchaseInvoiceErrorCode,
-  PurchaseInvoiceListParams,
-  PurchaseInvoiceListResult,
-  PurchaseInvoiceWithItems,
-  UpdatePurchaseInvoiceInput,
-} from "@/features/purchase/types/purchase-invoice.types";
+  CreateBillInput,
+  CreateBillItemInput,
+  Bill,
+  BillActionResult,
+  BillError,
+  BillErrorCode,
+  BillListItem,
+  BillListParams,
+  BillListResult,
+  BillStats,
+  BillWithItems,
+  UpdateBillInput,
+} from "@/features/purchase/types/bill.types";
 
-type DbPurchaseInvoiceItemInsert =
+type DbBillItemInsert =
   Database["public"]["Tables"]["purchase_invoice_items"]["Insert"];
 
-function ok<T>(data: T): PurchaseInvoiceActionResult<T> {
+function ok<T>(data: T): BillActionResult<T> {
   return { success: true, data };
 }
 
 function fail(
-  code: PurchaseInvoiceErrorCode,
+  code: BillErrorCode,
   message: string
-): PurchaseInvoiceActionResult<never> {
-  const error: PurchaseInvoiceError = { code, message };
+): BillActionResult<never> {
+  const error: BillError = { code, message };
   return { success: false, error };
 }
 
@@ -47,7 +49,7 @@ function round2(value: number): number {
  * Maps a raw `post_purchase_invoice` RPC error message to a domain error code.
  * The Postgres function raises messages that CONTAIN a stable token.
  */
-function mapPostError(message: string): PurchaseInvoiceErrorCode {
+function mapPostError(message: string): BillErrorCode {
   const lower = message.toLowerCase();
   if (lower.includes("not_found")) {
     return "not_found";
@@ -83,7 +85,7 @@ interface ComputedTotals {
  *   tax      = net * taxRate/100
  *   lineTotal= net + tax
  */
-function computeItem(input: CreatePurchaseInvoiceItemInput): ComputedItem {
+function computeItem(input: CreateBillItemInput): ComputedItem {
   const quantity = input.quantity;
   const unitPrice = input.unitPrice;
   const taxRate = input.taxRate ?? 0;
@@ -108,39 +110,52 @@ function computeTotals(items: readonly ComputedItem[]): ComputedTotals {
   return { subtotal, taxAmount, totalAmount };
 }
 
-export class PurchaseInvoiceService {
-  private readonly repo: PurchaseInvoiceRepository;
+export class BillService {
+  private readonly repo: BillRepository;
 
   constructor(supabase: AppSupabaseClient) {
-    this.repo = new PurchaseInvoiceRepository(supabase);
+    this.repo = new BillRepository(supabase);
   }
 
   // ── Reads ──────────────────────────────────────────────────
 
-  async listPurchaseInvoices(
+  async listBills(
     organizationId: string,
-    params?: PurchaseInvoiceListParams
-  ): Promise<PurchaseInvoiceListResult> {
+    params?: BillListParams
+  ): Promise<BillListResult> {
     return this.repo.list(organizationId, params);
   }
 
-  async getPurchaseInvoice(
+  /** Bills linked to a purchase order (for the PO detail page). */
+  async listBillsForPurchaseOrder(
+    purchaseOrderId: string
+  ): Promise<BillListItem[]> {
+    return this.repo.findByPurchaseOrder(purchaseOrderId);
+  }
+
+  async getBill(
     id: string
-  ): Promise<PurchaseInvoiceActionResult<PurchaseInvoiceWithItems>> {
+  ): Promise<BillActionResult<BillWithItems>> {
     const invoice = await this.repo.findWithItems(id);
     if (!invoice) {
-      return fail("not_found", "Purchase invoice not found");
+      return fail("not_found", "Bill not found");
     }
     return ok(invoice);
   }
 
+  async getBillStats(
+    organizationId: string
+  ): Promise<BillStats> {
+    return this.repo.getStats(organizationId);
+  }
+
   // ── Create ─────────────────────────────────────────────────
 
-  async createPurchaseInvoice(
-    input: CreatePurchaseInvoiceInput,
+  async createBill(
+    input: CreateBillInput,
     organizationId: string,
     userId: string
-  ): Promise<PurchaseInvoiceActionResult<PurchaseInvoiceWithItems>> {
+  ): Promise<BillActionResult<BillWithItems>> {
     const provided = nz(input.invoiceNumber);
     const invoiceNumber =
       provided?.toUpperCase() ?? (await this.nextInvoiceNumber(organizationId));
@@ -169,7 +184,7 @@ export class PurchaseInvoiceService {
     if (!header) {
       return fail(
         "unknown",
-        "Failed to create purchase invoice. Please try again."
+        "Failed to create bill. Please try again."
       );
     }
 
@@ -189,21 +204,21 @@ export class PurchaseInvoiceService {
 
   // ── Update (draft only) ────────────────────────────────────
 
-  async updatePurchaseInvoice(
-    purchaseInvoiceId: string,
-    input: UpdatePurchaseInvoiceInput,
+  async updateBill(
+    billId: string,
+    input: UpdateBillInput,
     organizationId: string,
     userId: string,
     expectedVersion: number
-  ): Promise<PurchaseInvoiceActionResult<PurchaseInvoiceWithItems>> {
-    const existing = await this.repo.findById(purchaseInvoiceId);
+  ): Promise<BillActionResult<BillWithItems>> {
+    const existing = await this.repo.findById(billId);
     if (!existing || existing.organizationId !== organizationId) {
-      return fail("not_found", "Purchase invoice not found");
+      return fail("not_found", "Bill not found");
     }
     if (existing.status !== "draft") {
       return fail(
         "invalid_status",
-        "Only draft purchase invoices can be edited. Posted invoices are immutable."
+        "Only draft bills can be edited. Posted invoices are immutable."
       );
     }
 
@@ -212,7 +227,7 @@ export class PurchaseInvoiceService {
     const provided = nz(input.invoiceNumber);
 
     const header = await this.repo.updateHeader(
-      purchaseInvoiceId,
+      billId,
       {
         invoice_number: provided?.toUpperCase() ?? existing.invoiceNumber,
         supplier_invoice_number: nz(input.supplierInvoiceNumber),
@@ -236,17 +251,17 @@ export class PurchaseInvoiceService {
       // optimistic lock failed: someone edited it since this form loaded.
       return fail(
         "conflict",
-        "This purchase invoice was changed by someone else. Reload and try again."
+        "This bill was changed by someone else. Reload and try again."
       );
     }
 
     const replaced = await this.repo.replaceItems(
-      purchaseInvoiceId,
+      billId,
       this.buildItemRows(
         input.items,
         computed,
         organizationId,
-        purchaseInvoiceId,
+        billId,
         userId
       )
     );
@@ -255,7 +270,7 @@ export class PurchaseInvoiceService {
       return fail("unknown", "Failed to update line items. Please try again.");
     }
 
-    const full = await this.repo.findWithItems(purchaseInvoiceId);
+    const full = await this.repo.findWithItems(billId);
     return ok(full ?? { ...header, items: [] });
   }
 
@@ -264,56 +279,56 @@ export class PurchaseInvoiceService {
   /**
    * Posts a draft invoice atomically. The `post_purchase_invoice` Postgres
    * function stamps the invoice posted AND appends the supplier-ledger credit
-   * (a purchase invoice INCREASES the payable) in a single transaction, so this
+   * (a bill INCREASES the payable) in a single transaction, so this
    * service only delegates to the RPC, maps any raised error and re-fetches.
    */
-  async postPurchaseInvoice(
-    purchaseInvoiceId: string,
+  async postBill(
+    billId: string,
     _organizationId: string,
     _userId: string
-  ): Promise<PurchaseInvoiceActionResult<PurchaseInvoice>> {
-    const { error } = await this.repo.postInvoiceRpc(purchaseInvoiceId);
+  ): Promise<BillActionResult<Bill>> {
+    const { error } = await this.repo.postInvoiceRpc(billId);
     if (error) {
       return fail(
         mapPostError(error.message),
-        "Failed to post purchase invoice."
+        "Failed to post bill."
       );
     }
 
-    const posted = await this.repo.findById(purchaseInvoiceId);
+    const posted = await this.repo.findById(billId);
     if (!posted) {
-      return fail("not_found", "Purchase invoice not found");
+      return fail("not_found", "Bill not found");
     }
     return ok(posted);
   }
 
   // ── Cancel (draft only; posted invoices are immutable) ─────
 
-  async cancelPurchaseInvoice(
-    purchaseInvoiceId: string,
+  async cancelBill(
+    billId: string,
     organizationId: string,
     userId: string
-  ): Promise<PurchaseInvoiceActionResult<PurchaseInvoice>> {
-    const existing = await this.repo.findById(purchaseInvoiceId);
+  ): Promise<BillActionResult<Bill>> {
+    const existing = await this.repo.findById(billId);
     if (!existing || existing.organizationId !== organizationId) {
-      return fail("not_found", "Purchase invoice not found");
+      return fail("not_found", "Bill not found");
     }
     if (existing.status !== "draft") {
       return fail(
         "invalid_status",
-        "Only draft purchase invoices can be cancelled. Posted invoices are immutable."
+        "Only draft bills can be cancelled. Posted invoices are immutable."
       );
     }
 
     const cancelled = await this.repo.updateStatus(
-      purchaseInvoiceId,
+      billId,
       "cancelled",
       userId
     );
     if (!cancelled) {
       return fail(
         "unknown",
-        "Failed to cancel purchase invoice. Please try again."
+        "Failed to cancel bill. Please try again."
       );
     }
     return ok(cancelled);
@@ -322,17 +337,17 @@ export class PurchaseInvoiceService {
   // ── Helpers ────────────────────────────────────────────────
 
   private buildItemRows(
-    inputs: readonly CreatePurchaseInvoiceItemInput[],
+    inputs: readonly CreateBillItemInput[],
     computed: readonly ComputedItem[],
     organizationId: string,
-    purchaseInvoiceId: string,
+    billId: string,
     userId: string
-  ): DbPurchaseInvoiceItemInsert[] {
+  ): DbBillItemInsert[] {
     return inputs.map((input, index) => {
       const line = computed[index];
       return {
         organization_id: organizationId,
-        purchase_invoice_id: purchaseInvoiceId,
+        purchase_invoice_id: billId,
         product_id: input.productId,
         description: nz(input.description),
         quantity: line.quantity,

@@ -126,6 +126,18 @@ export interface PurchaseReturnListResult {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Stats (list header tiles)
+// ─────────────────────────────────────────────────────────────
+
+export interface PurchaseReturnStats {
+  /** Sum of total_amount across all non-cancelled returns. */
+  readonly totalValue: number;
+  readonly draft: number;
+  readonly completed: number;
+  readonly cancelled: number;
+}
+
+// ─────────────────────────────────────────────────────────────
 // Result types
 // ─────────────────────────────────────────────────────────────
 

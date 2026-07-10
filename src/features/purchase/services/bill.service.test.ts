@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type {
-  CreatePurchaseInvoiceInput,
-  PurchaseInvoice,
-  PurchaseInvoiceWithItems,
-} from "@/features/purchase/types/purchase-invoice.types";
-import { PurchaseInvoiceService } from "./purchase-invoice.service";
+  CreateBillInput,
+  Bill,
+  BillWithItems,
+} from "@/features/purchase/types/bill.types";
+import { BillService } from "./bill.service";
 
 const { mockRepo } = vi.hoisted(() => ({
   mockRepo: {
     list: vi.fn(),
+    getStats: vi.fn(),
+    findByPurchaseOrder: vi.fn(),
     findById: vi.fn(),
     findByNumber: vi.fn(),
     findItems: vi.fn(),
@@ -24,13 +26,13 @@ const { mockRepo } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/features/purchase/repositories/purchase-invoice.repository", () => ({
-  PurchaseInvoiceRepository: vi.fn(() => mockRepo),
+vi.mock("@/features/purchase/repositories/bill.repository", () => ({
+  BillRepository: vi.fn(() => mockRepo),
 }));
 
 function buildInvoice(
-  overrides: Partial<PurchaseInvoice> = {}
-): PurchaseInvoice {
+  overrides: Partial<Bill> = {}
+): Bill {
   return {
     id: "pinv-1",
     organizationId: "org-1",
@@ -56,11 +58,11 @@ function buildInvoice(
   };
 }
 
-function withItems(invoice: PurchaseInvoice): PurchaseInvoiceWithItems {
+function withItems(invoice: Bill): BillWithItems {
   return { ...invoice, items: [] };
 }
 
-const MULTI_ITEM_INPUT: CreatePurchaseInvoiceInput = {
+const MULTI_ITEM_INPUT: CreateBillInput = {
   supplierId: "sup-1",
   items: [
     { productId: "p-a", quantity: 10, unitPrice: 100, taxRate: 18 },
@@ -68,18 +70,18 @@ const MULTI_ITEM_INPUT: CreatePurchaseInvoiceInput = {
   ],
 };
 
-let service: PurchaseInvoiceService;
+let service: BillService;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  service = new PurchaseInvoiceService({} as unknown as AppSupabaseClient);
+  service = new BillService({} as unknown as AppSupabaseClient);
 });
 
 // ─────────────────────────────────────────────────────────────
-// createPurchaseInvoice — totals math + numbering
+// createBill — totals math + numbering
 // ─────────────────────────────────────────────────────────────
 
-describe("PurchaseInvoiceService.createPurchaseInvoice", () => {
+describe("BillService.createBill", () => {
   it("computes per-item and header totals (no per-line discount)", async () => {
     mockRepo.list.mockResolvedValue({ items: [], total: 2, page: 1, pageSize: 1 });
     mockRepo.createHeader.mockResolvedValue(buildInvoice({ id: "pinv-9" }));
@@ -88,7 +90,7 @@ describe("PurchaseInvoiceService.createPurchaseInvoice", () => {
       withItems(buildInvoice({ id: "pinv-9" }))
     );
 
-    const result = await service.createPurchaseInvoice(
+    const result = await service.createBill(
       MULTI_ITEM_INPUT,
       "org-1",
       "user-1"
@@ -123,7 +125,7 @@ describe("PurchaseInvoiceService.createPurchaseInvoice", () => {
     mockRepo.insertItems.mockResolvedValue(true);
     mockRepo.findWithItems.mockResolvedValue(withItems(buildInvoice()));
 
-    await service.createPurchaseInvoice(
+    await service.createBill(
       { ...MULTI_ITEM_INPUT, invoiceNumber: "  my-bill-1 " },
       "org-1",
       "user-1"
@@ -143,7 +145,7 @@ describe("PurchaseInvoiceService.createPurchaseInvoice", () => {
     mockRepo.insertItems.mockResolvedValue(true);
     mockRepo.findWithItems.mockResolvedValue(withItems(buildInvoice()));
 
-    await service.createPurchaseInvoice(
+    await service.createBill(
       { supplierId: "sup-1", items: [{ productId: "p", quantity: 3, unitPrice: 10 }] },
       "org-1",
       "user-1"
@@ -162,7 +164,7 @@ describe("PurchaseInvoiceService.createPurchaseInvoice", () => {
     mockRepo.list.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 1 });
     mockRepo.createHeader.mockResolvedValue(null);
 
-    const result = await service.createPurchaseInvoice(
+    const result = await service.createBill(
       MULTI_ITEM_INPUT,
       "org-1",
       "u"
@@ -179,7 +181,7 @@ describe("PurchaseInvoiceService.createPurchaseInvoice", () => {
     mockRepo.createHeader.mockResolvedValue(buildInvoice({ id: "pinv-9" }));
     mockRepo.insertItems.mockResolvedValue(false);
 
-    const result = await service.createPurchaseInvoice(
+    const result = await service.createBill(
       MULTI_ITEM_INPUT,
       "org-1",
       "u"
@@ -190,17 +192,17 @@ describe("PurchaseInvoiceService.createPurchaseInvoice", () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// updatePurchaseInvoice — draft only
+// updateBill — draft only
 // ─────────────────────────────────────────────────────────────
 
-describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
+describe("BillService.updateBill", () => {
   it("recomputes totals, forwards the expected version, and replaces items for a draft", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
     mockRepo.updateHeader.mockResolvedValue(buildInvoice());
     mockRepo.replaceItems.mockResolvedValue(true);
     mockRepo.findWithItems.mockResolvedValue(withItems(buildInvoice()));
 
-    const result = await service.updatePurchaseInvoice(
+    const result = await service.updateBill(
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
@@ -222,7 +224,7 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
 
   it("returns not_found when the invoice does not exist", async () => {
     mockRepo.findById.mockResolvedValue(null);
-    const result = await service.updatePurchaseInvoice(
+    const result = await service.updateBill(
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
@@ -236,7 +238,7 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
 
   it("returns not_found when the invoice belongs to another org", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ organizationId: "org-1" }));
-    const result = await service.updatePurchaseInvoice(
+    const result = await service.updateBill(
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-2",
@@ -250,7 +252,7 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
 
   it("rejects editing a posted invoice (immutable)", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "posted" }));
-    const result = await service.updatePurchaseInvoice(
+    const result = await service.updateBill(
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
@@ -266,7 +268,7 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
   it("returns conflict when the optimistic lock fails (no row updated)", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
     mockRepo.updateHeader.mockResolvedValue(null);
-    const result = await service.updatePurchaseInvoice(
+    const result = await service.updateBill(
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
@@ -284,7 +286,7 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
     mockRepo.updateHeader.mockResolvedValue(buildInvoice());
     mockRepo.replaceItems.mockResolvedValue(false);
-    const result = await service.updatePurchaseInvoice(
+    const result = await service.updateBill(
       "pinv-1",
       MULTI_ITEM_INPUT,
       "org-1",
@@ -298,17 +300,17 @@ describe("PurchaseInvoiceService.updatePurchaseInvoice", () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// postPurchaseInvoice — atomic via post_purchase_invoice RPC
+// postBill — atomic via post_purchase_invoice RPC
 // ─────────────────────────────────────────────────────────────
 
-describe("PurchaseInvoiceService.postPurchaseInvoice", () => {
+describe("BillService.postBill", () => {
   it("delegates to the post RPC and re-fetches the posted invoice on success", async () => {
     mockRepo.postInvoiceRpc.mockResolvedValue({ data: null, error: null });
     mockRepo.findById.mockResolvedValue(
       buildInvoice({ status: "posted", totalAmount: 1180 })
     );
 
-    const result = await service.postPurchaseInvoice("pinv-1", "org-1", "user-1");
+    const result = await service.postBill("pinv-1", "org-1", "user-1");
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -321,9 +323,9 @@ describe("PurchaseInvoiceService.postPurchaseInvoice", () => {
   it("maps a not_found RPC error to not_found", async () => {
     mockRepo.postInvoiceRpc.mockResolvedValue({
       data: null,
-      error: { message: "purchase invoice not_found" },
+      error: { message: "bill not_found" },
     });
-    const result = await service.postPurchaseInvoice("pinv-1", "org-1", "u");
+    const result = await service.postBill("pinv-1", "org-1", "u");
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
@@ -336,7 +338,7 @@ describe("PurchaseInvoiceService.postPurchaseInvoice", () => {
       data: null,
       error: { message: "invalid_status: not a draft" },
     });
-    const result = await service.postPurchaseInvoice("pinv-1", "org-1", "u");
+    const result = await service.postBill("pinv-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("invalid_status");
     }
@@ -347,7 +349,7 @@ describe("PurchaseInvoiceService.postPurchaseInvoice", () => {
       data: null,
       error: { message: "deadlock detected" },
     });
-    const result = await service.postPurchaseInvoice("pinv-1", "org-1", "u");
+    const result = await service.postBill("pinv-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("unknown");
     }
@@ -356,7 +358,7 @@ describe("PurchaseInvoiceService.postPurchaseInvoice", () => {
   it("returns not_found when the re-fetch comes back empty", async () => {
     mockRepo.postInvoiceRpc.mockResolvedValue({ data: null, error: null });
     mockRepo.findById.mockResolvedValue(null);
-    const result = await service.postPurchaseInvoice("pinv-1", "org-1", "u");
+    const result = await service.postBill("pinv-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
     }
@@ -364,14 +366,14 @@ describe("PurchaseInvoiceService.postPurchaseInvoice", () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// cancelPurchaseInvoice — draft only
+// cancelBill — draft only
 // ─────────────────────────────────────────────────────────────
 
-describe("PurchaseInvoiceService.cancelPurchaseInvoice", () => {
+describe("BillService.cancelBill", () => {
   it("cancels a draft invoice", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
     mockRepo.updateStatus.mockResolvedValue(buildInvoice({ status: "cancelled" }));
-    const result = await service.cancelPurchaseInvoice(
+    const result = await service.cancelBill(
       "pinv-1",
       "org-1",
       "user-1"
@@ -386,7 +388,7 @@ describe("PurchaseInvoiceService.cancelPurchaseInvoice", () => {
 
   it("rejects cancelling a posted invoice (immutable)", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "posted" }));
-    const result = await service.cancelPurchaseInvoice("pinv-1", "org-1", "u");
+    const result = await service.cancelBill("pinv-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("invalid_status");
     }
@@ -395,7 +397,7 @@ describe("PurchaseInvoiceService.cancelPurchaseInvoice", () => {
 
   it("returns not_found for a missing/other-org invoice", async () => {
     mockRepo.findById.mockResolvedValue(null);
-    const result = await service.cancelPurchaseInvoice("pinv-1", "org-1", "u");
+    const result = await service.cancelBill("pinv-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
     }
@@ -404,7 +406,7 @@ describe("PurchaseInvoiceService.cancelPurchaseInvoice", () => {
   it("fails when the status update fails", async () => {
     mockRepo.findById.mockResolvedValue(buildInvoice({ status: "draft" }));
     mockRepo.updateStatus.mockResolvedValue(null);
-    const result = await service.cancelPurchaseInvoice("pinv-1", "org-1", "u");
+    const result = await service.cancelBill("pinv-1", "org-1", "u");
     if (!result.success) {
       expect(result.error.code).toBe("unknown");
     }
@@ -415,28 +417,44 @@ describe("PurchaseInvoiceService.cancelPurchaseInvoice", () => {
 // Reads
 // ─────────────────────────────────────────────────────────────
 
-describe("PurchaseInvoiceService reads", () => {
-  it("getPurchaseInvoice returns the invoice with items", async () => {
+describe("BillService reads", () => {
+  it("getBill returns the invoice with items", async () => {
     mockRepo.findWithItems.mockResolvedValue(withItems(buildInvoice()));
-    const result = await service.getPurchaseInvoice("pinv-1");
+    const result = await service.getBill("pinv-1");
     expect(result.success).toBe(true);
   });
 
-  it("getPurchaseInvoice returns not_found when missing", async () => {
+  it("getBill returns not_found when missing", async () => {
     mockRepo.findWithItems.mockResolvedValue(null);
-    const result = await service.getPurchaseInvoice("pinv-1");
+    const result = await service.getBill("pinv-1");
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
     }
   });
 
-  it("listPurchaseInvoices delegates to the repository", async () => {
+  it("listBills delegates to the repository", async () => {
     const listResult = { items: [], total: 0, page: 1, pageSize: 20 };
     mockRepo.list.mockResolvedValue(listResult);
-    const result = await service.listPurchaseInvoices("org-1", {
+    const result = await service.listBills("org-1", {
       status: "draft",
     });
     expect(result).toBe(listResult);
     expect(mockRepo.list).toHaveBeenCalledWith("org-1", { status: "draft" });
+  });
+
+  it("getBillStats delegates to the repository", async () => {
+    const stats = { totalValue: 100, draft: 1, posted: 2, overdue: 1 };
+    mockRepo.getStats.mockResolvedValue(stats);
+    const result = await service.getBillStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
+  });
+
+  it("listBillsForPurchaseOrder delegates to the repository", async () => {
+    const bills = [{ id: "bill-1" }];
+    mockRepo.findByPurchaseOrder.mockResolvedValue(bills);
+    const result = await service.listBillsForPurchaseOrder("po-1");
+    expect(result).toBe(bills);
+    expect(mockRepo.findByPurchaseOrder).toHaveBeenCalledWith("po-1");
   });
 });

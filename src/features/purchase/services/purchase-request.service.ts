@@ -14,6 +14,7 @@ import type {
   PurchaseRequestErrorCode,
   PurchaseRequestListParams,
   PurchaseRequestListResult,
+  PurchaseRequestStats,
   PurchaseRequestWithItems,
   UpdatePurchaseRequestInput,
 } from "@/features/purchase/types/purchase-request.types";
@@ -66,6 +67,12 @@ export class PurchaseRequestService {
       return fail("not_found", "Purchase request not found");
     }
     return ok(request);
+  }
+
+  async getPurchaseRequestStats(
+    organizationId: string
+  ): Promise<PurchaseRequestStats> {
+    return this.repo.getStats(organizationId);
   }
 
   // ── Create ─────────────────────────────────────────────────

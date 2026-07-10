@@ -10,10 +10,12 @@ import { PurchaseReturnService } from "./purchase-return.service";
 const { mockRepo } = vi.hoisted(() => ({
   mockRepo: {
     list: vi.fn(),
+    findByPurchaseOrder: vi.fn(),
     findById: vi.fn(),
     findByNumber: vi.fn(),
     findItems: vi.fn(),
     findWithItems: vi.fn(),
+    getStats: vi.fn(),
     createHeader: vi.fn(),
     insertItems: vi.fn(),
     replaceItems: vi.fn(),
@@ -409,5 +411,21 @@ describe("PurchaseReturnService reads", () => {
     });
     expect(result).toBe(listResult);
     expect(mockRepo.list).toHaveBeenCalledWith("org-1", { status: "draft" });
+  });
+
+  it("getPurchaseReturnStats delegates to the repository", async () => {
+    const stats = { totalValue: 500, draft: 1, completed: 2, cancelled: 0 };
+    mockRepo.getStats.mockResolvedValue(stats);
+    const result = await service.getPurchaseReturnStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
+  });
+
+  it("listReturnsForPurchaseOrder delegates to the repository", async () => {
+    const returns = [{ id: "ret-1" }];
+    mockRepo.findByPurchaseOrder.mockResolvedValue(returns);
+    const result = await service.listReturnsForPurchaseOrder("po-1");
+    expect(result).toBe(returns);
+    expect(mockRepo.findByPurchaseOrder).toHaveBeenCalledWith("po-1");
   });
 });

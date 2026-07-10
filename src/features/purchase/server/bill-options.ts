@@ -2,23 +2,23 @@ import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type {
   ProductOption,
   SupplierOption,
-} from "@/features/purchase/components/purchase-invoice-form";
+} from "@/features/purchase/components/bill-form";
 
-export interface PurchaseInvoiceFormOptions {
+export interface BillFormOptions {
   readonly suppliers: SupplierOption[];
   readonly products: ProductOption[];
 }
 
 /**
- * Fetches the option lists the purchase invoice form needs (supplier and
+ * Fetches the option lists the bill form needs (supplier and
  * product selects). Issues direct, narrow selects so the purchase pages do not
  * depend on in-flight sibling feature modules. Products carry their purchase
  * price and GST rate so line rows can pre-fill on selection.
  */
-export async function fetchPurchaseInvoiceOptions(
+export async function fetchBillOptions(
   supabase: AppSupabaseClient,
   organizationId: string
-): Promise<PurchaseInvoiceFormOptions> {
+): Promise<BillFormOptions> {
   const selectSuppliers = async (): Promise<SupplierOption[]> => {
     const { data } = await supabase
       .from("suppliers")

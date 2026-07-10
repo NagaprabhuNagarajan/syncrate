@@ -54,10 +54,12 @@ export interface GoodsReceiptWithItems extends GoodsReceipt {
   readonly items: readonly GoodsReceiptItem[];
 }
 
-/** A list row enriched with the joined PO number and supplier name. */
+/** A list row enriched with the joined PO number, supplier name and item total. */
 export interface GoodsReceiptListItem extends GoodsReceipt {
   readonly poNumber: string | null;
   readonly supplierName: string | null;
+  /** Sum of received quantity across this receipt's line items. */
+  readonly totalReceivedQuantity: number;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -95,6 +97,20 @@ export interface GoodsReceiptListResult {
   readonly total: number;
   readonly page: number;
   readonly pageSize: number;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Stats
+// ─────────────────────────────────────────────────────────────
+
+/** Aggregate counts for the goods-receipts list header tiles. */
+export interface GoodsReceiptStats {
+  /** All goods receipts, including drafts. */
+  readonly total: number;
+  /** Goods receipts recorded in the current calendar month. */
+  readonly thisMonth: number;
+  readonly completed: number;
+  readonly draft: number;
 }
 
 // ─────────────────────────────────────────────────────────────

@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor } from "@/tests/utils";
-import type { PurchaseInvoiceWithItems } from "@/features/purchase/types/purchase-invoice.types";
+import type { BillWithItems } from "@/features/purchase/types/bill.types";
 import {
-  PurchaseInvoiceForm,
+  BillForm,
   type ProductOption,
   type SupplierOption,
-} from "./purchase-invoice-form";
+} from "./bill-form";
 import {
   OCR_PURCHASE_DRAFT_KEY,
   buildOcrPurchaseDraft,
@@ -23,9 +23,9 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, replace: vi.fn(), refresh: vi.fn() }),
 }));
 
-vi.mock("@/features/purchase/actions/purchase-invoice.actions", () => ({
-  createPurchaseInvoiceAction: createActionMock,
-  updatePurchaseInvoiceAction: updateActionMock,
+vi.mock("@/features/purchase/actions/bill.actions", () => ({
+  createBillAction: createActionMock,
+  updateBillAction: updateActionMock,
 }));
 
 const suppliers: SupplierOption[] = [{ id: "sup-1", name: "Acme Supply" }];
@@ -36,7 +36,7 @@ const products: ProductOption[] = [
 
 function renderForm() {
   return render(
-    <PurchaseInvoiceForm
+    <BillForm
       organizationId="org-1"
       suppliers={suppliers}
       products={products}
@@ -44,7 +44,7 @@ function renderForm() {
   );
 }
 
-function buildEditInvoice(version = 7): PurchaseInvoiceWithItems {
+function buildEditInvoice(version = 7): BillWithItems {
   return {
     id: "pinv-1",
     organizationId: "org-1",
@@ -71,7 +71,7 @@ function buildEditInvoice(version = 7): PurchaseInvoiceWithItems {
       {
         id: "item-1",
         organizationId: "org-1",
-        purchaseInvoiceId: "pinv-1",
+        billId: "pinv-1",
         productId: "p-1",
         description: null,
         quantity: 1,
@@ -90,7 +90,35 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("PurchaseInvoiceForm", () => {
+describe("BillForm", () => {
+  it("prefills supplier and line items from a purchase order", () => {
+    const { container } = render(
+      <BillForm
+        organizationId="org-1"
+        suppliers={suppliers}
+        products={products}
+        prefill={{
+          supplierId: "sup-1",
+          items: [
+            {
+              productId: "p-1",
+              description: "",
+              quantity: "3",
+              unitPrice: "120",
+              taxRate: "18",
+            },
+          ],
+        }}
+      />
+    );
+    expect(
+      (container.querySelector("#supplierId") as HTMLSelectElement).value
+    ).toBe("sup-1");
+    expect(screen.getByLabelText("Product for line 1")).toHaveValue("p-1");
+    expect(screen.getByLabelText("Quantity for line 1")).toHaveValue(3);
+    expect(screen.getByLabelText("Unit price for line 1")).toHaveValue(120);
+  });
+
   it("starts with a single line item row", () => {
     renderForm();
     expect(screen.getByLabelText("Product for line 1")).toBeInTheDocument();
@@ -145,7 +173,7 @@ describe("PurchaseInvoiceForm", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: "Supplier" }), "sup-1");
     await user.selectOptions(screen.getByLabelText("Product for line 1"), "p-1");
     await user.click(
-      screen.getByRole("button", { name: /create purchase invoice/i })
+      screen.getByRole("button", { name: /create bill/i })
     );
 
     await waitFor(() => expect(createActionMock).toHaveBeenCalled());
@@ -169,7 +197,7 @@ describe("PurchaseInvoiceForm", () => {
     });
 
     await waitFor(() =>
-      expect(mockPush).toHaveBeenCalledWith("/purchases/invoices/pinv-9")
+      expect(mockPush).toHaveBeenCalledWith("/purchases/bills/pinv-9")
     );
   });
 
@@ -184,7 +212,7 @@ describe("PurchaseInvoiceForm", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: "Supplier" }), "sup-1");
     await user.selectOptions(screen.getByLabelText("Product for line 1"), "p-1");
     await user.click(
-      screen.getByRole("button", { name: /create purchase invoice/i })
+      screen.getByRole("button", { name: /create bill/i })
     );
 
     expect(await screen.findByText("Could not save")).toBeInTheDocument();
@@ -197,7 +225,7 @@ describe("PurchaseInvoiceForm", () => {
 
     await user.selectOptions(screen.getByLabelText("Product for line 1"), "p-1");
     await user.click(
-      screen.getByRole("button", { name: /create purchase invoice/i })
+      screen.getByRole("button", { name: /create bill/i })
     );
 
     await waitFor(() =>
@@ -213,11 +241,11 @@ describe("PurchaseInvoiceForm", () => {
       data: { id: "pinv-1" },
     });
     const { container } = render(
-      <PurchaseInvoiceForm
+      <BillForm
         organizationId="org-1"
         suppliers={suppliers}
         products={products}
-        purchaseInvoice={buildEditInvoice(7)}
+        bill={buildEditInvoice(7)}
       />
     );
 
@@ -237,7 +265,7 @@ describe("PurchaseInvoiceForm", () => {
   it("falls back to a zero tax rate for products outside the allowed slabs", async () => {
     const user = userEvent.setup();
     render(
-      <PurchaseInvoiceForm
+      <BillForm
         organizationId="org-1"
         suppliers={suppliers}
         products={[
@@ -255,7 +283,7 @@ describe("PurchaseInvoiceForm", () => {
   });
 });
 
-describe("PurchaseInvoiceForm — OCR prefill", () => {
+describe("BillForm — OCR prefill", () => {
   beforeEach(() => {
     window.sessionStorage.clear();
   });
@@ -281,7 +309,7 @@ describe("PurchaseInvoiceForm — OCR prefill", () => {
   it("prefills header + line values from the stored draft when fromOcr", () => {
     seedDraft();
     render(
-      <PurchaseInvoiceForm
+      <BillForm
         organizationId="org-1"
         suppliers={suppliers}
         products={products}

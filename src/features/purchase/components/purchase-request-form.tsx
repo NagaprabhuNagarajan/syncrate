@@ -7,6 +7,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { ClipboardList, AlertCircle, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   createPurchaseRequestSchema,
   updatePurchaseRequestSchema,
@@ -133,21 +142,52 @@ function FormField({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
+      {hint && !error && (
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+          {hint}
+        </p>
+      )}
       <FieldError message={error} />
     </div>
   );
 }
 
-function SectionTitle({ children }: { readonly children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  action,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly action?: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-      <span className="text-xs font-medium tracking-wide text-slate-400 dark:text-slate-500">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
+          {action}
+        </div>
         {children}
-      </span>
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-    </div>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -236,7 +276,9 @@ export function PurchaseRequestForm({
   );
 
   const itemsError =
-    typeof errors.items?.message === "string" ? errors.items.message : undefined;
+    typeof errors.items?.message === "string"
+      ? errors.items.message
+      : undefined;
 
   const handleProductChange = (index: number, productId: string): void => {
     setValue(`items.${index}.productId`, productId, { shouldValidate: true });
@@ -295,31 +337,28 @@ export function PurchaseRequestForm({
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-lg shadow-slate-200/50 dark:shadow-none sm:p-6"
-    >
+    <div>
       {/* Header */}
-      <div className="mb-5 flex items-start gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-5 flex items-start gap-3"
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
-          <ClipboardList
-            className="h-5 w-5 text-white"
-            aria-hidden="true"
-          />
+          <ClipboardList className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {isEdit ? "Edit purchase request" : "New purchase request"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update the draft requisition"
               : "Raise an internal requisition for goods you need"}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {serverError && (
         <motion.div
@@ -337,91 +376,90 @@ export function PurchaseRequestForm({
       )}
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
-        {/* Header fields */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            label="Request number"
-            htmlFor="requestNumber"
-            error={errors.requestNumber?.message}
-            hint="Leave blank to auto-generate (PR-#####)"
-          >
-            <input
-              id="requestNumber"
-              type="text"
-              className={inputClass(!!errors.requestNumber)}
-              placeholder="Auto-generated"
-              {...register("requestNumber")}
-            />
-          </FormField>
-          <FormField
-            label="Branch"
-            htmlFor="branchId"
-            error={errors.branchId?.message}
-          >
-            <select
-              id="branchId"
-              className={inputClass(!!errors.branchId)}
-              {...register("branchId")}
-            >
-              <option value="">— None —</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        </div>
+        {/* Request details */}
+        <Section
+          title="Purchase request details"
+          description="Branch, scheduling and identification for this requisition."
+          delay={0.05}
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                label="Request number"
+                htmlFor="requestNumber"
+                error={errors.requestNumber?.message}
+                hint="Leave blank to auto-generate (PR-#####)"
+              >
+                <input
+                  id="requestNumber"
+                  type="text"
+                  className={inputClass(!!errors.requestNumber)}
+                  placeholder="Auto-generated"
+                  {...register("requestNumber")}
+                />
+              </FormField>
+              <FormField
+                label="Branch"
+                htmlFor="branchId"
+                error={errors.branchId?.message}
+              >
+                <select
+                  id="branchId"
+                  className={inputClass(!!errors.branchId)}
+                  {...register("branchId")}
+                >
+                  <option value="">— None —</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            label="Required by"
-            htmlFor="requiredDate"
-            error={errors.requiredDate?.message}
-          >
-            <input
-              id="requiredDate"
-              type="date"
-              className={inputClass(!!errors.requiredDate)}
-              {...register("requiredDate")}
-            />
-          </FormField>
-        </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                label="Required by"
+                htmlFor="requiredDate"
+                error={errors.requiredDate?.message}
+              >
+                <input
+                  id="requiredDate"
+                  type="date"
+                  className={inputClass(!!errors.requiredDate)}
+                  {...register("requiredDate")}
+                />
+              </FormField>
+            </div>
+          </div>
+        </Section>
 
         {/* Line items */}
-        <SectionTitle>Line items</SectionTitle>
-        {itemsError && <FieldError message={itemsError} />}
+        <Section title="Line items" delay={0.1}>
+          {itemsError && <FieldError message={itemsError} />}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              <tr>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Product
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Qty
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Est. price
-                </th>
-                <th scope="col" className="px-2 py-2 text-right font-medium">
-                  Est. total
-                </th>
-                <th scope="col" className="px-2 py-2">
+          <Table wrapperClassName="border-slate-100 dark:border-slate-800">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Est. price</TableHead>
+                <TableHead className="text-right">Est. total</TableHead>
+                <TableHead>
                   <span className="sr-only">Remove</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {fields.map((field, index) => {
                 const rowErrors = errors.items?.[index];
                 const lineTotal =
                   num(watchedItems?.[index]?.quantity ?? "0") *
                   num(watchedItems?.[index]?.estimatedPrice ?? "0");
                 return (
-                  <tr key={field.id} className="align-top">
-                    <td className="px-2 py-2">
+                  <TableRow key={field.id} className="align-top">
+                    <TableCell>
                       <select
                         aria-label={`Product for line ${index + 1}`}
                         className={cellClass}
@@ -438,8 +476,8 @@ export function PurchaseRequestForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.productId?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Quantity for line ${index + 1}`}
                         type="number"
@@ -449,8 +487,8 @@ export function PurchaseRequestForm({
                         {...register(`items.${index}.quantity`)}
                       />
                       <FieldError message={rowErrors?.quantity?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Estimated price for line ${index + 1}`}
                         type="number"
@@ -459,12 +497,14 @@ export function PurchaseRequestForm({
                         className={cn(cellClass, "w-28")}
                         {...register(`items.${index}.estimatedPrice`)}
                       />
-                      <FieldError message={rowErrors?.estimatedPrice?.message} />
-                    </td>
-                    <td className="px-2 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
+                      <FieldError
+                        message={rowErrors?.estimatedPrice?.message}
+                      />
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(round2(lineTotal))}
-                    </td>
-                    <td className="px-2 py-2 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Button
                         type="button"
                         variant="ghost"
@@ -476,66 +516,80 @@ export function PurchaseRequestForm({
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => append(emptyItem())}
-        >
-          <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Add item
-        </Button>
-
-        {/* Estimated total */}
-        <div className="flex justify-end">
-          <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-sm">
-            <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 text-base font-semibold text-slate-900 dark:text-slate-100">
-              <dt>Estimated total</dt>
-              <dd className="nums">{formatCurrency(estimatedTotal)}</dd>
-            </div>
-          </dl>
-        </div>
-
-        {/* Notes */}
-        <SectionTitle>Notes</SectionTitle>
-        <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
-          <textarea
-            id="notes"
-            rows={2}
-            className={inputClass(!!errors.notes)}
-            placeholder="Why is this requisition needed?"
-            {...register("notes")}
-          />
-        </FormField>
-
-        {/* Actions */}
-        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/purchases/requests")}
-            disabled={isPending}
+            size="sm"
+            className="mt-3"
+            onClick={() => append(emptyItem())}
           >
-            Cancel
+            <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Add item
           </Button>
-          <Button
-            type="submit"
-            variant="gradient"
-            loading={isPending}
-            disabled={isPending}
-          >
-            {isEdit ? "Save changes" : "Create purchase request"}
-          </Button>
+
+          {/* Estimated total */}
+          <div className="mt-4 flex justify-end">
+            <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-sm">
+              <div className="flex justify-between text-base font-semibold text-slate-900 dark:text-slate-100">
+                <dt>Estimated total</dt>
+                <dd className="nums">{formatCurrency(estimatedTotal)}</dd>
+              </div>
+            </dl>
+          </div>
+        </Section>
+
+        {/* Notes */}
+        <Section
+          title="Notes"
+          description="Why is this requisition needed?"
+          delay={0.15}
+        >
+          <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
+            <textarea
+              id="notes"
+              rows={2}
+              className={inputClass(!!errors.notes)}
+              placeholder="Why is this requisition needed?"
+              {...register("notes")}
+            />
+          </FormField>
+        </Section>
+
+        {/* Sticky action bar */}
+        <div className="sticky bottom-4 z-10 flex flex-col-reverse gap-3 rounded-xl border border-slate-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Estimated total
+            <span className="nums ml-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+              {formatCurrency(estimatedTotal)}
+            </span>
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/purchases/requests")}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="gradient"
+              loading={isPending}
+              disabled={isPending}
+            >
+              {isEdit ? "Save changes" : "Create purchase request"}
+            </Button>
+          </div>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

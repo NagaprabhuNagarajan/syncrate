@@ -41,6 +41,21 @@ async function lookupName(
   return data?.name ?? null;
 }
 
+async function lookupPurchaseOrderNumber(
+  supabase: AppSupabaseClient,
+  id: string | null
+): Promise<string | null> {
+  if (!id) {
+    return null;
+  }
+  const { data } = await supabase
+    .from("purchase_orders")
+    .select("po_number")
+    .eq("id", id)
+    .single();
+  return data?.po_number ?? null;
+}
+
 async function lookupProductNames(
   supabase: AppSupabaseClient,
   ids: readonly string[]
@@ -119,14 +134,16 @@ export default async function PurchaseReturnDetailPage({
 
   const purchaseReturn = result.data;
 
-  const [supplierName, branchName, productNames] = await Promise.all([
-    lookupName(supabase, "suppliers", purchaseReturn.supplierId),
-    lookupName(supabase, "branches", purchaseReturn.branchId),
-    lookupProductNames(
-      supabase,
-      purchaseReturn.items.map((item) => item.productId)
-    ),
-  ]);
+  const [supplierName, branchName, productNames, purchaseOrderNumber] =
+    await Promise.all([
+      lookupName(supabase, "suppliers", purchaseReturn.supplierId),
+      lookupName(supabase, "branches", purchaseReturn.branchId),
+      lookupProductNames(
+        supabase,
+        purchaseReturn.items.map((item) => item.productId)
+      ),
+      lookupPurchaseOrderNumber(supabase, purchaseReturn.purchaseOrderId),
+    ]);
 
   return (
     <PurchaseReturnDetail
@@ -134,6 +151,7 @@ export default async function PurchaseReturnDetailPage({
       supplierName={supplierName}
       branchName={branchName}
       productNames={productNames}
+      purchaseOrderNumber={purchaseOrderNumber}
       organizationId={activeOrg.id}
       canComplete={context.permissions.includes("purchase.receive")}
       canCancel={context.permissions.includes("purchase.cancel")}

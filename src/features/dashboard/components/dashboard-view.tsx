@@ -293,7 +293,7 @@ const QUICK_ACTIONS: QuickActionProps[] = [
     label: "New Purchase Invoice",
     description: "Record a supplier bill",
     icon: ShoppingCart,
-    href: "/purchases/invoices/new",
+    href: "/purchases/bills/new",
     color: "bg-gradient-violet",
   },
   {

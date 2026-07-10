@@ -5,6 +5,7 @@ import type {
   PurchaseOrderItem,
   PurchaseOrderListParams,
   PurchaseOrderListResult,
+  PurchaseOrderStats,
   PurchaseOrderStatus,
   PurchaseOrderWithItems,
 } from "@/features/purchase/types/purchase-order.types";
@@ -213,6 +214,53 @@ export class PurchaseOrderRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Aggregate counts + total value for the list header tiles. Head-only count
+   * queries run in parallel for the status-group tiles; `totalValue` needs a
+   * sum, which PostgREST cannot compute server-side via a head query, so we
+   * fetch the minimal `total_amount` column for non-cancelled orders and
+   * reduce it in JS.
+   */
+  async getStats(organizationId: string): Promise<PurchaseOrderStats> {
+    const base = () =>
+      this.supabase
+        .from("purchase_orders")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null);
+
+    const [draft, awaitingApproval, approved, ordered, partiallyReceived] =
+      await Promise.all([
+        base().eq("status", "draft"),
+        base().eq("status", "submitted"),
+        base().eq("status", "approved"),
+        base().eq("status", "ordered"),
+        base().eq("status", "partially_received"),
+      ]);
+
+    const { data: valueRows } = await this.supabase
+      .from("purchase_orders")
+      .select("total_amount")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .neq("status", "cancelled");
+
+    const totalValue = (valueRows ?? []).reduce(
+      (sum, row) => sum + Number(row.total_amount),
+      0
+    );
+
+    return {
+      totalValue,
+      draft: draft.count ?? 0,
+      awaitingApproval: awaitingApproval.count ?? 0,
+      open:
+        (approved.count ?? 0) +
+        (ordered.count ?? 0) +
+        (partiallyReceived.count ?? 0),
     };
   }
 

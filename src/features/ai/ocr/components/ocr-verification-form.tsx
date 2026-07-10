@@ -322,7 +322,7 @@ export function OcrVerificationForm({
     const orgParam = organizationId
       ? `&org=${encodeURIComponent(organizationId)}`
       : "";
-    router.push(`/purchases/invoices/new?fromOcr=1${orgParam}`);
+    router.push(`/purchases/bills/new?fromOcr=1${orgParam}`);
   }, [form, items, organizationId, router]);
 
   const overallPercent = useMemo(

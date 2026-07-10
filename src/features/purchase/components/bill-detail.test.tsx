@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor } from "@/tests/utils";
-import { PurchaseInvoiceDetail } from "./purchase-invoice-detail";
+import { BillDetail } from "./bill-detail";
 import type {
-  PurchaseInvoiceStatus,
-  PurchaseInvoiceWithItems,
-} from "@/features/purchase/types/purchase-invoice.types";
+  BillStatus,
+  BillWithItems,
+} from "@/features/purchase/types/bill.types";
 
 const { mockRefresh, postMock, cancelMock } = vi.hoisted(() => ({
   mockRefresh: vi.fn(),
@@ -15,16 +15,17 @@ const { mockRefresh, postMock, cancelMock } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: mockRefresh }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
-vi.mock("@/features/purchase/actions/purchase-invoice.actions", () => ({
-  postPurchaseInvoiceAction: postMock,
-  cancelPurchaseInvoiceAction: cancelMock,
+vi.mock("@/features/purchase/actions/bill.actions", () => ({
+  postBillAction: postMock,
+  cancelBillAction: cancelMock,
 }));
 
 function makeInvoice(
-  status: PurchaseInvoiceStatus = "draft"
-): PurchaseInvoiceWithItems {
+  status: BillStatus = "draft"
+): BillWithItems {
   return {
     id: "pinv-1",
     organizationId: "org-1",
@@ -50,7 +51,7 @@ function makeInvoice(
       {
         id: "item-1",
         organizationId: "org-1",
-        purchaseInvoiceId: "pinv-1",
+        billId: "pinv-1",
         productId: "p-1",
         description: "Widget",
         quantity: 10,
@@ -66,12 +67,12 @@ function makeInvoice(
 }
 
 function renderDetail(
-  invoice: PurchaseInvoiceWithItems,
+  invoice: BillWithItems,
   perms: { canManage?: boolean; canCancel?: boolean } = {}
 ) {
   return render(
-    <PurchaseInvoiceDetail
-      purchaseInvoice={invoice}
+    <BillDetail
+      bill={invoice}
       supplierName="Acme Supply"
       productNames={{ "p-1": "Widget" }}
       organizationId="org-1"
@@ -85,7 +86,26 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("PurchaseInvoiceDetail", () => {
+describe("BillDetail", () => {
+  it("links to the purchase order when the bill was raised from one", () => {
+    const invoice = { ...makeInvoice("posted"), purchaseOrderId: "po-1" };
+    render(
+      <BillDetail
+        bill={invoice}
+        supplierName="Acme Supply"
+        productNames={{ "p-1": "Widget" }}
+        purchaseOrderNumber="PO-0001"
+        organizationId="org-1"
+        canManage
+        canCancel={false}
+      />
+    );
+    expect(screen.getByRole("link", { name: "PO-0001" })).toHaveAttribute(
+      "href",
+      "/purchases/po-1"
+    );
+  });
+
   it("renders header info, items, totals and status", () => {
     renderDetail(makeInvoice("draft"), { canManage: true });
     expect(screen.getByText("PINV-00001")).toBeInTheDocument();
@@ -147,7 +167,7 @@ describe("PurchaseInvoiceDetail", () => {
     renderDetail(makeInvoice("draft"), { canCancel: true });
     await user.click(screen.getByRole("button", { name: /^cancel$/i }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /cancel invoice/i }));
+    await user.click(screen.getByRole("button", { name: /cancel bill/i }));
     await waitFor(() =>
       expect(cancelMock).toHaveBeenCalledWith("org-1", "pinv-1")
     );
