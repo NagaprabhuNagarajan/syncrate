@@ -78,7 +78,7 @@ export default async function InventoryPage({
 
   const inventoryService = new InventoryService(supabase);
 
-  const [result, transactions, branches, stockValue, productRows] =
+  const [result, stats, transactions, branches, productRows] =
     await Promise.all([
       inventoryService.listLevels(activeOrg.id, {
         search,
@@ -86,9 +86,9 @@ export default async function InventoryPage({
         lowStockOnly,
         page,
       }),
+      inventoryService.getInventoryStats(activeOrg.id),
       inventoryService.listTransactions(activeOrg.id, { branchId, limit: 50 }),
       fetchBranchOptions(supabase, activeOrg.id),
-      inventoryService.getStockValue(activeOrg.id),
       supabase
         .from("products")
         .select("id,name,code")
@@ -108,11 +108,11 @@ export default async function InventoryPage({
     <InventoryView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       transactions={transactions}
       products={products}
       branches={branches}
       filters={{ search, branchId, lowStockOnly }}
-      stockValue={stockValue}
       canAdjust={canAdjust}
       canTransfer={canTransfer}
     />

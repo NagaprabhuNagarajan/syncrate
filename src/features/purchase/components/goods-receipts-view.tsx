@@ -6,44 +6,93 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   PackageCheck,
+  ClipboardList,
+  CalendarClock,
+  CheckCircle2,
+  FileEdit,
   Search,
   ChevronLeft,
   ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/shared/page-header";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { AnimatedNumber } from "@/components/shared/animated-number";
+import {
+  GRN_STATUS_LABEL,
+  GRN_STATUS_VARIANT,
+} from "@/features/purchase/utils/goods-receipt-display";
+import { formatDate } from "@/utils/format";
 import type {
   GoodsReceiptListItem,
   GoodsReceiptListResult,
-  GoodsReceiptStatus,
+  GoodsReceiptStats,
 } from "@/features/purchase/types/goods-receipt.types";
+import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
-// Status presentation
+// Stat tile
 // ─────────────────────────────────────────────────────────────
 
-export const GRN_STATUS_VARIANT: Record<
-  GoodsReceiptStatus,
-  BadgeProps["variant"]
-> = {
-  draft: "muted",
-  completed: "success",
-};
-
-export const GRN_STATUS_LABEL: Record<GoodsReceiptStatus, string> = {
-  draft: "Draft",
-  completed: "Completed",
-};
-
-function formatDate(value: Date): string {
-  return new Date(value).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
+  index,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+    >
+      <Card className="relative overflow-hidden p-4">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
+              tint
+            )}
+          >
+            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <AnimatedNumber value={value} />
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -53,25 +102,38 @@ function formatDate(value: Date): string {
 interface GoodsReceiptsViewProps {
   readonly organizationId: string;
   readonly result: GoodsReceiptListResult;
+  readonly stats: GoodsReceiptStats;
   readonly filters: {
     readonly search?: string;
   };
 }
 
-export function GoodsReceiptsView({ result, filters }: GoodsReceiptsViewProps) {
+export function GoodsReceiptsView({
+  result,
+  stats,
+  filters,
+}: GoodsReceiptsViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
 
   const { items, total, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(total, page * pageSize);
+  const hasFilters = Boolean(filters.search);
+  const org = searchParams.get("org");
 
-  const withOrg = (path: string): string => {
-    const org = searchParams.get("org");
-    return org ? `${path}?org=${org}` : path;
-  };
+  const withOrg = (path: string): string =>
+    org ? `${path}${path.includes("?") ? "&" : "?"}org=${org}` : path;
 
   const poHref = (id: string): string => withOrg(`/purchases/${id}`);
+
+  const subNavLinks: readonly { label: string; href: string }[] = [
+    { label: "Purchase orders", href: withOrg("/purchases") },
+    { label: "Bills", href: withOrg("/purchases/bills") },
+    { label: "Returns", href: withOrg("/purchases/returns") },
+  ];
 
   const pushWith = (patch: Record<string, string | undefined>): void => {
     const params = new URLSearchParams(searchParams.toString());
@@ -83,7 +145,9 @@ export function GoodsReceiptsView({ result, filters }: GoodsReceiptsViewProps) {
       }
     });
     const query = params.toString();
-    router.push(query ? `/purchases/goods-receipts?${query}` : "/purchases/goods-receipts");
+    router.push(
+      query ? `/purchases/goods-receipts?${query}` : "/purchases/goods-receipts"
+    );
   };
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -91,24 +155,99 @@ export function GoodsReceiptsView({ result, filters }: GoodsReceiptsViewProps) {
     pushWith({ search: searchInput.trim() || undefined, page: undefined });
   };
 
-  const goToPage = (next: number): void => {
-    pushWith({ page: next <= 1 ? undefined : String(next) });
+  const handleSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value = event.target.value;
+    setSearchInput(value);
+    // Clearing the field (native ✕ or deleting the text) resets the list
+    // immediately, without waiting for a submit.
+    if (value === "" && filters.search) {
+      pushWith({ search: undefined, page: undefined });
+    }
   };
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Goods receipts"
-        description="Deliveries recorded against your purchase orders"
-        icon={PackageCheck}
-      />
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <PackageCheck className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Goods receipts
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {total}
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Deliveries recorded against your purchase orders
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Sub-navigation */}
+      <nav
+        aria-label="Purchases sections"
+        className="mt-4 flex flex-wrap items-center gap-2"
+      >
+        {subNavLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:text-primary-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-primary-400"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+
+      {/* Stat tiles */}
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          icon={ClipboardList}
+          label="Total receipts"
+          value={stats.total}
+          tint="bg-gradient-brand"
+          index={0}
+        />
+        <StatTile
+          icon={CalendarClock}
+          label="This month"
+          value={stats.thisMonth}
+          tint="bg-gradient-info"
+          index={1}
+        />
+        <StatTile
+          icon={CheckCircle2}
+          label="Completed"
+          value={stats.completed}
+          tint="bg-gradient-success"
+          index={2}
+        />
+        <StatTile
+          icon={FileEdit}
+          label="Draft"
+          value={stats.draft}
+          tint="bg-gradient-violet"
+          index={3}
+        />
+      </div>
 
       {/* Filters */}
-      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
-          className="relative flex-1"
+          className="relative w-full lg:max-w-sm"
         >
           <Search
             className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -117,9 +256,9 @@ export function GoodsReceiptsView({ result, filters }: GoodsReceiptsViewProps) {
           <Input
             type="search"
             aria-label="Search goods receipts"
-            placeholder="Search by GRN number"
+            placeholder="Search by GRN number…"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-9"
           />
         </form>
@@ -130,11 +269,19 @@ export function GoodsReceiptsView({ result, filters }: GoodsReceiptsViewProps) {
         {items.length === 0 ? (
           <EmptyState
             icon={PackageCheck}
-            title="No goods receipts found"
+            title={hasFilters ? "No matching goods receipts" : "No goods receipts yet"}
             description={
-              filters.search
-                ? "No goods receipts match your current search."
+              hasFilters
+                ? "No goods receipts match your current search. Try adjusting or clearing it."
                 : "Goods receipts appear here once you record deliveries against approved purchase orders."
+            }
+            action={
+              hasFilters
+                ? {
+                    label: "Clear filters",
+                    onClick: () => router.push(withOrg("/purchases/goods-receipts")),
+                  }
+                : undefined
             }
           />
         ) : (
@@ -142,63 +289,54 @@ export function GoodsReceiptsView({ result, filters }: GoodsReceiptsViewProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      GRN number
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Purchase order
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Supplier
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Received date
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {items.map((receipt: GoodsReceiptListItem) => (
-                    <tr key={receipt.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                      <td className="px-3 py-2 font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
-                        {receipt.grnNumber}
-                      </td>
-                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                        {receipt.poNumber ? (
-                          <Link
-                            href={poHref(receipt.purchaseOrderId)}
-                            className="text-primary-600 hover:underline dark:text-primary-400"
-                          >
-                            {receipt.poNumber}
-                          </Link>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                        {receipt.supplierName ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {formatDate(receipt.receivedDate)}
-                      </td>
-                      <td className="px-3 py-2">
-                        <Badge dot variant={GRN_STATUS_VARIANT[receipt.status]}>
-                          {GRN_STATUS_LABEL[receipt.status]}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table wrapperClassName="shadow-card">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>GRN number</TableHead>
+                  <TableHead>Purchase order</TableHead>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead>Received date</TableHead>
+                  <TableHead className="text-right">Received qty</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((receipt: GoodsReceiptListItem) => (
+                  <TableRow key={receipt.id}>
+                    <TableCell className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
+                      {receipt.grnNumber}
+                    </TableCell>
+                    <TableCell className="text-slate-700 dark:text-slate-300">
+                      {receipt.poNumber ? (
+                        <Link
+                          href={poHref(receipt.purchaseOrderId)}
+                          className="text-primary-600 hover:underline dark:text-primary-400"
+                        >
+                          {receipt.poNumber}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-slate-700 dark:text-slate-300">
+                      {receipt.supplierName ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {formatDate(receipt.receivedDate)}
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-700 dark:text-slate-300">
+                      {receipt.totalReceivedQuantity}
+                    </TableCell>
+                    <TableCell>
+                      <Badge dot variant={GRN_STATUS_VARIANT[receipt.status]}>
+                        {GRN_STATUS_LABEL[receipt.status]}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </motion.div>
         )}
       </div>
@@ -207,8 +345,10 @@ export function GoodsReceiptsView({ result, filters }: GoodsReceiptsViewProps) {
       {items.length > 0 && (
         <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            {total} {total === 1 ? "goods receipt" : "goods receipts"} · Page{" "}
-            {page} of {totalPages}
+            Showing{" "}
+            <span className="font-medium text-foreground">{rangeStart}</span>–
+            <span className="font-medium text-foreground">{rangeEnd}</span> of{" "}
+            <span className="font-medium text-foreground">{total}</span>
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -216,17 +356,22 @@ export function GoodsReceiptsView({ result, filters }: GoodsReceiptsViewProps) {
               variant="outline"
               size="sm"
               disabled={page <= 1}
-              onClick={() => goToPage(page - 1)}
+              onClick={() =>
+                pushWith({ page: page <= 2 ? undefined : String(page - 1) })
+              }
             >
               <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
               Previous
             </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
             <Button
               type="button"
               variant="outline"
               size="sm"
               disabled={page >= totalPages}
-              onClick={() => goToPage(page + 1)}
+              onClick={() => pushWith({ page: String(page + 1) })}
             >
               Next
               <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />

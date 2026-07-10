@@ -12,7 +12,64 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { importProductsAction } from "@/features/product/actions/product.actions";
+import { objectsToCsv } from "@/utils/csv";
+import { downloadTextFile } from "@/utils/download";
 import type { ProductImportResult } from "@/features/product/types/product.types";
+
+// Mirrors the importer's expected columns (product.service CSV contract).
+const SAMPLE_COLUMNS = [
+  "code",
+  "name",
+  "type",
+  "status",
+  "categoryId",
+  "brandId",
+  "unitId",
+  "hsnCode",
+  "gstRate",
+  "taxInclusive",
+  "purchasePrice",
+  "sellingPrice",
+  "mrp",
+  "sku",
+  "barcode",
+  "reorderLevel",
+  "maxStock",
+  "openingStock",
+  "tags",
+  "description",
+] as const;
+
+const SAMPLE_ROW: Record<(typeof SAMPLE_COLUMNS)[number], string> = {
+  code: "PROD-00001",
+  name: "Premium Widget",
+  type: "inventory",
+  status: "active",
+  // Category / brand / unit reference existing IDs — leave blank or paste a valid UUID.
+  categoryId: "",
+  brandId: "",
+  unitId: "",
+  hsnCode: "8471",
+  gstRate: "18",
+  taxInclusive: "false",
+  purchasePrice: "100",
+  sellingPrice: "150",
+  mrp: "199",
+  sku: "WIDGET-001",
+  barcode: "8901234567890",
+  reorderLevel: "10",
+  maxStock: "500",
+  openingStock: "50",
+  tags: "featured;new",
+  description: "A premium widget",
+};
+
+function downloadSample(): void {
+  downloadTextFile(
+    "products-import-sample.csv",
+    objectsToCsv(SAMPLE_COLUMNS, [SAMPLE_ROW])
+  );
+}
 
 interface ProductImportDialogProps {
   readonly organizationId: string;
@@ -109,6 +166,16 @@ export function ProductImportDialog({
                 onChange={handleFileChange}
                 className="block w-full cursor-pointer rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 shadow-sm file:mr-3 file:border-0 file:bg-slate-50 dark:file:bg-slate-800 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-slate-700 dark:file:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Not sure about the format?{" "}
+                <button
+                  type="button"
+                  onClick={downloadSample}
+                  className="font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
+                >
+                  Download sample CSV
+                </button>
+              </p>
             </div>
           )}
 

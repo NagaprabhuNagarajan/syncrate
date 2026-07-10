@@ -5,15 +5,21 @@ import { BatchesView } from "./batches-view";
 import type {
   Batch,
   BatchListResult,
+  BatchStats,
 } from "@/features/inventory/types/batch.types";
 
-const { mockRefresh, createBatchMock } = vi.hoisted(() => ({
-  mockRefresh: vi.fn(),
-  createBatchMock: vi.fn(),
-}));
+const { mockPush, mockRefresh, createBatchMock, searchParamsRef } = vi.hoisted(
+  () => ({
+    mockPush: vi.fn(),
+    mockRefresh: vi.fn(),
+    createBatchMock: vi.fn(),
+    searchParamsRef: { current: "" },
+  })
+);
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: mockRefresh }),
+  useRouter: () => ({ push: mockPush, replace: vi.fn(), refresh: mockRefresh }),
+  useSearchParams: () => new URLSearchParams(searchParamsRef.current),
 }));
 
 vi.mock("@/features/inventory/actions/inventory.actions", () => ({
@@ -22,6 +28,7 @@ vi.mock("@/features/inventory/actions/inventory.actions", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  searchParamsRef.current = "";
 });
 
 const products = [{ id: "prod-1", name: "Paracetamol", code: "MED-01" }];
@@ -55,29 +62,41 @@ function makeResult(overrides: Partial<BatchListResult> = {}): BatchListResult {
   };
 }
 
+function makeStats(overrides: Partial<BatchStats> = {}): BatchStats {
+  return {
+    total: 1,
+    active: 1,
+    expired: 0,
+    depleted: 0,
+    ...overrides,
+  };
+}
+
+function renderView(props: Partial<Parameters<typeof BatchesView>[0]> = {}) {
+  return render(
+    <BatchesView
+      organizationId="org-1"
+      result={makeResult()}
+      stats={makeStats()}
+      products={products}
+      filters={{}}
+      canManage
+      {...props}
+    />
+  );
+}
+
 describe("BatchesView", () => {
   it("renders batch rows with the product name", () => {
-    render(
-      <BatchesView
-        organizationId="org-1"
-        result={makeResult()}
-        products={products}
-        canManage
-      />
-    );
+    renderView();
     expect(screen.getByText("B-001")).toBeInTheDocument();
-    expect(screen.getByText("Paracetamol (MED-01)")).toBeInTheDocument();
+    expect(screen.getAllByText("Paracetamol (MED-01)").length).toBeGreaterThan(
+      0
+    );
   });
 
   it("shows an empty state with no batches", () => {
-    render(
-      <BatchesView
-        organizationId="org-1"
-        result={makeResult({ items: [], total: 0 })}
-        products={products}
-        canManage
-      />
-    );
+    renderView({ result: makeResult({ items: [], total: 0 }) });
     expect(screen.getByText("No batches yet")).toBeInTheDocument();
   });
 
@@ -88,14 +107,7 @@ describe("BatchesView", () => {
       data: { id: "batch-2", batchNumber: "B-002" },
     });
 
-    render(
-      <BatchesView
-        organizationId="org-1"
-        result={makeResult()}
-        products={products}
-        canManage
-      />
-    );
+    renderView();
 
     await user.click(screen.getByRole("button", { name: /add batch/i }));
     await user.selectOptions(screen.getByLabelText("Product"), "prod-1");
@@ -110,16 +122,40 @@ describe("BatchesView", () => {
   });
 
   it("hides the add button when the user cannot manage", () => {
-    render(
-      <BatchesView
-        organizationId="org-1"
-        result={makeResult()}
-        products={products}
-        canManage={false}
-      />
-    );
+    renderView({ canManage: false });
     expect(
       screen.queryByRole("button", { name: /add batch/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("renders the stat tiles", () => {
+    renderView({
+      stats: makeStats({ total: 8, active: 5, expired: 2, depleted: 1 }),
+      result: makeResult({ items: [] }),
+    });
+    expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText("Expired")).toBeInTheDocument();
+    expect(screen.getByText("Depleted")).toBeInTheDocument();
+  });
+
+  it("filters by product via the URL", async () => {
+    const user = userEvent.setup();
+    renderView();
+    await user.selectOptions(
+      screen.getByLabelText("Filter by product"),
+      "prod-1"
+    );
+    expect(mockPush).toHaveBeenCalledWith(
+      "/inventory/batches?product=prod-1"
+    );
+  });
+
+  it("shows pagination and navigates to the next page", async () => {
+    const user = userEvent.setup();
+    renderView({ result: makeResult({ total: 45, page: 1, pageSize: 20 }) });
+    expect(screen.getByText(/Showing/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /next/i }));
+    expect(mockPush).toHaveBeenCalledWith("/inventory/batches?page=2");
   });
 });

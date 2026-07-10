@@ -574,4 +574,33 @@ describe("ProductRepository", () => {
       expect(await repo.softDelete("prod-1", "user-9")).toBe(false);
     });
   });
+
+  describe("restore", () => {
+    it("clears deleted_at/deleted_by and sets status active", async () => {
+      const { client, builders } = createMockClient([
+        { data: null, error: null },
+      ]);
+      const repo = new ProductRepository(client);
+
+      const result = await repo.restore("prod-1", "user-9");
+      expect(result).toBe(true);
+      const patchArg = builders[0].update.mock.calls[0][0] as Record<
+        string,
+        unknown
+      >;
+      expect(patchArg.deleted_at).toBeNull();
+      expect(patchArg.deleted_by).toBeNull();
+      expect(patchArg.status).toBe("active");
+      expect(patchArg.updated_by).toBe("user-9");
+      expect(builders[0].eq).toHaveBeenCalledWith("id", "prod-1");
+    });
+
+    it("returns false when the update errors", async () => {
+      const { client } = createMockClient([
+        { data: null, error: { message: "boom" } },
+      ]);
+      const repo = new ProductRepository(client);
+      expect(await repo.restore("prod-1", "user-9")).toBe(false);
+    });
+  });
 });

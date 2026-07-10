@@ -90,16 +90,16 @@ export default async function PurchasesPage({
   const page = parsePage(params.page);
 
   const service = new PurchaseOrderService(supabase);
-  const result = await service.listPurchaseOrders(activeOrg.id, {
-    search,
-    status,
-    page,
-  });
+  const [result, stats] = await Promise.all([
+    service.listPurchaseOrders(activeOrg.id, { search, status, page }),
+    service.getPurchaseOrderStats(activeOrg.id),
+  ]);
 
   return (
     <PurchaseOrdersView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search, status }}
       canManage={canManage}
     />

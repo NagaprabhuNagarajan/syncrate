@@ -112,6 +112,19 @@ export interface PurchaseRequestListResult {
   readonly pageSize: number;
 }
 
+/**
+ * Aggregate counts for the list header stat tiles. Requisitions are
+ * supplier-agnostic and carry only an *estimated* price per line (optional,
+ * non-authoritative), so — unlike purchase orders — the tiles surface status
+ * counts rather than a monetary sum.
+ */
+export interface PurchaseRequestStats {
+  readonly draft: number;
+  readonly awaitingApproval: number;
+  readonly approved: number;
+  readonly converted: number;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Result types
 // ─────────────────────────────────────────────────────────────

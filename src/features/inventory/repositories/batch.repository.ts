@@ -4,6 +4,7 @@ import type {
   Batch,
   BatchListParams,
   BatchListResult,
+  BatchStats,
 } from "@/features/inventory/types/batch.types";
 
 type DbBatch = Database["public"]["Tables"]["batches"]["Row"];
@@ -100,6 +101,34 @@ export class BatchRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Aggregate counts for the batches list header tiles. Runs the counts in
+   * parallel as head-only queries (no rows transferred), scoped to
+   * non-deleted batches.
+   */
+  async getStats(organizationId: string): Promise<BatchStats> {
+    const base = () =>
+      this.supabase
+        .from("batches")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null);
+
+    const [total, active, expired, depleted] = await Promise.all([
+      base(),
+      base().eq("status", "active"),
+      base().eq("status", "expired"),
+      base().eq("status", "depleted"),
+    ]);
+
+    return {
+      total: total.count ?? 0,
+      active: active.count ?? 0,
+      expired: expired.count ?? 0,
+      depleted: depleted.count ?? 0,
     };
   }
 

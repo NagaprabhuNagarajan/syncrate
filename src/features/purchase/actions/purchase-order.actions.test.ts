@@ -11,6 +11,7 @@ import {
   updatePurchaseOrderAction,
   submitPurchaseOrderAction,
   approvePurchaseOrderAction,
+  orderPurchaseOrderAction,
   cancelPurchaseOrderAction,
 } from "./purchase-order.actions";
 
@@ -27,6 +28,7 @@ const {
     updatePurchaseOrder: vi.fn(),
     submitPurchaseOrder: vi.fn(),
     approvePurchaseOrder: vi.fn(),
+    orderPurchaseOrder: vi.fn(),
     cancelPurchaseOrder: vi.fn(),
   },
   mockOrgService: { getOrganizationContext: vi.fn() },
@@ -340,6 +342,36 @@ describe("status transition actions", () => {
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: "purchase_order.approve" })
     );
+  });
+
+  it("orderPurchaseOrderAction uses purchase.create and audits order", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["purchase.create"])
+    );
+    mockService.orderPurchaseOrder.mockResolvedValue(orderResult);
+    const result = await orderPurchaseOrderAction("org-1", "po-1");
+    expect(result).toBe(orderResult);
+    expect(mockService.orderPurchaseOrder).toHaveBeenCalledWith(
+      "po-1",
+      "org-1",
+      "user-1"
+    );
+    expect(auditLogMock).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "purchase_order.order" })
+    );
+  });
+
+  it("orderPurchaseOrderAction is forbidden without purchase.create", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["purchase.view"])
+    );
+    const result = await orderPurchaseOrderAction("org-1", "po-1");
+    if (!result.success) {
+      expect(result.error.code).toBe("forbidden");
+    }
+    expect(mockService.orderPurchaseOrder).not.toHaveBeenCalled();
   });
 
   it("cancelPurchaseOrderAction requires purchase.cancel", async () => {

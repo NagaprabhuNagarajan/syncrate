@@ -4,7 +4,7 @@ import type { AiContext, AiResult } from "@/features/ai/types/ai.types";
 import { InvoiceRepository } from "@/features/sales/repositories/invoice.repository";
 import { SalesOrderRepository } from "@/features/sales/repositories/sales-order.repository";
 import { InventoryRepository } from "@/features/inventory/repositories/inventory.repository";
-import { PurchaseInvoiceRepository } from "@/features/purchase/repositories/purchase-invoice.repository";
+import { BillRepository } from "@/features/purchase/repositories/bill.repository";
 import { CustomerPaymentRepository } from "@/features/payment/repositories/customer-payment.repository";
 import { SupplierPaymentRepository } from "@/features/payment/repositories/supplier-payment.repository";
 import { forecastResultSchema } from "@/features/ai/forecasting/schemas/forecastSchema";
@@ -69,7 +69,7 @@ export interface ForecastingServiceDeps {
     InventoryRepository,
     "listTransactions" | "listLevels"
   >;
-  readonly purchaseInvoices: Pick<PurchaseInvoiceRepository, "list">;
+  readonly purchaseInvoices: Pick<BillRepository, "list">;
   readonly customerPayments: Pick<CustomerPaymentRepository, "findAll">;
   readonly supplierPayments: Pick<SupplierPaymentRepository, "findAll">;
 }
@@ -132,7 +132,7 @@ export class ForecastingService {
     this.salesOrders = deps.salesOrders ?? new SalesOrderRepository(supabase);
     this.inventory = deps.inventory ?? new InventoryRepository(supabase);
     this.purchaseInvoices =
-      deps.purchaseInvoices ?? new PurchaseInvoiceRepository(supabase);
+      deps.purchaseInvoices ?? new BillRepository(supabase);
     this.customerPayments =
       deps.customerPayments ?? new CustomerPaymentRepository(supabase);
     this.supplierPayments =

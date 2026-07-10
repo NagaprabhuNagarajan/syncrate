@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ShoppingCart,
   Pencil,
   Send,
   CheckCircle2,
@@ -17,42 +16,51 @@ import {
   PackageCheck,
   FileText,
   Undo2,
+  ChevronLeft,
+  Receipt,
+  Percent,
+  Wallet,
+  type LucideIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PageHeader } from "@/components/shared/page-header";
 import {
-  PO_STATUS_LABEL,
-  PO_STATUS_VARIANT,
-} from "@/features/purchase/components/purchase-orders-view";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   submitPurchaseOrderAction,
   approvePurchaseOrderAction,
+  orderPurchaseOrderAction,
   cancelPurchaseOrderAction,
 } from "@/features/purchase/actions/purchase-order.actions";
+import {
+  PO_STATUS_LABEL,
+  PO_STATUS_VARIANT,
+} from "@/features/purchase/utils/purchase-order-display";
+import { formatCurrency, formatDate } from "@/utils/format";
 import type { PurchaseOrderWithItems } from "@/features/purchase/types/purchase-order.types";
-
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
-
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
-}
-
-function formatDate(value: Date | null): string {
-  if (!value) {
-    return "—";
-  }
-  return new Date(value).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import type { BillListItem } from "@/features/purchase/types/bill.types";
+import type { PurchaseReturnListItem } from "@/features/purchase/types/purchase-return.types";
+import type { GoodsReceiptListItem } from "@/features/purchase/types/goods-receipt.types";
+import {
+  BILL_STATUS_LABEL,
+  BILL_STATUS_VARIANT,
+} from "@/features/purchase/utils/bill-display";
+import {
+  PRET_STATUS_LABEL,
+  PRET_STATUS_VARIANT,
+} from "@/features/purchase/utils/purchase-return-display";
+import {
+  GRN_STATUS_LABEL,
+  GRN_STATUS_VARIANT,
+} from "@/features/purchase/utils/goods-receipt-display";
+import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
 // Cancel confirmation dialog
@@ -92,7 +100,10 @@ function CancelDialog({
       >
         <div className="flex items-start gap-4">
           <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
-            <AlertTriangle className="text-error-600 dark:text-error-400 h-5 w-5" aria-hidden="true" />
+            <AlertTriangle
+              className="text-error-600 dark:text-error-400 h-5 w-5"
+              aria-hidden="true"
+            />
           </div>
           <div>
             <h2
@@ -103,8 +114,10 @@ function CancelDialog({
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Are you sure you want to cancel{" "}
-              <span className="font-medium text-slate-700 dark:text-slate-300">{poNumber}</span>?
-              This cannot be undone.
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {poNumber}
+              </span>
+              ? This cannot be undone.
             </p>
           </div>
         </div>
@@ -143,7 +156,70 @@ function CancelDialog({
 }
 
 // ─────────────────────────────────────────────────────────────
-// Info row
+// KPI tile
+// ─────────────────────────────────────────────────────────────
+
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
+  emphasis,
+  displayValue,
+  index,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly emphasis?: boolean;
+  readonly displayValue?: string;
+  readonly index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+    >
+      <Card className="relative h-full overflow-hidden p-3">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-20 w-20 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-2.5">
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
+              tint
+            )}
+          >
+            <Icon className="h-4 w-4 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p
+              className={cn(
+                "truncate font-bold leading-tight text-slate-900 dark:text-slate-100",
+                emphasis ? "text-lg" : "text-base"
+              )}
+            >
+              {displayValue ?? formatCurrency(value, true)}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Info row + section card
 // ─────────────────────────────────────────────────────────────
 
 function InfoRow({
@@ -151,7 +227,7 @@ function InfoRow({
   label,
   value,
 }: {
-  readonly icon: typeof Truck;
+  readonly icon: LucideIcon;
   readonly label: string;
   readonly value: string | null;
 }) {
@@ -164,11 +240,38 @@ function InfoRow({
         className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
         aria-hidden="true"
       />
-      <div>
+      <div className="min-w-0">
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
+        <dd className="break-words text-slate-700 dark:text-slate-300">
+          {value}
+        </dd>
       </div>
     </div>
+  );
+}
+
+function SectionCard({
+  title,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {title}
+        </h2>
+        {children}
+      </Card>
+    </motion.div>
   );
 }
 
@@ -176,11 +279,83 @@ function InfoRow({
 // Detail
 // ─────────────────────────────────────────────────────────────
 
+interface LinkedDocRow {
+  readonly id: string;
+  /** Detail link, when the document has its own page (goods receipts don't). */
+  readonly href?: string;
+  readonly number: string;
+  readonly date: string;
+  /** Pre-formatted trailing value (e.g. a currency total or a quantity). */
+  readonly trailing?: string;
+  readonly statusLabel: string;
+  readonly statusVariant: BadgeProps["variant"];
+}
+
+function LinkedDocTable({
+  rows,
+  trailingLabel,
+}: {
+  readonly rows: readonly LinkedDocRow[];
+  /** Header for the trailing column; omit to hide it. */
+  readonly trailingLabel?: string;
+}) {
+  return (
+    <Table wrapperClassName="shadow-none">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Number</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead>Status</TableHead>
+          {trailingLabel && (
+            <TableHead className="text-right">{trailingLabel}</TableHead>
+          )}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.id}>
+            <TableCell>
+              {row.href ? (
+                <Link
+                  href={row.href}
+                  className="font-mono text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
+                >
+                  {row.number}
+                </Link>
+              ) : (
+                <span className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {row.number}
+                </span>
+              )}
+            </TableCell>
+            <TableCell className="whitespace-nowrap text-slate-600 dark:text-slate-400">
+              {row.date}
+            </TableCell>
+            <TableCell>
+              <Badge variant={row.statusVariant}>{row.statusLabel}</Badge>
+            </TableCell>
+            {trailingLabel && (
+              <TableCell className="nums text-right font-medium text-slate-700 dark:text-slate-300">
+                {row.trailing}
+              </TableCell>
+            )}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 interface PurchaseOrderDetailProps {
   readonly purchaseOrder: PurchaseOrderWithItems;
   readonly supplierName: string | null;
   readonly branchName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
+  readonly linkedBills: readonly BillListItem[];
+  readonly linkedReturns: readonly PurchaseReturnListItem[];
+  readonly linkedReceipts: readonly GoodsReceiptListItem[];
+  /** Resolved display name of the approver (falls back to the id). */
+  readonly approvedByName?: string | null;
   readonly organizationId: string;
   readonly canManage: boolean;
   readonly canApprove: boolean;
@@ -193,6 +368,10 @@ export function PurchaseOrderDetail({
   supplierName,
   branchName,
   productNames,
+  linkedBills,
+  linkedReturns,
+  linkedReceipts,
+  approvedByName,
   organizationId,
   canManage,
   canApprove,
@@ -206,15 +385,21 @@ export function PurchaseOrderDetail({
   const [isPending, startTransition] = useTransition();
 
   const org = searchParams.get("org");
-  const withOrg = (path: string): string => (org ? `${path}?org=${org}` : path);
+  const withOrg = (path: string): string =>
+    org ? `${path}?org=${org}` : path;
   const editHref = withOrg(`/purchases/${purchaseOrder.id}/edit`);
   const receiveHref = withOrg(`/purchases/${purchaseOrder.id}/receive`);
-  const newInvoiceHref = withOrg("/purchases/invoices/new");
-  const newReturnHref = withOrg("/purchases/returns/new");
+  const newBillHref = withOrg(
+    `/purchases/bills/new?fromPurchaseOrder=${purchaseOrder.id}`
+  );
+  const newReturnHref = withOrg(
+    `/purchases/returns/new?fromPurchaseOrder=${purchaseOrder.id}`
+  );
 
   const { status } = purchaseOrder;
   const isDraft = status === "draft";
   const isSubmitted = status === "submitted";
+  const isApproved = status === "approved";
   const isTerminal = status === "completed" || status === "cancelled";
   const canReceiveNow =
     canReceive &&
@@ -243,215 +428,399 @@ export function PurchaseOrderDetail({
     run(() => submitPurchaseOrderAction(organizationId, purchaseOrder.id));
   const handleApprove = (): void =>
     run(() => approvePurchaseOrderAction(organizationId, purchaseOrder.id));
+  const handleOrder = (): void =>
+    run(() => orderPurchaseOrderAction(organizationId, purchaseOrder.id));
   const handleCancel = (): void =>
     run(() => cancelPurchaseOrderAction(organizationId, purchaseOrder.id));
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title={purchaseOrder.poNumber}
-        description={supplierName ?? undefined}
-        icon={ShoppingCart}
+      {/* Back link */}
+      <Link
+        href={withOrg("/purchases")}
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
-        {isDraft && canManage && (
-          <Button asChild variant="outline">
-            <Link href={editHref}>
-              <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Edit
-            </Link>
-          </Button>
-        )}
-        {isDraft && canManage && (
-          <Button type="button" variant="gradient" onClick={handleSubmit} loading={isPending}>
-            <Send className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Submit
-          </Button>
-        )}
-        {isSubmitted && canApprove && (
-          <Button type="button" variant="gradient" onClick={handleApprove} loading={isPending}>
-            <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Approve
-          </Button>
-        )}
-        {canReceiveNow && (
-          <Button asChild variant="gradient">
-            <Link href={receiveHref}>
-              <PackageCheck className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Receive goods
-            </Link>
-          </Button>
-        )}
-        {canCreateDocuments && (
-          <Button asChild variant="outline">
-            <Link href={newInvoiceHref}>
-              <FileText className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Create invoice
-            </Link>
-          </Button>
-        )}
-        {canCreateDocuments && (
-          <Button asChild variant="outline">
-            <Link href={newReturnHref}>
-              <Undo2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Create return
-            </Link>
-          </Button>
-        )}
-        {!isTerminal && canCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
-            onClick={() => {
-              setActionError(null);
-              setShowCancel(true);
-            }}
-          >
-            <XCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Cancel
-          </Button>
-        )}
-      </PageHeader>
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        Purchase orders
+      </Link>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Badge dot variant={PO_STATUS_VARIANT[status]}>
-          {PO_STATUS_LABEL[status]}
-        </Badge>
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200/70 bg-white/80 px-4 py-3 backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/80 lg:-mx-6 lg:px-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                {purchaseOrder.poNumber}
+              </h1>
+              <Badge dot variant={PO_STATUS_VARIANT[status]}>
+                {PO_STATUS_LABEL[status]}
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              {supplierName ?? "No supplier"}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {isDraft && canManage && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={editHref}>
+                  <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Edit
+                </Link>
+              </Button>
+            )}
+            {isDraft && canManage && (
+              <Button
+                type="button"
+                variant="gradient"
+                size="sm"
+                onClick={handleSubmit}
+                loading={isPending}
+              >
+                <Send className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Submit
+              </Button>
+            )}
+            {isSubmitted && canApprove && (
+              <Button
+                type="button"
+                variant="gradient"
+                size="sm"
+                onClick={handleApprove}
+                loading={isPending}
+              >
+                <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Approve
+              </Button>
+            )}
+            {isApproved && canManage && (
+              <Button
+                type="button"
+                variant="gradient"
+                size="sm"
+                onClick={handleOrder}
+                loading={isPending}
+              >
+                <Truck className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Mark as ordered
+              </Button>
+            )}
+            {canReceiveNow && (
+              <Button asChild variant="gradient" size="sm">
+                <Link href={receiveHref}>
+                  <PackageCheck
+                    className="mr-1.5 h-4 w-4"
+                    aria-hidden="true"
+                  />
+                  Receive goods
+                </Link>
+              </Button>
+            )}
+            {canCreateDocuments && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={newBillHref}>
+                  <FileText className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Create bill
+                </Link>
+              </Button>
+            )}
+            {canCreateDocuments && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={newReturnHref}>
+                  <Undo2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Create return
+                </Link>
+              </Button>
+            )}
+            {!isTerminal && canCancel && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
+                onClick={() => {
+                  setActionError(null);
+                  setShowCancel(true);
+                }}
+              >
+                <XCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Cancel
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       {actionError && (
         <p
           role="alert"
-          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mb-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {actionError}
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Details */}
-        <Card className="p-5 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Order details
-          </h2>
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoRow icon={Truck} label="Supplier" value={supplierName} />
-            <InfoRow icon={Building2} label="Building2" value={branchName} />
-            <InfoRow
-              icon={Calendar}
-              label="Order date"
-              value={formatDate(purchaseOrder.orderDate)}
-            />
-            <InfoRow
-              icon={Calendar}
-              label="Expected delivery"
-              value={formatDate(purchaseOrder.expectedDeliveryDate)}
-            />
-          </dl>
-          {purchaseOrder.terms && (
-            <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-800">
-              <dt className="text-xs text-muted-foreground">Terms</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
-                {purchaseOrder.terms}
-              </dd>
-            </div>
-          )}
-          {purchaseOrder.notes && (
-            <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-              <dt className="text-xs text-muted-foreground">Notes</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
-                {purchaseOrder.notes}
-              </dd>
-            </div>
-          )}
-        </Card>
-
-        {/* Totals */}
-        <Card className="p-5">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
-          <dl className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(purchaseOrder.subtotal)}
-              </dd>
-            </div>
-            <div className="flex justify-between text-sm">
-              <dt className="text-muted-foreground">Discount</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                −{formatCurrency(purchaseOrder.discountAmount)}
-              </dd>
-            </div>
-            <div className="flex justify-between text-sm">
-              <dt className="text-muted-foreground">Tax</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(purchaseOrder.taxAmount)}
-              </dd>
-            </div>
-            <div className="flex justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
-              <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">Total</dt>
-              <dd className="text-xl font-semibold nums text-slate-900 dark:text-slate-100">
-                {formatCurrency(purchaseOrder.totalAmount)}
-              </dd>
-            </div>
-          </dl>
-        </Card>
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiTile
+          icon={Receipt}
+          label="Total"
+          value={purchaseOrder.totalAmount}
+          tint="bg-gradient-brand"
+          emphasis
+          index={0}
+        />
+        <KpiTile
+          icon={Wallet}
+          label="Subtotal"
+          value={purchaseOrder.subtotal}
+          tint="bg-gradient-violet"
+          index={1}
+        />
+        <KpiTile
+          icon={Percent}
+          label="Tax"
+          value={purchaseOrder.taxAmount}
+          tint="bg-gradient-info"
+          index={2}
+        />
+        <KpiTile
+          icon={Calendar}
+          label="Order date"
+          value={0}
+          displayValue={formatDate(purchaseOrder.orderDate)}
+          tint="bg-gradient-success"
+          index={3}
+        />
       </div>
 
-      {/* Items */}
-      <div className="mt-4">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Line items</h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-                <tr>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Product
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Qty
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Unit price
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Disc %
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Tax
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Line total
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {purchaseOrder.items.map((item) => (
-                  <tr key={item.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                      {productNames[item.productId] ?? item.description ?? "—"}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {item.quantity}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {formatCurrency(item.unitPrice)}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {item.discountPercent}%
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {item.taxRate}%
-                    </td>
-                    <td className="px-3 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
-                      {formatCurrency(item.lineTotal)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* Two-column body */}
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Main column */}
+        <div className="space-y-4 lg:col-span-2">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.1 }}
+          >
+            <Card className="overflow-hidden">
+              <div className="px-5 py-4">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Line items
+                </h2>
+              </div>
+              <Table
+                className="[&_td]:px-5 [&_th]:px-5"
+                wrapperClassName="rounded-none border-0 border-t border-slate-100 bg-transparent dark:border-slate-800"
+              >
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Unit price</TableHead>
+                    <TableHead className="text-right">Disc %</TableHead>
+                    <TableHead className="text-right">Tax</TableHead>
+                    <TableHead className="text-right">Line total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {purchaseOrder.items.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="text-slate-700 dark:text-slate-300">
+                        {productNames[item.productId] ??
+                          item.description ??
+                          "—"}
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                        {item.quantity}
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                        {formatCurrency(item.unitPrice, true)}
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                        {item.discountPercent}%
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                        {item.taxRate}%
+                      </TableCell>
+                      <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                        {formatCurrency(item.lineTotal, true)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </motion.div>
+
+          {(purchaseOrder.terms || purchaseOrder.notes) && (
+            <SectionCard title="Terms & notes" delay={0.15}>
+              <div className="space-y-4">
+                {purchaseOrder.terms && (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Terms</dt>
+                    <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
+                      {purchaseOrder.terms}
+                    </dd>
+                  </div>
+                )}
+                {purchaseOrder.notes && (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Notes</dt>
+                    <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
+                      {purchaseOrder.notes}
+                    </dd>
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          )}
+
+          <SectionCard title="Linked documents" delay={0.2}>
+            {linkedReceipts.length === 0 &&
+            linkedBills.length === 0 &&
+            linkedReturns.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No goods receipts, bills or returns are linked to this purchase
+                order yet. Receive goods, or use &ldquo;Create bill&rdquo; /
+                &ldquo;Create return&rdquo; above to raise one from this order.
+              </p>
+            ) : (
+              <div className="space-y-5">
+                {linkedReceipts.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      Goods receipts
+                    </p>
+                    <LinkedDocTable
+                      trailingLabel="Received qty"
+                      rows={linkedReceipts.map((g) => ({
+                        id: g.id,
+                        href: withOrg(
+                          `/purchases/goods-receipts?search=${encodeURIComponent(
+                            g.grnNumber
+                          )}`
+                        ),
+                        number: g.grnNumber,
+                        date: formatDate(g.receivedDate),
+                        trailing: String(g.totalReceivedQuantity),
+                        statusLabel: GRN_STATUS_LABEL[g.status],
+                        statusVariant: GRN_STATUS_VARIANT[g.status],
+                      }))}
+                    />
+                  </div>
+                )}
+                {linkedBills.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      Bills
+                    </p>
+                    <LinkedDocTable
+                      trailingLabel="Total"
+                      rows={linkedBills.map((b) => ({
+                        id: b.id,
+                        href: withOrg(`/purchases/bills/${b.id}`),
+                        number: b.invoiceNumber,
+                        date: formatDate(b.invoiceDate),
+                        trailing: formatCurrency(b.totalAmount),
+                        statusLabel: BILL_STATUS_LABEL[b.status],
+                        statusVariant: BILL_STATUS_VARIANT[b.status],
+                      }))}
+                    />
+                  </div>
+                )}
+                {linkedReturns.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      Returns
+                    </p>
+                    <LinkedDocTable
+                      trailingLabel="Total"
+                      rows={linkedReturns.map((r) => ({
+                        id: r.id,
+                        href: withOrg(`/purchases/returns/${r.id}`),
+                        number: r.returnNumber,
+                        date: formatDate(r.returnDate),
+                        trailing: formatCurrency(r.totalAmount),
+                        statusLabel: PRET_STATUS_LABEL[r.status],
+                        statusVariant: PRET_STATUS_VARIANT[r.status],
+                      }))}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-4">
+          <SectionCard title="Details" delay={0.1}>
+            <dl className="space-y-4">
+              <InfoRow icon={Truck} label="Supplier" value={supplierName} />
+              <InfoRow icon={Building2} label="Branch" value={branchName} />
+              <InfoRow
+                icon={Calendar}
+                label="Order date"
+                value={formatDate(purchaseOrder.orderDate)}
+              />
+              <InfoRow
+                icon={Calendar}
+                label="Expected delivery"
+                value={
+                  purchaseOrder.expectedDeliveryDate
+                    ? formatDate(purchaseOrder.expectedDeliveryDate)
+                    : null
+                }
+              />
+              <InfoRow
+                icon={CheckCircle2}
+                label="Approved by"
+                value={approvedByName ?? purchaseOrder.approvedBy}
+              />
+              <InfoRow
+                icon={Calendar}
+                label="Approved at"
+                value={
+                  purchaseOrder.approvedAt
+                    ? formatDate(purchaseOrder.approvedAt)
+                    : null
+                }
+              />
+            </dl>
+          </SectionCard>
+
+          <SectionCard title="Summary" delay={0.15}>
+            <dl className="space-y-4">
+              <div className="flex justify-between text-sm">
+                <dt className="text-muted-foreground">Subtotal</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(purchaseOrder.subtotal, true)}
+                </dd>
+              </div>
+              <div className="flex justify-between text-sm">
+                <dt className="text-muted-foreground">Discount</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  −{formatCurrency(purchaseOrder.discountAmount, true)}
+                </dd>
+              </div>
+              <div className="flex justify-between text-sm">
+                <dt className="text-muted-foreground">Tax</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(purchaseOrder.taxAmount, true)}
+                </dd>
+              </div>
+              <div className="flex justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+                <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Total
+                </dt>
+                <dd className="nums text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  {formatCurrency(purchaseOrder.totalAmount, true)}
+                </dd>
+              </div>
+            </dl>
+          </SectionCard>
         </div>
       </div>
 

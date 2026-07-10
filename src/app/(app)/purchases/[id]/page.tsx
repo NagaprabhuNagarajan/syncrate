@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { PurchaseOrderService } from "@/features/purchase/services/purchase-order.service";
+import { BillService } from "@/features/purchase/services/bill.service";
+import { PurchaseReturnService } from "@/features/purchase/services/purchase-return.service";
+import { GoodsReceiptService } from "@/features/purchase/services/goods-receipt.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { PurchaseOrderDetail } from "@/features/purchase/components/purchase-order-detail";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
@@ -39,6 +42,21 @@ async function lookupName(
     .eq("id", id)
     .single();
   return data?.name ?? null;
+}
+
+async function lookupUserName(
+  supabase: AppSupabaseClient,
+  id: string | null
+): Promise<string | null> {
+  if (!id) {
+    return null;
+  }
+  const { data } = await supabase
+    .from("users")
+    .select("full_name,email")
+    .eq("id", id)
+    .single();
+  return data?.full_name ?? data?.email ?? null;
 }
 
 async function lookupProductNames(
@@ -119,13 +137,25 @@ export default async function PurchaseOrderDetailPage({
 
   const order = result.data;
 
-  const [supplierName, branchName, productNames] = await Promise.all([
+  const [
+    supplierName,
+    branchName,
+    productNames,
+    linkedBills,
+    linkedReturns,
+    linkedReceipts,
+    approvedByName,
+  ] = await Promise.all([
     lookupName(supabase, "suppliers", order.supplierId),
     lookupName(supabase, "branches", order.branchId),
     lookupProductNames(
       supabase,
       order.items.map((item) => item.productId)
     ),
+    new BillService(supabase).listBillsForPurchaseOrder(order.id),
+    new PurchaseReturnService(supabase).listReturnsForPurchaseOrder(order.id),
+    new GoodsReceiptService(supabase).listReceiptsForPurchaseOrder(order.id),
+    lookupUserName(supabase, order.approvedBy),
   ]);
 
   return (
@@ -134,6 +164,10 @@ export default async function PurchaseOrderDetailPage({
       supplierName={supplierName}
       branchName={branchName}
       productNames={productNames}
+      linkedBills={linkedBills}
+      linkedReturns={linkedReturns}
+      linkedReceipts={linkedReceipts}
+      approvedByName={approvedByName}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("purchase.create")}
       canApprove={context.permissions.includes("purchase.approve")}

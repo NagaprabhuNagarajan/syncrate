@@ -3,8 +3,10 @@ import type { Database } from "@/types/database.types";
 import type {
   GoodsReceipt,
   GoodsReceiptItem,
+  GoodsReceiptListItem,
   GoodsReceiptListParams,
   GoodsReceiptListResult,
+  GoodsReceiptStats,
   GoodsReceiptWithItems,
 } from "@/features/purchase/types/goods-receipt.types";
 
@@ -35,13 +37,22 @@ interface PurchaseOrderJoin {
 
 type DbGoodsReceiptListRow = DbGoodsReceipt & {
   purchase_orders: PurchaseOrderJoin | PurchaseOrderJoin[] | null;
+  goods_receipt_items: { received_quantity: number }[] | null;
 };
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 
 const LIST_SELECT =
-  "*, purchase_orders(po_number, suppliers(name))";
+  "*, purchase_orders(po_number, suppliers(name)), goods_receipt_items(received_quantity)";
+
+/** Sums the received quantity across a list row's embedded line items. */
+function sumReceived(row: DbGoodsReceiptListRow): number {
+  return (row.goods_receipt_items ?? []).reduce(
+    (sum, item) => sum + Number(item.received_quantity),
+    0
+  );
+}
 
 // ─────────────────────────────────────────────────────────────
 // Mappers
@@ -184,12 +195,40 @@ export class GoodsReceiptRepository {
           ...mapGoodsReceipt(row),
           poNumber: po?.po_number ?? null,
           supplierName: readSupplierName(po),
+          totalReceivedQuantity: sumReceived(row),
         };
       }),
       total: count ?? 0,
       page,
       pageSize,
     };
+  }
+
+  /** Goods receipts recorded against a purchase order, newest first. */
+  async findByPurchaseOrder(
+    purchaseOrderId: string
+  ): Promise<GoodsReceiptListItem[]> {
+    const { data, error } = await this.supabase
+      .from("goods_receipts")
+      .select(LIST_SELECT)
+      .eq("purchase_order_id", purchaseOrderId)
+      .is("deleted_at", null)
+      .order("received_date", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+
+    const rows = data as unknown as DbGoodsReceiptListRow[];
+    return rows.map((row) => {
+      const po = one(row.purchase_orders);
+      return {
+        ...mapGoodsReceipt(row),
+        poNumber: po?.po_number ?? null,
+        supplierName: readSupplierName(po),
+        totalReceivedQuantity: sumReceived(row),
+      };
+    });
   }
 
   /**
@@ -203,5 +242,36 @@ export class GoodsReceiptRepository {
   async receiveGoodsRpc(args: ReceiveGoodsArgs): Promise<ReceiveGoodsResult> {
     const { data, error } = await this.supabase.rpc("receive_goods", args);
     return { data: data ?? null, error };
+  }
+
+  /**
+   * Aggregate counts for the goods-receipts list header tiles. All are
+   * head-count-only queries (no rows fetched) run in parallel.
+   */
+  async getStats(organizationId: string): Promise<GoodsReceiptStats> {
+    const base = () =>
+      this.supabase
+        .from("goods_receipts")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const [total, thisMonth, completed, draft] = await Promise.all([
+      base(),
+      base().gte("created_at", monthStart.toISOString()),
+      base().eq("status", "completed"),
+      base().eq("status", "draft"),
+    ]);
+
+    return {
+      total: total.count ?? 0,
+      thisMonth: thisMonth.count ?? 0,
+      completed: completed.count ?? 0,
+      draft: draft.count ?? 0,
+    };
   }
 }

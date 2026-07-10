@@ -10,6 +10,7 @@ import type {
   PurchaseOrderErrorCode,
   PurchaseOrderListParams,
   PurchaseOrderListResult,
+  PurchaseOrderStats,
   PurchaseOrderWithItems,
   UpdatePurchaseOrderInput,
 } from "@/features/purchase/types/purchase-order.types";
@@ -138,6 +139,12 @@ export class PurchaseOrderService {
       return fail("not_found", "Purchase order not found");
     }
     return ok(order);
+  }
+
+  async getPurchaseOrderStats(
+    organizationId: string
+  ): Promise<PurchaseOrderStats> {
+    return this.repo.getStats(organizationId);
   }
 
   // ── Create ─────────────────────────────────────────────────
@@ -289,6 +296,22 @@ export class PurchaseOrderService {
       "approved",
       "Only submitted purchase orders can be approved",
       true
+    );
+  }
+
+  async orderPurchaseOrder(
+    purchaseOrderId: string,
+    organizationId: string,
+    userId: string
+  ): Promise<PurchaseOrderActionResult<PurchaseOrder>> {
+    return this.transition(
+      purchaseOrderId,
+      organizationId,
+      userId,
+      (current) => current === "approved",
+      "ordered",
+      "Only approved purchase orders can be marked as ordered",
+      false
     );
   }
 

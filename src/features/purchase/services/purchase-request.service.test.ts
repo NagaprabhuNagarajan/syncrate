@@ -11,6 +11,7 @@ import { PurchaseRequestService } from "./purchase-request.service";
 const { mockRepo, createPurchaseOrderMock } = vi.hoisted(() => ({
   mockRepo: {
     list: vi.fn(),
+    getStats: vi.fn(),
     findById: vi.fn(),
     findByNumber: vi.fn(),
     findItems: vi.fn(),
@@ -506,5 +507,13 @@ describe("PurchaseRequestService reads", () => {
     const result = await service.listPurchaseRequests("org-1", { status: "draft" });
     expect(result).toBe(listResult);
     expect(mockRepo.list).toHaveBeenCalledWith("org-1", { status: "draft" });
+  });
+
+  it("getPurchaseRequestStats delegates to the repository", async () => {
+    const stats = { draft: 1, awaitingApproval: 2, approved: 3, converted: 4 };
+    mockRepo.getStats.mockResolvedValue(stats);
+    const result = await service.getPurchaseRequestStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
   });
 });

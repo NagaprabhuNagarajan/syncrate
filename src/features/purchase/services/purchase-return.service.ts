@@ -9,7 +9,9 @@ import type {
   PurchaseReturnError,
   PurchaseReturnErrorCode,
   PurchaseReturnListParams,
+  PurchaseReturnListItem,
   PurchaseReturnListResult,
+  PurchaseReturnStats,
   PurchaseReturnWithItems,
   UpdatePurchaseReturnInput,
 } from "@/features/purchase/types/purchase-return.types";
@@ -137,6 +139,13 @@ export class PurchaseReturnService {
     return this.repo.list(organizationId, params);
   }
 
+  /** Returns linked to a purchase order (for the PO detail page). */
+  async listReturnsForPurchaseOrder(
+    purchaseOrderId: string
+  ): Promise<PurchaseReturnListItem[]> {
+    return this.repo.findByPurchaseOrder(purchaseOrderId);
+  }
+
   async getPurchaseReturn(
     id: string
   ): Promise<PurchaseReturnActionResult<PurchaseReturnWithItems>> {
@@ -145,6 +154,12 @@ export class PurchaseReturnService {
       return fail("not_found", "Purchase return not found");
     }
     return ok(found);
+  }
+
+  async getPurchaseReturnStats(
+    organizationId: string
+  ): Promise<PurchaseReturnStats> {
+    return this.repo.getStats(organizationId);
   }
 
   // ── Create ─────────────────────────────────────────────────

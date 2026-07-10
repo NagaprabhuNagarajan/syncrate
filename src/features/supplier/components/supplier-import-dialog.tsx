@@ -12,7 +12,65 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { importSuppliersAction } from "@/features/supplier/actions/supplier.actions";
+import { objectsToCsv } from "@/utils/csv";
+import { downloadTextFile } from "@/utils/download";
 import type { SupplierImportResult } from "@/features/supplier/types/supplier.types";
+
+// Mirrors the importer's expected columns (supplier.service CSV contract).
+const SAMPLE_COLUMNS = [
+  "code",
+  "name",
+  "contactPerson",
+  "gstNumber",
+  "panNumber",
+  "mobile",
+  "email",
+  "website",
+  "city",
+  "state",
+  "pincode",
+  "bankName",
+  "bankAccountNumber",
+  "bankIfsc",
+  "upiId",
+  "paymentTermsDays",
+  "openingBalance",
+  "rating",
+  "status",
+  "tags",
+  "notes",
+] as const;
+
+const SAMPLE_ROW: Record<(typeof SAMPLE_COLUMNS)[number], string> = {
+  code: "SUPP-00001",
+  name: "Acme Supplies",
+  contactPerson: "Ramesh Kumar",
+  gstNumber: "27BBBBB1111B1Z5",
+  panNumber: "BBBBB1111B",
+  mobile: "+91 90000 00000",
+  email: "sales@acmesupplies.com",
+  website: "https://acmesupplies.com",
+  city: "Pune",
+  state: "Maharashtra",
+  pincode: "411001",
+  bankName: "HDFC Bank",
+  bankAccountNumber: "123456789012",
+  bankIfsc: "HDFC0001234",
+  upiId: "acme@okhdfcbank",
+  paymentTermsDays: "45",
+  openingBalance: "0",
+  rating: "4.5",
+  status: "active",
+  tags: "preferred;raw-material",
+  notes: "Reliable supplier",
+};
+
+function downloadSample(): void {
+  downloadTextFile(
+    "suppliers-import-sample.csv",
+    objectsToCsv(SAMPLE_COLUMNS, [SAMPLE_ROW])
+  );
+}
 
 interface SupplierImportDialogProps {
   readonly organizationId: string;
@@ -109,6 +167,16 @@ export function SupplierImportDialog({
                 onChange={handleFileChange}
                 className="block w-full cursor-pointer rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-300 shadow-sm file:mr-3 file:border-0 file:bg-slate-50 dark:file:bg-slate-800 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-slate-700 dark:file:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Not sure about the format?{" "}
+                <button
+                  type="button"
+                  onClick={downloadSample}
+                  className="font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
+                >
+                  Download sample CSV
+                </button>
+              </p>
             </div>
           )}
 

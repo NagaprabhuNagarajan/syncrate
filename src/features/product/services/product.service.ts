@@ -223,6 +223,21 @@ export class ProductService {
     return ok(undefined);
   }
 
+  async restoreProduct(
+    productId: string,
+    userId: string
+  ): Promise<ProductActionResult<void>> {
+    const existing = await this.repo.findById(productId);
+    if (!existing) {
+      return fail("not_found", "Product not found");
+    }
+    const restored = await this.repo.restore(productId, userId);
+    if (!restored) {
+      return fail("unknown", "Failed to restore product. Please try again.");
+    }
+    return ok(undefined);
+  }
+
   // ── CSV export ─────────────────────────────────────────────
 
   /** Serializes every non-deleted product for the org into CSV text. */

@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type { Database } from "@/types/database.types";
-import { PurchaseInvoiceRepository } from "./purchase-invoice.repository";
+import { BillRepository } from "./bill.repository";
 
-type DbPurchaseInvoice =
+type DbBill =
   Database["public"]["Tables"]["purchase_invoices"]["Row"];
-type DbPurchaseInvoiceItem =
+type DbBillItem =
   Database["public"]["Tables"]["purchase_invoice_items"]["Row"];
 
 // ─────────────────────────────────────────────────────────────
@@ -22,6 +22,8 @@ interface QueryResult {
 interface MockBuilder {
   select: Mock;
   eq: Mock;
+  neq: Mock;
+  lt: Mock;
   is: Mock;
   or: Mock;
   ilike: Mock;
@@ -62,6 +64,8 @@ function createMockClient(
     } = {
       select: vi.fn(() => builder),
       eq: vi.fn(() => builder),
+      neq: vi.fn(() => builder),
+      lt: vi.fn(() => builder),
       is: vi.fn(() => builder),
       or: vi.fn(() => builder),
       ilike: vi.fn(() => builder),
@@ -90,8 +94,8 @@ function createMockClient(
 // ─────────────────────────────────────────────────────────────
 
 function buildDbInvoice(
-  overrides: Partial<DbPurchaseInvoice> = {}
-): DbPurchaseInvoice {
+  overrides: Partial<DbBill> = {}
+): DbBill {
   return {
     id: "pinv-1",
     organization_id: "org-1",
@@ -122,8 +126,8 @@ function buildDbInvoice(
 }
 
 function buildDbItem(
-  overrides: Partial<DbPurchaseInvoiceItem> = {}
-): DbPurchaseInvoiceItem {
+  overrides: Partial<DbBillItem> = {}
+): DbBillItem {
   return {
     id: "item-1",
     organization_id: "org-1",
@@ -141,7 +145,7 @@ function buildDbItem(
   };
 }
 
-describe("PurchaseInvoiceRepository", () => {
+describe("BillRepository", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -151,7 +155,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: buildDbInvoice(), error: null },
       ]);
-      const invoice = await new PurchaseInvoiceRepository(client).findById(
+      const invoice = await new BillRepository(client).findById(
         "pinv-1"
       );
 
@@ -170,7 +174,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: null, error: { message: "boom" } },
       ]);
       expect(
-        await new PurchaseInvoiceRepository(client).findById("pinv-1")
+        await new BillRepository(client).findById("pinv-1")
       ).toBeNull();
     });
 
@@ -178,7 +182,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client } = createMockClient([
         { data: buildDbInvoice({ due_date: null }), error: null },
       ]);
-      const invoice = await new PurchaseInvoiceRepository(client).findById(
+      const invoice = await new BillRepository(client).findById(
         "pinv-1"
       );
       expect(invoice?.dueDate).toBeNull();
@@ -190,7 +194,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: buildDbInvoice(), error: null },
       ]);
-      const invoice = await new PurchaseInvoiceRepository(client).findByNumber(
+      const invoice = await new BillRepository(client).findByNumber(
         "org-1",
         "  pinv-00001 "
       );
@@ -204,7 +208,7 @@ describe("PurchaseInvoiceRepository", () => {
     it("returns null when not found", async () => {
       const { client } = createMockClient([{ data: null, error: null }]);
       expect(
-        await new PurchaseInvoiceRepository(client).findByNumber(
+        await new BillRepository(client).findByNumber(
           "org-1",
           "PINV-1"
         )
@@ -217,7 +221,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: [buildDbItem(), buildDbItem({ id: "item-2" })], error: null },
       ]);
-      const items = await new PurchaseInvoiceRepository(client).findItems(
+      const items = await new BillRepository(client).findItems(
         "pinv-1"
       );
       expect(items.map((i) => i.id)).toEqual(["item-1", "item-2"]);
@@ -236,7 +240,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: null, error: { message: "x" } },
       ]);
       expect(
-        await new PurchaseInvoiceRepository(client).findItems("pinv-1")
+        await new BillRepository(client).findItems("pinv-1")
       ).toEqual([]);
     });
   });
@@ -247,7 +251,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: buildDbInvoice(), error: null },
         { data: [buildDbItem()], error: null },
       ]);
-      const invoice = await new PurchaseInvoiceRepository(client).findWithItems(
+      const invoice = await new BillRepository(client).findWithItems(
         "pinv-1"
       );
       expect(invoice?.id).toBe("pinv-1");
@@ -257,7 +261,7 @@ describe("PurchaseInvoiceRepository", () => {
     it("returns null when the header is missing", async () => {
       const { client } = createMockClient([{ data: null, error: null }]);
       expect(
-        await new PurchaseInvoiceRepository(client).findWithItems("pinv-1")
+        await new BillRepository(client).findWithItems("pinv-1")
       ).toBeNull();
     });
   });
@@ -270,7 +274,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: rows, error: null, count: 5 },
       ]);
-      const result = await new PurchaseInvoiceRepository(client).list("org-1");
+      const result = await new BillRepository(client).list("org-1");
 
       expect(result.items[0].supplierName).toBe("Acme Supply");
       expect(result.total).toBe(5);
@@ -288,7 +292,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client } = createMockClient([
         { data: rows, error: null, count: 1 },
       ]);
-      const result = await new PurchaseInvoiceRepository(client).list("org-1");
+      const result = await new BillRepository(client).list("org-1");
       expect(result.items[0].supplierName).toBe("Beta");
     });
 
@@ -297,7 +301,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client } = createMockClient([
         { data: rows, error: null, count: 1 },
       ]);
-      const result = await new PurchaseInvoiceRepository(client).list("org-1");
+      const result = await new BillRepository(client).list("org-1");
       expect(result.items[0].supplierName).toBeNull();
     });
 
@@ -305,7 +309,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: [], error: null, count: 0 },
       ]);
-      await new PurchaseInvoiceRepository(client).list("org-1", {
+      await new BillRepository(client).list("org-1", {
         status: "posted",
         search: "pinv-001",
         page: 2,
@@ -328,7 +332,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: [], error: null, count: 0 },
       ]);
-      await new PurchaseInvoiceRepository(client).list("org-1", {
+      await new BillRepository(client).list("org-1", {
         search: "(),",
       });
       expect(builders[0].ilike).not.toHaveBeenCalled();
@@ -338,7 +342,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client } = createMockClient([
         { data: null, error: { message: "boom" }, count: null },
       ]);
-      const result = await new PurchaseInvoiceRepository(client).list("org-1", {
+      const result = await new BillRepository(client).list("org-1", {
         page: 3,
         pageSize: 5,
       });
@@ -349,11 +353,59 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: [], error: null, count: 0 },
       ]);
-      await new PurchaseInvoiceRepository(client).list("org-1", {
+      await new BillRepository(client).list("org-1", {
         page: 0,
         pageSize: 1000,
       });
       expect(builders[0].range).toHaveBeenCalledWith(0, 99);
+    });
+  });
+
+  describe("getStats", () => {
+    it("aggregates status counts, sums total_amount and counts overdue invoices", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: 3 }, // draft
+        { data: null, error: null, count: 5 }, // posted
+        {
+          data: [{ total_amount: 100 }, { total_amount: 250.5 }],
+          error: null,
+        }, // value rows (non-cancelled)
+        {
+          data: [
+            { total_amount: 500, amount_paid: 0 }, // overdue (unpaid)
+            { total_amount: 300, amount_paid: 150 }, // overdue (partial)
+            { total_amount: 200, amount_paid: 200 }, // fully paid, not overdue
+          ],
+          error: null,
+        }, // overdue rows
+      ]);
+      const stats = await new BillRepository(client).getStats(
+        "org-1"
+      );
+      expect(stats).toEqual({
+        totalValue: 350.5,
+        draft: 3,
+        posted: 5,
+        overdue: 2,
+      });
+    });
+
+    it("defaults counts, totalValue and overdue to 0 when data is missing", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: undefined },
+        { data: null, error: null },
+        { data: null, error: null },
+      ]);
+      const stats = await new BillRepository(client).getStats(
+        "org-1"
+      );
+      expect(stats).toEqual({
+        totalValue: 0,
+        draft: 0,
+        posted: 0,
+        overdue: 0,
+      });
     });
   });
 
@@ -362,7 +414,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: buildDbInvoice(), error: null },
       ]);
-      const invoice = await new PurchaseInvoiceRepository(client).createHeader({
+      const invoice = await new BillRepository(client).createHeader({
         organization_id: "org-1",
         invoice_number: "PINV-00001",
         supplier_id: "sup-1",
@@ -376,7 +428,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: null, error: { message: "x" } },
       ]);
       expect(
-        await new PurchaseInvoiceRepository(client).createHeader({
+        await new BillRepository(client).createHeader({
           organization_id: "org-1",
           invoice_number: "PINV-1",
           supplier_id: "sup-1",
@@ -389,7 +441,7 @@ describe("PurchaseInvoiceRepository", () => {
     it("returns true without querying when there are no items", async () => {
       const { client, from } = createMockClient([]);
       expect(
-        await new PurchaseInvoiceRepository(client).insertItems([])
+        await new BillRepository(client).insertItems([])
       ).toBe(true);
       expect(from).not.toHaveBeenCalled();
     });
@@ -398,7 +450,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: null, error: null },
       ]);
-      const result = await new PurchaseInvoiceRepository(client).insertItems([
+      const result = await new BillRepository(client).insertItems([
         {
           organization_id: "org-1",
           purchase_invoice_id: "pinv-1",
@@ -415,7 +467,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: null, error: { message: "x" } },
       ]);
       expect(
-        await new PurchaseInvoiceRepository(client).insertItems([
+        await new BillRepository(client).insertItems([
           {
             organization_id: "org-1",
             purchase_invoice_id: "pinv-1",
@@ -433,7 +485,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: null, error: null }, // delete
         { data: null, error: null }, // insert
       ]);
-      const result = await new PurchaseInvoiceRepository(client).replaceItems(
+      const result = await new BillRepository(client).replaceItems(
         "pinv-1",
         [
           {
@@ -457,7 +509,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, from } = createMockClient([
         { data: null, error: { message: "x" } },
       ]);
-      const result = await new PurchaseInvoiceRepository(client).replaceItems(
+      const result = await new BillRepository(client).replaceItems(
         "pinv-1",
         [
           {
@@ -478,7 +530,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: buildDbInvoice({ notes: "updated" }), error: null },
       ]);
-      const invoice = await new PurchaseInvoiceRepository(client).updateHeader(
+      const invoice = await new BillRepository(client).updateHeader(
         "pinv-1",
         { notes: "updated" },
         "user-9",
@@ -502,7 +554,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: null, error: { message: "x" } },
       ]);
       expect(
-        await new PurchaseInvoiceRepository(client).updateHeader(
+        await new BillRepository(client).updateHeader(
           "pinv-1",
           {},
           "user-9",
@@ -515,7 +567,7 @@ describe("PurchaseInvoiceRepository", () => {
       // A stale version matches no row, so PostgREST returns no data.
       const { client } = createMockClient([{ data: null, error: null }]);
       expect(
-        await new PurchaseInvoiceRepository(client).updateHeader(
+        await new BillRepository(client).updateHeader(
           "pinv-1",
           { notes: "stale" },
           "user-9",
@@ -530,7 +582,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: buildDbInvoice({ status: "cancelled" }), error: null },
       ]);
-      const invoice = await new PurchaseInvoiceRepository(client).updateStatus(
+      const invoice = await new BillRepository(client).updateStatus(
         "pinv-1",
         "cancelled",
         "user-9"
@@ -549,7 +601,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: null, error: { message: "x" } },
       ]);
       expect(
-        await new PurchaseInvoiceRepository(client).updateStatus(
+        await new BillRepository(client).updateStatus(
           "pinv-1",
           "cancelled",
           "user-9"
@@ -561,7 +613,7 @@ describe("PurchaseInvoiceRepository", () => {
   describe("postInvoiceRpc", () => {
     it("calls the post_purchase_invoice RPC with the invoice id", async () => {
       const { client, rpc } = createMockClient([], { data: null, error: null });
-      const result = await new PurchaseInvoiceRepository(client).postInvoiceRpc(
+      const result = await new BillRepository(client).postInvoiceRpc(
         "pinv-1"
       );
       expect(rpc).toHaveBeenCalledWith("post_purchase_invoice", {
@@ -575,7 +627,7 @@ describe("PurchaseInvoiceRepository", () => {
         data: null,
         error: { message: "invalid_status" },
       });
-      const result = await new PurchaseInvoiceRepository(client).postInvoiceRpc(
+      const result = await new BillRepository(client).postInvoiceRpc(
         "pinv-1"
       );
       expect(result.error?.message).toBe("invalid_status");
@@ -587,7 +639,7 @@ describe("PurchaseInvoiceRepository", () => {
       const { client, builders } = createMockClient([
         { data: null, error: null },
       ]);
-      const result = await new PurchaseInvoiceRepository(client).softDelete(
+      const result = await new BillRepository(client).softDelete(
         "pinv-1",
         "user-9"
       );
@@ -605,7 +657,7 @@ describe("PurchaseInvoiceRepository", () => {
         { data: null, error: { message: "x" } },
       ]);
       expect(
-        await new PurchaseInvoiceRepository(client).softDelete("pinv-1", "u")
+        await new BillRepository(client).softDelete("pinv-1", "u")
       ).toBe(false);
     });
   });

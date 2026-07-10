@@ -1,25 +1,27 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type { Database } from "@/types/database.types";
 import type {
-  PurchaseInvoice,
-  PurchaseInvoiceItem,
-  PurchaseInvoiceListParams,
-  PurchaseInvoiceListResult,
-  PurchaseInvoiceStatus,
-  PurchaseInvoiceWithItems,
-} from "@/features/purchase/types/purchase-invoice.types";
+  Bill,
+  BillItem,
+  BillListItem,
+  BillListParams,
+  BillListResult,
+  BillStats,
+  BillStatus,
+  BillWithItems,
+} from "@/features/purchase/types/bill.types";
 
-type DbPurchaseInvoice =
+type DbBill =
   Database["public"]["Tables"]["purchase_invoices"]["Row"];
-type DbPurchaseInvoiceInsert =
+type DbBillInsert =
   Database["public"]["Tables"]["purchase_invoices"]["Insert"];
-type DbPurchaseInvoiceItem =
+type DbBillItem =
   Database["public"]["Tables"]["purchase_invoice_items"]["Row"];
-type DbPurchaseInvoiceItemInsert =
+type DbBillItemInsert =
   Database["public"]["Tables"]["purchase_invoice_items"]["Insert"];
 
 /** A list row enriched with the joined supplier name from `suppliers(name)`. */
-type DbPurchaseInvoiceListRow = DbPurchaseInvoice & {
+type DbBillListRow = DbBill & {
   suppliers: { name: string } | { name: string }[] | null;
 };
 
@@ -41,7 +43,7 @@ const MAX_PAGE_SIZE = 100;
 // Mappers
 // ─────────────────────────────────────────────────────────────
 
-function mapPurchaseInvoice(row: DbPurchaseInvoice): PurchaseInvoice {
+function mapBill(row: DbBill): Bill {
   return {
     id: row.id,
     organizationId: row.organization_id,
@@ -67,11 +69,11 @@ function mapPurchaseInvoice(row: DbPurchaseInvoice): PurchaseInvoice {
   };
 }
 
-function mapItem(row: DbPurchaseInvoiceItem): PurchaseInvoiceItem {
+function mapItem(row: DbBillItem): BillItem {
   return {
     id: row.id,
     organizationId: row.organization_id,
-    purchaseInvoiceId: row.purchase_invoice_id,
+    billId: row.purchase_invoice_id,
     productId: row.product_id,
     description: row.description,
     quantity: Number(row.quantity),
@@ -85,7 +87,7 @@ function mapItem(row: DbPurchaseInvoiceItem): PurchaseInvoiceItem {
 }
 
 function readSupplierName(
-  joined: DbPurchaseInvoiceListRow["suppliers"]
+  joined: DbBillListRow["suppliers"]
 ): string | null {
   if (!joined) {
     return null;
@@ -105,10 +107,10 @@ function sanitizeSearch(term: string): string {
 // Repository
 // ─────────────────────────────────────────────────────────────
 
-export class PurchaseInvoiceRepository {
+export class BillRepository {
   constructor(private readonly supabase: AppSupabaseClient) {}
 
-  async findById(id: string): Promise<PurchaseInvoice | null> {
+  async findById(id: string): Promise<Bill | null> {
     const { data, error } = await this.supabase
       .from("purchase_invoices")
       .select("*")
@@ -119,13 +121,13 @@ export class PurchaseInvoiceRepository {
     if (error || !data) {
       return null;
     }
-    return mapPurchaseInvoice(data);
+    return mapBill(data);
   }
 
   async findByNumber(
     organizationId: string,
     invoiceNumber: string
-  ): Promise<PurchaseInvoice | null> {
+  ): Promise<Bill | null> {
     const { data, error } = await this.supabase
       .from("purchase_invoices")
       .select("*")
@@ -137,14 +139,14 @@ export class PurchaseInvoiceRepository {
     if (error || !data) {
       return null;
     }
-    return mapPurchaseInvoice(data);
+    return mapBill(data);
   }
 
-  async findItems(purchaseInvoiceId: string): Promise<PurchaseInvoiceItem[]> {
+  async findItems(billId: string): Promise<BillItem[]> {
     const { data, error } = await this.supabase
       .from("purchase_invoice_items")
       .select("*")
-      .eq("purchase_invoice_id", purchaseInvoiceId)
+      .eq("purchase_invoice_id", billId)
       .order("created_at", { ascending: true });
 
     if (error || !data) {
@@ -153,7 +155,7 @@ export class PurchaseInvoiceRepository {
     return data.map(mapItem);
   }
 
-  async findWithItems(id: string): Promise<PurchaseInvoiceWithItems | null> {
+  async findWithItems(id: string): Promise<BillWithItems | null> {
     const header = await this.findById(id);
     if (!header) {
       return null;
@@ -164,8 +166,8 @@ export class PurchaseInvoiceRepository {
 
   async list(
     organizationId: string,
-    params: PurchaseInvoiceListParams = {}
-  ): Promise<PurchaseInvoiceListResult> {
+    params: BillListParams = {}
+  ): Promise<BillListResult> {
     const page = Math.max(1, params.page ?? 1);
     const pageSize = Math.min(
       MAX_PAGE_SIZE,
@@ -201,10 +203,10 @@ export class PurchaseInvoiceRepository {
       return { items: [], total: 0, page, pageSize };
     }
 
-    const rows = data as unknown as DbPurchaseInvoiceListRow[];
+    const rows = data as unknown as DbBillListRow[];
     return {
       items: rows.map((row) => ({
-        ...mapPurchaseInvoice(row),
+        ...mapBill(row),
         supplierName: readSupplierName(row.suppliers),
       })),
       total: count ?? 0,
@@ -213,9 +215,87 @@ export class PurchaseInvoiceRepository {
     };
   }
 
+  /** Bills linked to a purchase order, newest first. */
+  async findByPurchaseOrder(
+    purchaseOrderId: string
+  ): Promise<BillListItem[]> {
+    const { data, error } = await this.supabase
+      .from("purchase_invoices")
+      .select("*, suppliers(name)")
+      .eq("purchase_order_id", purchaseOrderId)
+      .is("deleted_at", null)
+      .order("invoice_date", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+
+    const rows = data as unknown as DbBillListRow[];
+    return rows.map((row) => ({
+      ...mapBill(row),
+      supplierName: readSupplierName(row.suppliers),
+    }));
+  }
+
+  /**
+   * Aggregate counts + total value for the list header tiles. Head-only count
+   * queries run in parallel for the status-group tiles; `totalValue` needs a
+   * sum, which PostgREST cannot compute server-side via a head query, so we
+   * fetch the minimal `total_amount` column for non-cancelled invoices and
+   * reduce it in JS. `overdue` similarly can't compare two columns
+   * (`due_date` vs today, `amount_paid` vs `total_amount`) in a single
+   * head-count query, so we fetch the minimal columns for posted invoices
+   * past their due date and reduce in JS.
+   */
+  async getStats(organizationId: string): Promise<BillStats> {
+    const base = () =>
+      this.supabase
+        .from("purchase_invoices")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null);
+
+    const [draft, posted] = await Promise.all([
+      base().eq("status", "draft"),
+      base().eq("status", "posted"),
+    ]);
+
+    const { data: valueRows } = await this.supabase
+      .from("purchase_invoices")
+      .select("total_amount")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .neq("status", "cancelled");
+
+    const totalValue = (valueRows ?? []).reduce(
+      (sum, row) => sum + Number(row.total_amount),
+      0
+    );
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: overdueRows } = await this.supabase
+      .from("purchase_invoices")
+      .select("total_amount, amount_paid")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .eq("status", "posted")
+      .lt("due_date", today);
+
+    const overdue = (overdueRows ?? []).filter(
+      (row) => Number(row.amount_paid) < Number(row.total_amount)
+    ).length;
+
+    return {
+      totalValue,
+      draft: draft.count ?? 0,
+      posted: posted.count ?? 0,
+      overdue,
+    };
+  }
+
   async createHeader(
-    input: DbPurchaseInvoiceInsert
-  ): Promise<PurchaseInvoice | null> {
+    input: DbBillInsert
+  ): Promise<Bill | null> {
     const { data, error } = await this.supabase
       .from("purchase_invoices")
       .insert(input)
@@ -225,10 +305,10 @@ export class PurchaseInvoiceRepository {
     if (error || !data) {
       return null;
     }
-    return mapPurchaseInvoice(data);
+    return mapBill(data);
   }
 
-  async insertItems(items: DbPurchaseInvoiceItemInsert[]): Promise<boolean> {
+  async insertItems(items: DbBillItemInsert[]): Promise<boolean> {
     if (items.length === 0) {
       return true;
     }
@@ -240,13 +320,13 @@ export class PurchaseInvoiceRepository {
 
   /** Deletes all existing items for a draft invoice, then inserts the new set. */
   async replaceItems(
-    purchaseInvoiceId: string,
-    items: DbPurchaseInvoiceItemInsert[]
+    billId: string,
+    items: DbBillItemInsert[]
   ): Promise<boolean> {
     const { error: deleteError } = await this.supabase
       .from("purchase_invoice_items")
       .delete()
-      .eq("purchase_invoice_id", purchaseInvoiceId);
+      .eq("purchase_invoice_id", billId);
 
     if (deleteError) {
       return false;
@@ -262,10 +342,10 @@ export class PurchaseInvoiceRepository {
    */
   async updateHeader(
     id: string,
-    patch: Partial<DbPurchaseInvoice>,
+    patch: Partial<DbBill>,
     updatedBy: string,
     expectedVersion: number
-  ): Promise<PurchaseInvoice | null> {
+  ): Promise<Bill | null> {
     const { data, error } = await this.supabase
       .from("purchase_invoices")
       .update({
@@ -282,15 +362,15 @@ export class PurchaseInvoiceRepository {
     if (error || !data) {
       return null;
     }
-    return mapPurchaseInvoice(data);
+    return mapBill(data);
   }
 
-  /** Transitions a purchase invoice to a new status. */
+  /** Transitions a bill to a new status. */
   async updateStatus(
     id: string,
-    status: PurchaseInvoiceStatus,
+    status: BillStatus,
     userId: string
-  ): Promise<PurchaseInvoice | null> {
+  ): Promise<Bill | null> {
     const now = new Date().toISOString();
     const { data, error } = await this.supabase
       .from("purchase_invoices")
@@ -303,7 +383,7 @@ export class PurchaseInvoiceRepository {
     if (error || !data) {
       return null;
     }
-    return mapPurchaseInvoice(data);
+    return mapBill(data);
   }
 
   /**

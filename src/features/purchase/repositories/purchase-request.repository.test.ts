@@ -320,6 +320,44 @@ describe("PurchaseRequestRepository", () => {
     });
   });
 
+  describe("getStats", () => {
+    it("aggregates status counts", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: 3 }, // draft
+        { data: null, error: null, count: 2 }, // submitted (awaitingApproval)
+        { data: null, error: null, count: 4 }, // approved
+        { data: null, error: null, count: 1 }, // converted
+      ]);
+      const stats = await new PurchaseRequestRepository(client).getStats(
+        "org-1"
+      );
+      expect(stats).toEqual({
+        draft: 3,
+        awaitingApproval: 2,
+        approved: 4,
+        converted: 1,
+      });
+    });
+
+    it("defaults counts to 0 when count is undefined/null", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: undefined },
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: null },
+      ]);
+      const stats = await new PurchaseRequestRepository(client).getStats(
+        "org-1"
+      );
+      expect(stats).toEqual({
+        draft: 0,
+        awaitingApproval: 0,
+        approved: 0,
+        converted: 0,
+      });
+    });
+  });
+
   describe("createHeader / insertItems / replaceItems", () => {
     it("inserts and maps the created header", async () => {
       const { client, builders } = createMockClient([

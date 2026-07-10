@@ -3,8 +3,10 @@ import type { Database } from "@/types/database.types";
 import type {
   PurchaseReturn,
   PurchaseReturnItem,
+  PurchaseReturnListItem,
   PurchaseReturnListParams,
   PurchaseReturnListResult,
+  PurchaseReturnStats,
   PurchaseReturnStatus,
   PurchaseReturnWithItems,
 } from "@/features/purchase/types/purchase-return.types";
@@ -205,6 +207,69 @@ export class PurchaseReturnRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /** Returns linked to a purchase order, newest first. */
+  async findByPurchaseOrder(
+    purchaseOrderId: string
+  ): Promise<PurchaseReturnListItem[]> {
+    const { data, error } = await this.supabase
+      .from("purchase_returns")
+      .select("*, suppliers(name)")
+      .eq("purchase_order_id", purchaseOrderId)
+      .is("deleted_at", null)
+      .order("return_date", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+
+    const rows = data as unknown as DbPurchaseReturnListRow[];
+    return rows.map((row) => ({
+      ...mapPurchaseReturn(row),
+      supplierName: readSupplierName(row.suppliers),
+    }));
+  }
+
+  /**
+   * Aggregate counts + total value for the list header tiles. Head-only count
+   * queries run in parallel for the per-status tiles; `totalValue` needs a
+   * sum, which PostgREST cannot compute server-side via a head query, so we
+   * fetch the minimal `total_amount` column for non-cancelled returns and
+   * reduce it in JS.
+   */
+  async getStats(organizationId: string): Promise<PurchaseReturnStats> {
+    const base = () =>
+      this.supabase
+        .from("purchase_returns")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null);
+
+    const [draft, completed, cancelled] = await Promise.all([
+      base().eq("status", "draft"),
+      base().eq("status", "completed"),
+      base().eq("status", "cancelled"),
+    ]);
+
+    const { data: valueRows } = await this.supabase
+      .from("purchase_returns")
+      .select("total_amount")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .neq("status", "cancelled");
+
+    const totalValue = (valueRows ?? []).reduce(
+      (sum, row) => sum + Number(row.total_amount),
+      0
+    );
+
+    return {
+      totalValue,
+      draft: draft.count ?? 0,
+      completed: completed.count ?? 0,
+      cancelled: cancelled.count ?? 0,
     };
   }
 

@@ -246,6 +246,33 @@ export async function archiveCustomerAction(
   return result;
 }
 
+export async function restoreCustomerAction(
+  organizationId: string,
+  customerId: string
+): Promise<CustomerActionResult<void>> {
+  const supabase = await createServerSupabaseClient();
+  const auth = await authorize(supabase, organizationId, "customer.update");
+  if (!auth.ok) {
+    return auth.result;
+  }
+
+  const service = new CustomerService(supabase);
+  const result = await service.restoreCustomer(customerId, auth.userId);
+
+  if (result.success) {
+    revalidatePath("/customers");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: auth.userId,
+      action: "customer.restore",
+      entityType: "customer",
+      entityId: customerId,
+      summary: "Restored customer",
+    });
+  }
+  return result;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Export (CSV)
 // ─────────────────────────────────────────────────────────────

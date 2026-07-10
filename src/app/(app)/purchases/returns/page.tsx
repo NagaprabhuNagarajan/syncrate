@@ -86,16 +86,16 @@ export default async function PurchaseReturnsPage({
   const page = parsePage(params.page);
 
   const service = new PurchaseReturnService(supabase);
-  const result = await service.listPurchaseReturns(activeOrg.id, {
-    search,
-    status,
-    page,
-  });
+  const [result, stats] = await Promise.all([
+    service.listPurchaseReturns(activeOrg.id, { search, status, page }),
+    service.getPurchaseReturnStats(activeOrg.id),
+  ]);
 
   return (
     <PurchaseReturnsView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search, status }}
       canManage={canManage}
     />

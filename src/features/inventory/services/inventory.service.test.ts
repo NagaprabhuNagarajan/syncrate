@@ -8,6 +8,7 @@ const { mockRepo } = vi.hoisted(() => ({
     getLevel: vi.fn(),
     listLevels: vi.fn(),
     listTransactions: vi.fn(),
+    getStats: vi.fn(),
     adjustStockRpc: vi.fn(),
     transferStockRpc: vi.fn(),
   },
@@ -379,18 +380,29 @@ describe("InventoryService reads", () => {
     });
   });
 
-  it("getStockValue sums quantity × purchase price", async () => {
-    mockRepo.listLevels.mockResolvedValue({
-      items: [
-        { quantity: 10, purchasePrice: 5 },
-        { quantity: 3, purchasePrice: 20 },
-      ],
-      total: 2,
-      page: 1,
-      pageSize: 100,
+  it("getStockValue delegates to the shared stats scan", async () => {
+    mockRepo.getStats.mockResolvedValue({
+      totalSkus: 2,
+      stockValue: 10 * 5 + 3 * 20,
+      lowStock: 0,
+      outOfStock: 0,
     });
     const value = await service.getStockValue("org-1");
     expect(value).toBe(10 * 5 + 3 * 20);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
+  });
+
+  it("getInventoryStats delegates to the repository", async () => {
+    const stats = {
+      totalSkus: 5,
+      stockValue: 1000,
+      lowStock: 2,
+      outOfStock: 1,
+    };
+    mockRepo.getStats.mockResolvedValue(stats);
+    const result = await service.getInventoryStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
   });
 
   it("getCurrentQuantity returns the level quantity or zero", async () => {

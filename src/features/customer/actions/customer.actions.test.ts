@@ -9,6 +9,7 @@ import {
   createCustomerAction,
   updateCustomerAction,
   archiveCustomerAction,
+  restoreCustomerAction,
   exportCustomersAction,
   importCustomersAction,
 } from "./customer.actions";
@@ -29,6 +30,7 @@ const {
     createCustomer: vi.fn(),
     updateCustomer: vi.fn(),
     archiveCustomer: vi.fn(),
+    restoreCustomer: vi.fn(),
     exportCustomersCsv: vi.fn(),
     importCustomers: vi.fn(),
   },
@@ -508,6 +510,58 @@ describe("archiveCustomerAction", () => {
     expect(result).toBe(failure);
     expect(revalidateMock).not.toHaveBeenCalled();
     expect(auditLogMock).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// restoreCustomerAction
+// ─────────────────────────────────────────────────────────────
+
+describe("restoreCustomerAction", () => {
+  it("returns forbidden when the caller lacks customer.update", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["customer.view"])
+    );
+
+    const result = await restoreCustomerAction("org-1", "cust-1");
+
+    expect(result).toEqual({
+      success: false,
+      error: {
+        code: "forbidden",
+        message: "You do not have permission to perform this action",
+      },
+    });
+    expect(mockCustomerService.restoreCustomer).not.toHaveBeenCalled();
+  });
+
+  it("calls the service, revalidates and audits on success", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["customer.update"])
+    );
+    const success: CustomerActionResult<void> = {
+      success: true,
+      data: undefined,
+    };
+    mockCustomerService.restoreCustomer.mockResolvedValue(success);
+
+    const result = await restoreCustomerAction("org-1", "cust-1");
+
+    expect(mockCustomerService.restoreCustomer).toHaveBeenCalledWith(
+      "cust-1",
+      "user-1"
+    );
+    expect(result).toBe(success);
+    expect(revalidateMock).toHaveBeenCalledWith("/customers");
+    expect(auditLogMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "customer.restore",
+        entityType: "customer",
+        entityId: "cust-1",
+      })
+    );
   });
 });
 

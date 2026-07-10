@@ -254,6 +254,20 @@ export async function approvePurchaseOrderAction(
   );
 }
 
+export async function orderPurchaseOrderAction(
+  organizationId: string,
+  purchaseOrderId: string
+): Promise<PurchaseOrderActionResult<PurchaseOrder>> {
+  return runTransition(
+    organizationId,
+    purchaseOrderId,
+    "purchase.create",
+    "purchase_order.order",
+    (service, userId) =>
+      service.orderPurchaseOrder(purchaseOrderId, organizationId, userId)
+  );
+}
+
 export async function cancelPurchaseOrderAction(
   organizationId: string,
   purchaseOrderId: string

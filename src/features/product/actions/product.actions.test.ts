@@ -9,6 +9,7 @@ import {
   createProductAction,
   updateProductAction,
   archiveProductAction,
+  restoreProductAction,
   exportProductsAction,
   importProductsAction,
 } from "./product.actions";
@@ -29,6 +30,7 @@ const {
     createProduct: vi.fn(),
     updateProduct: vi.fn(),
     archiveProduct: vi.fn(),
+    restoreProduct: vi.fn(),
     exportProductsCsv: vi.fn(),
     importProducts: vi.fn(),
   },
@@ -475,6 +477,58 @@ describe("archiveProductAction", () => {
     expect(result).toBe(failure);
     expect(revalidateMock).not.toHaveBeenCalled();
     expect(auditLogMock).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// restoreProductAction
+// ─────────────────────────────────────────────────────────────
+
+describe("restoreProductAction", () => {
+  it("returns forbidden when the caller lacks product.update", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["product.view"])
+    );
+
+    const result = await restoreProductAction("org-1", "prod-1");
+
+    expect(result).toEqual({
+      success: false,
+      error: {
+        code: "forbidden",
+        message: "You do not have permission to perform this action",
+      },
+    });
+    expect(mockProductService.restoreProduct).not.toHaveBeenCalled();
+  });
+
+  it("calls the service, revalidates and audits on success", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["product.update"])
+    );
+    const success: ProductActionResult<void> = {
+      success: true,
+      data: undefined,
+    };
+    mockProductService.restoreProduct.mockResolvedValue(success);
+
+    const result = await restoreProductAction("org-1", "prod-1");
+
+    expect(mockProductService.restoreProduct).toHaveBeenCalledWith(
+      "prod-1",
+      "user-1"
+    );
+    expect(result).toBe(success);
+    expect(revalidateMock).toHaveBeenCalledWith("/products");
+    expect(auditLogMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "product.restore",
+        entityType: "product",
+        entityId: "prod-1",
+      })
+    );
   });
 });
 

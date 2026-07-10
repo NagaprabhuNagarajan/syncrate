@@ -6,8 +6,17 @@ import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { PackageCheck, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { createGoodsReceiptAction } from "@/features/purchase/actions/goods-receipt.actions";
 import type { PurchaseOrderWithItems } from "@/features/purchase/types/purchase-order.types";
 import type { BranchOption } from "@/features/purchase/components/purchase-order-form";
@@ -56,6 +65,44 @@ const inputClass = cn(
 );
 
 // ─────────────────────────────────────────────────────────────
+// Section chrome (Card-wrapped, mirrors purchase-order-form)
+// ─────────────────────────────────────────────────────────────
+
+function Section({
+  title,
+  description,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            {title}
+          </h2>
+          {description && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
+        {children}
+      </Card>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Goods receipt form
 // ─────────────────────────────────────────────────────────────
 
@@ -93,7 +140,7 @@ export function GoodsReceiptForm({
     [purchaseOrder.items, productNames]
   );
 
-  const { register, handleSubmit } = useForm<GoodsReceiptFormValues>({
+  const { register, handleSubmit, watch } = useForm<GoodsReceiptFormValues>({
     defaultValues: {
       branchId: purchaseOrder.branchId ?? branches[0]?.id ?? "",
       receivedDate: new Date().toISOString().slice(0, 10),
@@ -106,6 +153,18 @@ export function GoodsReceiptForm({
       })),
     },
   });
+
+  // Live summary for the sticky save bar — purely presentational, computed
+  // from the same watched values the submit handler reads.
+  const watchedItems = watch("items");
+  const totalReceiving = (watchedItems ?? []).reduce(
+    (sum, item) => sum + num(item.receivedQuantity),
+    0
+  );
+  const totalRejected = (watchedItems ?? []).reduce(
+    (sum, item) => sum + num(item.rejectedQuantity),
+    0
+  );
 
   const onSubmit = handleSubmit((values) => {
     setServerError(null);
@@ -146,181 +205,198 @@ export function GoodsReceiptForm({
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 sm:p-6"
-    >
-      <div className="mb-6 flex items-start gap-3">
+    <div>
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-5 flex items-start gap-3"
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
           <PackageCheck className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             Receive goods
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             Record delivery against{" "}
             <span className="font-medium text-slate-700 dark:text-slate-300">
               {purchaseOrder.poNumber}
             </span>
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {serverError && (
-        <div
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           role="alert"
-          className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mb-6 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm"
         >
-          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {serverError}
-        </div>
+          <AlertCircle
+            className="text-error-500 mt-0.5 h-4 w-4 shrink-0"
+            aria-hidden="true"
+          />
+          <span>{serverError}</span>
+        </motion.div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-5">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="grn-branch"
-              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              Branch
-              <span className="text-error-500 ml-0.5" aria-hidden="true">
-                *
-              </span>
-            </label>
-            <select
-              id="grn-branch"
-              className={inputClass}
-              {...register("branchId")}
-            >
-              {branches.length === 0 && <option value="">No branches</option>}
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
+      <form onSubmit={onSubmit} className="space-y-4">
+        {/* Receipt details */}
+        <Section
+          title="Receipt details"
+          description="Branch and date this delivery was received."
+          delay={0.05}
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="grn-branch"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Branch
+                <span className="text-error-500 ml-0.5" aria-hidden="true">
+                  *
+                </span>
+              </label>
+              <select
+                id="grn-branch"
+                className={inputClass}
+                {...register("branchId")}
+              >
+                {branches.length === 0 && <option value="">No branches</option>}
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="grn-date"
+                className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Received date
+              </label>
+              <Input id="grn-date" type="date" {...register("receivedDate")} />
+            </div>
           </div>
+        </Section>
+
+        {/* Line items */}
+        <Section
+          title="Line items"
+          description="Quantities received or rejected for each ordered product."
+          delay={0.1}
+        >
+          <Table wrapperClassName="border-slate-100 dark:border-slate-800">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead className="text-right">Ordered</TableHead>
+                <TableHead className="text-right">Already received</TableHead>
+                <TableHead className="text-right">Outstanding</TableHead>
+                <TableHead className="text-right">Receive now</TableHead>
+                <TableHead className="text-right">Rejected</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {meta.map((line, index) => (
+                <TableRow key={line.purchaseOrderItemId}>
+                  <TableCell className="text-slate-700 dark:text-slate-300">
+                    {line.productName}
+                  </TableCell>
+                  <TableCell className="nums text-right text-slate-600 dark:text-slate-400">
+                    {line.ordered}
+                  </TableCell>
+                  <TableCell className="nums text-right text-slate-600 dark:text-slate-400">
+                    {line.alreadyReceived}
+                  </TableCell>
+                  <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                    {line.outstanding}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      aria-label={`Receive quantity for ${line.productName}`}
+                      className={cn(cellClass, "ml-auto w-24 text-right")}
+                      {...register(`items.${index}.receivedQuantity`)}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      aria-label={`Rejected quantity for ${line.productName}`}
+                      className={cn(cellClass, "ml-auto w-24 text-right")}
+                      {...register(`items.${index}.rejectedQuantity`)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Section>
+
+        {/* Notes */}
+        <Section title="Notes" delay={0.15}>
           <div>
             <label
-              htmlFor="grn-date"
+              htmlFor="grn-notes"
               className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Received date
+              Notes
             </label>
-            <Input
-              id="grn-date"
-              type="date"
-              {...register("receivedDate")}
+            <Textarea
+              id="grn-notes"
+              rows={3}
+              placeholder="Delivery condition, discrepancies, etc."
+              {...register("notes")}
             />
           </div>
-        </div>
+        </Section>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200 shadow-card dark:border-slate-800">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-                <tr>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Product
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Ordered
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Already received
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Outstanding
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Receive now
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Rejected
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {meta.map((line, index) => (
-                  <tr key={line.purchaseOrderItemId}>
-                    <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                      {line.productName}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-600 dark:text-slate-400">
-                      {line.ordered}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-600 dark:text-slate-400">
-                      {line.alreadyReceived}
-                    </td>
-                    <td className="px-3 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
-                      {line.outstanding}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <input
-                        type="number"
-                        min={0}
-                        step="any"
-                        aria-label={`Receive quantity for ${line.productName}`}
-                        className={cn(cellClass, "w-24 text-right")}
-                        {...register(`items.${index}.receivedQuantity`)}
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <input
-                        type="number"
-                        min={0}
-                        step="any"
-                        aria-label={`Rejected quantity for ${line.productName}`}
-                        className={cn(cellClass, "w-24 text-right")}
-                        {...register(`items.${index}.rejectedQuantity`)}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Sticky action bar */}
+        <div className="sticky bottom-4 z-10 flex flex-col-reverse gap-3 rounded-xl border border-slate-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Receiving
+            <span className="nums ml-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+              {totalReceiving}
+            </span>
+            {totalRejected > 0 && (
+              <span className="text-error-600 dark:text-error-400 ml-3">
+                {totalRejected} rejected
+              </span>
+            )}
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push(`/purchases/${purchaseOrder.id}`)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="gradient"
+              loading={isPending}
+              disabled={isPending}
+            >
+              <PackageCheck className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Record receipt
+            </Button>
           </div>
         </div>
-
-        <div>
-          <label
-            htmlFor="grn-notes"
-            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
-          >
-            Notes
-          </label>
-          <Textarea
-            id="grn-notes"
-            rows={3}
-            placeholder="Delivery condition, discrepancies, etc."
-            {...register("notes")}
-          />
-        </div>
-
-        <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 dark:border-slate-800 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push(`/purchases/${purchaseOrder.id}`)}
-            disabled={isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="gradient"
-            loading={isPending}
-            disabled={isPending}
-          >
-            <PackageCheck className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Record receipt
-          </Button>
-        </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

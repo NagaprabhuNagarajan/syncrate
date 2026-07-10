@@ -5,6 +5,7 @@ import { PurchaseOrdersView } from "./purchase-orders-view";
 import type {
   PurchaseOrderListItem,
   PurchaseOrderListResult,
+  PurchaseOrderStats,
 } from "@/features/purchase/types/purchase-order.types";
 
 const { mockPush, searchParamsRef } = vi.hoisted(() => ({
@@ -59,17 +60,30 @@ function makeResult(
   return { items, total: items.length, page: 1, pageSize: 20, ...overrides };
 }
 
+function makeStats(
+  overrides: Partial<PurchaseOrderStats> = {}
+): PurchaseOrderStats {
+  return {
+    totalValue: 1180,
+    draft: 1,
+    awaitingApproval: 0,
+    open: 0,
+    ...overrides,
+  };
+}
+
 describe("PurchaseOrdersView", () => {
   it("renders an empty state when there are no orders", () => {
     render(
       <PurchaseOrdersView
         organizationId="org-1"
         result={makeResult([])}
+        stats={makeStats({ draft: 0 })}
         filters={{}}
         canManage
       />
     );
-    expect(screen.getByText("No purchase orders found")).toBeInTheDocument();
+    expect(screen.getByText("No purchase orders yet")).toBeInTheDocument();
   });
 
   it("renders orders with supplier name, status and total", () => {
@@ -77,6 +91,7 @@ describe("PurchaseOrdersView", () => {
       <PurchaseOrdersView
         organizationId="org-1"
         result={makeResult([makeOrder()])}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -87,11 +102,33 @@ describe("PurchaseOrdersView", () => {
     expect(screen.getByText("₹1,180.00")).toBeInTheDocument();
   });
 
+  it("renders the stat tiles", () => {
+    render(
+      <PurchaseOrdersView
+        organizationId="org-1"
+        result={makeResult([makeOrder()])}
+        stats={makeStats({
+          totalValue: 5000,
+          draft: 2,
+          awaitingApproval: 3,
+          open: 4,
+        })}
+        filters={{}}
+        canManage
+      />
+    );
+    expect(screen.getByText("Total value")).toBeInTheDocument();
+    expect(screen.getByText("Awaiting approval")).toBeInTheDocument();
+    expect(screen.getByText("Open")).toBeInTheDocument();
+    expect(screen.getByText("₹5,000")).toBeInTheDocument();
+  });
+
   it("shows the new purchase order button only when canManage is true", () => {
     const { rerender } = render(
       <PurchaseOrdersView
         organizationId="org-1"
         result={makeResult([makeOrder()])}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -104,6 +141,7 @@ describe("PurchaseOrdersView", () => {
       <PurchaseOrdersView
         organizationId="org-1"
         result={makeResult([makeOrder()])}
+        stats={makeStats()}
         filters={{}}
         canManage={false}
       />
@@ -118,6 +156,7 @@ describe("PurchaseOrdersView", () => {
       <PurchaseOrdersView
         organizationId="org-1"
         result={makeResult([makeOrder()])}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -125,9 +164,9 @@ describe("PurchaseOrdersView", () => {
     expect(
       screen.getByRole("link", { name: /goods receipts/i })
     ).toHaveAttribute("href", "/purchases/goods-receipts");
-    expect(screen.getByRole("link", { name: /invoices/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /bills/i })).toHaveAttribute(
       "href",
-      "/purchases/invoices"
+      "/purchases/bills"
     );
     expect(screen.getByRole("link", { name: /returns/i })).toHaveAttribute(
       "href",
@@ -141,6 +180,7 @@ describe("PurchaseOrdersView", () => {
       <PurchaseOrdersView
         organizationId="org-1"
         result={makeResult([makeOrder()])}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -156,6 +196,7 @@ describe("PurchaseOrdersView", () => {
       <PurchaseOrdersView
         organizationId="org-1"
         result={makeResult([makeOrder()])}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
@@ -165,20 +206,67 @@ describe("PurchaseOrdersView", () => {
     expect(mockPush).toHaveBeenCalledWith("/purchases?search=PO-001");
   });
 
-  it("pushes a status filter change", async () => {
+  it("resets the list immediately when the search field is cleared", async () => {
     const user = userEvent.setup();
     render(
       <PurchaseOrdersView
         organizationId="org-1"
         result={makeResult([makeOrder()])}
+        stats={makeStats()}
+        filters={{ search: "PO-001" }}
+        canManage
+      />
+    );
+    const input = screen.getByLabelText("Search purchase orders");
+    await user.clear(input);
+    expect(mockPush).toHaveBeenCalledWith("/purchases");
+  });
+
+  it("pushes a status filter change via pills", async () => {
+    const user = userEvent.setup();
+    render(
+      <PurchaseOrdersView
+        organizationId="org-1"
+        result={makeResult([makeOrder()])}
+        stats={makeStats()}
         filters={{}}
         canManage
       />
     );
-    await user.selectOptions(
-      screen.getByLabelText("Filter by status"),
-      "approved"
-    );
+    await user.click(screen.getByRole("tab", { name: "Approved" }));
     expect(mockPush).toHaveBeenCalledWith("/purchases?status=approved");
+  });
+
+  it("shows the Showing X–Y of N pagination summary", () => {
+    render(
+      <PurchaseOrdersView
+        organizationId="org-1"
+        result={makeResult([makeOrder()], { total: 45, page: 2, pageSize: 20 })}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
+    expect(screen.getByText("21")).toBeInTheDocument();
+    expect(screen.getByText("40")).toBeInTheDocument();
+    expect(screen.getAllByText("45").length).toBeGreaterThan(0);
+  });
+
+  it("navigates via Previous/Next pagination buttons", async () => {
+    const user = userEvent.setup();
+    render(
+      <PurchaseOrdersView
+        organizationId="org-1"
+        result={makeResult([makeOrder()], { total: 45, page: 2, pageSize: 20 })}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
+    await user.click(screen.getByRole("button", { name: /next/i }));
+    expect(mockPush).toHaveBeenCalledWith("/purchases?page=3");
+
+    await user.click(screen.getByRole("button", { name: /previous/i }));
+    expect(mockPush).toHaveBeenCalledWith("/purchases");
   });
 });

@@ -7,18 +7,27 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { FileText, AlertCircle, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  createPurchaseInvoiceSchema,
-  updatePurchaseInvoiceSchema,
-  PURCHASE_TAX_RATES,
-} from "@/features/purchase/schemas/purchase-invoice.schemas";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
-  createPurchaseInvoiceAction,
-  updatePurchaseInvoiceAction,
-} from "@/features/purchase/actions/purchase-invoice.actions";
-import type { PurchaseInvoiceWithItems } from "@/features/purchase/types/purchase-invoice.types";
+  createBillSchema,
+  updateBillSchema,
+  PURCHASE_TAX_RATES,
+} from "@/features/purchase/schemas/bill.schemas";
+import {
+  createBillAction,
+  updateBillAction,
+} from "@/features/purchase/actions/bill.actions";
+import type { BillWithItems } from "@/features/purchase/types/bill.types";
 import {
   clearOcrPurchaseDraft,
   readOcrPurchaseDraft,
@@ -49,7 +58,7 @@ interface LineItemValue {
   taxRate: string;
 }
 
-interface PurchaseInvoiceFormValues {
+interface BillFormValues {
   supplierId: string;
   invoiceNumber: string;
   supplierInvoiceNumber: string;
@@ -159,21 +168,52 @@ function FormField({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
+      {hint && !error && (
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+          {hint}
+        </p>
+      )}
       <FieldError message={error} />
     </div>
   );
 }
 
-function SectionTitle({ children }: { readonly children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  action,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly action?: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
+          {action}
+        </div>
         {children}
-      </span>
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-    </div>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -187,40 +227,57 @@ const inputClass = (hasError: boolean) =>
   );
 
 const cellClass = cn(
-  "block w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-[border-color,box-shadow] duration-150 ease-out",
+  "block w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-[border-color,box-shadow]",
   "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
 );
 
 // ─────────────────────────────────────────────────────────────
-// Purchase invoice form (create + edit)
+// Bill form (create + edit)
 // ─────────────────────────────────────────────────────────────
 
-interface PurchaseInvoiceFormProps {
+/** Server-supplied initial values for a new bill (e.g. from a purchase order). */
+export interface BillPrefill {
+  readonly supplierId: string;
+  /** Links the new bill back to the originating purchase order. */
+  readonly purchaseOrderId?: string;
+  readonly items: readonly {
+    readonly productId: string;
+    readonly description?: string;
+    readonly quantity: string;
+    readonly unitPrice: string;
+    readonly taxRate: string;
+  }[];
+}
+
+interface BillFormProps {
   readonly organizationId: string;
   readonly suppliers: readonly SupplierOption[];
   readonly products: readonly ProductOption[];
-  readonly purchaseInvoice?: PurchaseInvoiceWithItems;
+  readonly bill?: BillWithItems;
   /** When true, prefill from a verified AI-OCR draft (sessionStorage). */
   readonly fromOcr?: boolean;
+  /** Initial values for a new bill, e.g. carried over from a purchase order. */
+  readonly prefill?: BillPrefill;
 }
 
-export function PurchaseInvoiceForm({
+export function BillForm({
   organizationId,
   suppliers,
   products,
-  purchaseInvoice,
+  bill,
   fromOcr = false,
-}: PurchaseInvoiceFormProps) {
+  prefill,
+}: BillFormProps) {
   const router = useRouter();
-  const isEdit = Boolean(purchaseInvoice);
+  const isEdit = Boolean(bill);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const resolver = (
     isEdit
-      ? zodResolver(updatePurchaseInvoiceSchema)
-      : zodResolver(createPurchaseInvoiceSchema)
-  ) as unknown as Resolver<PurchaseInvoiceFormValues>;
+      ? zodResolver(updateBillSchema)
+      : zodResolver(createBillSchema)
+  ) as unknown as Resolver<BillFormValues>;
 
   const {
     register,
@@ -229,34 +286,42 @@ export function PurchaseInvoiceForm({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<PurchaseInvoiceFormValues>({
+  } = useForm<BillFormValues>({
     resolver,
     defaultValues: {
-      supplierId: purchaseInvoice?.supplierId ?? "",
-      invoiceNumber: purchaseInvoice?.invoiceNumber ?? "",
-      supplierInvoiceNumber: purchaseInvoice?.supplierInvoiceNumber ?? "",
-      invoiceDate: purchaseInvoice
-        ? purchaseInvoice.invoiceDate.toISOString().slice(0, 10)
+      supplierId: bill?.supplierId ?? prefill?.supplierId ?? "",
+      invoiceNumber: bill?.invoiceNumber ?? "",
+      supplierInvoiceNumber: bill?.supplierInvoiceNumber ?? "",
+      invoiceDate: bill
+        ? bill.invoiceDate.toISOString().slice(0, 10)
         : new Date().toISOString().slice(0, 10),
-      dueDate: purchaseInvoice?.dueDate
-        ? purchaseInvoice.dueDate.toISOString().slice(0, 10)
+      dueDate: bill?.dueDate
+        ? bill.dueDate.toISOString().slice(0, 10)
         : "",
-      notes: purchaseInvoice?.notes ?? "",
+      notes: bill?.notes ?? "",
       items:
-        purchaseInvoice && purchaseInvoice.items.length > 0
-          ? purchaseInvoice.items.map((item) => ({
+        bill && bill.items.length > 0
+          ? bill.items.map((item) => ({
               productId: item.productId,
               description: item.description ?? "",
               quantity: String(item.quantity),
               unitPrice: String(item.unitPrice),
               taxRate: String(item.taxRate),
             }))
-          : [emptyItem()],
+          : prefill && prefill.items.length > 0
+            ? prefill.items.map((item) => ({
+                productId: item.productId,
+                description: item.description ?? "",
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                taxRate: item.taxRate,
+              }))
+            : [emptyItem()],
     },
   });
 
   const { fields, append, remove, replace } =
-    useFieldArray<PurchaseInvoiceFormValues>({
+    useFieldArray<BillFormValues>({
       control,
       name: "items",
     });
@@ -312,7 +377,9 @@ export function PurchaseInvoiceForm({
   const grandTotal = round2(subtotal + taxTotal);
 
   const itemsError =
-    typeof errors.items?.message === "string" ? errors.items.message : undefined;
+    typeof errors.items?.message === "string"
+      ? errors.items.message
+      : undefined;
 
   const handleProductChange = (index: number, productId: string): void => {
     setValue(`items.${index}.productId`, productId, { shouldValidate: true });
@@ -348,9 +415,16 @@ export function PurchaseInvoiceForm({
     if (values.notes.trim()) {
       fd.append("notes", values.notes.trim());
     }
-    if (isEdit && purchaseInvoice) {
+    if (isEdit && bill) {
       // Carry the optimistic-lock version so the server can detect a stale edit.
-      fd.append("version", String(purchaseInvoice.version ?? 1));
+      fd.append("version", String(bill.version ?? 1));
+    }
+
+    // Preserve the purchase-order link (from the existing bill, or carried over
+    // when creating a bill from a PO) so it isn't cleared on save.
+    const linkedPurchaseOrderId = bill?.purchaseOrderId ?? prefill?.purchaseOrderId;
+    if (linkedPurchaseOrderId) {
+      fd.append("purchaseOrderId", linkedPurchaseOrderId);
     }
 
     const items = values.items.map((item) => ({
@@ -364,47 +438,47 @@ export function PurchaseInvoiceForm({
 
     startTransition(async () => {
       const result =
-        isEdit && purchaseInvoice
-          ? await updatePurchaseInvoiceAction(
+        isEdit && bill
+          ? await updateBillAction(
               organizationId,
-              purchaseInvoice.id,
+              bill.id,
               fd
             )
-          : await createPurchaseInvoiceAction(organizationId, fd);
+          : await createBillAction(organizationId, fd);
 
       if (result && !result.success) {
         setServerError(result.error.message);
         return;
       }
 
-      const id = result.success ? result.data.id : purchaseInvoice?.id;
-      router.push(id ? `/purchases/invoices/${id}` : "/purchases/invoices");
+      const id = result.success ? result.data.id : bill?.id;
+      router.push(id ? `/purchases/bills/${id}` : "/purchases/bills");
     });
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 sm:p-6"
-    >
+    <div>
       {/* Header */}
-      <div className="mb-6 flex items-start gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-5 flex items-start gap-3"
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
           <FileText className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            {isEdit ? "Edit purchase invoice" : "New purchase invoice"}
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            {isEdit ? "Edit bill" : "New bill"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
-              ? "Update the draft purchase invoice"
+              ? "Update the draft bill"
               : "Record a supplier bill against your business"}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {ocrNotice && (
         <div
@@ -423,7 +497,7 @@ export function PurchaseInvoiceForm({
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
+          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
           role="alert"
         >
           <AlertCircle
@@ -435,125 +509,123 @@ export function PurchaseInvoiceForm({
       )}
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
-        {isEdit && purchaseInvoice && (
+        {isEdit && bill && (
           <input
             type="hidden"
             name="version"
-            value={String(purchaseInvoice.version ?? 1)}
+            value={String(bill.version ?? 1)}
             readOnly
           />
         )}
-        {/* Header fields */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            label="Supplier"
-            htmlFor="supplierId"
-            required
-            error={errors.supplierId?.message}
-          >
-            <select
-              id="supplierId"
-              className={inputClass(!!errors.supplierId)}
-              {...register("supplierId")}
-            >
-              <option value="">— Select supplier —</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField
-            label="Supplier invoice no."
-            htmlFor="supplierInvoiceNumber"
-            error={errors.supplierInvoiceNumber?.message}
-          >
-            <Input
-              id="supplierInvoiceNumber"
-              type="text"
-              aria-invalid={errors.supplierInvoiceNumber ? "true" : "false"}
-              placeholder="Bill number on the supplier's invoice"
-              {...register("supplierInvoiceNumber")}
-            />
-          </FormField>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField
-            label="Invoice number"
-            htmlFor="invoiceNumber"
-            error={errors.invoiceNumber?.message}
-            hint="Leave blank to auto-generate"
-          >
-            <Input
-              id="invoiceNumber"
-              type="text"
-              aria-invalid={errors.invoiceNumber ? "true" : "false"}
-              placeholder="Auto-generated"
-              {...register("invoiceNumber")}
-            />
-          </FormField>
-          <FormField
-            label="Invoice date"
-            htmlFor="invoiceDate"
-            error={errors.invoiceDate?.message}
-          >
-            <Input
-              id="invoiceDate"
-              type="date"
-              aria-invalid={errors.invoiceDate ? "true" : "false"}
-              {...register("invoiceDate")}
-            />
-          </FormField>
-          <FormField
-            label="Due date"
-            htmlFor="dueDate"
-            error={errors.dueDate?.message}
-          >
-            <Input
-              id="dueDate"
-              type="date"
-              aria-invalid={errors.dueDate ? "true" : "false"}
-              {...register("dueDate")}
-            />
-          </FormField>
-        </div>
+        {/* Bill details */}
+        <Section
+          title="Bill details"
+          description="Supplier, references and scheduling for this bill."
+          delay={0.05}
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                label="Supplier"
+                htmlFor="supplierId"
+                required
+                error={errors.supplierId?.message}
+              >
+                <select
+                  id="supplierId"
+                  className={inputClass(!!errors.supplierId)}
+                  {...register("supplierId")}
+                >
+                  <option value="">— Select supplier —</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField
+                label="Supplier invoice no."
+                htmlFor="supplierInvoiceNumber"
+                error={errors.supplierInvoiceNumber?.message}
+              >
+                <Input
+                  id="supplierInvoiceNumber"
+                  type="text"
+                  aria-invalid={errors.supplierInvoiceNumber ? "true" : "false"}
+                  placeholder="Bill number on the supplier's invoice"
+                  {...register("supplierInvoiceNumber")}
+                />
+              </FormField>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <FormField
+                label="Bill number"
+                htmlFor="invoiceNumber"
+                error={errors.invoiceNumber?.message}
+                hint="Leave blank to auto-generate"
+              >
+                <Input
+                  id="invoiceNumber"
+                  type="text"
+                  aria-invalid={errors.invoiceNumber ? "true" : "false"}
+                  placeholder="Auto-generated"
+                  {...register("invoiceNumber")}
+                />
+              </FormField>
+              <FormField
+                label="Bill date"
+                htmlFor="invoiceDate"
+                error={errors.invoiceDate?.message}
+              >
+                <Input
+                  id="invoiceDate"
+                  type="date"
+                  aria-invalid={errors.invoiceDate ? "true" : "false"}
+                  {...register("invoiceDate")}
+                />
+              </FormField>
+              <FormField
+                label="Due date"
+                htmlFor="dueDate"
+                error={errors.dueDate?.message}
+              >
+                <Input
+                  id="dueDate"
+                  type="date"
+                  aria-invalid={errors.dueDate ? "true" : "false"}
+                  {...register("dueDate")}
+                />
+              </FormField>
+            </div>
+          </div>
+        </Section>
 
         {/* Line items */}
-        <SectionTitle>Line items</SectionTitle>
-        {itemsError && <FieldError message={itemsError} />}
+        <Section title="Line items" delay={0.1}>
+          {itemsError && <FieldError message={itemsError} />}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              <tr>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Product
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Qty
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Unit price
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Tax
-                </th>
-                <th scope="col" className="px-2 py-2 text-right font-medium">
-                  Line total
-                </th>
-                <th scope="col" className="px-2 py-2">
+          <Table wrapperClassName="border-slate-100 dark:border-slate-800">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Unit price</TableHead>
+                <TableHead>Tax</TableHead>
+                <TableHead className="text-right">Line total</TableHead>
+                <TableHead>
                   <span className="sr-only">Remove</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {fields.map((field, index) => {
                 const rowErrors = errors.items?.[index];
                 return (
-                  <tr key={field.id} className="align-top">
-                    <td className="px-2 py-2">
+                  <TableRow key={field.id} className="align-top">
+                    <TableCell>
                       <select
                         aria-label={`Product for line ${index + 1}`}
                         className={cellClass}
@@ -570,8 +642,8 @@ export function PurchaseInvoiceForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.productId?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Quantity for line ${index + 1}`}
                         type="number"
@@ -581,8 +653,8 @@ export function PurchaseInvoiceForm({
                         {...register(`items.${index}.quantity`)}
                       />
                       <FieldError message={rowErrors?.quantity?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Unit price for line ${index + 1}`}
                         type="number"
@@ -592,8 +664,8 @@ export function PurchaseInvoiceForm({
                         {...register(`items.${index}.unitPrice`)}
                       />
                       <FieldError message={rowErrors?.unitPrice?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <select
                         aria-label={`Tax rate for line ${index + 1}`}
                         className={cn(cellClass, "w-20")}
@@ -606,11 +678,11 @@ export function PurchaseInvoiceForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.taxRate?.message} />
-                    </td>
-                    <td className="px-2 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(lines[index]?.lineTotal ?? 0)}
-                    </td>
-                    <td className="px-2 py-2 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Button
                         type="button"
                         variant="ghost"
@@ -618,82 +690,98 @@ export function PurchaseInvoiceForm({
                         aria-label={`Remove line ${index + 1}`}
                         disabled={fields.length <= 1}
                         onClick={() => remove(index)}
-                        className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
+                        className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => append(emptyItem())}
-        >
-          <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Add item
-        </Button>
-
-        {/* Totals */}
-        <div className="flex justify-end">
-          <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Subtotal</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(subtotal)}
-              </dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Tax</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(taxTotal)}
-              </dd>
-            </div>
-            <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
-              <dt>Grand total</dt>
-              <dd className="nums">{formatCurrency(grandTotal)}</dd>
-            </div>
-          </dl>
-        </div>
-
-        {/* Notes */}
-        <SectionTitle>Notes</SectionTitle>
-        <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
-          <Textarea
-            id="notes"
-            rows={2}
-            aria-invalid={errors.notes ? "true" : "false"}
-            placeholder="Internal notes about this purchase invoice"
-            {...register("notes")}
-          />
-        </FormField>
-
-        {/* Actions */}
-        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/purchases/invoices")}
-            disabled={isPending}
+            size="sm"
+            className="mt-3"
+            onClick={() => append(emptyItem())}
           >
-            Cancel
+            <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Add item
           </Button>
-          <Button
-            type="submit"
-            variant="gradient"
-            loading={isPending}
-            disabled={isPending}
-          >
-            {isEdit ? "Save changes" : "Create purchase invoice"}
-          </Button>
+
+          {/* Totals */}
+          <div className="mt-4 flex justify-end">
+            <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex justify-between">
+                <dt className="text-slate-500 dark:text-slate-400">
+                  Subtotal
+                </dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(subtotal)}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-500 dark:text-slate-400">Tax</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(taxTotal)}
+                </dd>
+              </div>
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
+                <dt>Grand total</dt>
+                <dd className="nums">{formatCurrency(grandTotal)}</dd>
+              </div>
+            </dl>
+          </div>
+        </Section>
+
+        {/* Notes */}
+        <Section
+          title="Notes"
+          description="Optional internal notes for this bill."
+          delay={0.15}
+        >
+          <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
+            <Textarea
+              id="notes"
+              rows={2}
+              aria-invalid={errors.notes ? "true" : "false"}
+              placeholder="Internal notes about this bill"
+              {...register("notes")}
+            />
+          </FormField>
+        </Section>
+
+        {/* Sticky action bar */}
+        <div className="sticky bottom-4 z-10 flex flex-col-reverse gap-3 rounded-xl border border-slate-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Grand total
+            <span className="nums ml-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+              {formatCurrency(grandTotal)}
+            </span>
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/purchases/bills")}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="gradient"
+              loading={isPending}
+              disabled={isPending}
+            >
+              {isEdit ? "Save changes" : "Create bill"}
+            </Button>
+          </div>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

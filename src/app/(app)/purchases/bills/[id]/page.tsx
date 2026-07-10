@@ -2,30 +2,30 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
-import { PurchaseInvoiceService } from "@/features/purchase/services/purchase-invoice.service";
+import { BillService } from "@/features/purchase/services/bill.service";
 import { ErrorState } from "@/components/shared/error-state";
-import { PurchaseInvoiceDetail } from "@/features/purchase/components/purchase-invoice-detail";
+import { BillDetail } from "@/features/purchase/components/bill-detail";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 
-interface PurchaseInvoiceDetailPageProps {
+interface BillDetailPageProps {
   readonly params: Promise<{ id: string }>;
   readonly searchParams: Promise<{ org?: string }>;
 }
 
 export async function generateMetadata({
   params,
-}: PurchaseInvoiceDetailPageProps): Promise<Metadata> {
+}: BillDetailPageProps): Promise<Metadata> {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase.auth.getUser();
   if (!data.user) {
-    return { title: "Purchase invoice" };
+    return { title: "Bill" };
   }
-  const result = await new PurchaseInvoiceService(supabase).getPurchaseInvoice(
+  const result = await new BillService(supabase).getBill(
     id
   );
   return {
-    title: result.success ? result.data.invoiceNumber : "Purchase invoice",
+    title: result.success ? result.data.invoiceNumber : "Bill",
   };
 }
 
@@ -42,6 +42,21 @@ async function lookupSupplierName(
     .eq("id", id)
     .single();
   return data?.name ?? null;
+}
+
+async function lookupPurchaseOrderNumber(
+  supabase: AppSupabaseClient,
+  id: string | null
+): Promise<string | null> {
+  if (!id) {
+    return null;
+  }
+  const { data } = await supabase
+    .from("purchase_orders")
+    .select("po_number")
+    .eq("id", id)
+    .single();
+  return data?.po_number ?? null;
 }
 
 async function lookupProductNames(
@@ -62,10 +77,10 @@ async function lookupProductNames(
   return map;
 }
 
-export default async function PurchaseInvoiceDetailPage({
+export default async function BillDetailPage({
   params,
   searchParams,
-}: PurchaseInvoiceDetailPageProps) {
+}: BillDetailPageProps) {
   const { id } = await params;
   const query = await searchParams;
   const supabase = await createServerSupabaseClient();
@@ -100,21 +115,21 @@ export default async function PurchaseInvoiceDetailPage({
       <div className="p-6 lg:p-8">
         <ErrorState
           title="Access denied"
-          message="You do not have permission to view purchase invoices for this organization."
+          message="You do not have permission to view bills for this organization."
         />
       </div>
     );
   }
 
-  const service = new PurchaseInvoiceService(supabase);
-  const result = await service.getPurchaseInvoice(id);
+  const service = new BillService(supabase);
+  const result = await service.getBill(id);
 
   if (!result.success || result.data.organizationId !== activeOrg.id) {
     return (
       <div className="p-6 lg:p-8">
         <ErrorState
-          title="Purchase invoice not found"
-          message="This purchase invoice does not exist or belongs to another organization."
+          title="Bill not found"
+          message="This bill does not exist or belongs to another organization."
         />
       </div>
     );
@@ -122,19 +137,21 @@ export default async function PurchaseInvoiceDetailPage({
 
   const invoice = result.data;
 
-  const [supplierName, productNames] = await Promise.all([
+  const [supplierName, productNames, purchaseOrderNumber] = await Promise.all([
     lookupSupplierName(supabase, invoice.supplierId),
     lookupProductNames(
       supabase,
       invoice.items.map((item) => item.productId)
     ),
+    lookupPurchaseOrderNumber(supabase, invoice.purchaseOrderId),
   ]);
 
   return (
-    <PurchaseInvoiceDetail
-      purchaseInvoice={invoice}
+    <BillDetail
+      bill={invoice}
       supplierName={supplierName}
       productNames={productNames}
+      purchaseOrderNumber={purchaseOrderNumber}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("purchase.create")}
       canCancel={context.permissions.includes("purchase.cancel")}

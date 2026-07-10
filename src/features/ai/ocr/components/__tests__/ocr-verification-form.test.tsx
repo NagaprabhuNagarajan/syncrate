@@ -156,7 +156,7 @@ describe("OcrVerificationForm", () => {
 
     // Navigates to the real purchase-invoice form in OCR-prefill mode.
     expect(mockPush).toHaveBeenCalledWith(
-      "/purchases/invoices/new?fromOcr=1&org=org-123"
+      "/purchases/bills/new?fromOcr=1&org=org-123"
     );
 
     // And stashes a valid draft for that form to read.

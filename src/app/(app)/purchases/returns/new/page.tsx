@@ -4,7 +4,9 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { PurchaseReturnForm } from "@/features/purchase/components/purchase-return-form";
+import type { PurchaseReturnPrefill } from "@/features/purchase/components/purchase-return-form";
 import { fetchPurchaseReturnOptions } from "@/features/purchase/server/purchase-return-options";
+import { PurchaseOrderService } from "@/features/purchase/services/purchase-order.service";
 
 export const metadata: Metadata = {
   title: "New purchase return",
@@ -14,7 +16,7 @@ export const metadata: Metadata = {
 export default async function NewPurchaseReturnPage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ org?: string }>;
+  readonly searchParams: Promise<{ org?: string; fromPurchaseOrder?: string }>;
 }) {
   const query = await searchParams;
   const supabase = await createServerSupabaseClient();
@@ -57,6 +59,28 @@ export default async function NewPurchaseReturnPage({
 
   const options = await fetchPurchaseReturnOptions(supabase, activeOrg.id);
 
+  // Prefill from a purchase order when arriving via "Create return" on a PO.
+  let prefill: PurchaseReturnPrefill | undefined;
+  if (query.fromPurchaseOrder) {
+    const poResult = await new PurchaseOrderService(supabase).getPurchaseOrder(
+      query.fromPurchaseOrder
+    );
+    if (poResult.success && poResult.data.organizationId === activeOrg.id) {
+      const po = poResult.data;
+      prefill = {
+        supplierId: po.supplierId,
+        branchId: po.branchId ?? "",
+        purchaseOrderId: po.id,
+        items: po.items.map((item) => ({
+          productId: item.productId,
+          quantity: String(item.quantity),
+          unitPrice: String(item.unitPrice),
+          taxRate: String(item.taxRate),
+        })),
+      };
+    }
+  }
+
   return (
     <div className="p-6 lg:p-8">
       <div className="mx-auto w-full max-w-5xl">
@@ -65,6 +89,7 @@ export default async function NewPurchaseReturnPage({
           suppliers={options.suppliers}
           branches={options.branches}
           products={options.products}
+          prefill={prefill}
         />
       </div>
     </div>

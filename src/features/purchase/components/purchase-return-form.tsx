@@ -7,8 +7,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Undo2, AlertCircle, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   createPurchaseReturnSchema,
   updatePurchaseReturnSchema,
@@ -148,21 +157,45 @@ function FormField({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
+      {hint && !error && (
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>
+      )}
       <FieldError message={error} />
     </div>
   );
 }
 
-function SectionTitle({ children }: { readonly children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-      <span className="text-xs font-medium tracking-wide text-slate-400 dark:text-slate-500">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            {title}
+          </h2>
+          {description && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
         {children}
-      </span>
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-    </div>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -176,7 +209,7 @@ const inputClass = (hasError: boolean) =>
   );
 
 const cellClass = cn(
-  "block w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-[border-color,box-shadow] duration-150 ease-out",
+  "block w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-[border-color,box-shadow]",
   "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
 );
 
@@ -184,12 +217,28 @@ const cellClass = cn(
 // Purchase return form (create + edit)
 // ─────────────────────────────────────────────────────────────
 
+/** Server-supplied initial values for a new return (e.g. from a purchase order). */
+export interface PurchaseReturnPrefill {
+  readonly supplierId: string;
+  readonly branchId: string;
+  /** Links the new return back to the originating purchase order. */
+  readonly purchaseOrderId?: string;
+  readonly items: readonly {
+    readonly productId: string;
+    readonly quantity: string;
+    readonly unitPrice: string;
+    readonly taxRate: string;
+  }[];
+}
+
 interface PurchaseReturnFormProps {
   readonly organizationId: string;
   readonly suppliers: readonly SupplierOption[];
   readonly branches: readonly BranchOption[];
   readonly products: readonly ProductOption[];
   readonly purchaseReturn?: PurchaseReturnWithItems;
+  /** Initial values for a new return, e.g. carried over from a purchase order. */
+  readonly prefill?: PurchaseReturnPrefill;
 }
 
 export function PurchaseReturnForm({
@@ -198,6 +247,7 @@ export function PurchaseReturnForm({
   branches,
   products,
   purchaseReturn,
+  prefill,
 }: PurchaseReturnFormProps) {
   const router = useRouter();
   const isEdit = Boolean(purchaseReturn);
@@ -221,8 +271,8 @@ export function PurchaseReturnForm({
     resolver,
     defaultValues: {
       returnNumber: purchaseReturn?.returnNumber ?? "",
-      supplierId: purchaseReturn?.supplierId ?? "",
-      branchId: purchaseReturn?.branchId ?? "",
+      supplierId: purchaseReturn?.supplierId ?? prefill?.supplierId ?? "",
+      branchId: purchaseReturn?.branchId ?? prefill?.branchId ?? "",
       returnDate: purchaseReturn
         ? purchaseReturn.returnDate.toISOString().slice(0, 10)
         : new Date().toISOString().slice(0, 10),
@@ -236,7 +286,14 @@ export function PurchaseReturnForm({
               unitPrice: String(item.unitPrice),
               taxRate: String(item.taxRate),
             }))
-          : [emptyItem()],
+          : prefill && prefill.items.length > 0
+            ? prefill.items.map((item) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                taxRate: item.taxRate,
+              }))
+            : [emptyItem()],
     },
   });
 
@@ -295,6 +352,13 @@ export function PurchaseReturnForm({
       fd.append("version", String(purchaseReturn.version ?? 1));
     }
 
+    // Preserve the purchase-order link (existing, or carried over from a PO).
+    const linkedPurchaseOrderId =
+      purchaseReturn?.purchaseOrderId ?? prefill?.purchaseOrderId;
+    if (linkedPurchaseOrderId) {
+      fd.append("purchaseOrderId", linkedPurchaseOrderId);
+    }
+
     const items = values.items.map((item) => ({
       productId: item.productId,
       quantity: num(item.quantity),
@@ -324,28 +388,28 @@ export function PurchaseReturnForm({
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xl shadow-slate-200/50 sm:p-6"
-    >
+    <div>
       {/* Header */}
-      <div className="mb-6 flex items-start gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-5 flex items-start gap-3"
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
           <Undo2 className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {isEdit ? "Edit purchase return" : "New purchase return"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update the draft purchase return"
               : "Return goods to one of your suppliers"}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {serverError && (
         <motion.div
@@ -371,129 +435,127 @@ export function PurchaseReturnForm({
             readOnly
           />
         )}
-        {/* Header fields */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            label="Supplier"
-            htmlFor="supplierId"
-            required
-            error={errors.supplierId?.message}
-          >
-            <select
-              id="supplierId"
-              className={inputClass(!!errors.supplierId)}
-              {...register("supplierId")}
-            >
-              <option value="">— Select supplier —</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField
-            label="Branch"
-            htmlFor="branchId"
-            required
-            error={errors.branchId?.message}
-            hint="Stock is decreased from this branch on completion"
-          >
-            <select
-              id="branchId"
-              className={inputClass(!!errors.branchId)}
-              {...register("branchId")}
-            >
-              <option value="">— Select branch —</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField
-            label="Return date"
-            htmlFor="returnDate"
-            error={errors.returnDate?.message}
-          >
-            <Input
-              id="returnDate"
-              type="date"
-              aria-invalid={errors.returnDate ? "true" : "false"}
-              {...register("returnDate")}
-            />
-          </FormField>
-          <FormField
-            label="Reason"
-            htmlFor="reason"
-            required
-            error={errors.reason?.message}
-          >
-            <select
-              id="reason"
-              className={inputClass(!!errors.reason)}
-              {...register("reason")}
-            >
-              {PURCHASE_RETURN_REASONS.map((reason) => (
-                <option key={reason} value={reason}>
-                  {PURCHASE_RETURN_REASON_LABELS[reason]}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField
-            label="Return number"
-            htmlFor="returnNumber"
-            error={errors.returnNumber?.message}
-          >
-            <Input
-              id="returnNumber"
-              type="text"
-              aria-invalid={errors.returnNumber ? "true" : "false"}
-              placeholder="Auto-generated"
-              {...register("returnNumber")}
-            />
-          </FormField>
-        </div>
+        {/* Return details */}
+        <Section
+          title="Return details"
+          description="Supplier, branch and reason for this return."
+          delay={0.05}
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                label="Supplier"
+                htmlFor="supplierId"
+                required
+                error={errors.supplierId?.message}
+              >
+                <select
+                  id="supplierId"
+                  className={inputClass(!!errors.supplierId)}
+                  {...register("supplierId")}
+                >
+                  <option value="">— Select supplier —</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField
+                label="Branch"
+                htmlFor="branchId"
+                required
+                error={errors.branchId?.message}
+                hint="Stock is decreased from this branch on completion"
+              >
+                <select
+                  id="branchId"
+                  className={inputClass(!!errors.branchId)}
+                  {...register("branchId")}
+                >
+                  <option value="">— Select branch —</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <FormField
+                label="Return date"
+                htmlFor="returnDate"
+                error={errors.returnDate?.message}
+              >
+                <Input
+                  id="returnDate"
+                  type="date"
+                  aria-invalid={errors.returnDate ? "true" : "false"}
+                  {...register("returnDate")}
+                />
+              </FormField>
+              <FormField
+                label="Reason"
+                htmlFor="reason"
+                required
+                error={errors.reason?.message}
+              >
+                <select
+                  id="reason"
+                  className={inputClass(!!errors.reason)}
+                  {...register("reason")}
+                >
+                  {PURCHASE_RETURN_REASONS.map((reason) => (
+                    <option key={reason} value={reason}>
+                      {PURCHASE_RETURN_REASON_LABELS[reason]}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField
+                label="Return number"
+                htmlFor="returnNumber"
+                error={errors.returnNumber?.message}
+              >
+                <Input
+                  id="returnNumber"
+                  type="text"
+                  aria-invalid={errors.returnNumber ? "true" : "false"}
+                  placeholder="Auto-generated"
+                  {...register("returnNumber")}
+                />
+              </FormField>
+            </div>
+          </div>
+        </Section>
 
         {/* Line items */}
-        <SectionTitle>Line items</SectionTitle>
-        {itemsError && <FieldError message={itemsError} />}
+        <Section title="Line items" delay={0.1}>
+          {itemsError && <FieldError message={itemsError} />}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              <tr>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Product
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Qty
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Unit price
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Tax
-                </th>
-                <th scope="col" className="px-2 py-2 text-right font-medium">
-                  Line total
-                </th>
-                <th scope="col" className="px-2 py-2">
+          <Table wrapperClassName="border-slate-100 dark:border-slate-800">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Unit price</TableHead>
+                <TableHead>Tax</TableHead>
+                <TableHead className="text-right">Line total</TableHead>
+                <TableHead>
                   <span className="sr-only">Remove</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {fields.map((field, index) => {
                 const rowErrors = errors.items?.[index];
                 return (
-                  <tr key={field.id} className="align-top">
-                    <td className="px-2 py-2">
+                  <TableRow key={field.id} className="align-top">
+                    <TableCell>
                       <select
                         aria-label={`Product for line ${index + 1}`}
                         className={cellClass}
@@ -510,8 +572,8 @@ export function PurchaseReturnForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.productId?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Quantity for line ${index + 1}`}
                         type="number"
@@ -521,8 +583,8 @@ export function PurchaseReturnForm({
                         {...register(`items.${index}.quantity`)}
                       />
                       <FieldError message={rowErrors?.quantity?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Unit price for line ${index + 1}`}
                         type="number"
@@ -532,8 +594,8 @@ export function PurchaseReturnForm({
                         {...register(`items.${index}.unitPrice`)}
                       />
                       <FieldError message={rowErrors?.unitPrice?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <select
                         aria-label={`Tax rate for line ${index + 1}`}
                         className={cn(cellClass, "w-20")}
@@ -546,11 +608,11 @@ export function PurchaseReturnForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.taxRate?.message} />
-                    </td>
-                    <td className="px-2 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(lines[index]?.lineTotal ?? 0)}
-                    </td>
-                    <td className="px-2 py-2 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Button
                         type="button"
                         variant="ghost"
@@ -558,82 +620,98 @@ export function PurchaseReturnForm({
                         aria-label={`Remove line ${index + 1}`}
                         disabled={fields.length <= 1}
                         onClick={() => remove(index)}
-                        className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700 dark:hover:text-error-300"
+                        className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => append(emptyItem())}
-        >
-          <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Add item
-        </Button>
-
-        {/* Totals */}
-        <div className="flex justify-end">
-          <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Subtotal</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(subtotal)}
-              </dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Tax</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(taxTotal)}
-              </dd>
-            </div>
-            <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 text-base font-semibold text-slate-900 dark:text-slate-100">
-              <dt>Grand total</dt>
-              <dd className="nums">{formatCurrency(grandTotal)}</dd>
-            </div>
-          </dl>
-        </div>
-
-        {/* Notes */}
-        <SectionTitle>Notes</SectionTitle>
-        <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
-          <Textarea
-            id="notes"
-            rows={2}
-            aria-invalid={errors.notes ? "true" : "false"}
-            placeholder="Internal notes about this purchase return"
-            {...register("notes")}
-          />
-        </FormField>
-
-        {/* Actions */}
-        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/purchases/returns")}
-            disabled={isPending}
+            size="sm"
+            className="mt-3"
+            onClick={() => append(emptyItem())}
           >
-            Cancel
+            <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Add item
           </Button>
-          <Button
-            type="submit"
-            variant="gradient"
-            loading={isPending}
-            disabled={isPending}
-          >
-            {isEdit ? "Save changes" : "Create purchase return"}
-          </Button>
+
+          {/* Totals */}
+          <div className="mt-4 flex justify-end">
+            <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex justify-between">
+                <dt className="text-slate-500 dark:text-slate-400">
+                  Subtotal
+                </dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(subtotal)}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-500 dark:text-slate-400">Tax</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(taxTotal)}
+                </dd>
+              </div>
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
+                <dt>Grand total</dt>
+                <dd className="nums">{formatCurrency(grandTotal)}</dd>
+              </div>
+            </dl>
+          </div>
+        </Section>
+
+        {/* Notes */}
+        <Section
+          title="Notes"
+          description="Optional internal notes for this return."
+          delay={0.15}
+        >
+          <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
+            <Textarea
+              id="notes"
+              rows={2}
+              aria-invalid={errors.notes ? "true" : "false"}
+              placeholder="Internal notes about this purchase return"
+              {...register("notes")}
+            />
+          </FormField>
+        </Section>
+
+        {/* Sticky action bar */}
+        <div className="sticky bottom-4 z-10 flex flex-col-reverse gap-3 rounded-xl border border-slate-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Grand total
+            <span className="nums ml-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+              {formatCurrency(grandTotal)}
+            </span>
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/purchases/returns")}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="gradient"
+              loading={isPending}
+              disabled={isPending}
+            >
+              {isEdit ? "Save changes" : "Create purchase return"}
+            </Button>
+          </div>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

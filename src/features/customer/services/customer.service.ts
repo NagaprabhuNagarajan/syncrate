@@ -219,6 +219,22 @@ export class CustomerService {
     return ok(undefined);
   }
 
+  async restoreCustomer(
+    customerId: string,
+    userId: string
+  ): Promise<CustomerActionResult<void>> {
+    const existing = await this.repo.findById(customerId);
+    if (!existing) {
+      return fail("not_found", "Customer not found");
+    }
+
+    const restored = await this.repo.restore(customerId, userId);
+    if (!restored) {
+      return fail("unknown", "Failed to restore customer. Please try again.");
+    }
+    return ok(undefined);
+  }
+
   // ── CSV export ─────────────────────────────────────────────
 
   /** Serializes every non-deleted customer for the org into CSV text. */

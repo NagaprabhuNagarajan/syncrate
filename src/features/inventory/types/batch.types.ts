@@ -58,3 +58,11 @@ export interface BatchError {
 export type BatchActionResult<T = void> =
   | { readonly success: true; readonly data: T }
   | { readonly success: false; readonly error: BatchError };
+
+/** Aggregate counts for the batches list header tiles. */
+export interface BatchStats {
+  readonly total: number;
+  readonly active: number;
+  readonly expired: number;
+  readonly depleted: number;
+}

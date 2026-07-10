@@ -4,6 +4,7 @@ import type {
   InventoryLevel,
   InventoryLevelListParams,
   InventoryLevelListResult,
+  InventoryStats,
   InventoryTransaction,
   InventoryTransactionListParams,
   InventoryTransactionType,
@@ -82,6 +83,18 @@ interface RawLevelRow {
   branch_id: string;
   quantity: number;
   reserved_quantity: number;
+}
+
+/** Minimal shape used by the single-scan stats aggregation. */
+interface StatsRow {
+  quantity: number;
+  reorderLevel: number;
+  purchasePrice: number;
+}
+
+interface StatsJoinRow {
+  quantity: number;
+  products: Pick<ProductJoin, "reorder_level" | "purchase_price"> | Pick<ProductJoin, "reorder_level" | "purchase_price">[] | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -163,6 +176,9 @@ const LEVEL_SELECT =
 const TX_SELECT =
   "id,organization_id,product_id,branch_id,batch_id,type,quantity,running_balance,reference_type,reference_id,note,created_at,created_by,products(name,code),branches(name,code)";
 
+const STATS_SELECT =
+  "quantity,products!inner(reorder_level,purchase_price)";
+
 export class InventoryRepository {
   constructor(private readonly supabase: AppSupabaseClient) {}
 
@@ -182,6 +198,61 @@ export class InventoryRepository {
       return null;
     }
     return mapRawLevel(data as unknown as RawLevelRow);
+  }
+
+  /**
+   * Minimal rows for the whole organization's stock levels — just enough to
+   * compute stats (quantity, reorder level, purchase price). A single scan
+   * shared by `getStats()` and `getStockValue()` so both stay in sync and
+   * avoid transferring full product/branch joins twice.
+   */
+  async getStatsRows(organizationId: string): Promise<StatsRow[]> {
+    const { data, error } = await this.supabase
+      .from("inventory")
+      .select(STATS_SELECT)
+      .eq("organization_id", organizationId);
+
+    if (error || !data) {
+      return [];
+    }
+
+    return (data as unknown as StatsJoinRow[]).map((row) => {
+      const product = one(row.products);
+      return {
+        quantity: Number(row.quantity),
+        reorderLevel: product ? Number(product.reorder_level) : 0,
+        purchasePrice: product ? Number(product.purchase_price) : 0,
+      };
+    });
+  }
+
+  /**
+   * Aggregate counts for the inventory list header tiles, computed in a
+   * single scan over all stock levels for the organization.
+   */
+  async getStats(organizationId: string): Promise<InventoryStats> {
+    const rows = await this.getStatsRows(organizationId);
+
+    let stockValue = 0;
+    let lowStock = 0;
+    let outOfStock = 0;
+
+    for (const row of rows) {
+      stockValue += row.quantity * row.purchasePrice;
+      if (row.quantity === 0) {
+        outOfStock += 1;
+      }
+      if (row.quantity <= row.reorderLevel) {
+        lowStock += 1;
+      }
+    }
+
+    return {
+      totalSkus: rows.length,
+      stockValue,
+      lowStock,
+      outOfStock,
+    };
   }
 
   async listLevels(

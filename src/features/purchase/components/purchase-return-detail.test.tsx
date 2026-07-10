@@ -15,6 +15,7 @@ const { mockRefresh, completeMock, cancelMock } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: mockRefresh }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/features/purchase/actions/purchase-return.actions", () => ({
@@ -84,6 +85,27 @@ beforeEach(() => {
 });
 
 describe("PurchaseReturnDetail", () => {
+  it("links to the purchase order when the return was raised from one", () => {
+    const entry = { ...makeReturn("completed"), purchaseOrderId: "po-1" };
+    render(
+      <PurchaseReturnDetail
+        purchaseReturn={entry}
+        supplierName="Acme Supply"
+        branchName="Main WH"
+        productNames={{ "p-1": "Widget" }}
+        purchaseOrderNumber="PO-0001"
+        organizationId="org-1"
+        canComplete={false}
+        canCancel={false}
+        canManage
+      />
+    );
+    expect(screen.getByRole("link", { name: "PO-0001" })).toHaveAttribute(
+      "href",
+      "/purchases/po-1"
+    );
+  });
+
   it("renders header info, items, totals, reason and status", () => {
     renderDetail(makeReturn("draft"), { canComplete: true });
     expect(screen.getByText("PRET-00001")).toBeInTheDocument();

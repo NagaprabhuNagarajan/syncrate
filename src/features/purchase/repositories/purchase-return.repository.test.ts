@@ -22,6 +22,7 @@ interface QueryResult {
 interface MockBuilder {
   select: Mock;
   eq: Mock;
+  neq: Mock;
   is: Mock;
   or: Mock;
   ilike: Mock;
@@ -62,6 +63,7 @@ function createMockClient(
     } = {
       select: vi.fn(() => builder),
       eq: vi.fn(() => builder),
+      neq: vi.fn(() => builder),
       is: vi.fn(() => builder),
       or: vi.fn(() => builder),
       ilike: vi.fn(() => builder),
@@ -328,6 +330,47 @@ describe("PurchaseReturnRepository", () => {
         pageSize: 1000,
       });
       expect(builders[0].range).toHaveBeenCalledWith(0, 99);
+    });
+  });
+
+  describe("getStats", () => {
+    it("aggregates status counts and sums total_amount for non-cancelled returns", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: 3 }, // draft
+        { data: null, error: null, count: 4 }, // completed
+        { data: null, error: null, count: 1 }, // cancelled
+        {
+          data: [{ total_amount: 100 }, { total_amount: 250.5 }],
+          error: null,
+        }, // value rows
+      ]);
+      const stats = await new PurchaseReturnRepository(client).getStats(
+        "org-1"
+      );
+      expect(stats).toEqual({
+        totalValue: 350.5,
+        draft: 3,
+        completed: 4,
+        cancelled: 1,
+      });
+    });
+
+    it("defaults counts to 0 and totalValue to 0 when data is missing", async () => {
+      const { client } = createMockClient([
+        { data: null, error: null, count: null },
+        { data: null, error: null, count: undefined },
+        { data: null, error: null, count: null },
+        { data: null, error: null },
+      ]);
+      const stats = await new PurchaseReturnRepository(client).getStats(
+        "org-1"
+      );
+      expect(stats).toEqual({
+        totalValue: 0,
+        draft: 0,
+        completed: 0,
+        cancelled: 0,
+      });
     });
   });
 

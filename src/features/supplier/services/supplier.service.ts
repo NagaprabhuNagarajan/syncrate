@@ -241,6 +241,22 @@ export class SupplierService {
     return ok(undefined);
   }
 
+  async restoreSupplier(
+    supplierId: string,
+    userId: string
+  ): Promise<SupplierActionResult<void>> {
+    const existing = await this.repo.findById(supplierId);
+    if (!existing) {
+      return fail("not_found", "Supplier not found");
+    }
+
+    const restored = await this.repo.restore(supplierId, userId);
+    if (!restored) {
+      return fail("unknown", "Failed to restore supplier. Please try again.");
+    }
+    return ok(undefined);
+  }
+
   // ── Export ─────────────────────────────────────────────────
 
   /** Serializes every non-deleted supplier in the org to CSV text. */

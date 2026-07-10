@@ -9,6 +9,7 @@ const { mockRepo } = vi.hoisted(() => ({
     findById: vi.fn(),
     findByNumber: vi.fn(),
     create: vi.fn(),
+    getStats: vi.fn(),
   },
 }));
 
@@ -132,5 +133,16 @@ describe("BatchService.getBatch", () => {
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
     }
+  });
+});
+
+describe("BatchService.getBatchStats", () => {
+  it("delegates to the repository", async () => {
+    const stats = { total: 8, active: 5, expired: 2, depleted: 1 };
+    mockRepo.getStats.mockResolvedValue(stats);
+
+    const result = await service.getBatchStats("org-1");
+    expect(result).toBe(stats);
+    expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
   });
 });

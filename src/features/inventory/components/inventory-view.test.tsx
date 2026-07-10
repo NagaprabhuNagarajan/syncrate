@@ -5,6 +5,7 @@ import { InventoryView } from "./inventory-view";
 import type {
   InventoryLevel,
   InventoryLevelListResult,
+  InventoryStats,
   InventoryTransaction,
 } from "@/features/inventory/types/inventory.types";
 
@@ -82,6 +83,16 @@ function makeResult(
   };
 }
 
+function makeStats(overrides: Partial<InventoryStats> = {}): InventoryStats {
+  return {
+    totalSkus: 1,
+    stockValue: 200,
+    lowStock: 1,
+    outOfStock: 0,
+    ...overrides,
+  };
+}
+
 const branches = [
   { id: "wh-1", code: "WH-01", name: "Main Depot" },
   { id: "wh-2", code: "WH-02", name: "Second Depot" },
@@ -93,11 +104,11 @@ function renderView(props: Partial<Parameters<typeof InventoryView>[0]> = {}) {
     <InventoryView
       organizationId="org-1"
       result={makeResult()}
+      stats={makeStats()}
       transactions={[makeTx()]}
       products={products}
       branches={branches}
       filters={{}}
-      stockValue={200}
       canAdjust
       canTransfer
       {...props}
@@ -122,7 +133,7 @@ describe("InventoryView", () => {
   });
 
   it("shows the total stock value", () => {
-    renderView({ stockValue: 1500 });
+    renderView({ stats: makeStats({ stockValue: 1500 }) });
     expect(screen.getByText(/₹/)).toBeInTheDocument();
   });
 
@@ -162,7 +173,49 @@ describe("InventoryView", () => {
   it("toggles the low-stock filter via the URL", async () => {
     const user = userEvent.setup();
     renderView();
-    await user.click(screen.getByLabelText("Low stock only"));
+    await user.click(screen.getByRole("tab", { name: "Low stock" }));
     expect(mockPush).toHaveBeenCalledWith("/inventory?low=1");
+  });
+
+  it("marks the active stock filter pill", () => {
+    searchParamsRef.current = "low=1";
+    renderView({ filters: { lowStockOnly: true } });
+    expect(screen.getByRole("tab", { name: "Low stock" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("tab", { name: "All stock" })).toHaveAttribute(
+      "aria-selected",
+      "false"
+    );
+  });
+
+  it("shows an out-of-stock badge when quantity is zero", () => {
+    renderView({
+      result: makeResult({ items: [makeLevel({ quantity: 0 })] }),
+    });
+    // "Out of stock" also appears as a stat-tile label, so there are two.
+    expect(screen.getAllByText("Out of stock").length).toBe(2);
+  });
+
+  it("clearing the search field resets the list immediately", async () => {
+    const user = userEvent.setup();
+    searchParamsRef.current = "search=cement";
+    renderView({ filters: { search: "cement" } });
+
+    const input = screen.getByLabelText("Search stock by product");
+    await user.clear(input);
+
+    expect(mockPush).toHaveBeenCalledWith("/inventory");
+  });
+
+  it("shows pagination and navigates to the next page", async () => {
+    const user = userEvent.setup();
+    renderView({
+      result: makeResult({ total: 45, page: 1, pageSize: 20 }),
+    });
+    expect(screen.getByText(/Showing/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /next/i }));
+    expect(mockPush).toHaveBeenCalledWith("/inventory?page=2");
   });
 });

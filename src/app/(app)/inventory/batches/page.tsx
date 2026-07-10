@@ -71,8 +71,9 @@ export default async function BatchesPage({
 
   const batchService = new BatchService(supabase);
 
-  const [result, productRows] = await Promise.all([
+  const [result, stats, productRows] = await Promise.all([
     batchService.listBatches(activeOrg.id, { productId, page }),
+    batchService.getBatchStats(activeOrg.id),
     supabase
       .from("products")
       .select("id,name,code")
@@ -92,7 +93,9 @@ export default async function BatchesPage({
     <BatchesView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       products={products}
+      filters={{ productId }}
       canManage={canManage}
     />
   );
