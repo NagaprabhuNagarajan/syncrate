@@ -66,7 +66,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: "Suppliers", href: "/suppliers", icon: Truck },
   { label: "Products", href: "/products", icon: Package },
   { label: "Inventory", href: "/inventory", icon: Warehouse },
-  { label: "Purchase Order", href: "/purchases", icon: ShoppingCart },
+  { label: "Purchases", href: "/purchases", icon: ShoppingCart },
   { label: "Sales Order", href: "/sales-orders", icon: TrendingUp },
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "Payments", href: "/payments", icon: CreditCard },
