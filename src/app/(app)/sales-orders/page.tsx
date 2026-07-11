@@ -89,16 +89,16 @@ export default async function SalesOrdersPage({
   const page = parsePage(params.page);
 
   const service = new SalesOrderService(supabase);
-  const result = await service.listSalesOrders(activeOrg.id, {
-    search,
-    status,
-    page,
-  });
+  const [result, stats] = await Promise.all([
+    service.listSalesOrders(activeOrg.id, { search, status, page }),
+    service.getSalesOrderStats(activeOrg.id),
+  ]);
 
   return (
     <SalesOrdersView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search, status }}
       canManage={canManage}
     />

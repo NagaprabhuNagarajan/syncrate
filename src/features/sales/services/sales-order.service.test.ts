@@ -3,19 +3,20 @@ import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type {
   CreateSalesOrderInput,
   SalesOrder,
+  SalesOrderItem,
   SalesOrderWithItems,
   UpdateSalesOrderInput,
 } from "@/features/sales/types/sales-order.types";
-import type { QuotationWithItems } from "@/features/sales/types/quotation.types";
 import { SalesOrderService } from "./sales-order.service";
 
 // ─────────────────────────────────────────────────────────────
 // Mock repositories
 // ─────────────────────────────────────────────────────────────
 
-const { mockRepo, mockQtRepo } = vi.hoisted(() => ({
+const { mockRepo } = vi.hoisted(() => ({
   mockRepo: {
     list: vi.fn(),
+    getStats: vi.fn(),
     findById: vi.fn(),
     findWithItems: vi.fn(),
     findItems: vi.fn(),
@@ -24,28 +25,13 @@ const { mockRepo, mockQtRepo } = vi.hoisted(() => ({
     replaceItems: vi.fn(),
     updateHeader: vi.fn(),
     updateStatus: vi.fn(),
-    softDelete: vi.fn(),
-  },
-  mockQtRepo: {
-    list: vi.fn(),
-    findById: vi.fn(),
-    findWithItems: vi.fn(),
-    findItems: vi.fn(),
-    createHeader: vi.fn(),
-    insertItems: vi.fn(),
-    replaceItems: vi.fn(),
-    updateHeader: vi.fn(),
-    updateStatus: vi.fn(),
+    recordItemDeliveries: vi.fn(),
     softDelete: vi.fn(),
   },
 }));
 
 vi.mock("@/features/sales/repositories/sales-order.repository", () => ({
   SalesOrderRepository: vi.fn(() => mockRepo),
-}));
-
-vi.mock("@/features/sales/repositories/quotation.repository", () => ({
-  QuotationRepository: vi.fn(() => mockQtRepo),
 }));
 
 // ─────────────────────────────────────────────────────────────
@@ -58,7 +44,6 @@ function buildSalesOrder(overrides: Partial<SalesOrder> = {}): SalesOrder {
     organizationId: "org-1",
     soNumber: "SO-00001",
     customerId: "cust-1",
-    quotationId: null,
     branchId: null,
     salespersonId: null,
     referenceNumber: null,
@@ -95,66 +80,43 @@ function buildWithItems(
   return { ...buildSalesOrder(overrides), items: [] };
 }
 
-function buildQuotationWithItems(
-  overrides: Partial<QuotationWithItems> = {}
-): QuotationWithItems {
+function buildItem(overrides: Partial<SalesOrderItem> = {}): SalesOrderItem {
   return {
-    id: "qt-1",
+    id: "item-1",
     organizationId: "org-1",
-    quotationNumber: "QT-00001",
-    customerId: "cust-1",
-    branchId: null,
-    salespersonId: null,
-    referenceNumber: null,
-    quotationDate: new Date("2026-06-01"),
-    expiryDate: null,
-    supplyState: "Maharashtra",
-    isInterstate: false,
-    status: "accepted",
-    subtotal: 1000,
+    salesOrderId: "so-1",
+    productId: "prod-1",
+    description: "Widget",
+    hsnCode: null,
+    quantity: 10,
+    deliveredQty: 0,
+    unitPrice: 100,
+    discountPercent: 0,
     discountAmount: 0,
+    taxableAmount: 1000,
+    gstRate: 18,
+    cgstRate: 9,
+    sgstRate: 9,
+    igstRate: 0,
     cgstAmount: 90,
     sgstAmount: 90,
     igstAmount: 0,
     taxAmount: 180,
-    roundOff: 0,
-    totalAmount: 1180,
-    notes: null,
-    terms: null,
-    convertedSoId: null,
-    convertedInvId: null,
+    lineTotal: 1180,
+    sortOrder: 0,
     createdAt: new Date("2026-06-01"),
-    updatedAt: new Date("2026-06-01"),
     createdBy: "user-1",
-    version: 1,
-    items: [
-      {
-        id: "qi-1",
-        organizationId: "org-1",
-        quotationId: "qt-1",
-        productId: "prod-1",
-        description: null,
-        hsnCode: null,
-        quantity: 10,
-        unitPrice: 100,
-        discountPercent: 0,
-        discountAmount: 0,
-        taxableAmount: 1000,
-        gstRate: 18,
-        cgstRate: 9,
-        sgstRate: 9,
-        igstRate: 0,
-        cgstAmount: 90,
-        sgstAmount: 90,
-        igstAmount: 0,
-        taxAmount: 180,
-        lineTotal: 1180,
-        sortOrder: 0,
-        createdAt: new Date("2026-06-01"),
-        createdBy: "user-1",
-      },
-    ],
     ...overrides,
+  };
+}
+
+function buildFulfilling(
+  items: SalesOrderItem[],
+  overrides: Partial<SalesOrder> = {}
+): SalesOrderWithItems {
+  return {
+    ...buildSalesOrder({ status: "processing", ...overrides }),
+    items,
   };
 }
 
@@ -213,6 +175,24 @@ describe("SalesOrderService", () => {
       mockRepo.findWithItems.mockResolvedValueOnce(so);
       const result = await service.getSalesOrder("so-1");
       expect(result).toMatchObject({ success: true, data: so });
+    });
+  });
+
+  // ── getSalesOrderStats ─────────────────────────────────────
+
+  describe("getSalesOrderStats", () => {
+    it("delegates to repo.getStats", async () => {
+      const stats = {
+        totalValue: 1180,
+        draft: 1,
+        awaitingApproval: 0,
+        open: 0,
+      };
+      mockRepo.getStats.mockResolvedValueOnce(stats);
+
+      const result = await service.getSalesOrderStats("org-1");
+      expect(mockRepo.getStats).toHaveBeenCalledWith("org-1");
+      expect(result).toBe(stats);
     });
   });
 
@@ -384,58 +364,115 @@ describe("SalesOrderService", () => {
     });
   });
 
-  // ── convertFromQuotation ────────────────────────────────────
+  // ── recordDelivery ─────────────────────────────────────────
 
-  describe("convertFromQuotation", () => {
-    it("creates SO from quotation and marks quotation converted", async () => {
-      const qtWithItems = buildQuotationWithItems();
-      mockQtRepo.findWithItems.mockResolvedValueOnce(qtWithItems);
-
-      // createSalesOrder internals
-      mockRepo.list.mockResolvedValueOnce({ total: 0 });
-      mockRepo.createHeader.mockResolvedValueOnce(buildSalesOrder({ quotationId: "qt-1" }));
-      mockRepo.insertItems.mockResolvedValueOnce(true);
-      mockRepo.findWithItems.mockResolvedValueOnce(buildWithItems({ quotationId: "qt-1" }));
-
-      mockQtRepo.updateStatus.mockResolvedValueOnce(null);
-
-      const result = await service.convertFromQuotation(
-        "qt-1",
-        "org-1",
-        "user-1",
-        "Maharashtra"
+  describe("recordDelivery", () => {
+    it("moves to partially_delivered on a partial delivery", async () => {
+      const items = [
+        buildItem({ id: "item-1", quantity: 10, deliveredQty: 0 }),
+        buildItem({ id: "item-2", quantity: 5, deliveredQty: 0 }),
+      ];
+      mockRepo.findWithItems
+        .mockResolvedValueOnce(buildFulfilling(items))
+        .mockResolvedValueOnce(buildFulfilling(items, { status: "partially_delivered" }));
+      mockRepo.recordItemDeliveries.mockResolvedValueOnce(true);
+      mockRepo.updateStatus.mockResolvedValueOnce(
+        buildSalesOrder({ status: "partially_delivered" })
       );
+
+      const result = await service.recordDelivery("org-1", "so-1", "user-1", [
+        { itemId: "item-1", deliverQty: 4 },
+      ]);
 
       expect(result.success).toBe(true);
-      // quotation should be marked converted
-      expect(mockQtRepo.updateStatus).toHaveBeenCalledWith(
-        "qt-1",
-        "converted",
+      expect(mockRepo.recordItemDeliveries).toHaveBeenCalledWith(
+        "org-1",
+        "so-1",
+        [{ itemId: "item-1", deliveredQty: 4 }]
+      );
+      expect(mockRepo.updateStatus).toHaveBeenCalledWith(
+        "so-1",
+        "partially_delivered",
         "user-1",
-        "so-1"
+        false
       );
     });
 
-    it("returns not_found when quotation does not exist", async () => {
-      mockQtRepo.findWithItems.mockResolvedValueOnce(null);
-      const result = await service.convertFromQuotation("qt-x", "org-1", "user-1");
-      expect(result).toMatchObject({ success: false, error: { code: "not_found" } });
+    it("moves to completed when every item is fully delivered", async () => {
+      const items = [
+        buildItem({ id: "item-1", quantity: 10, deliveredQty: 6 }),
+        buildItem({ id: "item-2", quantity: 5, deliveredQty: 5 }),
+      ];
+      mockRepo.findWithItems
+        .mockResolvedValueOnce(buildFulfilling(items))
+        .mockResolvedValueOnce(buildFulfilling(items, { status: "completed" }));
+      mockRepo.recordItemDeliveries.mockResolvedValueOnce(true);
+      mockRepo.updateStatus.mockResolvedValueOnce(
+        buildSalesOrder({ status: "completed" })
+      );
+
+      const result = await service.recordDelivery("org-1", "so-1", "user-1", [
+        { itemId: "item-1", deliverQty: 4 },
+      ]);
+
+      expect(result.success).toBe(true);
+      expect(mockRepo.updateStatus).toHaveBeenCalledWith(
+        "so-1",
+        "completed",
+        "user-1",
+        false
+      );
     });
 
-    it("rejects draft quotation from conversion", async () => {
-      mockQtRepo.findWithItems.mockResolvedValueOnce(
-        buildQuotationWithItems({ status: "draft" })
-      );
-      const result = await service.convertFromQuotation("qt-1", "org-1", "user-1");
-      expect(result).toMatchObject({ success: false, error: { code: "invalid_status" } });
+    it("rejects an over-delivery beyond the ordered quantity", async () => {
+      const items = [buildItem({ id: "item-1", quantity: 10, deliveredQty: 8 })];
+      mockRepo.findWithItems.mockResolvedValueOnce(buildFulfilling(items));
+
+      const result = await service.recordDelivery("org-1", "so-1", "user-1", [
+        { itemId: "item-1", deliverQty: 5 },
+      ]);
+
+      expect(result).toMatchObject({
+        success: false,
+        error: { code: "validation" },
+      });
+      expect(mockRepo.recordItemDeliveries).not.toHaveBeenCalled();
     });
 
-    it("rejects rejected quotation from conversion", async () => {
-      mockQtRepo.findWithItems.mockResolvedValueOnce(
-        buildQuotationWithItems({ status: "rejected" })
+    it("rejects delivery from a non-deliverable status", async () => {
+      const items = [buildItem()];
+      mockRepo.findWithItems.mockResolvedValueOnce(
+        buildFulfilling(items, { status: "submitted" })
       );
-      const result = await service.convertFromQuotation("qt-1", "org-1", "user-1");
-      expect(result).toMatchObject({ success: false, error: { code: "invalid_status" } });
+
+      const result = await service.recordDelivery("org-1", "so-1", "user-1", [
+        { itemId: "item-1", deliverQty: 1 },
+      ]);
+
+      expect(result).toMatchObject({
+        success: false,
+        error: { code: "invalid_status" },
+      });
+    });
+
+    it("reports a conflict when the version is stale", async () => {
+      const items = [buildItem()];
+      mockRepo.findWithItems.mockResolvedValueOnce(
+        buildFulfilling(items, { version: 3 })
+      );
+
+      const result = await service.recordDelivery(
+        "org-1",
+        "so-1",
+        "user-1",
+        [{ itemId: "item-1", deliverQty: 1 }],
+        2
+      );
+
+      expect(result).toMatchObject({
+        success: false,
+        error: { code: "conflict" },
+      });
     });
   });
 });

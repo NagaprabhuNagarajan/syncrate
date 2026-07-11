@@ -67,7 +67,6 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     invoiceType: "tax_invoice",
     customerId: "cust-1",
     salesOrderId: null,
-    quotationId: null,
     branchId: null,
     salespersonId: null,
     referenceNumber: null,

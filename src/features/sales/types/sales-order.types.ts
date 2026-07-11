@@ -25,7 +25,6 @@ export interface SalesOrder {
   readonly organizationId: string;
   readonly soNumber: string;
   readonly customerId: string;
-  readonly quotationId: string | null;
   readonly branchId: string | null;
   readonly salespersonId: string | null;
   readonly referenceNumber: string | null;
@@ -113,7 +112,6 @@ export interface CreateSalesOrderItemInput {
 
 export interface CreateSalesOrderInput {
   readonly customerId: string;
-  readonly quotationId?: string;
   readonly branchId?: string;
   readonly salespersonId?: string;
   readonly referenceNumber?: string;
@@ -160,6 +158,15 @@ export interface SalesOrderListResult {
   readonly total: number;
   readonly page: number;
   readonly pageSize: number;
+}
+
+/** Aggregate counts/sums for the list header stat tiles. */
+export interface SalesOrderStats {
+  /** Sum of total_amount across all non-cancelled orders. */
+  readonly totalValue: number;
+  readonly draft: number;
+  readonly awaitingApproval: number;
+  readonly open: number;
 }
 
 // ─────────────────────────────────────────────────────────────

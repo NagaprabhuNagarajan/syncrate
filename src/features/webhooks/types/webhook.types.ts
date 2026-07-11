@@ -95,7 +95,6 @@ export const WEBHOOK_EVENT_TYPES = [
   { value: "invoice.created", label: "Invoice created" },
   { value: "invoice.paid", label: "Invoice paid" },
   { value: "invoice.cancelled", label: "Invoice cancelled" },
-  { value: "quotation.accepted", label: "Quotation accepted" },
   { value: "payment.received", label: "Payment received" },
   { value: "customer.created", label: "Customer created" },
   { value: "supplier.created", label: "Supplier created" },

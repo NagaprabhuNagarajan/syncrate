@@ -3,6 +3,7 @@ import type { Database } from "@/types/database.types";
 import type {
   Invoice,
   InvoiceItem,
+  InvoiceListItem,
   InvoiceListParams,
   InvoiceListResult,
   InvoiceStatus,
@@ -46,7 +47,6 @@ function mapInvoice(row: DbInvoice): Invoice {
     invoiceType: row.invoice_type,
     customerId: row.customer_id,
     salesOrderId: row.sales_order_id,
-    quotationId: row.quotation_id,
     branchId: row.branch_id,
     salespersonId: row.salesperson_id,
     referenceNumber: row.reference_number,
@@ -244,6 +244,26 @@ export class InvoiceRepository {
       page,
       pageSize,
     };
+  }
+
+  /** Invoices linked to a sales order, newest first. */
+  async findBySalesOrder(salesOrderId: string): Promise<InvoiceListItem[]> {
+    const { data, error } = await this.supabase
+      .from("invoices")
+      .select("*, customers(name)")
+      .eq("sales_order_id", salesOrderId)
+      .is("deleted_at", null)
+      .order("invoice_date", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+
+    const rows = data as unknown as DbInvoiceListRow[];
+    return rows.map((row) => ({
+      ...mapInvoice(row),
+      customerName: readCustomerName(row.customers),
+    }));
   }
 
   async createHeader(input: DbInvoiceInsert): Promise<Invoice | null> {

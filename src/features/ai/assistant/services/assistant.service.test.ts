@@ -106,7 +106,7 @@ describe("AssistantService.chat", () => {
     expect(opts.context).toEqual({ organizationId: ORG, userId: USER });
     expect(opts.messages).toEqual([{ role: "user", content: "Hi" }]);
 
-    // Six tools: four read tools (with execute) + two propose tools (without).
+    // Five tools: four read tools (with execute) + one propose tool (without).
     const tools: AiTool[] = opts.tools;
     expect(tools.map((t) => t.definition.name)).toEqual([
       "search_customers",
@@ -114,14 +114,12 @@ describe("AssistantService.chat", () => {
       "search_products",
       "check_inventory",
       "propose_invoice",
-      "propose_quotation",
     ]);
     const readTools = tools.filter((t) => Boolean(t.execute));
     const proposeTools = tools.filter((t) => !t.execute);
     expect(readTools).toHaveLength(4);
     expect(proposeTools.map((t) => t.definition.name)).toEqual([
       "propose_invoice",
-      "propose_quotation",
     ]);
   });
 

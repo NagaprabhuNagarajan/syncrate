@@ -47,7 +47,6 @@ function makeInvoice(
     customerId: "cust-1",
     customerName: "Acme Corp",
     salesOrderId: null,
-    quotationId: null,
     branchId: null,
     salespersonId: null,
     referenceNumber: null,

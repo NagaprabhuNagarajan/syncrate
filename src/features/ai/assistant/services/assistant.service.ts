@@ -55,11 +55,11 @@ Your job is to help the user understand and act on their business data: customer
 
 TOOLS
 - search_customers, search_suppliers, search_products, check_inventory are READ-ONLY. Use them to look up real records before answering or proposing anything. Never invent IDs, prices, stock levels, or names.
-- propose_invoice and propose_quotation PREPARE a draft for the user to review. They do NOT create anything. The user must explicitly approve a proposal before any document is created.
+- propose_invoice PREPARES a draft for the user to review. It does NOT create anything. The user must explicitly approve a proposal before any document is created.
 
 RULES
-1. You must NEVER claim to have created, sent, updated, or deleted anything. You can only read data and PROPOSE invoices/quotations.
-2. Before proposing an invoice or quotation you MUST resolve the real customerId (via search_customers) and a real productId for every line (via search_products). If you cannot find a match, ask the user to clarify instead of guessing.
+1. You must NEVER claim to have created, sent, updated, or deleted anything. You can only read data and PROPOSE invoices.
+2. Before proposing an invoice you MUST resolve the real customerId (via search_customers) and a real productId for every line (via search_products). If you cannot find a match, ask the user to clarify instead of guessing.
 3. Default each line's unitPrice to the product's selling price and gstRate to the product's GST rate unless the user specifies otherwise.
 4. When you have everything you need to prepare a document, call the matching propose_ tool. Briefly summarise what you are proposing in text as well.
 5. If the request is ambiguous or missing required details, ask a short clarifying question rather than proposing.`;
@@ -146,7 +146,6 @@ export class AssistantService {
       this.searchProductsTool(organizationId),
       this.checkInventoryTool(organizationId),
       proposeInvoiceTool(),
-      proposeQuotationTool(),
     ];
   }
 
@@ -328,17 +327,6 @@ function proposeInvoiceTool(): AiTool {
       name: "propose_invoice",
       description:
         "Prepare a DRAFT sales invoice for the user to review and approve. This does NOT create the invoice — the user must approve it. Only call once you have resolved a real customerId and a real productId for every line.",
-      input_schema: PROPOSE_DOCUMENT_INPUT_SCHEMA,
-    },
-  };
-}
-
-function proposeQuotationTool(): AiTool {
-  return {
-    definition: {
-      name: "propose_quotation",
-      description:
-        "Prepare a DRAFT quotation for the user to review and approve. This does NOT create the quotation — the user must approve it. Only call once you have resolved a real customerId and a real productId for every line.",
       input_schema: PROPOSE_DOCUMENT_INPUT_SCHEMA,
     },
   };

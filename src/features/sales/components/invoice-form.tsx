@@ -1,12 +1,22 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { FileText, AlertCircle, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   createInvoiceSchema,
   updateInvoiceSchema,
@@ -28,6 +38,8 @@ import { cn } from "@/utils/cn";
 export interface CustomerOption {
   readonly id: string;
   readonly name: string;
+  readonly billingState: string | null;
+  readonly shippingState: string | null;
 }
 
 export interface ProductOption {
@@ -40,6 +52,7 @@ export interface ProductOption {
 export interface BranchOption {
   readonly id: string;
   readonly name: string;
+  readonly state: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -178,15 +191,42 @@ function FormField({
   );
 }
 
-function SectionTitle({ children }: { readonly children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  action,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly action?: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-      <span className="text-xs font-medium tracking-wide text-slate-400 dark:text-slate-500">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
+          {action}
+        </div>
         {children}
-      </span>
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-    </div>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -200,13 +240,33 @@ const inputClass = (hasError: boolean) =>
   );
 
 const cellClass = cn(
-  "block w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-2 text-sm text-slate-900 dark:text-slate-100 shadow-sm",
-  "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+  "block w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-[border-color,box-shadow]",
+  "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
 );
 
 // ─────────────────────────────────────────────────────────────
 // Invoice form
 // ─────────────────────────────────────────────────────────────
+
+export interface InvoicePrefillItem {
+  readonly productId: string;
+  readonly description: string;
+  readonly hsnCode?: string;
+  readonly quantity: number;
+  readonly unitPrice: number;
+  readonly discountPercent: number;
+  readonly gstRate: number;
+}
+
+export interface InvoicePrefill {
+  readonly customerId: string;
+  readonly salesOrderId: string;
+  readonly salesOrderNumber: string;
+  readonly branchId: string;
+  readonly supplyState: string;
+  readonly isInterstate: boolean;
+  readonly items: readonly InvoicePrefillItem[];
+}
 
 interface InvoiceFormProps {
   readonly organizationId: string;
@@ -215,6 +275,7 @@ interface InvoiceFormProps {
   readonly products: readonly ProductOption[];
   readonly branches: readonly BranchOption[];
   readonly invoice?: InvoiceWithItems;
+  readonly prefill?: InvoicePrefill;
 }
 
 export function InvoiceForm({
@@ -224,6 +285,7 @@ export function InvoiceForm({
   products,
   branches,
   invoice,
+  prefill,
 }: InvoiceFormProps) {
   const router = useRouter();
   const isEdit = Boolean(invoice);
@@ -236,6 +298,18 @@ export function InvoiceForm({
       : zodResolver(createInvoiceSchema)
   ) as unknown as Resolver<CreateInvoiceFormValues>;
 
+  // The GST source state is the dispatching branch/warehouse's state, falling
+  // back to the organization's state when the branch has none (or none is
+  // selected). This is what decides CGST/SGST (intra-state) vs IGST.
+  const resolveSourceState = (branchId: string): string => {
+    const selectedBranch = branches.find((b) => b.id === branchId);
+    return selectedBranch?.state?.trim() ? selectedBranch.state : orgState ?? "";
+  };
+
+  const initialSourceState = resolveSourceState(
+    invoice?.branchId ?? prefill?.branchId ?? ""
+  );
+
   const {
     register,
     handleSubmit,
@@ -246,10 +320,9 @@ export function InvoiceForm({
   } = useForm<CreateInvoiceFormValues>({
     resolver,
     defaultValues: {
-      customerId: invoice?.customerId ?? "",
-      salesOrderId: invoice?.salesOrderId ?? "",
-      quotationId: invoice?.quotationId ?? "",
-      branchId: invoice?.branchId ?? "",
+      customerId: invoice?.customerId ?? prefill?.customerId ?? "",
+      salesOrderId: invoice?.salesOrderId ?? prefill?.salesOrderId ?? "",
+      branchId: invoice?.branchId ?? prefill?.branchId ?? "",
       invoiceDate: invoice
         ? invoice.invoiceDate.toISOString().slice(0, 10)
         : new Date().toISOString().slice(0, 10),
@@ -257,8 +330,8 @@ export function InvoiceForm({
         ? invoice.dueDate.toISOString().slice(0, 10)
         : "",
       invoiceType: invoice?.invoiceType ?? "tax_invoice",
-      supplyState: invoice?.supplyState ?? orgState ?? "",
-      isInterstate: invoice?.isInterstate ?? false,
+      supplyState: invoice?.supplyState ?? prefill?.supplyState ?? initialSourceState,
+      isInterstate: invoice?.isInterstate ?? prefill?.isInterstate ?? false,
       referenceNumber: invoice?.referenceNumber ?? "",
       notes: invoice?.notes ?? "",
       terms: invoice?.terms ?? "",
@@ -273,7 +346,17 @@ export function InvoiceForm({
               discountPercent: item.discountPercent,
               gstRate: item.gstRate,
             }))
-          : [emptyItem()],
+          : prefill && prefill.items.length > 0
+            ? prefill.items.map((item) => ({
+                productId: item.productId,
+                description: item.description,
+                hsnCode: item.hsnCode ?? "",
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                discountPercent: item.discountPercent,
+                gstRate: item.gstRate,
+              }))
+            : [emptyItem()],
     },
   });
 
@@ -284,12 +367,16 @@ export function InvoiceForm({
 
   const watchedItems = watch("items");
   const watchedSupplyState = watch("supplyState");
+  const watchedBranchId = watch("branchId");
+  const watchedSalesOrderId = watch("salesOrderId");
+
+  const sourceState = resolveSourceState(watchedBranchId ?? "");
 
   // Determine if intra or inter-state for the GST preview
   const isInterstate = useMemo(() => {
-    if (!orgState || !watchedSupplyState) {return false;}
-    return orgState.trim().toLowerCase() !== watchedSupplyState.trim().toLowerCase();
-  }, [orgState, watchedSupplyState]);
+    if (!sourceState || !watchedSupplyState) {return false;}
+    return sourceState.trim().toLowerCase() !== watchedSupplyState.trim().toLowerCase();
+  }, [sourceState, watchedSupplyState]);
 
   const lines = (watchedItems ?? []).map((item) =>
     computeLine(item, isInterstate)
@@ -325,6 +412,22 @@ export function InvoiceForm({
     }
   };
 
+  const customerField = register("customerId");
+
+  const handleCustomerChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ): void => {
+    // Preserve react-hook-form's own onChange for the registered field…
+    void customerField.onChange(event);
+    // …then auto-fill the place-of-supply from the chosen customer's state.
+    const picked = customers.find((c) => c.id === event.target.value);
+    setValue(
+      "supplyState",
+      picked?.shippingState ?? picked?.billingState ?? sourceState,
+      { shouldValidate: true, shouldDirty: true }
+    );
+  };
+
   const onSubmit = handleSubmit((values) => {
     setServerError(null);
 
@@ -332,7 +435,6 @@ export function InvoiceForm({
     fd.append("customerId", values.customerId);
     if (values.invoiceType) {fd.append("invoiceType", values.invoiceType);}
     if (values.salesOrderId?.trim()) {fd.append("salesOrderId", values.salesOrderId.trim());}
-    if (values.quotationId?.trim()) {fd.append("quotationId", values.quotationId.trim());}
     if (values.branchId?.trim()) {fd.append("branchId", values.branchId.trim());}
     if (values.invoiceDate) {fd.append("invoiceDate", values.invoiceDate);}
     if (values.dueDate) {fd.append("dueDate", values.dueDate);}
@@ -373,28 +475,28 @@ export function InvoiceForm({
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-lg shadow-slate-200/50 dark:shadow-none sm:p-6"
-    >
+    <div>
       {/* Header */}
-      <div className="mb-5 flex items-start gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-5 flex items-start gap-3"
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
           <FileText className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {isEdit ? "Edit invoice" : "New invoice"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update the draft invoice"
               : "Create a sales invoice for your customer"}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {serverError && (
         <motion.div
@@ -421,223 +523,232 @@ export function InvoiceForm({
           />
         )}
 
-        {/* Customer + Invoice type */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            label="Customer"
-            htmlFor="customerId"
-            required
-            error={errors.customerId?.message}
-          >
-            <select
-              id="customerId"
-              className={inputClass(!!errors.customerId)}
-              {...register("customerId")}
-            >
-              <option value="">— Select customer —</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField
-            label="Invoice type"
-            htmlFor="invoiceType"
-            error={errors.invoiceType?.message}
-          >
-            <select
-              id="invoiceType"
-              className={inputClass(!!errors.invoiceType)}
-              {...register("invoiceType")}
-            >
-              {INVOICE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {INVOICE_TYPE_LABELS[type]}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        </div>
+        {/* Invoice details */}
+        <Section
+          title="Invoice details"
+          description="Customer, type and scheduling for this invoice."
+          delay={0.05}
+        >
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                label="Customer"
+                htmlFor="customerId"
+                required
+                error={errors.customerId?.message}
+              >
+                <select
+                  id="customerId"
+                  className={inputClass(!!errors.customerId)}
+                  name={customerField.name}
+                  ref={customerField.ref}
+                  onBlur={customerField.onBlur}
+                  onChange={handleCustomerChange}
+                >
+                  <option value="">— Select customer —</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField
+                label="Invoice type"
+                htmlFor="invoiceType"
+                error={errors.invoiceType?.message}
+              >
+                <select
+                  id="invoiceType"
+                  className={inputClass(!!errors.invoiceType)}
+                  {...register("invoiceType")}
+                >
+                  {INVOICE_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {INVOICE_TYPE_LABELS[type]}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
 
-        {/* Dates */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField
-            label="Invoice date"
-            htmlFor="invoiceDate"
-            error={errors.invoiceDate?.message}
-          >
-            <input
-              id="invoiceDate"
-              type="date"
-              className={inputClass(!!errors.invoiceDate)}
-              {...register("invoiceDate")}
-            />
-          </FormField>
-          <FormField
-            label="Due date"
-            htmlFor="dueDate"
-            error={errors.dueDate?.message}
-          >
-            <input
-              id="dueDate"
-              type="date"
-              className={inputClass(!!errors.dueDate)}
-              {...register("dueDate")}
-            />
-          </FormField>
-          <FormField
-            label="Supply state"
-            htmlFor="supplyState"
-            hint={
-              isInterstate
-                ? "Inter-state (IGST applies)"
-                : orgState
-                ? "Intra-state (CGST + SGST)"
-                : "Set org state for GST auto-detection"
-            }
-            error={errors.supplyState?.message}
-          >
-            <input
-              id="supplyState"
-              type="text"
-              placeholder="e.g. Maharashtra"
-              className={inputClass(!!errors.supplyState)}
-              {...register("supplyState")}
-            />
-          </FormField>
-        </div>
+            {branches.length > 0 && (
+              <FormField
+                label="Dispatch from branch"
+                htmlFor="branchId"
+                error={errors.branchId?.message}
+              >
+                <select
+                  id="branchId"
+                  className={inputClass(!!errors.branchId)}
+                  {...register("branchId")}
+                >
+                  <option value="">— Optional —</option>
+                  {branches.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <FormField
+                label="Invoice date"
+                htmlFor="invoiceDate"
+                error={errors.invoiceDate?.message}
+              >
+                <input
+                  id="invoiceDate"
+                  type="date"
+                  className={inputClass(!!errors.invoiceDate)}
+                  {...register("invoiceDate")}
+                />
+              </FormField>
+              <FormField
+                label="Due date"
+                htmlFor="dueDate"
+                error={errors.dueDate?.message}
+              >
+                <input
+                  id="dueDate"
+                  type="date"
+                  className={inputClass(!!errors.dueDate)}
+                  {...register("dueDate")}
+                />
+              </FormField>
+              <FormField
+                label="Supply state"
+                htmlFor="supplyState"
+                hint={
+                  isInterstate
+                    ? "Auto-filled from the customer's state — edit if goods ship elsewhere. Inter-state (IGST applies)."
+                    : sourceState.trim()
+                    ? "Auto-filled from the customer's state — edit if goods ship elsewhere. Intra-state (CGST + SGST)."
+                    : "Auto-filled from the customer's state — edit if goods ship elsewhere. Set org state for GST auto-detection."
+                }
+                error={errors.supplyState?.message}
+              >
+                <input
+                  id="supplyState"
+                  type="text"
+                  placeholder="e.g. Maharashtra"
+                  className={inputClass(!!errors.supplyState)}
+                  {...register("supplyState")}
+                />
+              </FormField>
+            </div>
+
+            {!sourceState.trim() && (
+              <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                <AlertCircle
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>
+                  Your organization&apos;s state isn&apos;t set, so GST is
+                  defaulting to inter-state (IGST). Set it in{" "}
+                  <Link
+                    href="/organization"
+                    className="font-medium underline underline-offset-2"
+                  >
+                    Settings → Organization
+                  </Link>
+                  .
+                </span>
+              </div>
+            )}
+          </div>
+        </Section>
 
         {/* References */}
-        <SectionTitle>References (optional)</SectionTitle>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField
-            label="Sales order ref."
-            htmlFor="salesOrderId"
-            error={errors.salesOrderId?.message}
-          >
-            <input
-              id="salesOrderId"
-              type="text"
-              placeholder="SO ID"
-              className={inputClass(!!errors.salesOrderId)}
-              {...register("salesOrderId")}
-            />
-          </FormField>
-          <FormField
-            label="Quotation ref."
-            htmlFor="quotationId"
-            error={errors.quotationId?.message}
-          >
-            <input
-              id="quotationId"
-              type="text"
-              placeholder="QT ID"
-              className={inputClass(!!errors.quotationId)}
-              {...register("quotationId")}
-            />
-          </FormField>
-          <FormField
-            label="Your reference no."
-            htmlFor="referenceNumber"
-            error={errors.referenceNumber?.message}
-          >
-            <input
-              id="referenceNumber"
-              type="text"
-              placeholder="PO / external ref"
-              className={inputClass(!!errors.referenceNumber)}
-              {...register("referenceNumber")}
-            />
-          </FormField>
-        </div>
-
-        {/* Branch */}
-        {branches.length > 0 && (
-          <FormField
-            label="Dispatch from branch"
-            htmlFor="branchId"
-            error={errors.branchId?.message}
-          >
-            <select
-              id="branchId"
-              className={inputClass(!!errors.branchId)}
-              {...register("branchId")}
+        <Section
+          title="References"
+          description="Optional links to a sales order or your own reference number."
+          delay={0.1}
+        >
+          {/* salesOrderId is the FK — carried as a hidden value and shown
+              read-only as the SO number (never the raw UUID). */}
+          <input type="hidden" {...register("salesOrderId")} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {watchedSalesOrderId && (
+              <FormField label="Sales order" htmlFor="salesOrderRef">
+                <div
+                  id="salesOrderRef"
+                  className="flex items-center rounded-lg border border-input bg-muted/40 px-3 py-2 text-sm"
+                >
+                  <Link
+                    href={`/sales-orders/${watchedSalesOrderId}?org=${organizationId}`}
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    {prefill?.salesOrderNumber ?? "View sales order"}
+                  </Link>
+                </div>
+              </FormField>
+            )}
+            <FormField
+              label="Your reference no."
+              htmlFor="referenceNumber"
+              error={errors.referenceNumber?.message}
             >
-              <option value="">— Optional —</option>
-              {branches.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        )}
+              <input
+                id="referenceNumber"
+                type="text"
+                placeholder="PO / external ref"
+                className={inputClass(!!errors.referenceNumber)}
+                {...register("referenceNumber")}
+              />
+            </FormField>
+          </div>
+        </Section>
 
         {/* Line items */}
-        <SectionTitle>Line items</SectionTitle>
-        {itemsError && <FieldError message={itemsError} />}
+        <Section title="Line items" delay={0.15}>
+          {itemsError && <FieldError message={itemsError} />}
 
-        {/* GST mode indicator */}
-        {orgState && (
-          <div className={cn(
-            "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium",
-            isInterstate
-              ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300"
-              : "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300"
-          )}>
-            <span>
-              {isInterstate
-                ? `Inter-state supply — IGST applies (supply state: ${watchedSupplyState || "—"})`
-                : `Intra-state supply — CGST + SGST applies (state: ${orgState})`}
-            </span>
-          </div>
-        )}
+          {sourceState.trim() && (
+            <div
+              className={cn(
+                "mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium",
+                isInterstate
+                  ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                  : "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300"
+              )}
+            >
+              <span>
+                {isInterstate
+                  ? `Inter-state supply — IGST applies (supply state: ${watchedSupplyState || "—"})`
+                  : `Intra-state supply — CGST + SGST applies (state: ${sourceState})`}
+              </span>
+            </div>
+          )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              <tr>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Product
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  HSN
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Qty
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Rate
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Disc %
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  GST %
-                </th>
-                <th scope="col" className="px-2 py-2 text-right font-medium">
-                  Taxable
-                </th>
-                <th scope="col" className="px-2 py-2 text-right font-medium">
+          <Table wrapperClassName="border-slate-100 dark:border-slate-800">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>HSN</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Rate</TableHead>
+                <TableHead>Disc %</TableHead>
+                <TableHead>GST %</TableHead>
+                <TableHead className="text-right">
                   {isInterstate ? "IGST" : "CGST+SGST"}
-                </th>
-                <th scope="col" className="px-2 py-2 text-right font-medium">
-                  Total
-                </th>
-                <th scope="col" className="px-2 py-2">
+                </TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead>
                   <span className="sr-only">Remove</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {fields.map((field, index) => {
                 const rowErrors = errors.items?.[index];
                 const line = lines[index];
                 return (
-                  <tr key={field.id} className="align-top">
-                    <td className="px-2 py-2">
+                  <TableRow key={field.id} className="align-top">
+                    <TableCell>
                       <select
                         aria-label={`Product for line ${index + 1}`}
                         className={cn(cellClass, "min-w-[140px]")}
@@ -654,8 +765,8 @@ export function InvoiceForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.productId?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`HSN code for line ${index + 1}`}
                         type="text"
@@ -664,8 +775,8 @@ export function InvoiceForm({
                         className={cn(cellClass, "w-20")}
                         {...register(`items.${index}.hsnCode`)}
                       />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Quantity for line ${index + 1}`}
                         type="number"
@@ -675,8 +786,8 @@ export function InvoiceForm({
                         {...register(`items.${index}.quantity`)}
                       />
                       <FieldError message={rowErrors?.quantity?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Unit price for line ${index + 1}`}
                         type="number"
@@ -686,8 +797,8 @@ export function InvoiceForm({
                         {...register(`items.${index}.unitPrice`)}
                       />
                       <FieldError message={rowErrors?.unitPrice?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Discount percent for line ${index + 1}`}
                         type="number"
@@ -697,9 +808,11 @@ export function InvoiceForm({
                         className={cn(cellClass, "w-16")}
                         {...register(`items.${index}.discountPercent`)}
                       />
-                      <FieldError message={rowErrors?.discountPercent?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                      <FieldError
+                        message={rowErrors?.discountPercent?.message}
+                      />
+                    </TableCell>
+                    <TableCell>
                       <select
                         aria-label={`GST rate for line ${index + 1}`}
                         className={cn(cellClass, "w-20")}
@@ -712,21 +825,18 @@ export function InvoiceForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.gstRate?.message} />
-                    </td>
-                    <td className="px-2 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {formatCurrency(line?.taxableAmount ?? 0)}
-                    </td>
-                    <td className="px-2 py-2 text-right nums text-slate-700 dark:text-slate-300">
+                    </TableCell>
+                    <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
                       {isInterstate
                         ? formatCurrency(line?.igstAmount ?? 0)
                         : formatCurrency(
                             (line?.cgstAmount ?? 0) + (line?.sgstAmount ?? 0)
                           )}
-                    </td>
-                    <td className="px-2 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
                       {formatCurrency(line?.lineTotal ?? 0)}
-                    </td>
-                    <td className="px-2 py-2 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Button
                         type="button"
                         variant="ghost"
@@ -738,124 +848,157 @@ export function InvoiceForm({
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => append(emptyItem())}
-        >
-          <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Add item
-        </Button>
-
-        {/* Totals panel */}
-        <div className="flex justify-end">
-          <dl className="w-full max-w-sm space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Subtotal</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(subtotal)}
-              </dd>
-            </div>
-            {discountTotal > 0 && (
-              <div className="flex justify-between">
-                <dt className="text-slate-500 dark:text-slate-400">Discount</dt>
-                <dd className="nums text-slate-700 dark:text-slate-300">
-                  −{formatCurrency(discountTotal)}
-                </dd>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Taxable value</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(taxableTotal)}
-              </dd>
-            </div>
-            {isInterstate ? (
-              <div className="flex justify-between">
-                <dt className="text-slate-500 dark:text-slate-400">IGST</dt>
-                <dd className="nums text-slate-700 dark:text-slate-300">
-                  {formatCurrency(igstTotal)}
-                </dd>
-              </div>
-            ) : (
-              <>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500 dark:text-slate-400">CGST</dt>
-                  <dd className="nums text-slate-700 dark:text-slate-300">
-                    {formatCurrency(cgstTotal)}
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500 dark:text-slate-400">SGST</dt>
-                  <dd className="nums text-slate-700 dark:text-slate-300">
-                    {formatCurrency(sgstTotal)}
-                  </dd>
-                </div>
-              </>
-            )}
-            {roundOff !== 0 && (
-              <div className="flex justify-between">
-                <dt className="text-slate-500 dark:text-slate-400">Round off</dt>
-                <dd className="nums text-slate-700 dark:text-slate-300">
-                  {roundOff > 0 ? "+" : ""}
-                  {formatCurrency(roundOff)}
-                </dd>
-              </div>
-            )}
-            <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 text-base font-bold text-slate-900 dark:text-slate-100">
-              <dt>TOTAL</dt>
-              <dd className="nums">{formatCurrency(grandTotal)}</dd>
-            </div>
-          </dl>
-        </div>
-
-        {/* Notes + Terms */}
-        <SectionTitle>Notes &amp; terms</SectionTitle>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
-            <textarea
-              id="notes"
-              rows={3}
-              className={inputClass(!!errors.notes)}
-              placeholder="Notes to customer"
-              {...register("notes")}
-            />
-          </FormField>
-          <FormField label="Terms &amp; conditions" htmlFor="terms" error={errors.terms?.message}>
-            <textarea
-              id="terms"
-              rows={3}
-              className={inputClass(!!errors.terms)}
-              placeholder="Payment terms, delivery conditions…"
-              {...register("terms")}
-            />
-          </FormField>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/invoices")}
-            disabled={isPending}
+            size="sm"
+            className="mt-3"
+            onClick={() => append(emptyItem())}
           >
-            Cancel
+            <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Add item
           </Button>
-          <Button type="submit" variant="gradient" loading={isPending} disabled={isPending}>
-            {isEdit ? "Save changes" : "Create invoice"}
-          </Button>
+
+          {/* Totals panel */}
+          <div className="mt-4 flex justify-end">
+            <dl className="w-full max-w-sm space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex justify-between">
+                <dt className="text-slate-500 dark:text-slate-400">Subtotal</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(subtotal)}
+                </dd>
+              </div>
+              {discountTotal > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-slate-500 dark:text-slate-400">
+                    Discount
+                  </dt>
+                  <dd className="nums text-slate-700 dark:text-slate-300">
+                    −{formatCurrency(discountTotal)}
+                  </dd>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <dt className="text-slate-500 dark:text-slate-400">
+                  Taxable value
+                </dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(taxableTotal)}
+                </dd>
+              </div>
+              {isInterstate ? (
+                <div className="flex justify-between">
+                  <dt className="text-slate-500 dark:text-slate-400">IGST</dt>
+                  <dd className="nums text-slate-700 dark:text-slate-300">
+                    {formatCurrency(igstTotal)}
+                  </dd>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-slate-500 dark:text-slate-400">CGST</dt>
+                    <dd className="nums text-slate-700 dark:text-slate-300">
+                      {formatCurrency(cgstTotal)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-slate-500 dark:text-slate-400">SGST</dt>
+                    <dd className="nums text-slate-700 dark:text-slate-300">
+                      {formatCurrency(sgstTotal)}
+                    </dd>
+                  </div>
+                </>
+              )}
+              {roundOff !== 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-slate-500 dark:text-slate-400">
+                    Round off
+                  </dt>
+                  <dd className="nums text-slate-700 dark:text-slate-300">
+                    {roundOff > 0 ? "+" : ""}
+                    {formatCurrency(roundOff)}
+                  </dd>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-900 dark:border-slate-800 dark:text-slate-100">
+                <dt>TOTAL</dt>
+                <dd className="nums">{formatCurrency(grandTotal)}</dd>
+              </div>
+            </dl>
+          </div>
+        </Section>
+
+        {/* Notes & terms */}
+        <Section
+          title="Notes & terms"
+          description="Optional notes and terms for this invoice."
+          delay={0.2}
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField
+              label="Notes"
+              htmlFor="notes"
+              error={errors.notes?.message}
+            >
+              <textarea
+                id="notes"
+                rows={3}
+                className={inputClass(!!errors.notes)}
+                placeholder="Notes to customer"
+                {...register("notes")}
+              />
+            </FormField>
+            <FormField
+              label="Terms & conditions"
+              htmlFor="terms"
+              error={errors.terms?.message}
+            >
+              <textarea
+                id="terms"
+                rows={3}
+                className={inputClass(!!errors.terms)}
+                placeholder="Payment terms, delivery conditions…"
+                {...register("terms")}
+              />
+            </FormField>
+          </div>
+        </Section>
+
+        {/* Sticky action bar */}
+        <div className="sticky bottom-4 z-10 flex flex-col-reverse gap-3 rounded-xl border border-slate-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Grand total
+            <span className="nums ml-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+              {formatCurrency(grandTotal)}
+            </span>
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/invoices")}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="gradient"
+              loading={isPending}
+              disabled={isPending}
+            >
+              {isEdit ? "Save changes" : "Create invoice"}
+            </Button>
+          </div>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

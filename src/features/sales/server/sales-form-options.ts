@@ -1,14 +1,9 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
-import type { CustomerOption } from "@/features/sales/components/quotation-form";
 import type {
+  CustomerOption,
   ProductOption,
   BranchOption,
 } from "@/features/sales/components/sales-order-form";
-
-export interface QuotationFormOptions {
-  readonly customers: CustomerOption[];
-  readonly products: ProductOption[];
-}
 
 export interface SalesOrderFormOptions {
   readonly customers: CustomerOption[];
@@ -22,11 +17,16 @@ async function fetchCustomers(
 ): Promise<CustomerOption[]> {
   const { data } = await supabase
     .from("customers")
-    .select("id,name")
+    .select("id,name,billing_state,shipping_state")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
     .order("name", { ascending: true });
-  return (data ?? []).map((row) => ({ id: row.id, name: row.name }));
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    billingState: row.billing_state ?? null,
+    shippingState: row.shipping_state ?? null,
+  }));
 }
 
 async function fetchProducts(
@@ -53,27 +53,15 @@ async function fetchBranches(
 ): Promise<BranchOption[]> {
   const { data } = await supabase
     .from("branches")
-    .select("id,name")
+    .select("id,name,state")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
     .order("name", { ascending: true });
-  return (data ?? []).map((row) => ({ id: row.id, name: row.name }));
-}
-
-/**
- * Fetches the option lists the quotation form needs (customer and product
- * selects). Products carry their selling price and GST rate so line rows
- * can pre-fill on selection.
- */
-export async function fetchQuotationFormOptions(
-  supabase: AppSupabaseClient,
-  organizationId: string
-): Promise<QuotationFormOptions> {
-  const [customers, products] = await Promise.all([
-    fetchCustomers(supabase, organizationId),
-    fetchProducts(supabase, organizationId),
-  ]);
-  return { customers, products };
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    state: row.state ?? null,
+  }));
 }
 
 /**

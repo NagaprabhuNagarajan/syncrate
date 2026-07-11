@@ -5,6 +5,7 @@ import type {
   SalesOrderItem,
   SalesOrderListParams,
   SalesOrderListResult,
+  SalesOrderStats,
   SalesOrderStatus,
   SalesOrderWithItems,
 } from "@/features/sales/types/sales-order.types";
@@ -44,7 +45,6 @@ function mapSalesOrder(row: DbSalesOrder): SalesOrder {
     organizationId: row.organization_id,
     soNumber: row.so_number,
     customerId: row.customer_id,
-    quotationId: row.quotation_id,
     branchId: row.branch_id,
     salespersonId: row.salesperson_id,
     referenceNumber: row.reference_number,
@@ -218,6 +218,53 @@ export class SalesOrderRepository {
     };
   }
 
+  /**
+   * Aggregate counts + total value for the list header tiles. Head-only count
+   * queries run in parallel for the status-group tiles; `totalValue` needs a
+   * sum, which PostgREST cannot compute server-side via a head query, so we
+   * fetch the minimal `total_amount` column for non-cancelled orders and
+   * reduce it in JS.
+   */
+  async getStats(organizationId: string): Promise<SalesOrderStats> {
+    const base = () =>
+      this.supabase
+        .from("sales_orders")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null);
+
+    const [draft, awaitingApproval, approved, processing, partiallyDelivered] =
+      await Promise.all([
+        base().eq("status", "draft"),
+        base().eq("status", "submitted"),
+        base().eq("status", "approved"),
+        base().eq("status", "processing"),
+        base().eq("status", "partially_delivered"),
+      ]);
+
+    const { data: valueRows } = await this.supabase
+      .from("sales_orders")
+      .select("total_amount")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .neq("status", "cancelled");
+
+    const totalValue = (valueRows ?? []).reduce(
+      (sum, row) => sum + Number(row.total_amount),
+      0
+    );
+
+    return {
+      totalValue,
+      draft: draft.count ?? 0,
+      awaitingApproval: awaitingApproval.count ?? 0,
+      open:
+        (approved.count ?? 0) +
+        (processing.count ?? 0) +
+        (partiallyDelivered.count ?? 0),
+    };
+  }
+
   async createHeader(input: DbSalesOrderInsert): Promise<SalesOrder | null> {
     const { data, error } = await this.supabase
       .from("sales_orders")
@@ -324,6 +371,31 @@ export class SalesOrderRepository {
       return null;
     }
     return mapSalesOrder(data);
+  }
+
+  /**
+   * Sets the `delivered_qty` on individual line items, org-scoped and keyed by
+   * both the item id and its parent `sales_order_id` so a caller can never
+   * touch a row belonging to another order or organization. Returns `false` if
+   * any single update fails.
+   */
+  async recordItemDeliveries(
+    organizationId: string,
+    salesOrderId: string,
+    updates: readonly { readonly itemId: string; readonly deliveredQty: number }[]
+  ): Promise<boolean> {
+    for (const update of updates) {
+      const { error } = await this.supabase
+        .from("sales_order_items")
+        .update({ delivered_qty: update.deliveredQty })
+        .eq("id", update.itemId)
+        .eq("sales_order_id", salesOrderId)
+        .eq("organization_id", organizationId);
+      if (error) {
+        return false;
+      }
+    }
+    return true;
   }
 
   async softDelete(id: string, deletedBy: string): Promise<boolean> {

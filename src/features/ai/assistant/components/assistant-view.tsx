@@ -12,7 +12,6 @@ const SUGGESTIONS: readonly string[] = [
   "Which products are low on stock?",
   "Show me my top customers",
   "Create an invoice for 10 Cement Bags for ABC Hardware",
-  "Prepare a quotation for 5 units of Steel Rods",
 ];
 
 interface SuggestionChipProps {
@@ -108,7 +107,7 @@ export function AssistantView({ organizationId }: AssistantViewProps) {
     <div className="flex h-[calc(100vh-4rem)] flex-col p-4 lg:p-6">
       <PageHeader
         title="AI Assistant"
-        description="Ask about your business or prepare invoices and quotations — you approve every action."
+        description="Ask about your business or prepare invoices — you approve every action."
         icon={Sparkles}
       />
 
@@ -127,7 +126,7 @@ export function AssistantView({ organizationId }: AssistantViewProps) {
             </h2>
             <p className="mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">
               I can look up customers, suppliers, products and stock, and prepare
-              invoices or quotations for you to review.
+              invoices for you to review.
             </p>
             <div className="mt-6 flex max-w-xl flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((suggestion) => (

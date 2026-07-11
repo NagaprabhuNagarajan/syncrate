@@ -5,76 +5,71 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  TrendingUp,
   Pencil,
   Send,
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  Calendar,
   Users,
   Building2,
+  Calendar,
   FileText,
+  ChevronLeft,
+  Receipt,
+  Percent,
+  Wallet,
+  MapPin,
+  Truck,
+  type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PageHeader } from "@/components/shared/page-header";
 import {
-  SO_STATUS_LABEL,
-  SO_STATUS_VARIANT,
-} from "@/features/sales/components/sales-orders-view";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   submitSalesOrderAction,
   approveSalesOrderAction,
   cancelSalesOrderAction,
 } from "@/features/sales/actions/sales-order.actions";
+import {
+  SO_STATUS_LABEL,
+  SO_STATUS_VARIANT,
+} from "@/features/sales/utils/sales-order-display";
+import {
+  INV_STATUS_LABEL,
+  INV_STATUS_VARIANT,
+} from "@/features/sales/components/invoices-view";
+import { formatCurrency, formatDate } from "@/utils/format";
 import type { SalesOrderWithItems } from "@/features/sales/types/sales-order.types";
-
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
-
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
-}
-
-function formatDate(value: Date | null): string {
-  if (!value) {return "—";}
-  return new Date(value).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import type { InvoiceListItem } from "@/features/sales/types/invoice.types";
+import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
-// Confirm dialog
+// Cancel confirmation dialog
 // ─────────────────────────────────────────────────────────────
 
-interface ConfirmDialogProps {
-  readonly title: string;
-  readonly message: string;
-  readonly confirmLabel: string;
-  readonly variant: "destructive" | "default";
+interface CancelDialogProps {
+  readonly soNumber: string;
   readonly isPending: boolean;
   readonly error: string | null;
   readonly onConfirm: () => void;
   readonly onCancel: () => void;
 }
 
-function ConfirmDialog({
-  title,
-  message,
-  confirmLabel,
-  variant,
+function CancelDialog({
+  soNumber,
   isPending,
   error,
   onConfirm,
   onCancel,
-}: ConfirmDialogProps) {
+}: CancelDialogProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
@@ -89,8 +84,8 @@ function ConfirmDialog({
         transition={{ duration: 0.18 }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl"
+        aria-labelledby="cancel-so-title"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-start gap-4">
           <div className="bg-error-50 dark:bg-error-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
@@ -101,22 +96,30 @@ function ConfirmDialog({
           </div>
           <div>
             <h2
-              id="confirm-dialog-title"
+              id="cancel-so-title"
               className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
-              {title}
+              Cancel sales order
             </h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{message}</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Are you sure you want to cancel{" "}
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {soNumber}
+              </span>
+              ? This cannot be undone.
+            </p>
           </div>
         </div>
+
         {error && (
           <div
-            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
+            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
             role="alert"
           >
             {error}
           </div>
         )}
+
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
             type="button"
@@ -124,16 +127,16 @@ function ConfirmDialog({
             onClick={onCancel}
             disabled={isPending}
           >
-            Keep it
+            Keep order
           </Button>
           <Button
             type="button"
-            variant={variant}
+            variant="destructive"
             onClick={onConfirm}
             loading={isPending}
             disabled={isPending}
           >
-            {confirmLabel}
+            Cancel order
           </Button>
         </div>
       </motion.div>
@@ -142,7 +145,70 @@ function ConfirmDialog({
 }
 
 // ─────────────────────────────────────────────────────────────
-// Info row
+// KPI tile
+// ─────────────────────────────────────────────────────────────
+
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
+  emphasis,
+  displayValue,
+  index,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly emphasis?: boolean;
+  readonly displayValue?: string;
+  readonly index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+    >
+      <Card className="relative h-full overflow-hidden p-3">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-20 w-20 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-2.5">
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
+              tint
+            )}
+          >
+            <Icon className="h-4 w-4 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p
+              className={cn(
+                "truncate font-bold leading-tight text-slate-900 dark:text-slate-100",
+                emphasis ? "text-lg" : "text-base"
+              )}
+            >
+              {displayValue ?? formatCurrency(value, true)}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Info row + section card
 // ─────────────────────────────────────────────────────────────
 
 function InfoRow({
@@ -150,22 +216,51 @@ function InfoRow({
   label,
   value,
 }: {
-  readonly icon: typeof Calendar;
+  readonly icon: LucideIcon;
   readonly label: string;
   readonly value: string | null;
 }) {
-  if (!value) {return null;}
+  if (!value) {
+    return null;
+  }
   return (
     <div className="flex items-start gap-2.5 text-sm">
       <Icon
         className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
         aria-hidden="true"
       />
-      <div>
+      <div className="min-w-0">
         <dt className="text-xs text-muted-foreground">{label}</dt>
-        <dd className="text-slate-700 dark:text-slate-300">{value}</dd>
+        <dd className="break-words text-slate-700 dark:text-slate-300">
+          {value}
+        </dd>
       </div>
     </div>
+  );
+}
+
+function SectionCard({
+  title,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {title}
+        </h2>
+        {children}
+      </Card>
+    </motion.div>
   );
 }
 
@@ -178,6 +273,9 @@ interface SalesOrderDetailProps {
   readonly customerName: string | null;
   readonly branchName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
+  readonly linkedInvoices: readonly InvoiceListItem[];
+  /** Resolved display name of the approver (falls back to the id). */
+  readonly approvedByName?: string | null;
   readonly organizationId: string;
   readonly canManage: boolean;
   readonly canApprove: boolean;
@@ -189,6 +287,8 @@ export function SalesOrderDetail({
   customerName,
   branchName,
   productNames,
+  linkedInvoices,
+  approvedByName,
   organizationId,
   canManage,
   canApprove,
@@ -201,21 +301,24 @@ export function SalesOrderDetail({
   const [isPending, startTransition] = useTransition();
 
   const org = searchParams.get("org");
-  const withOrg = (path: string): string => (org ? `${path}?org=${org}` : path);
+  const withOrg = (path: string): string =>
+    org ? `${path}?org=${org}` : path;
   const editHref = withOrg(`/sales-orders/${salesOrder.id}/edit`);
   const newInvoiceHref = withOrg(
     `/invoices/new?from=so&soId=${salesOrder.id}`
   );
+  const deliverHref = withOrg(`/sales-orders/${salesOrder.id}/deliver`);
 
   const { status } = salesOrder;
   const isDraft = status === "draft";
   const isSubmitted = status === "submitted";
   const isTerminal = status === "completed" || status === "cancelled";
-  const canInvoice =
-    canManage &&
-    (status === "approved" ||
-      status === "processing" ||
-      status === "partially_delivered");
+  const isFulfilling =
+    status === "approved" ||
+    status === "processing" ||
+    status === "partially_delivered";
+  const canDeliver = canManage && isFulfilling;
+  const canInvoice = canManage && (isFulfilling || status === "completed");
 
   const run = (
     action: () => Promise<{ success: boolean; error?: { message: string } }>
@@ -239,253 +342,389 @@ export function SalesOrderDetail({
   const handleCancel = (): void =>
     run(() => cancelSalesOrderAction(organizationId, salesOrder.id));
 
+  const taxTotal =
+    salesOrder.cgstAmount + salesOrder.sgstAmount + salesOrder.igstAmount;
+
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title={salesOrder.soNumber}
-        description={customerName ?? undefined}
-        icon={TrendingUp}
+      {/* Back link */}
+      <Link
+        href={withOrg("/sales-orders")}
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
-        {isDraft && canManage && (
-          <Button asChild variant="outline">
-            <Link href={editHref}>
-              <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Edit
-            </Link>
-          </Button>
-        )}
-        {isDraft && canManage && (
-          <Button type="button" variant="gradient" onClick={handleSubmit} loading={isPending}>
-            <Send className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Submit
-          </Button>
-        )}
-        {isSubmitted && canApprove && (
-          <Button type="button" variant="gradient" onClick={handleApprove} loading={isPending}>
-            <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Approve
-          </Button>
-        )}
-        {canInvoice && (
-          <Button asChild variant="gradient">
-            <Link href={newInvoiceHref}>
-              <FileText className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Convert to invoice
-            </Link>
-          </Button>
-        )}
-        {!isTerminal && canCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700 dark:hover:text-error-300"
-            onClick={() => {
-              setActionError(null);
-              setShowCancel(true);
-            }}
-          >
-            <XCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Cancel
-          </Button>
-        )}
-      </PageHeader>
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        Sales orders
+      </Link>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Badge dot variant={SO_STATUS_VARIANT[status]}>
-          {SO_STATUS_LABEL[status]}
-        </Badge>
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200/70 bg-white/80 px-4 py-3 backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/80 lg:-mx-6 lg:px-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                {salesOrder.soNumber}
+              </h1>
+              <Badge dot variant={SO_STATUS_VARIANT[status]}>
+                {SO_STATUS_LABEL[status]}
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              {customerName ?? "No customer"}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {isDraft && canManage && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={editHref}>
+                  <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Edit
+                </Link>
+              </Button>
+            )}
+            {isDraft && canManage && (
+              <Button
+                type="button"
+                variant="gradient"
+                size="sm"
+                onClick={handleSubmit}
+                loading={isPending}
+              >
+                <Send className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Submit
+              </Button>
+            )}
+            {isSubmitted && canApprove && (
+              <Button
+                type="button"
+                variant="gradient"
+                size="sm"
+                onClick={handleApprove}
+                loading={isPending}
+              >
+                <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Approve
+              </Button>
+            )}
+            {canDeliver && (
+              <Button asChild variant="gradient" size="sm">
+                <Link href={deliverHref}>
+                  <Truck className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Record delivery
+                </Link>
+              </Button>
+            )}
+            {canInvoice && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={newInvoiceHref}>
+                  <FileText className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Convert to invoice
+                </Link>
+              </Button>
+            )}
+            {!isTerminal && canCancel && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-error-600 hover:bg-error-50 hover:text-error-700 dark:text-error-400 dark:hover:bg-error-500/10 dark:hover:text-error-300"
+                onClick={() => {
+                  setActionError(null);
+                  setShowCancel(true);
+                }}
+              >
+                <XCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Cancel
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       {actionError && (
         <p
           role="alert"
-          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
+          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mb-4 rounded-lg border px-3 py-2.5 text-sm"
         >
           {actionError}
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Details card */}
-        <Card className="p-5 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Order details
-          </h2>
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoRow icon={Users} label="Customer" value={customerName} />
-            <InfoRow
-              icon={Building2}
-              label="Building2"
-              value={branchName}
-            />
-            <InfoRow
-              icon={Calendar}
-              label="Order date"
-              value={formatDate(salesOrder.orderDate)}
-            />
-            <InfoRow
-              icon={Calendar}
-              label="Delivery date"
-              value={formatDate(salesOrder.deliveryDate)}
-            />
-            <InfoRow
-              icon={TrendingUp}
-              label="Payment terms"
-              value={
-                salesOrder.paymentTermsDays
-                  ? `${salesOrder.paymentTermsDays} days`
-                  : null
-              }
-            />
-            {salesOrder.supplyState && (
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiTile
+          icon={Receipt}
+          label="Total"
+          value={salesOrder.totalAmount}
+          tint="bg-gradient-brand"
+          emphasis
+          index={0}
+        />
+        <KpiTile
+          icon={Wallet}
+          label="Subtotal"
+          value={salesOrder.subtotal}
+          tint="bg-gradient-violet"
+          index={1}
+        />
+        <KpiTile
+          icon={Percent}
+          label="Tax"
+          value={taxTotal}
+          tint="bg-gradient-info"
+          index={2}
+        />
+        <KpiTile
+          icon={Calendar}
+          label="Order date"
+          value={0}
+          displayValue={formatDate(salesOrder.orderDate)}
+          tint="bg-gradient-success"
+          index={3}
+        />
+      </div>
+
+      {/* Two-column body */}
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Main column */}
+        <div className="space-y-4 lg:col-span-2">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.1 }}
+          >
+            <Card className="overflow-hidden">
+              <div className="px-5 py-4">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Line items
+                </h2>
+              </div>
+              <Table
+                className="[&_td]:px-5 [&_th]:px-5"
+                wrapperClassName="rounded-none border-0 border-t border-slate-100 bg-transparent dark:border-slate-800"
+              >
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Delivered</TableHead>
+                    <TableHead className="text-right">Remaining</TableHead>
+                    <TableHead className="text-right">Unit price</TableHead>
+                    <TableHead className="text-right">Disc %</TableHead>
+                    <TableHead className="text-right">GST</TableHead>
+                    <TableHead className="text-right">Line total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {salesOrder.items.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="text-slate-700 dark:text-slate-300">
+                        {productNames[item.productId] ??
+                          item.description ??
+                          "—"}
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                        {item.quantity}
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-600 dark:text-slate-400">
+                        {item.deliveredQty}
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-600 dark:text-slate-400">
+                        {Math.max(0, item.quantity - item.deliveredQty)}
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                        {formatCurrency(item.unitPrice, true)}
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                        {item.discountPercent}%
+                      </TableCell>
+                      <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                        {item.gstRate}%
+                      </TableCell>
+                      <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                        {formatCurrency(item.lineTotal, true)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </motion.div>
+
+          {(salesOrder.terms || salesOrder.notes) && (
+            <SectionCard title="Terms & notes" delay={0.15}>
+              <div className="space-y-4">
+                {salesOrder.terms && (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Terms</dt>
+                    <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
+                      {salesOrder.terms}
+                    </dd>
+                  </div>
+                )}
+                {salesOrder.notes && (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Notes</dt>
+                    <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
+                      {salesOrder.notes}
+                    </dd>
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          )}
+
+          <SectionCard title="Linked invoices" delay={0.2}>
+            {linkedInvoices.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No invoices have been raised from this sales order yet. Use
+                &ldquo;Convert to invoice&rdquo; above to create one.
+              </p>
+            ) : (
+              <Table wrapperClassName="shadow-none">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Number</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {linkedInvoices.map((inv) => (
+                    <TableRow key={inv.id}>
+                      <TableCell>
+                        <Link
+                          href={withOrg(`/invoices/${inv.id}`)}
+                          className="font-mono text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
+                        >
+                          {inv.invoiceNumber}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-slate-600 dark:text-slate-400">
+                        {formatDate(inv.invoiceDate)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={INV_STATUS_VARIANT[inv.status]}>
+                          {INV_STATUS_LABEL[inv.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="nums text-right font-medium text-slate-700 dark:text-slate-300">
+                        {formatCurrency(inv.totalAmount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </SectionCard>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-4">
+          <SectionCard title="Details" delay={0.1}>
+            <dl className="space-y-4">
+              <InfoRow icon={Users} label="Customer" value={customerName} />
+              <InfoRow icon={Building2} label="Branch" value={branchName} />
+              <InfoRow
+                icon={Calendar}
+                label="Order date"
+                value={formatDate(salesOrder.orderDate)}
+              />
+              <InfoRow
+                icon={Calendar}
+                label="Delivery date"
+                value={
+                  salesOrder.deliveryDate
+                    ? formatDate(salesOrder.deliveryDate)
+                    : null
+                }
+              />
               <InfoRow
                 icon={FileText}
+                label="Payment terms"
+                value={
+                  salesOrder.paymentTermsDays
+                    ? `${salesOrder.paymentTermsDays} days`
+                    : null
+                }
+              />
+              <InfoRow
+                icon={MapPin}
                 label="Supply state"
                 value={salesOrder.supplyState}
               />
-            )}
-          </dl>
-          {salesOrder.terms && (
-            <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4">
-              <dt className="text-xs text-muted-foreground">Terms</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
-                {salesOrder.terms}
-              </dd>
-            </div>
-          )}
-          {salesOrder.notes && (
-            <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
-              <dt className="text-xs text-muted-foreground">Notes</dt>
-              <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
-                {salesOrder.notes}
-              </dd>
-            </div>
-          )}
-        </Card>
+              <InfoRow
+                icon={CheckCircle2}
+                label="Approved by"
+                value={approvedByName ?? salesOrder.approvedBy}
+              />
+              <InfoRow
+                icon={Calendar}
+                label="Approved at"
+                value={
+                  salesOrder.approvedAt
+                    ? formatDate(salesOrder.approvedAt)
+                    : null
+                }
+              />
+            </dl>
+          </SectionCard>
 
-        {/* Totals card */}
-        <Card className="p-5">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
-          <dl className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(salesOrder.subtotal)}
-              </dd>
-            </div>
-            <div className="flex justify-between text-sm">
-              <dt className="text-muted-foreground">Discount</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                −{formatCurrency(salesOrder.discountAmount)}
-              </dd>
-            </div>
-            {salesOrder.isInterstate ? (
+          <SectionCard title="Summary" delay={0.15}>
+            <dl className="space-y-4">
               <div className="flex justify-between text-sm">
-                <dt className="text-muted-foreground">IGST</dt>
+                <dt className="text-muted-foreground">Subtotal</dt>
                 <dd className="nums text-slate-700 dark:text-slate-300">
-                  {formatCurrency(salesOrder.igstAmount)}
+                  {formatCurrency(salesOrder.subtotal, true)}
                 </dd>
               </div>
-            ) : (
-              <>
+              <div className="flex justify-between text-sm">
+                <dt className="text-muted-foreground">Discount</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  −{formatCurrency(salesOrder.discountAmount, true)}
+                </dd>
+              </div>
+              {salesOrder.isInterstate ? (
                 <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">CGST</dt>
+                  <dt className="text-muted-foreground">IGST</dt>
                   <dd className="nums text-slate-700 dark:text-slate-300">
-                    {formatCurrency(salesOrder.cgstAmount)}
+                    {formatCurrency(salesOrder.igstAmount, true)}
                   </dd>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">SGST</dt>
-                  <dd className="nums text-slate-700 dark:text-slate-300">
-                    {formatCurrency(salesOrder.sgstAmount)}
-                  </dd>
-                </div>
-              </>
-            )}
-            <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
-              <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">Total</dt>
-              <dd className="text-xl font-semibold nums text-slate-900 dark:text-slate-100">
-                {formatCurrency(salesOrder.totalAmount)}
-              </dd>
-            </div>
-          </dl>
-        </Card>
-      </div>
-
-      {/* Line items */}
-      <div className="mt-4">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
-          Line items
-        </h2>
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                <tr>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Product
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Qty
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Delivered
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Unit price
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Disc %
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    GST
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Line total
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {salesOrder.items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                      {productNames[item.productId] ??
-                        item.description ??
-                        "—"}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {item.quantity}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-600 dark:text-slate-400">
-                      {item.deliveredQty}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {formatCurrency(item.unitPrice)}
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {item.discountPercent}%
-                    </td>
-                    <td className="px-3 py-2 text-right nums text-slate-700 dark:text-slate-300">
-                      {item.gstRate}%
-                    </td>
-                    <td className="px-3 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
-                      {formatCurrency(item.lineTotal)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ) : (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-muted-foreground">CGST</dt>
+                    <dd className="nums text-slate-700 dark:text-slate-300">
+                      {formatCurrency(salesOrder.cgstAmount, true)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-muted-foreground">SGST</dt>
+                    <dd className="nums text-slate-700 dark:text-slate-300">
+                      {formatCurrency(salesOrder.sgstAmount, true)}
+                    </dd>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+                <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Total
+                </dt>
+                <dd className="nums text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  {formatCurrency(salesOrder.totalAmount, true)}
+                </dd>
+              </div>
+            </dl>
+          </SectionCard>
         </div>
       </div>
 
       <AnimatePresence>
         {showCancel && (
-          <ConfirmDialog
-            title="Cancel sales order"
-            message={`Are you sure you want to cancel ${salesOrder.soNumber}? This cannot be undone.`}
-            confirmLabel="Cancel order"
-            variant="destructive"
+          <CancelDialog
+            soNumber={salesOrder.soNumber}
             isPending={isPending}
             error={actionError}
             onConfirm={handleCancel}

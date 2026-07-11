@@ -33,10 +33,19 @@ interface SettingsSection {
 
 const SECTIONS: readonly SettingsSection[] = [
   {
+    key: "organization",
+    label: "Organization",
+    description:
+      "Update business details and state — sets CGST/SGST vs IGST on sales.",
+    href: "/organization",
+    icon: Building2,
+    permission: "settings.manage",
+  },
+  {
     key: "team",
     label: "Team",
     description: "Invite members and manage who has access.",
-    href: "/settings/team",
+    href: "/team",
     icon: Users,
     permission: "settings.users",
   },
@@ -44,7 +53,7 @@ const SECTIONS: readonly SettingsSection[] = [
     key: "branches",
     label: "Branches",
     description: "Manage business locations and branch settings.",
-    href: "/settings/branches",
+    href: "/branches",
     icon: Building2,
     permission: "settings.branches",
   },
