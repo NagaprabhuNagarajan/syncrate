@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
   // Recharts (v3) ships ESM-only deps (d3 / victory-vendor) that must be
   // transpiled for the production build worker to resolve them.
   transpilePackages: ["recharts"],
+  // Playwright (used by the invoice PDF route) is a heavy Node package with
+  // native binaries (.node). It must be required at runtime, never bundled.
+  serverExternalPackages: [
+    "playwright",
+    "playwright-core",
+    "@playwright/test",
+    "fsevents",
+    "chromium-bidi",
+  ],
   images: {
     remotePatterns: [
       {

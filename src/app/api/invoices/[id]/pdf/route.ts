@@ -73,12 +73,40 @@ export async function GET(
     }
     const page = await context.newPage();
     await page.goto(shareUrl, { waitUntil: "load", timeout: 30_000 });
-    // Print media triggers the share page's isolation CSS (invoice only).
-    await page.emulateMedia({ media: "print" });
+    await page.emulateMedia({ media: "print", colorScheme: "light" });
+
+    // Lift the invoice document out to be the sole body content, so it
+    // paginates naturally (no fragile visibility/absolute print trick) and the
+    // app chrome is gone entirely.
+    const found = await page.evaluate(() => {
+      const doc = document.getElementById("invoice-document");
+      if (!doc) {
+        return false;
+      }
+      doc.style.position = "static";
+      doc.style.boxShadow = "none";
+      doc.style.border = "0";
+      doc.style.borderRadius = "0";
+      document.body.replaceChildren(doc);
+      document.body.style.background = "#ffffff";
+      return true;
+    });
+    if (!found) {
+      return NextResponse.json(
+        { error: "Could not render invoice" },
+        { status: 500 }
+      );
+    }
+
     const pdf = await page.pdf({
       format: "A4",
       printBackground: true,
-      preferCSSPageSize: true,
+      margin: {
+        top: "14mm",
+        bottom: "14mm",
+        left: "14mm",
+        right: "14mm",
+      },
     });
 
     return new NextResponse(new Uint8Array(pdf), {
