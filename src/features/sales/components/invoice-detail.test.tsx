@@ -24,6 +24,20 @@ vi.mock("@/features/sales/actions/invoice.actions", () => ({
   cancelInvoiceAction: cancelMock,
 }));
 
+// The payment dialog owns its own action/form; stub it so these tests stay
+// focused on when the "Record payment" trigger is shown.
+vi.mock("@/features/payment/components/record-customer-payment-dialog", () => ({
+  RecordCustomerPaymentDialog: ({
+    customerName,
+  }: {
+    customerName: string;
+  }) => (
+    <div role="dialog" aria-label="Record customer payment">
+      Payment for {customerName}
+    </div>
+  ),
+}));
+
 function makeInvoice(
   status: InvoiceStatus = "draft",
   overrides: Partial<InvoiceWithItems> = {}
@@ -95,7 +109,11 @@ function makeInvoice(
 
 function renderDetail(
   invoice: InvoiceWithItems,
-  perms: { canManage?: boolean; canCancel?: boolean } = {}
+  perms: {
+    canManage?: boolean;
+    canCancel?: boolean;
+    canReceivePayment?: boolean;
+  } = {}
 ) {
   return render(
     <InvoiceDetail
@@ -105,6 +123,7 @@ function renderDetail(
       organizationId="org-1"
       canManage={perms.canManage ?? false}
       canCancel={perms.canCancel ?? false}
+      canReceivePayment={perms.canReceivePayment ?? false}
     />
   );
 }
@@ -257,5 +276,48 @@ describe("InvoiceDetail", () => {
     expect(
       screen.queryByRole("link", { name: /view sales order/i })
     ).not.toBeInTheDocument();
+  });
+
+  // ── Record payment ─────────────────────────────────────────
+
+  it("shows Record payment for a posted invoice with a balance when canReceivePayment", () => {
+    renderDetail(makeInvoice("posted"), { canReceivePayment: true });
+    expect(
+      screen.getByRole("button", { name: /record payment/i })
+    ).toBeInTheDocument();
+  });
+
+  it("hides Record payment when canReceivePayment is false", () => {
+    renderDetail(makeInvoice("posted"), { canReceivePayment: false });
+    expect(
+      screen.queryByRole("button", { name: /record payment/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides Record payment for a draft invoice", () => {
+    renderDetail(makeInvoice("draft"), { canReceivePayment: true });
+    expect(
+      screen.queryByRole("button", { name: /record payment/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides Record payment for a fully-paid invoice", () => {
+    renderDetail(
+      makeInvoice("posted", { amountPaid: 1062, paymentStatus: "paid" }),
+      { canReceivePayment: true }
+    );
+    expect(
+      screen.queryByRole("button", { name: /record payment/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens the payment dialog when Record payment is clicked", async () => {
+    const user = userEvent.setup();
+    renderDetail(makeInvoice("posted"), { canReceivePayment: true });
+
+    await user.click(screen.getByRole("button", { name: /record payment/i }));
+    expect(
+      screen.getByRole("dialog", { name: "Record customer payment" })
+    ).toBeInTheDocument();
   });
 });

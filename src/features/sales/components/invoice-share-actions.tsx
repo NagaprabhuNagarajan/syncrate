@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Printer, Link2, Check, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { printPdfFromUrl } from "@/features/sales/utils/print-pdf";
 
 interface InvoiceShareActionsProps {
   readonly pdfUrl: string;
@@ -30,35 +31,7 @@ export function InvoiceShareActions({ pdfUrl }: InvoiceShareActionsProps) {
 
   const handlePrint = (): void => {
     setPrinting(true);
-    void fetch(pdfUrl)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to render PDF");
-        }
-        return res.blob();
-      })
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const iframe = document.createElement("iframe");
-        iframe.style.position = "fixed";
-        iframe.style.right = "0";
-        iframe.style.bottom = "0";
-        iframe.style.width = "0";
-        iframe.style.height = "0";
-        iframe.style.border = "0";
-        iframe.src = url;
-        iframe.onload = (): void => {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-          window.setTimeout(() => {
-            URL.revokeObjectURL(url);
-            iframe.remove();
-          }, 60_000);
-        };
-        document.body.appendChild(iframe);
-        setPrinting(false);
-      })
-      .catch(() => setPrinting(false));
+    void printPdfFromUrl(pdfUrl).finally(() => setPrinting(false));
   };
 
   return (

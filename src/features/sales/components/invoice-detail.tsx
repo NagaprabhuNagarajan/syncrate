@@ -19,6 +19,7 @@ import {
   Receipt,
   Wallet,
   CircleDollarSign,
+  Banknote,
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ import {
   postInvoiceAction,
   cancelInvoiceAction,
 } from "@/features/sales/actions/invoice.actions";
+import { RecordCustomerPaymentDialog } from "@/features/payment/components/record-customer-payment-dialog";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type { InvoiceWithItems } from "@/features/sales/types/invoice.types";
 import { cn } from "@/utils/cn";
@@ -275,23 +277,28 @@ interface InvoiceDetailProps {
   readonly invoice: InvoiceWithItems;
   readonly customerName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
+  readonly salesOrderNumber?: string | null;
   readonly organizationId: string;
   readonly canManage: boolean;
   readonly canCancel: boolean;
+  readonly canReceivePayment: boolean;
 }
 
 export function InvoiceDetail({
   invoice,
   customerName,
   productNames,
+  salesOrderNumber,
   organizationId,
   canManage,
   canCancel,
+  canReceivePayment,
 }: InvoiceDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [actionError, setActionError] = useState<string | null>(null);
   const [showCancel, setShowCancel] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const org = searchParams.get("org");
@@ -301,6 +308,7 @@ export function InvoiceDetail({
   const { status } = invoice;
   const isDraft = status === "draft";
   const balanceDue = invoice.totalAmount - invoice.amountPaid;
+  const canPay = status === "posted" && balanceDue > 0 && canReceivePayment;
 
   // Preserve existing action hrefs byte-for-byte.
   const editHref = `/invoices/${invoice.id}/edit`;
@@ -334,6 +342,15 @@ export function InvoiceDetail({
   };
 
   const closeCancel = (): void => setShowCancel(false);
+
+  const openPayment = (): void => setShowPayment(true);
+
+  const closePayment = (): void => setShowPayment(false);
+
+  const handlePaymentDone = (): void => {
+    setShowPayment(false);
+    router.refresh();
+  };
 
   return (
     <div className="p-4 lg:p-6">
@@ -390,13 +407,19 @@ export function InvoiceDetail({
                 Post
               </Button>
             )}
-            <Button asChild variant="outline" size="sm">
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Download PDF"
+            {canPay && (
+              <Button
+                type="button"
+                variant="gradient"
+                size="sm"
+                onClick={openPayment}
               >
+                <Banknote className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Record payment
+              </Button>
+            )}
+            <Button asChild variant="outline" size="sm">
+              <a href={pdfUrl} aria-label="Download PDF">
                 <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
                 Download PDF
               </a>
@@ -682,7 +705,7 @@ export function InvoiceDetail({
                         href={withOrg(`/sales-orders/${invoice.salesOrderId}`)}
                         className="text-primary-600 hover:underline dark:text-primary-400"
                       >
-                        View sales order
+                        {salesOrderNumber ?? "View sales order"}
                       </Link>
                     </dd>
                   </div>
@@ -704,6 +727,25 @@ export function InvoiceDetail({
           />
         )}
       </AnimatePresence>
+
+      {showPayment && (
+        <RecordCustomerPaymentDialog
+          organizationId={organizationId}
+          customerId={invoice.customerId}
+          customerName={customerName ?? "Customer"}
+          outstandingInvoices={[
+            {
+              id: invoice.id,
+              invoiceNumber: invoice.invoiceNumber,
+              totalAmount: invoice.totalAmount,
+              amountPaid: invoice.amountPaid,
+              outstandingAmount: balanceDue,
+            },
+          ]}
+          onClose={closePayment}
+          onDone={handlePaymentDone}
+        />
+      )}
     </div>
   );
 }

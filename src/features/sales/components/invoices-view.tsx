@@ -18,12 +18,15 @@ import {
   ArrowUpRight,
   Pencil,
   Share2,
+  Banknote,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -41,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AnimatedNumber } from "@/components/shared/animated-number";
+import { RecordCustomerPaymentDialog } from "@/features/payment/components/record-customer-payment-dialog";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { cn } from "@/utils/cn";
 import type {
@@ -229,17 +233,24 @@ interface InvoicesViewProps {
     readonly paymentStatus?: PaymentStatus;
   };
   readonly canManage: boolean;
+  readonly canReceivePayment: boolean;
 }
 
 export function InvoicesView({
+  organizationId,
   result,
   stats,
   filters,
   canManage,
+  canReceivePayment,
 }: InvoicesViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
+  const [showPayment, setShowPayment] = useState(false);
 
   const { items, total, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -303,6 +314,83 @@ export function InvoicesView({
   const handleNew = (): void => {
     router.push(newHref());
   };
+
+  // ── Bulk selection ─────────────────────────────────────────
+  // A row is payable only while it still carries a balance.
+  const isSelectable = (invoice: InvoiceListItem): boolean =>
+    invoice.paymentStatus !== "paid" && invoice.status !== "cancelled";
+
+  const selectableItems = items.filter(isSelectable);
+  const selectedInvoices = items.filter((invoice) =>
+    selectedIds.has(invoice.id)
+  );
+  const selectedCount = selectedInvoices.length;
+
+  const allSelectableSelected =
+    selectableItems.length > 0 &&
+    selectableItems.every((invoice) => selectedIds.has(invoice.id));
+
+  const headerChecked: boolean | "indeterminate" = allSelectableSelected
+    ? true
+    : selectedCount > 0
+      ? "indeterminate"
+      : false;
+
+  const toggleRow = (id: string): void => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleAll = (): void => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (
+        selectableItems.length > 0 &&
+        selectableItems.every((invoice) => prev.has(invoice.id))
+      ) {
+        selectableItems.forEach((invoice) => next.delete(invoice.id));
+      } else {
+        selectableItems.forEach((invoice) => next.add(invoice.id));
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = (): void => setSelectedIds(new Set());
+
+  // A payment belongs to a single customer, so the selection must not span more.
+  const selectedCustomerIds = new Set(
+    selectedInvoices.map((invoice) => invoice.customerId)
+  );
+  const isSingleCustomer = selectedCustomerIds.size === 1;
+  const bulkOutstanding = selectedInvoices.reduce(
+    (sum, invoice) => sum + (invoice.totalAmount - invoice.amountPaid),
+    0
+  );
+  const paymentCustomer = selectedInvoices[0];
+
+  const openPayment = (): void => {
+    if (isSingleCustomer && selectedCount > 0) {
+      setShowPayment(true);
+    }
+  };
+
+  const closePayment = (): void => setShowPayment(false);
+
+  const handlePaymentDone = (): void => {
+    setShowPayment(false);
+    clearSelection();
+    router.refresh();
+  };
+
+  const showSelection = canReceivePayment;
 
   return (
     <div className="p-4 lg:p-6">
@@ -419,6 +507,51 @@ export function InvoicesView({
         </div>
       </div>
 
+      {/* Bulk action bar */}
+      {showSelection && selectedCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18 }}
+          className="sticky top-2 z-30 mt-4 flex flex-col gap-3 rounded-xl border border-primary-200 bg-primary-50/80 px-4 py-3 shadow-card backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-primary-500/30 dark:bg-primary-500/10"
+        >
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              {selectedCount} selected ·{" "}
+              <span className="nums">{formatCurrency(bulkOutstanding, true)}</span>{" "}
+              outstanding
+            </span>
+            {!isSingleCustomer && (
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Select invoices from a single customer to record one payment
+                together.
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+            >
+              <X className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Clear
+            </Button>
+            <Button
+              type="button"
+              variant="gradient"
+              size="sm"
+              onClick={openPayment}
+              disabled={!isSingleCustomer}
+            >
+              <Banknote className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Record payment
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Table / empty state */}
       <div className="mt-4">
         {items.length === 0 ? (
@@ -447,6 +580,16 @@ export function InvoicesView({
             <Table wrapperClassName="shadow-card">
               <TableHeader>
                 <TableRow>
+                  {showSelection && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={headerChecked}
+                        onCheckedChange={toggleAll}
+                        disabled={selectableItems.length === 0}
+                        aria-label="Select all payable invoices"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>Invoice #</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Date</TableHead>
@@ -462,12 +605,29 @@ export function InvoicesView({
               <TableBody>
                 {items.map((invoice: InvoiceListItem) => {
                   const isOverdue = invoice.paymentStatus === "overdue";
+                  const selectable = isSelectable(invoice);
                   return (
                     <TableRow
                       key={invoice.id}
                       onClick={() => router.push(detailHref(invoice.id))}
                       className="group cursor-pointer"
+                      data-state={
+                        selectedIds.has(invoice.id) ? "selected" : undefined
+                      }
                     >
+                      {showSelection && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {selectable ? (
+                            <Checkbox
+                              checked={selectedIds.has(invoice.id)}
+                              onCheckedChange={() => toggleRow(invoice.id)}
+                              aria-label={`Select ${invoice.invoiceNumber}`}
+                            />
+                          ) : (
+                            <span className="sr-only">Not payable</span>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Link
                           href={detailHref(invoice.id)}
@@ -607,6 +767,23 @@ export function InvoicesView({
             </Button>
           </div>
         </div>
+      )}
+
+      {showPayment && paymentCustomer && (
+        <RecordCustomerPaymentDialog
+          organizationId={organizationId}
+          customerId={paymentCustomer.customerId}
+          customerName={paymentCustomer.customerName ?? "Customer"}
+          outstandingInvoices={selectedInvoices.map((invoice) => ({
+            id: invoice.id,
+            invoiceNumber: invoice.invoiceNumber,
+            totalAmount: invoice.totalAmount,
+            amountPaid: invoice.amountPaid,
+            outstandingAmount: invoice.totalAmount - invoice.amountPaid,
+          }))}
+          onClose={closePayment}
+          onDone={handlePaymentDone}
+        />
       )}
     </div>
   );

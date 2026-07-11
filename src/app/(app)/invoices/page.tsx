@@ -93,6 +93,7 @@ export default async function SalesInvoicesPage({
   }
 
   const canManage = context.permissions.includes("invoice.create");
+  const canReceivePayment = context.permissions.includes("payment.receive");
 
   const search = params.search?.trim() || undefined;
   const status = parseStatus(params.status);
@@ -112,6 +113,7 @@ export default async function SalesInvoicesPage({
       stats={stats}
       filters={{ search, status, paymentStatus }}
       canManage={canManage}
+      canReceivePayment={canReceivePayment}
     />
   );
 }
