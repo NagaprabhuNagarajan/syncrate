@@ -167,6 +167,25 @@ export interface InvoiceListResult {
   readonly pageSize: number;
 }
 
+/** Aggregate counts/sums for the list header stat tiles. */
+export interface InvoiceStats {
+  /** Total non-deleted invoices. */
+  readonly total: number;
+  // Per-status counts
+  readonly draft: number;
+  readonly posted: number;
+  readonly cancelled: number;
+  // Money aggregates (non-cancelled unless noted)
+  /** Sum of total_amount across non-cancelled invoices. */
+  readonly totalInvoiced: number;
+  /** Sum of (total_amount − amount_paid), i.e. balance due, non-cancelled. */
+  readonly outstanding: number;
+  /** Sum of balance due for posted invoices past their due date. */
+  readonly overdue: number;
+  /** Sum of amount_paid across non-cancelled invoices. */
+  readonly paid: number;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Result types
 // ─────────────────────────────────────────────────────────────

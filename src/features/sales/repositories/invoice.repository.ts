@@ -6,6 +6,7 @@ import type {
   InvoiceListItem,
   InvoiceListParams,
   InvoiceListResult,
+  InvoiceStats,
   InvoiceStatus,
   InvoiceWithItems,
 } from "@/features/sales/types/invoice.types";
@@ -243,6 +244,75 @@ export class InvoiceRepository {
       total: count ?? 0,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Aggregate counts + money sums for the list header tiles. Head-only count
+   * queries run in parallel for the status tiles. The money aggregates need
+   * sums PostgREST cannot compute server-side via head queries, so we fetch
+   * the minimal `total_amount`/`amount_paid` columns for non-cancelled
+   * invoices and reduce in JS. `overdue` similarly compares two columns
+   * (`due_date` vs today, and balance due), so we fetch the minimal columns
+   * for posted invoices past their due date and reduce in JS.
+   */
+  async getStats(organizationId: string): Promise<InvoiceStats> {
+    const base = () =>
+      this.supabase
+        .from("invoices")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null);
+
+    const [total, draft, posted, cancelled] = await Promise.all([
+      base(),
+      base().eq("status", "draft"),
+      base().eq("status", "posted"),
+      base().eq("status", "cancelled"),
+    ]);
+
+    const { data: valueRows } = await this.supabase
+      .from("invoices")
+      .select("total_amount, amount_paid")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .neq("status", "cancelled");
+
+    let totalInvoiced = 0;
+    let outstanding = 0;
+    let paid = 0;
+    for (const row of valueRows ?? []) {
+      const totalAmount = Number(row.total_amount);
+      const amountPaid = Number(row.amount_paid);
+      totalInvoiced += totalAmount;
+      outstanding += totalAmount - amountPaid;
+      paid += amountPaid;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: overdueRows } = await this.supabase
+      .from("invoices")
+      .select("total_amount, amount_paid")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .eq("status", "posted")
+      .lt("due_date", today);
+
+    const overdue = (overdueRows ?? []).reduce(
+      (sum, row) =>
+        sum + Math.max(0, Number(row.total_amount) - Number(row.amount_paid)),
+      0
+    );
+
+    return {
+      total: total.count ?? 0,
+      draft: draft.count ?? 0,
+      posted: posted.count ?? 0,
+      cancelled: cancelled.count ?? 0,
+      totalInvoiced,
+      outstanding,
+      overdue,
+      paid,
     };
   }
 

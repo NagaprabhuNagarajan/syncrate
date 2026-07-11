@@ -85,6 +85,17 @@ function makeResult(
   return { items, total, page: 1, pageSize: 20 };
 }
 
+const zeroStats = {
+  total: 0,
+  draft: 0,
+  posted: 0,
+  cancelled: 0,
+  totalInvoiced: 0,
+  outstanding: 0,
+  overdue: 0,
+  paid: 0,
+} as const;
+
 // ─────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────
@@ -95,11 +106,12 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
     );
-    expect(screen.getByRole("heading", { name: "Invoices" })).toBeDefined();
+    expect(screen.getByRole("heading", { name: /Invoices/ })).toBeDefined();
   });
 
   it("shows the New invoice button when canManage is true", () => {
@@ -107,6 +119,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -119,6 +132,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([])}
+        stats={zeroStats}
         filters={{}}
         canManage={false}
       />
@@ -131,11 +145,12 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
     );
-    expect(screen.getByText("No invoices found")).toBeDefined();
+    expect(screen.getByText("No invoices yet")).toBeDefined();
   });
 
   it("renders invoice rows in the table", () => {
@@ -144,6 +159,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([invoice])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -158,6 +174,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([invoice])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -172,6 +189,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([invoice])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -185,6 +203,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([invoice])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -198,6 +217,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([invoice])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -211,6 +231,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([invoice])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -224,6 +245,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([invoice])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -237,6 +259,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([invoice])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -251,6 +274,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult([])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -258,30 +282,42 @@ describe("InvoicesView", () => {
     expect(screen.getByRole("searchbox", { name: "Search invoices" })).toBeDefined();
   });
 
-  it("shows status filter select", () => {
+  it("shows the status filter pills", () => {
     render(
       <InvoicesView
         organizationId="org-1"
         result={makeResult([])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
     );
-    expect(screen.getByRole("combobox", { name: "Filter by status" })).toBeDefined();
+    const statusTablist = screen.getByRole("tablist", {
+      name: "Filter by status",
+    });
+    expect(statusTablist).toBeDefined();
+    // "All" + the three invoice statuses render as tabs
+    expect(
+      screen.getAllByRole("tab", { name: "Draft" }).length
+    ).toBeGreaterThan(0);
   });
 
-  it("shows payment status filter select", () => {
+  it("shows the payment filter pills", () => {
     render(
       <InvoicesView
         organizationId="org-1"
         result={makeResult([])}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
     );
     expect(
-      screen.getByRole("combobox", { name: "Filter by payment status" })
+      screen.getByRole("tablist", { name: "Filter by payment" })
     ).toBeDefined();
+    expect(
+      screen.getAllByRole("tab", { name: "Overdue" }).length
+    ).toBeGreaterThan(0);
   });
 
   it("renders multiple invoices", () => {
@@ -293,6 +329,7 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={makeResult(invoices)}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
@@ -309,10 +346,13 @@ describe("InvoicesView", () => {
       <InvoicesView
         organizationId="org-1"
         result={{ ...makeResult([invoice]), total: 42 }}
+        stats={zeroStats}
         filters={{}}
         canManage
       />
     );
-    expect(screen.getByText(/42 invoices/)).toBeDefined();
+    // Pagination shows a "Showing X–Y of N" summary with the total count.
+    expect(screen.getByText(/Showing/)).toBeDefined();
+    expect(screen.getAllByText("42").length).toBeGreaterThan(0);
   });
 });

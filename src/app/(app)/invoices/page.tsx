@@ -100,16 +100,16 @@ export default async function SalesInvoicesPage({
   const page = parsePage(params.page);
 
   const service = new InvoiceService(supabase);
-  const result = await service.listInvoices(activeOrg.id, {
-    search,
-    status,
-    page,
-  });
+  const [result, stats] = await Promise.all([
+    service.listInvoices(activeOrg.id, { search, status, page }),
+    service.getInvoiceStats(activeOrg.id),
+  ]);
 
   return (
     <InvoicesView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search, status, paymentStatus }}
       canManage={canManage}
     />
