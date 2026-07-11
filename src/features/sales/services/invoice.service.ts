@@ -13,6 +13,7 @@ import type {
   InvoiceListItem,
   InvoiceListParams,
   InvoiceListResult,
+  InvoiceStats,
   InvoiceType,
   InvoiceWithItems,
   UpdateInvoiceInput,
@@ -195,6 +196,11 @@ export class InvoiceService {
     params?: InvoiceListParams
   ): Promise<InvoiceListResult> {
     return this.repo.list(organizationId, params);
+  }
+
+  /** Aggregate counts/sums for the list header stat tiles. */
+  async getInvoiceStats(organizationId: string): Promise<InvoiceStats> {
+    return this.repo.getStats(organizationId);
   }
 
   /** Invoices linked to a sales order (for the SO detail page). */

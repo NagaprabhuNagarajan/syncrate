@@ -8,6 +8,14 @@ export default defineConfig({
     environment: "happy-dom",
     setupFiles: ["./src/tests/setup.ts"],
     globals: true,
+    // Placeholder public env so import-time env validation (src/config/env.ts)
+    // succeeds for any test that transitively loads a server module. Mirrors the
+    // placeholders used by the CI build job.
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-anon-key",
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html", "lcov"],

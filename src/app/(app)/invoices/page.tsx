@@ -93,6 +93,7 @@ export default async function SalesInvoicesPage({
   }
 
   const canManage = context.permissions.includes("invoice.create");
+  const canReceivePayment = context.permissions.includes("payment.receive");
 
   const search = params.search?.trim() || undefined;
   const status = parseStatus(params.status);
@@ -100,18 +101,19 @@ export default async function SalesInvoicesPage({
   const page = parsePage(params.page);
 
   const service = new InvoiceService(supabase);
-  const result = await service.listInvoices(activeOrg.id, {
-    search,
-    status,
-    page,
-  });
+  const [result, stats] = await Promise.all([
+    service.listInvoices(activeOrg.id, { search, status, page }),
+    service.getInvoiceStats(activeOrg.id),
+  ]);
 
   return (
     <InvoicesView
       organizationId={activeOrg.id}
       result={result}
+      stats={stats}
       filters={{ search, status, paymentStatus }}
       canManage={canManage}
+      canReceivePayment={canReceivePayment}
     />
   );
 }

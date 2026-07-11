@@ -40,6 +40,19 @@ async function lookupCustomerName(
   return data?.name ?? null;
 }
 
+async function lookupSalesOrderNumber(
+  supabase: AppSupabaseClient,
+  id: string | null
+): Promise<string | null> {
+  if (!id) {return null;}
+  const { data } = await supabase
+    .from("sales_orders")
+    .select("so_number")
+    .eq("id", id)
+    .single();
+  return data?.so_number ?? null;
+}
+
 async function lookupProductNames(
   supabase: AppSupabaseClient,
   ids: readonly string[]
@@ -116,12 +129,13 @@ export default async function InvoiceDetailPage({
 
   const invoice = result.data;
 
-  const [customerName, productNames] = await Promise.all([
+  const [customerName, productNames, salesOrderNumber] = await Promise.all([
     lookupCustomerName(supabase, invoice.customerId),
     lookupProductNames(
       supabase,
       invoice.items.map((item) => item.productId)
     ),
+    lookupSalesOrderNumber(supabase, invoice.salesOrderId),
   ]);
 
   return (
@@ -129,9 +143,11 @@ export default async function InvoiceDetailPage({
       invoice={invoice}
       customerName={customerName}
       productNames={productNames}
+      salesOrderNumber={salesOrderNumber}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("invoice.create")}
       canCancel={context.permissions.includes("invoice.cancel")}
+      canReceivePayment={context.permissions.includes("payment.receive")}
     />
   );
 }

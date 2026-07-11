@@ -6,25 +6,61 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   FileText,
+  Wallet,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
   Plus,
   Search,
   ChevronLeft,
   ChevronRight,
+  MoreHorizontal,
+  ArrowUpRight,
+  Pencil,
+  Share2,
+  Banknote,
+  X,
+  type LucideIcon,
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/shared/page-header";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
+import { AnimatedNumber } from "@/components/shared/animated-number";
+import { RecordCustomerPaymentDialog } from "@/features/payment/components/record-customer-payment-dialog";
+import { formatCurrency, formatDate } from "@/utils/format";
+import { cn } from "@/utils/cn";
 import type {
   InvoiceListItem,
   InvoiceListResult,
+  InvoiceStats,
   InvoiceStatus,
   PaymentStatus,
 } from "@/features/sales/types/invoice.types";
 
 // ─────────────────────────────────────────────────────────────
 // Status presentation
+//
+// These maps are imported by 5 other files (marketplace-orders,
+// invoice-detail, sales-order-detail, dashboard-analytics). Keep them
+// exported from this module — do not move them.
 // ─────────────────────────────────────────────────────────────
 
 export const INV_STATUS_VARIANT: Record<InvoiceStatus, BadgeProps["variant"]> =
@@ -57,37 +93,130 @@ export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
   overdue: "Overdue",
 };
 
-const STATUS_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: "", label: "All statuses" },
-  { value: "draft", label: "Draft" },
-  { value: "posted", label: "Posted" },
-  { value: "cancelled", label: "Cancelled" },
+// ─────────────────────────────────────────────────────────────
+// Filters
+// ─────────────────────────────────────────────────────────────
+
+const STATUS_FILTERS: readonly { value: string; label: string }[] = [
+  { value: "", label: "All" },
+  { value: "draft", label: INV_STATUS_LABEL.draft },
+  { value: "posted", label: INV_STATUS_LABEL.posted },
+  { value: "cancelled", label: INV_STATUS_LABEL.cancelled },
 ];
 
-const PAYMENT_STATUS_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: "", label: "All payment statuses" },
-  { value: "unpaid", label: "Unpaid" },
-  { value: "partial", label: "Partial" },
-  { value: "paid", label: "Paid" },
-  { value: "overdue", label: "Overdue" },
+const PAYMENT_FILTERS: readonly { value: string; label: string }[] = [
+  { value: "", label: "All" },
+  { value: "unpaid", label: PAYMENT_STATUS_LABEL.unpaid },
+  { value: "partial", label: PAYMENT_STATUS_LABEL.partial },
+  { value: "paid", label: PAYMENT_STATUS_LABEL.paid },
+  { value: "overdue", label: PAYMENT_STATUS_LABEL.overdue },
 ];
 
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
+// ─────────────────────────────────────────────────────────────
+// Stat tile
+// ─────────────────────────────────────────────────────────────
 
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
+  index,
+  currency,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly index: number;
+  readonly currency?: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+    >
+      <Card className="relative overflow-hidden p-4">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
+              tint
+            )}
+          >
+            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {currency ? (
+                formatCurrency(value)
+              ) : (
+                <AnimatedNumber value={value} />
+              )}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
 }
 
-function formatDate(value: Date): string {
-  return new Date(value).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+// ─────────────────────────────────────────────────────────────
+// Filter pill row
+// ─────────────────────────────────────────────────────────────
+
+function FilterPills({
+  label,
+  options,
+  active,
+  onSelect,
+}: {
+  readonly label: string;
+  readonly options: readonly { value: string; label: string }[];
+  readonly active: string;
+  readonly onSelect: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <div
+        className="flex flex-wrap items-center gap-1.5"
+        role="tablist"
+        aria-label={`Filter by ${label.toLowerCase()}`}
+      >
+        {options.map((option) => {
+          const isActive = active === option.value;
+          return (
+            <button
+              key={option.value || "all"}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => onSelect(option.value)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                isActive
+                  ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -97,32 +226,47 @@ function formatDate(value: Date): string {
 interface InvoicesViewProps {
   readonly organizationId: string;
   readonly result: InvoiceListResult;
+  readonly stats: InvoiceStats;
   readonly filters: {
     readonly search?: string;
     readonly status?: InvoiceStatus;
     readonly paymentStatus?: PaymentStatus;
   };
   readonly canManage: boolean;
+  readonly canReceivePayment: boolean;
 }
 
 export function InvoicesView({
+  organizationId,
   result,
+  stats,
   filters,
   canManage,
+  canReceivePayment,
 }: InvoicesViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
+  const [showPayment, setShowPayment] = useState(false);
 
   const { items, total, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(total, page * pageSize);
+  const hasFilters = Boolean(
+    filters.search || filters.status || filters.paymentStatus
+  );
+  const org = searchParams.get("org");
 
-  const withOrg = (path: string): string => {
-    const org = searchParams.get("org");
-    return org ? `${path}?org=${org}` : path;
-  };
+  const withOrg = (path: string): string =>
+    org ? `${path}${path.includes("?") ? "&" : "?"}org=${org}` : path;
 
   const detailHref = (id: string): string => withOrg(`/invoices/${id}`);
+  const editHref = (id: string): string => withOrg(`/invoices/${id}/edit`);
+  const shareHref = (id: string): string => withOrg(`/invoices/${id}/share`);
   const newHref = (): string => withOrg("/invoices/new");
 
   const pushWith = (patch: Record<string, string | undefined>): void => {
@@ -143,48 +287,191 @@ export function InvoicesView({
     pushWith({ search: searchInput.trim() || undefined, page: undefined });
   };
 
-  const handleStatusChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
+  const handleSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement>
   ): void => {
-    pushWith({ status: event.target.value || undefined, page: undefined });
+    const value = event.target.value;
+    setSearchInput(value);
+    // Clearing the field (native ✕ or deleting the text) resets the list
+    // immediately, without waiting for a submit.
+    if (value === "" && filters.search) {
+      pushWith({ search: undefined, page: undefined });
+    }
   };
 
-  const handlePaymentStatusChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ): void => {
-    pushWith({
-      paymentStatus: event.target.value || undefined,
-      page: undefined,
+  const handleStatusSelect = (value: string): void => {
+    pushWith({ status: value || undefined, page: undefined });
+  };
+
+  const handlePaymentSelect = (value: string): void => {
+    pushWith({ paymentStatus: value || undefined, page: undefined });
+  };
+
+  const handleClearFilters = (): void => {
+    router.push(withOrg("/invoices"));
+  };
+
+  const handleNew = (): void => {
+    router.push(newHref());
+  };
+
+  // ── Bulk selection ─────────────────────────────────────────
+  // A row is payable only while it still carries a balance.
+  const isSelectable = (invoice: InvoiceListItem): boolean =>
+    invoice.paymentStatus !== "paid" && invoice.status !== "cancelled";
+
+  const selectableItems = items.filter(isSelectable);
+  const selectedInvoices = items.filter((invoice) =>
+    selectedIds.has(invoice.id)
+  );
+  const selectedCount = selectedInvoices.length;
+
+  const allSelectableSelected =
+    selectableItems.length > 0 &&
+    selectableItems.every((invoice) => selectedIds.has(invoice.id));
+
+  const headerChecked: boolean | "indeterminate" = allSelectableSelected
+    ? true
+    : selectedCount > 0
+      ? "indeterminate"
+      : false;
+
+  const toggleRow = (id: string): void => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
     });
   };
 
-  const goToPage = (next: number): void => {
-    pushWith({ page: next <= 1 ? undefined : String(next) });
+  const toggleAll = (): void => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (
+        selectableItems.length > 0 &&
+        selectableItems.every((invoice) => prev.has(invoice.id))
+      ) {
+        selectableItems.forEach((invoice) => next.delete(invoice.id));
+      } else {
+        selectableItems.forEach((invoice) => next.add(invoice.id));
+      }
+      return next;
+    });
   };
+
+  const clearSelection = (): void => setSelectedIds(new Set());
+
+  // A payment belongs to a single customer, so the selection must not span more.
+  const selectedCustomerIds = new Set(
+    selectedInvoices.map((invoice) => invoice.customerId)
+  );
+  const isSingleCustomer = selectedCustomerIds.size === 1;
+  const bulkOutstanding = selectedInvoices.reduce(
+    (sum, invoice) => sum + (invoice.totalAmount - invoice.amountPaid),
+    0
+  );
+  const paymentCustomer = selectedInvoices[0];
+
+  const openPayment = (): void => {
+    if (isSingleCustomer && selectedCount > 0) {
+      setShowPayment(true);
+    }
+  };
+
+  const closePayment = (): void => setShowPayment(false);
+
+  const handlePaymentDone = (): void => {
+    setShowPayment(false);
+    clearSelection();
+    router.refresh();
+  };
+
+  const showSelection = canReceivePayment;
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Invoices"
-        description="Create, send and track your customer invoices"
-        icon={FileText}
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
-        {canManage && (
-          <Button asChild variant="gradient">
-            <Link href={newHref()}>
-              <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              New invoice
-            </Link>
-          </Button>
-        )}
-      </PageHeader>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <FileText className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Invoices
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {total}
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Create, send and track your customer invoices
+            </p>
+          </div>
+        </div>
 
-      {/* Filters */}
-      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+        {canManage && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="gradient">
+              <Link href={newHref()}>
+                <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                New invoice
+              </Link>
+            </Button>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Stat tiles */}
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          icon={Wallet}
+          label="Total invoiced"
+          value={stats.totalInvoiced}
+          tint="bg-gradient-brand"
+          index={0}
+          currency
+        />
+        <StatTile
+          icon={Clock}
+          label="Outstanding"
+          value={stats.outstanding}
+          tint="bg-gradient-info"
+          index={1}
+          currency
+        />
+        <StatTile
+          icon={AlertTriangle}
+          label="Overdue"
+          value={stats.overdue}
+          tint="bg-gradient-warning"
+          index={2}
+          currency
+        />
+        <StatTile
+          icon={CheckCircle2}
+          label="Paid"
+          value={stats.paid}
+          tint="bg-gradient-success"
+          index={3}
+          currency
+        />
+      </div>
+
+      {/* Search + filter pills */}
+      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
-          className="relative flex-1"
+          className="relative w-full lg:max-w-sm lg:shrink-0"
         >
           <Search
             className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -193,57 +480,95 @@ export function InvoicesView({
           <Input
             type="search"
             aria-label="Search invoices"
-            placeholder="Search by invoice number"
+            placeholder="Search by invoice number…"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-9"
           />
         </form>
-        <select
-          aria-label="Filter by status"
-          value={filters.status ?? ""}
-          onChange={handleStatusChange}
-          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
-        >
-          {STATUS_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Filter by payment status"
-          value={filters.paymentStatus ?? ""}
-          onChange={handlePaymentStatusChange}
-          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
-        >
-          {PAYMENT_STATUS_OPTIONS.map((option) => (
-            <option key={option.value || "all-payment"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5">
+          <FilterPills
+            label="Status"
+            options={STATUS_FILTERS}
+            active={filters.status ?? ""}
+            onSelect={handleStatusSelect}
+          />
+          <div
+            className="h-6 w-px shrink-0 bg-slate-200 dark:bg-slate-700"
+            aria-hidden="true"
+          />
+          <FilterPills
+            label="Payment"
+            options={PAYMENT_FILTERS}
+            active={filters.paymentStatus ?? ""}
+            onSelect={handlePaymentSelect}
+          />
+        </div>
       </div>
+
+      {/* Bulk action bar */}
+      {showSelection && selectedCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18 }}
+          className="sticky top-2 z-30 mt-4 flex flex-col gap-3 rounded-xl border border-primary-200 bg-primary-50/80 px-4 py-3 shadow-card backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-primary-500/30 dark:bg-primary-500/10"
+        >
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              {selectedCount} selected ·{" "}
+              <span className="nums">{formatCurrency(bulkOutstanding, true)}</span>{" "}
+              outstanding
+            </span>
+            {!isSingleCustomer && (
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Select invoices from a single customer to record one payment
+                together.
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+            >
+              <X className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Clear
+            </Button>
+            <Button
+              type="button"
+              variant="gradient"
+              size="sm"
+              onClick={openPayment}
+              disabled={!isSingleCustomer}
+            >
+              <Banknote className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Record payment
+            </Button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Table / empty state */}
       <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="No invoices found"
+            title={hasFilters ? "No matching invoices" : "No invoices yet"}
             description={
-              filters.search || filters.status || filters.paymentStatus
-                ? "No invoices match your current filters. Try adjusting your search."
+              hasFilters
+                ? "No invoices match your current filters. Try adjusting your search or clearing the filters."
                 : "Create your first invoice to start billing your customers."
             }
             action={
-              canManage
-                ? {
-                    label: "New invoice",
-                    icon: Plus,
-                    onClick: () => router.push(newHref()),
-                  }
-                : undefined
+              hasFilters
+                ? { label: "Clear filters", onClick: handleClearFilters }
+                : canManage
+                  ? { label: "New invoice", icon: Plus, onClick: handleNew }
+                  : undefined
             }
           />
         ) : (
@@ -251,94 +576,154 @@ export function InvoicesView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Invoice no.
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Customer
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Date
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Due date
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      Amount
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Payment
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Status
-                    </th>
-                    <th scope="col" className="px-3 py-2">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {items.map((invoice: InvoiceListItem) => (
-                    <tr
+            <Table wrapperClassName="shadow-card">
+              <TableHeader>
+                <TableRow>
+                  {showSelection && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={headerChecked}
+                        onCheckedChange={toggleAll}
+                        disabled={selectableItems.length === 0}
+                        aria-label="Select all payable invoices"
+                      />
+                    </TableHead>
+                  )}
+                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Due date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((invoice: InvoiceListItem) => {
+                  const isOverdue = invoice.paymentStatus === "overdue";
+                  const selectable = isSelectable(invoice);
+                  return (
+                    <TableRow
                       key={invoice.id}
                       onClick={() => router.push(detailHref(invoice.id))}
-                      className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      className="group cursor-pointer"
+                      data-state={
+                        selectedIds.has(invoice.id) ? "selected" : undefined
+                      }
                     >
-                      <td className="px-3 py-2 font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
+                      {showSelection && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {selectable ? (
+                            <Checkbox
+                              checked={selectedIds.has(invoice.id)}
+                              onCheckedChange={() => toggleRow(invoice.id)}
+                              aria-label={`Select ${invoice.invoiceNumber}`}
+                            />
+                          ) : (
+                            <span className="sr-only">Not payable</span>
+                          )}
+                        </TableCell>
+                      )}
+                      <TableCell>
                         <Link
                           href={detailHref(invoice.id)}
                           onClick={(e) => e.stopPropagation()}
-                          className="hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
+                          className="font-mono text-xs font-medium text-slate-700 hover:text-primary-600 hover:underline dark:text-slate-300 dark:hover:text-primary-400"
                         >
                           {invoice.invoiceNumber}
                         </Link>
-                      </td>
-                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
+                      </TableCell>
+                      <TableCell className="text-slate-700 dark:text-slate-300">
                         {invoice.customerName ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
+                      </TableCell>
+                      <TableCell className="text-slate-600 dark:text-slate-400">
                         {formatDate(invoice.invoiceDate)}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          isOverdue
+                            ? "font-medium text-error-600 dark:text-error-400"
+                            : "text-slate-600 dark:text-slate-400"
+                        )}
+                      >
                         {invoice.dueDate ? formatDate(invoice.dueDate) : "—"}
-                      </td>
-                      <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
-                        {formatCurrency(invoice.totalAmount)}
-                      </td>
-                      <td className="px-3 py-2">
+                      </TableCell>
+                      <TableCell>
+                        <Badge dot variant={INV_STATUS_VARIANT[invoice.status]}>
+                          {INV_STATUS_LABEL[invoice.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         <Badge
                           dot
                           variant={PAYMENT_STATUS_VARIANT[invoice.paymentStatus]}
                         >
                           {PAYMENT_STATUS_LABEL[invoice.paymentStatus]}
                         </Badge>
-                      </td>
-                      <td className="px-3 py-2">
-                        <Badge dot variant={INV_STATUS_VARIANT[invoice.status]}>
-                          {INV_STATUS_LABEL[invoice.status]}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <Link
-                          href={detailHref(invoice.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
-                          aria-label={`View invoice ${invoice.invoiceNumber}`}
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </TableCell>
+                      <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                        {formatCurrency(invoice.totalAmount, true)}
+                      </TableCell>
+                      <TableCell
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={`Actions for ${invoice.invoiceNumber}`}
+                              className="rounded-md p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                            >
+                              <MoreHorizontal
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={detailHref(invoice.id)}>
+                                <ArrowUpRight
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                                View
+                              </Link>
+                            </DropdownMenuItem>
+                            {canManage && invoice.status === "draft" && (
+                              <DropdownMenuItem asChild>
+                                <Link href={editHref(invoice.id)}>
+                                  <Pencil
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
+                                  Edit
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <Link href={shareHref(invoice.id)}>
+                                <Share2
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                                Share
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </motion.div>
         )}
       </div>
@@ -347,8 +732,10 @@ export function InvoicesView({
       {items.length > 0 && (
         <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            {total} {total === 1 ? "invoice" : "invoices"} · Page {page} of{" "}
-            {totalPages}
+            Showing{" "}
+            <span className="font-medium text-foreground">{rangeStart}</span>–
+            <span className="font-medium text-foreground">{rangeEnd}</span> of{" "}
+            <span className="font-medium text-foreground">{total}</span>
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -356,18 +743,23 @@ export function InvoicesView({
               variant="outline"
               size="sm"
               disabled={page <= 1}
-              onClick={() => goToPage(page - 1)}
+              onClick={() =>
+                pushWith({ page: page <= 2 ? undefined : String(page - 1) })
+              }
               aria-label="Previous page"
             >
               <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
               Previous
             </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
             <Button
               type="button"
               variant="outline"
               size="sm"
               disabled={page >= totalPages}
-              onClick={() => goToPage(page + 1)}
+              onClick={() => pushWith({ page: String(page + 1) })}
               aria-label="Next page"
             >
               Next
@@ -375,6 +767,23 @@ export function InvoicesView({
             </Button>
           </div>
         </div>
+      )}
+
+      {showPayment && paymentCustomer && (
+        <RecordCustomerPaymentDialog
+          organizationId={organizationId}
+          customerId={paymentCustomer.customerId}
+          customerName={paymentCustomer.customerName ?? "Customer"}
+          outstandingInvoices={selectedInvoices.map((invoice) => ({
+            id: invoice.id,
+            invoiceNumber: invoice.invoiceNumber,
+            totalAmount: invoice.totalAmount,
+            amountPaid: invoice.amountPaid,
+            outstandingAmount: invoice.totalAmount - invoice.amountPaid,
+          }))}
+          onClose={closePayment}
+          onDone={handlePaymentDone}
+        />
       )}
     </div>
   );
