@@ -20,7 +20,6 @@ import type {
 const TRIGGER_EVENT_SUGGESTIONS: readonly string[] = [
   "invoice.created",
   "invoice.paid",
-  "quotation.accepted",
   "payment.received",
   "customer.created",
   "supplier.created",

@@ -5,7 +5,7 @@
  *  1. Tool *inputs* the model sends to read-only executors — validated before
  *     touching any repository (never trust model output, spec §17).
  *  2. The *proposed action* the user approves — re-validated server-side before
- *     it is turned into a real invoice/quotation (the AI never mutates data).
+ *     it is turned into a real invoice (the AI never mutates data).
  */
 
 import { z } from "zod";
@@ -22,7 +22,7 @@ export type SearchToolInput = z.infer<typeof searchToolInputSchema>;
 
 // ── Proposed-action inputs (require human approval) ──────────
 
-/** One line item on a proposed invoice/quotation. */
+/** One line item on a proposed invoice. */
 export const proposedLineItemSchema = z.object({
   /** Resolved product UUID — the model must search first to obtain this. */
   productId: z.string().min(1, "productId is required"),
@@ -36,7 +36,7 @@ export const proposedLineItemSchema = z.object({
 
 export type ProposedLineItem = z.infer<typeof proposedLineItemSchema>;
 
-/** Shape of a propose_invoice / propose_quotation tool input. */
+/** Shape of a propose_invoice tool input. */
 export const proposedDocumentSchema = z.object({
   /** Resolved customer UUID — the model must search first to obtain this. */
   customerId: z.string().min(1, "customerId is required"),

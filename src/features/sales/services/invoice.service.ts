@@ -10,6 +10,7 @@ import type {
   InvoiceError,
   InvoiceErrorCode,
   InvoiceItem,
+  InvoiceListItem,
   InvoiceListParams,
   InvoiceListResult,
   InvoiceType,
@@ -196,6 +197,13 @@ export class InvoiceService {
     return this.repo.list(organizationId, params);
   }
 
+  /** Invoices linked to a sales order (for the SO detail page). */
+  async listInvoicesForSalesOrder(
+    salesOrderId: string
+  ): Promise<InvoiceListItem[]> {
+    return this.repo.findBySalesOrder(salesOrderId);
+  }
+
   async getInvoice(
     id: string
   ): Promise<InvoiceActionResult<InvoiceWithItems>> {
@@ -229,7 +237,6 @@ export class InvoiceService {
       invoice_type: (input.invoiceType as InvoiceType) ?? "tax_invoice",
       customer_id: input.customerId,
       sales_order_id: nz(input.salesOrderId),
-      quotation_id: nz(input.quotationId),
       branch_id: nz(input.branchId),
       reference_number: nz(input.referenceNumber),
       invoice_date:
@@ -312,7 +319,6 @@ export class InvoiceService {
           (input.invoiceType as InvoiceType) ?? existing.invoiceType,
         customer_id: input.customerId,
         sales_order_id: nz(input.salesOrderId),
-        quotation_id: nz(input.quotationId),
         branch_id: nz(input.branchId),
         reference_number: nz(input.referenceNumber),
         invoice_date:

@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
+import { SalesOrderService } from "@/features/sales/services/sales-order.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { InvoiceForm } from "@/features/sales/components/invoice-form";
+import type { InvoicePrefill } from "@/features/sales/components/invoice-form";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 
 export const metadata: Metadata = {
@@ -14,14 +16,26 @@ export const metadata: Metadata = {
 async function loadCustomers(
   supabase: AppSupabaseClient,
   organizationId: string
-): Promise<{ id: string; name: string }[]> {
+): Promise<
+  {
+    id: string;
+    name: string;
+    billingState: string | null;
+    shippingState: string | null;
+  }[]
+> {
   const { data } = await supabase
     .from("customers")
-    .select("id, name")
+    .select("id, name, billing_state, shipping_state")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
     .order("name");
-  return (data ?? []).map((r) => ({ id: r.id, name: r.name }));
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    billingState: r.billing_state ?? null,
+    shippingState: r.shipping_state ?? null,
+  }));
 }
 
 async function loadProducts(
@@ -45,20 +59,24 @@ async function loadProducts(
 async function loadBranches(
   supabase: AppSupabaseClient,
   organizationId: string
-): Promise<{ id: string; name: string }[]> {
+): Promise<{ id: string; name: string; state: string | null }[]> {
   const { data } = await supabase
     .from("branches")
-    .select("id, name")
+    .select("id, name, state")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
     .order("name");
-  return (data ?? []).map((r) => ({ id: r.id, name: r.name }));
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    state: r.state ?? null,
+  }));
 }
 
 export default async function NewInvoicePage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ org?: string }>;
+  readonly searchParams: Promise<{ org?: string; from?: string; soId?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createServerSupabaseClient();
@@ -107,14 +125,42 @@ export default async function NewInvoicePage({
 
   const orgState = context.organization.state;
 
+  // Prefill from a sales order when arriving via "Convert to invoice" on an SO.
+  let prefill: InvoicePrefill | undefined;
+  if (params.from === "so" && params.soId) {
+    const soResult = await new SalesOrderService(supabase).getSalesOrder(
+      params.soId
+    );
+    if (soResult.success && soResult.data.organizationId === activeOrg.id) {
+      const so = soResult.data;
+      prefill = {
+        customerId: so.customerId,
+        salesOrderId: so.id,
+        salesOrderNumber: so.soNumber,
+        branchId: so.branchId ?? "",
+        supplyState: so.supplyState ?? "",
+        isInterstate: so.isInterstate,
+        items: so.items.map((item) => ({
+          productId: item.productId,
+          description: item.description ?? "",
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discountPercent: item.discountPercent,
+          gstRate: item.gstRate,
+        })),
+      };
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-5xl p-6 lg:p-8">
+    <div className="mx-auto max-w-6xl p-6 lg:p-8">
       <InvoiceForm
         organizationId={activeOrg.id}
         orgState={orgState}
         customers={customers}
         products={products}
         branches={branches}
+        prefill={prefill}
       />
     </div>
   );

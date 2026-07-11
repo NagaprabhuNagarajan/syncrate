@@ -8,6 +8,7 @@ import { SalesOrderService } from "@/features/sales/services/sales-order.service
 import { InvoiceService } from "@/features/sales/services/invoice.service";
 import {
   createSalesOrderSchema,
+  recordDeliverySchema,
   updateSalesOrderSchema,
 } from "@/features/sales/schemas/sales-order.schemas";
 import type {
@@ -42,7 +43,6 @@ function parseItems(value: FormDataEntryValue | null): unknown[] | null {
 function readFormCandidate(formData: FormData): Record<string, unknown> {
   return {
     customerId: formData.get("customerId") || undefined,
-    quotationId: formData.get("quotationId") || undefined,
     branchId: formData.get("branchId") || undefined,
     salespersonId: formData.get("salespersonId") || undefined,
     referenceNumber: formData.get("referenceNumber") || undefined,
@@ -253,37 +253,52 @@ export async function cancelSalesOrderAction(
 }
 
 // ─────────────────────────────────────────────────────────────
-// Convert from Quotation
+// Record delivery (fulfilment)
 // ─────────────────────────────────────────────────────────────
 
-export async function convertQuotationToSalesOrderAction(
+export async function recordSalesOrderDeliveryAction(
   organizationId: string,
-  quotationId: string
+  salesOrderId: string,
+  formData: FormData
 ): Promise<SalesOrderActionResult<SalesOrderWithItems>> {
-  const supabase = await createServerSupabaseClient();
-  const auth = await authorize(supabase, organizationId, "sales.create");
-  if (!auth.ok) {
-    return auth.result;
+  if (parseItems(formData.get("lines")) === null) {
+    return invalid("Delivery line items are missing or malformed");
   }
 
+  const parsed = recordDeliverySchema.safeParse({
+    version: formData.get("version") || undefined,
+    lines: parseItems(formData.get("lines")) ?? [],
+  });
+  if (!parsed.success) {
+    return invalid(parsed.error.errors[0]?.message ?? "Invalid input");
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const auth = await authorize(supabase, organizationId, "sales.create");
+  if (!auth.ok) {return auth.result;}
+
   const service = new SalesOrderService(supabase);
-  const result = await service.convertFromQuotation(
-    quotationId,
+  const result = await service.recordDelivery(
     organizationId,
+    salesOrderId,
     auth.userId,
-    auth.orgState
+    parsed.data.lines.map((line) => ({
+      itemId: line.itemId,
+      deliverQty: line.deliverQty,
+    })),
+    parsed.data.version
   );
 
   if (result.success) {
     revalidatePath("/sales-orders");
-    revalidatePath("/sales/quotations");
+    revalidatePath(`/sales-orders/${salesOrderId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
-      action: "sales_order.convert_from_quotation",
+      action: "sales_order.deliver",
       entityType: "sales_order",
-      entityId: result.data.id,
-      summary: `Converted quotation ${quotationId} to sales order ${result.data.soNumber}`,
+      entityId: salesOrderId,
+      summary: `Recorded delivery for sales order ${result.data.soNumber}`,
     });
   }
   return result;

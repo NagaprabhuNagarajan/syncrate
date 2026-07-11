@@ -9,7 +9,6 @@ import {
 } from "@/features/ai/assistant/schemas/assistant.schemas";
 import type { ProposedDocument } from "@/features/ai/assistant/schemas/assistant.schemas";
 import { createInvoiceAction } from "@/features/sales/actions/invoice.actions";
-import { createQuotationAction } from "@/features/sales/actions/quotation.actions";
 import type { AiProposedAction } from "@/features/ai/services/ai-gateway.service";
 import type { AiError, AiErrorCode, AiResult } from "@/features/ai/types/ai.types";
 import type {
@@ -131,9 +130,9 @@ export async function sendAssistantMessageAction(
 /**
  * Executes a previously proposed action AFTER explicit user approval. The
  * proposal is re-validated server-side and delegated to the real sales create
- * action, which enforces its own permission (`invoice.create` /
- * `quotation.create`) and writes the audit log. The AI never reaches here on
- * its own — only a deliberate user click does.
+ * action, which enforces its own permission (`invoice.create`) and writes the
+ * audit log. The AI never reaches here on its own — only a deliberate user
+ * click does.
  */
 export async function approveProposedActionAction(
   organizationId: string,
@@ -145,10 +144,7 @@ export async function approveProposedActionAction(
     return auth.result;
   }
 
-  if (
-    action.tool !== "propose_invoice" &&
-    action.tool !== "propose_quotation"
-  ) {
+  if (action.tool !== "propose_invoice") {
     return invalid(`Unsupported proposed action "${action.tool}"`);
   }
 
@@ -161,17 +157,9 @@ export async function approveProposedActionAction(
 
   const formData = buildDocumentFormData(parsed.data);
 
-  if (action.tool === "propose_invoice") {
-    const result = await createInvoiceAction(organizationId, formData);
-    if (!result.success) {
-      return { success: false, error: toAiError(result.error) };
-    }
-    return { success: true, data: { kind: "invoice", id: result.data.id } };
-  }
-
-  const result = await createQuotationAction(organizationId, formData);
+  const result = await createInvoiceAction(organizationId, formData);
   if (!result.success) {
     return { success: false, error: toAiError(result.error) };
   }
-  return { success: true, data: { kind: "quotation", id: result.data.id } };
+  return { success: true, data: { kind: "invoice", id: result.data.id } };
 }

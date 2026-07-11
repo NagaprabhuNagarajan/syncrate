@@ -1,12 +1,22 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { TrendingUp, AlertCircle, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   createSalesOrderSchema,
   updateSalesOrderSchema,
@@ -26,11 +36,14 @@ import { cn } from "@/utils/cn";
 export interface CustomerOption {
   readonly id: string;
   readonly name: string;
+  readonly billingState: string | null;
+  readonly shippingState: string | null;
 }
 
 export interface BranchOption {
   readonly id: string;
   readonly name: string;
+  readonly state: string | null;
 }
 
 export interface ProductOption {
@@ -67,7 +80,8 @@ interface SalesOrderFormValues {
 }
 
 // ─────────────────────────────────────────────────────────────
-// GST calculation (inline)
+// GST calculation (inline) — DO NOT alter this math. It mirrors the
+// server-side gst-engine computation used for the live preview.
 // ─────────────────────────────────────────────────────────────
 
 function num(value: string): number {
@@ -109,7 +123,15 @@ function computeLineGST(
   const sgst = isIntra ? round2(taxAmount / 2) : 0;
   const igst = isIntra ? 0 : taxAmount;
 
-  return { net: gross, taxable, cgst, sgst, igst, lineTotal: round2(taxable + taxAmount), isIntra };
+  return {
+    net: gross,
+    taxable,
+    cgst,
+    sgst,
+    igst,
+    lineTotal: round2(taxable + taxAmount),
+    isIntra,
+  };
 }
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
@@ -138,7 +160,9 @@ function emptyItem(): LineItemValue {
 // ─────────────────────────────────────────────────────────────
 
 function FieldError({ message }: { readonly message?: string }) {
-  if (!message) {return null;}
+  if (!message) {
+    return null;
+  }
   return (
     <p
       className="text-error-600 dark:text-error-400 mt-1.5 flex items-center gap-1.5 text-xs"
@@ -179,21 +203,52 @@ function FormField({
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
+      {hint && !error && (
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+          {hint}
+        </p>
+      )}
       <FieldError message={error} />
     </div>
   );
 }
 
-function SectionTitle({ children }: { readonly children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  action,
+  children,
+  delay,
+}: {
+  readonly title: string;
+  readonly description?: string;
+  readonly action?: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly delay: number;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-      <span className="text-xs font-medium tracking-wide text-slate-400 dark:text-slate-500">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay }}
+    >
+      <Card className="p-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
+          {action}
+        </div>
         {children}
-      </span>
-      <div className="flex-1 border-t border-slate-100 dark:border-slate-800" />
-    </div>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -207,12 +262,12 @@ const inputClass = (hasError: boolean) =>
   );
 
 const cellClass = cn(
-  "block w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-2 text-sm text-slate-900 dark:text-slate-100 shadow-sm",
-  "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+  "block w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-slate-900 dark:text-slate-100 shadow-sm transition-[border-color,box-shadow]",
+  "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
 );
 
 // ─────────────────────────────────────────────────────────────
-// Sales order form
+// Sales order form (create + edit)
 // ─────────────────────────────────────────────────────────────
 
 interface SalesOrderFormProps {
@@ -243,6 +298,16 @@ export function SalesOrderForm({
       : zodResolver(createSalesOrderSchema)
   ) as unknown as Resolver<SalesOrderFormValues>;
 
+  // The GST source state is the fulfilling branch/warehouse's state, falling
+  // back to the organization's state when the branch has none (or none is
+  // selected). This is what decides CGST/SGST (intra-state) vs IGST.
+  const resolveSourceState = (branchId: string): string => {
+    const selectedBranch = branches.find((b) => b.id === branchId);
+    return selectedBranch?.state?.trim() ? selectedBranch.state : orgState ?? "";
+  };
+
+  const initialSourceState = resolveSourceState(salesOrder?.branchId ?? "");
+
   const {
     register,
     handleSubmit,
@@ -262,7 +327,7 @@ export function SalesOrderForm({
         ? salesOrder.deliveryDate.toISOString().slice(0, 10)
         : "",
       paymentTermsDays: String(salesOrder?.paymentTermsDays ?? 30),
-      supplyState: salesOrder?.supplyState ?? "",
+      supplyState: salesOrder?.supplyState ?? initialSourceState,
       notes: salesOrder?.notes ?? "",
       terms: salesOrder?.terms ?? "",
       version: salesOrder?.version,
@@ -287,9 +352,12 @@ export function SalesOrderForm({
 
   const watchedItems = watch("items");
   const watchedSupplyState = watch("supplyState");
+  const watchedBranchId = watch("branchId");
+
+  const sourceState = resolveSourceState(watchedBranchId ?? "");
 
   const lines = (watchedItems ?? []).map((item) =>
-    computeLineGST(item, orgState, watchedSupplyState ?? "")
+    computeLineGST(item, sourceState, watchedSupplyState ?? "")
   );
 
   const isIntra =
@@ -317,7 +385,9 @@ export function SalesOrderForm({
   );
 
   const itemsError =
-    typeof errors.items?.message === "string" ? errors.items.message : undefined;
+    typeof errors.items?.message === "string"
+      ? errors.items.message
+      : undefined;
 
   const handleProductChange = (index: number, productId: string): void => {
     setValue(`items.${index}.productId`, productId, { shouldValidate: true });
@@ -333,22 +403,53 @@ export function SalesOrderForm({
     }
   };
 
+  const customerField = register("customerId");
+
+  const handleCustomerChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ): void => {
+    // Preserve react-hook-form's own onChange for the registered field…
+    void customerField.onChange(event);
+    // …then auto-fill the place-of-supply from the chosen customer's state.
+    const picked = customers.find((c) => c.id === event.target.value);
+    setValue(
+      "supplyState",
+      picked?.shippingState ?? picked?.billingState ?? sourceState,
+      { shouldValidate: true, shouldDirty: true }
+    );
+  };
+
   const onSubmit = handleSubmit((values) => {
     setServerError(null);
 
     const fd = new FormData();
     fd.append("customerId", values.customerId);
-    if (values.branchId) {fd.append("branchId", values.branchId);}
-    if (values.orderDate) {fd.append("orderDate", values.orderDate);}
-    if (values.deliveryDate) {fd.append("deliveryDate", values.deliveryDate);}
-    if (values.paymentTermsDays)
-      {fd.append("paymentTermsDays", values.paymentTermsDays);}
-    if (values.supplyState.trim())
-      {fd.append("supplyState", values.supplyState.trim());}
-    if (values.notes.trim()) {fd.append("notes", values.notes.trim());}
-    if (values.terms.trim()) {fd.append("terms", values.terms.trim());}
-    if (isEdit && salesOrder)
-      {fd.append("version", String(salesOrder.version));}
+    if (values.branchId) {
+      fd.append("branchId", values.branchId);
+    }
+    if (values.orderDate) {
+      fd.append("orderDate", values.orderDate);
+    }
+    if (values.deliveryDate) {
+      fd.append("deliveryDate", values.deliveryDate);
+    }
+    if (values.paymentTermsDays) {
+      fd.append("paymentTermsDays", values.paymentTermsDays);
+    }
+    if (values.supplyState.trim()) {
+      fd.append("supplyState", values.supplyState.trim());
+    }
+    if (values.notes.trim()) {
+      fd.append("notes", values.notes.trim());
+    }
+    if (values.terms.trim()) {
+      fd.append("terms", values.terms.trim());
+    }
+    // In edit mode carry the loaded version so the update is optimistically
+    // locked — the server rejects the write if the order moved on since load.
+    if (isEdit && salesOrder) {
+      fd.append("version", String(salesOrder.version));
+    }
 
     const items = values.items.map((item) => ({
       productId: item.productId,
@@ -380,31 +481,28 @@ export function SalesOrderForm({
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-lg shadow-slate-200/50 dark:shadow-none sm:p-6"
-    >
+    <div>
       {/* Header */}
-      <div className="mb-5 flex items-start gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-5 flex items-start gap-3"
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
-          <TrendingUp
-            className="h-5 w-5 text-white"
-            aria-hidden="true"
-          />
+          <TrendingUp className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {isEdit ? "Edit sales order" : "New sales order"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update this draft sales order"
               : "Create a confirmed sales order for a customer"}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {serverError && (
         <motion.div
@@ -422,169 +520,181 @@ export function SalesOrderForm({
       )}
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
-        {/* Header fields */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            label="Customer"
-            htmlFor="customerId"
-            required
-            error={errors.customerId?.message}
-          >
-            <select
-              id="customerId"
-              className={inputClass(!!errors.customerId)}
-              {...register("customerId")}
-            >
-              <option value="">— Select customer —</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField
-            label="Branch"
-            htmlFor="branchId"
-            error={errors.branchId?.message}
-          >
-            <select
-              id="branchId"
-              className={inputClass(!!errors.branchId)}
-              {...register("branchId")}
-            >
-              <option value="">— None —</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField
-            label="Order date"
-            htmlFor="orderDate"
-            error={errors.orderDate?.message}
-          >
-            <input
-              id="orderDate"
-              type="date"
-              className={inputClass(!!errors.orderDate)}
-              {...register("orderDate")}
-            />
-          </FormField>
-          <FormField
-            label="Delivery date"
-            htmlFor="deliveryDate"
-            error={errors.deliveryDate?.message}
-          >
-            <input
-              id="deliveryDate"
-              type="date"
-              className={inputClass(!!errors.deliveryDate)}
-              {...register("deliveryDate")}
-            />
-          </FormField>
-          <FormField
-            label="Payment terms (days)"
-            htmlFor="paymentTermsDays"
-            error={errors.paymentTermsDays?.message}
-          >
-            <input
-              id="paymentTermsDays"
-              type="number"
-              min={0}
-              max={365}
-              className={inputClass(!!errors.paymentTermsDays)}
-              placeholder="30"
-              {...register("paymentTermsDays")}
-            />
-          </FormField>
-        </div>
-
-        <FormField
-          label="Supply state"
-          htmlFor="supplyState"
-          error={errors.supplyState?.message}
-          hint="Enter the state where goods/services are delivered (determines CGST+SGST vs IGST)"
+        {/* Order details */}
+        <Section
+          title="Order details"
+          description="Customer, branch and scheduling for this order."
+          delay={0.05}
         >
-          <input
-            id="supplyState"
-            type="text"
-            placeholder="e.g. Karnataka"
-            className={inputClass(!!errors.supplyState)}
-            {...register("supplyState")}
-          />
-        </FormField>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                label="Customer"
+                htmlFor="customerId"
+                required
+                error={errors.customerId?.message}
+              >
+                <select
+                  id="customerId"
+                  className={inputClass(!!errors.customerId)}
+                  name={customerField.name}
+                  ref={customerField.ref}
+                  onBlur={customerField.onBlur}
+                  onChange={handleCustomerChange}
+                >
+                  <option value="">— Select customer —</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField
+                label="Branch"
+                htmlFor="branchId"
+                error={errors.branchId?.message}
+              >
+                <select
+                  id="branchId"
+                  className={inputClass(!!errors.branchId)}
+                  {...register("branchId")}
+                >
+                  <option value="">— None —</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <FormField
+                label="Order date"
+                htmlFor="orderDate"
+                error={errors.orderDate?.message}
+              >
+                <input
+                  id="orderDate"
+                  type="date"
+                  className={inputClass(!!errors.orderDate)}
+                  {...register("orderDate")}
+                />
+              </FormField>
+              <FormField
+                label="Delivery date"
+                htmlFor="deliveryDate"
+                error={errors.deliveryDate?.message}
+              >
+                <input
+                  id="deliveryDate"
+                  type="date"
+                  className={inputClass(!!errors.deliveryDate)}
+                  {...register("deliveryDate")}
+                />
+              </FormField>
+              <FormField
+                label="Payment terms (days)"
+                htmlFor="paymentTermsDays"
+                error={errors.paymentTermsDays?.message}
+              >
+                <input
+                  id="paymentTermsDays"
+                  type="number"
+                  min={0}
+                  max={365}
+                  className={inputClass(!!errors.paymentTermsDays)}
+                  placeholder="30"
+                  {...register("paymentTermsDays")}
+                />
+              </FormField>
+            </div>
+
+            <FormField
+              label="Supply state"
+              htmlFor="supplyState"
+              error={errors.supplyState?.message}
+              hint="Auto-filled from the customer's state — edit if goods ship elsewhere. Determines CGST+SGST vs IGST."
+            >
+              <input
+                id="supplyState"
+                type="text"
+                placeholder="e.g. Karnataka"
+                className={inputClass(!!errors.supplyState)}
+                {...register("supplyState")}
+              />
+            </FormField>
+          </div>
+        </Section>
 
         {/* Line items */}
-        <SectionTitle>Line items</SectionTitle>
-        {itemsError && <FieldError message={itemsError} />}
+        <Section title="Line items" delay={0.1}>
+          {itemsError && <FieldError message={itemsError} />}
 
-        {watchedSupplyState?.trim() && (
-          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-xs text-slate-600 dark:text-slate-400">
-            {isIntra ? (
+          {!sourceState.trim() && (
+            <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+              <AlertCircle
+                className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                aria-hidden="true"
+              />
               <span>
-                Intra-state supply to <strong>{watchedSupplyState}</strong> —
-                CGST + SGST applied
+                Your organization&apos;s state isn&apos;t set, so GST is
+                defaulting to inter-state (IGST). Set it in{" "}
+                <Link
+                  href="/organization"
+                  className="font-medium underline underline-offset-2"
+                >
+                  Settings → Organization
+                </Link>
+                .
               </span>
-            ) : (
-              <span>Inter-state supply — IGST applied</span>
-            )}
-          </div>
-        )}
+            </div>
+          )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              <tr>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Product
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Qty
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Unit price
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  Disc %
-                </th>
-                <th scope="col" className="px-2 py-2 font-medium">
-                  GST %
-                </th>
+          {watchedSupplyState?.trim() && (
+            <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+              {isIntra ? (
+                <span>
+                  Intra-state supply to <strong>{watchedSupplyState}</strong>{" "}
+                  — CGST + SGST applied
+                </span>
+              ) : (
+                <span>Inter-state supply — IGST applied</span>
+              )}
+            </div>
+          )}
+
+          <Table wrapperClassName="border-slate-100 dark:border-slate-800">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Unit price</TableHead>
+                <TableHead>Disc %</TableHead>
+                <TableHead>GST %</TableHead>
                 {isIntra ? (
                   <>
-                    <th scope="col" className="px-2 py-2 font-medium">
-                      CGST
-                    </th>
-                    <th scope="col" className="px-2 py-2 font-medium">
-                      SGST
-                    </th>
+                    <TableHead>CGST</TableHead>
+                    <TableHead>SGST</TableHead>
                   </>
                 ) : (
-                  <th scope="col" className="px-2 py-2 font-medium">
-                    IGST
-                  </th>
+                  <TableHead>IGST</TableHead>
                 )}
-                <th scope="col" className="px-2 py-2 text-right font-medium">
-                  Line total
-                </th>
-                <th scope="col" className="px-2 py-2">
+                <TableHead className="text-right">Line total</TableHead>
+                <TableHead>
                   <span className="sr-only">Remove</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {fields.map((field, index) => {
                 const rowErrors = errors.items?.[index];
                 const lineGST = lines[index];
                 return (
-                  <tr key={field.id} className="align-top">
-                    <td className="px-2 py-2">
+                  <TableRow key={field.id} className="align-top">
+                    <TableCell>
                       <select
                         aria-label={`Product for line ${index + 1}`}
                         className={cellClass}
@@ -601,8 +711,8 @@ export function SalesOrderForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.productId?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Quantity for line ${index + 1}`}
                         type="number"
@@ -612,8 +722,8 @@ export function SalesOrderForm({
                         {...register(`items.${index}.quantity`)}
                       />
                       <FieldError message={rowErrors?.quantity?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Unit price for line ${index + 1}`}
                         type="number"
@@ -623,8 +733,8 @@ export function SalesOrderForm({
                         {...register(`items.${index}.unitPrice`)}
                       />
                       <FieldError message={rowErrors?.unitPrice?.message} />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <input
                         aria-label={`Discount percent for line ${index + 1}`}
                         type="number"
@@ -637,8 +747,8 @@ export function SalesOrderForm({
                       <FieldError
                         message={rowErrors?.discountPercent?.message}
                       />
-                    </td>
-                    <td className="px-2 py-2">
+                    </TableCell>
+                    <TableCell>
                       <select
                         aria-label={`GST rate for line ${index + 1}`}
                         className={cn(cellClass, "w-20")}
@@ -651,25 +761,25 @@ export function SalesOrderForm({
                         ))}
                       </select>
                       <FieldError message={rowErrors?.gstRate?.message} />
-                    </td>
+                    </TableCell>
                     {isIntra ? (
                       <>
-                        <td className="px-2 py-2 nums text-slate-500 dark:text-slate-400 text-xs">
+                        <TableCell className="nums text-xs text-slate-500 dark:text-slate-400">
                           {lineGST ? formatCurrency(lineGST.cgst) : "—"}
-                        </td>
-                        <td className="px-2 py-2 nums text-slate-500 dark:text-slate-400 text-xs">
+                        </TableCell>
+                        <TableCell className="nums text-xs text-slate-500 dark:text-slate-400">
                           {lineGST ? formatCurrency(lineGST.sgst) : "—"}
-                        </td>
+                        </TableCell>
                       </>
                     ) : (
-                      <td className="px-2 py-2 nums text-slate-500 dark:text-slate-400 text-xs">
+                      <TableCell className="nums text-xs text-slate-500 dark:text-slate-400">
                         {lineGST ? formatCurrency(lineGST.igst) : "—"}
-                      </td>
+                      </TableCell>
                     )}
-                    <td className="px-2 py-2 text-right nums font-medium text-slate-900 dark:text-slate-100">
+                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
                       {lineGST ? formatCurrency(lineGST.lineTotal) : "—"}
-                    </td>
-                    <td className="px-2 py-2 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Button
                         type="button"
                         variant="ghost"
@@ -677,114 +787,146 @@ export function SalesOrderForm({
                         aria-label={`Remove line ${index + 1}`}
                         disabled={fields.length <= 1}
                         onClick={() => remove(index)}
-                        className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700 dark:hover:text-error-300"
+                        className="text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-500/10 hover:text-error-700"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => append(emptyItem())}
-        >
-          <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Add item
-        </Button>
-
-        {/* Totals */}
-        <div className="flex justify-end">
-          <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Subtotal</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                {formatCurrency(subtotal)}
-              </dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-500 dark:text-slate-400">Discount</dt>
-              <dd className="nums text-slate-700 dark:text-slate-300">
-                −{formatCurrency(discountTotal)}
-              </dd>
-            </div>
-            {isIntra ? (
-              <>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500 dark:text-slate-400">CGST</dt>
-                  <dd className="nums text-slate-700 dark:text-slate-300">
-                    {formatCurrency(cgstTotal)}
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-500 dark:text-slate-400">SGST</dt>
-                  <dd className="nums text-slate-700 dark:text-slate-300">
-                    {formatCurrency(sgstTotal)}
-                  </dd>
-                </div>
-              </>
-            ) : (
-              <div className="flex justify-between">
-                <dt className="text-slate-500 dark:text-slate-400">IGST</dt>
-                <dd className="nums text-slate-700 dark:text-slate-300">
-                  {formatCurrency(igstTotal)}
-                </dd>
-              </div>
-            )}
-            <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 text-base font-semibold text-slate-900 dark:text-slate-100">
-              <dt>Grand total</dt>
-              <dd className="nums">{formatCurrency(grandTotal)}</dd>
-            </div>
-          </dl>
-        </div>
-
-        {/* Terms & notes */}
-        <SectionTitle>Terms &amp; notes</SectionTitle>
-        <FormField label="Terms" htmlFor="terms" error={errors.terms?.message}>
-          <textarea
-            id="terms"
-            rows={2}
-            className={inputClass(!!errors.terms)}
-            placeholder="Payment terms, delivery conditions…"
-            {...register("terms")}
-          />
-        </FormField>
-        <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
-          <textarea
-            id="notes"
-            rows={2}
-            className={inputClass(!!errors.notes)}
-            placeholder="Internal notes about this sales order"
-            {...register("notes")}
-          />
-        </FormField>
-
-        {/* Actions */}
-        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/sales-orders")}
-            disabled={isPending}
+            size="sm"
+            className="mt-3"
+            onClick={() => append(emptyItem())}
           >
-            Cancel
+            <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Add item
           </Button>
-          <Button
-            type="submit"
-            variant="gradient"
-            loading={isPending}
-            disabled={isPending}
-          >
-            {isEdit ? "Save changes" : "Create sales order"}
-          </Button>
+
+          {/* Totals */}
+          <div className="mt-4 flex justify-end">
+            <dl className="w-full max-w-xs space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex justify-between">
+                <dt className="text-slate-500 dark:text-slate-400">
+                  Subtotal
+                </dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(subtotal)}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-500 dark:text-slate-400">
+                  Discount
+                </dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  −{formatCurrency(discountTotal)}
+                </dd>
+              </div>
+              {isIntra ? (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-slate-500 dark:text-slate-400">
+                      CGST
+                    </dt>
+                    <dd className="nums text-slate-700 dark:text-slate-300">
+                      {formatCurrency(cgstTotal)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-slate-500 dark:text-slate-400">
+                      SGST
+                    </dt>
+                    <dd className="nums text-slate-700 dark:text-slate-300">
+                      {formatCurrency(sgstTotal)}
+                    </dd>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between">
+                  <dt className="text-slate-500 dark:text-slate-400">IGST</dt>
+                  <dd className="nums text-slate-700 dark:text-slate-300">
+                    {formatCurrency(igstTotal)}
+                  </dd>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
+                <dt>Grand total</dt>
+                <dd className="nums">{formatCurrency(grandTotal)}</dd>
+              </div>
+            </dl>
+          </div>
+        </Section>
+
+        {/* Terms & notes */}
+        <Section
+          title="Terms & notes"
+          description="Optional terms and internal notes for this order."
+          delay={0.15}
+        >
+          <div className="space-y-3">
+            <FormField
+              label="Terms"
+              htmlFor="terms"
+              error={errors.terms?.message}
+            >
+              <textarea
+                id="terms"
+                rows={2}
+                className={inputClass(!!errors.terms)}
+                placeholder="Payment terms, delivery conditions…"
+                {...register("terms")}
+              />
+            </FormField>
+            <FormField
+              label="Notes"
+              htmlFor="notes"
+              error={errors.notes?.message}
+            >
+              <textarea
+                id="notes"
+                rows={2}
+                className={inputClass(!!errors.notes)}
+                placeholder="Internal notes about this sales order"
+                {...register("notes")}
+              />
+            </FormField>
+          </div>
+        </Section>
+
+        {/* Sticky action bar */}
+        <div className="sticky bottom-4 z-10 flex flex-col-reverse gap-3 rounded-xl border border-slate-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Grand total
+            <span className="nums ml-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+              {formatCurrency(grandTotal)}
+            </span>
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/sales-orders")}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="gradient"
+              loading={isPending}
+              disabled={isPending}
+            >
+              {isEdit ? "Save changes" : "Create sales order"}
+            </Button>
+          </div>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

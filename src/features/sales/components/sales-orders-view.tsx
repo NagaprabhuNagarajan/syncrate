@@ -6,77 +6,115 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
+  Wallet,
+  FileEdit,
+  Clock,
+  PackageOpen,
   Plus,
   Search,
   ChevronLeft,
   ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/shared/page-header";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { AnimatedNumber } from "@/components/shared/animated-number";
+import {
+  SO_STATUS_LABEL,
+  SO_STATUS_VARIANT,
+} from "@/features/sales/utils/sales-order-display";
+import { formatCurrency, formatDate } from "@/utils/format";
 import type {
   SalesOrderListItem,
   SalesOrderListResult,
+  SalesOrderStats,
   SalesOrderStatus,
 } from "@/features/sales/types/sales-order.types";
+import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
-// Status presentation
+// Filters
 // ─────────────────────────────────────────────────────────────
 
-export const SO_STATUS_VARIANT: Record<
-  SalesOrderStatus,
-  BadgeProps["variant"]
-> = {
-  draft: "muted",
-  submitted: "info",
-  approved: "success",
-  processing: "info",
-  partially_delivered: "warning",
-  completed: "success",
-  cancelled: "destructive",
-};
-
-export const SO_STATUS_LABEL: Record<SalesOrderStatus, string> = {
-  draft: "Draft",
-  submitted: "Submitted",
-  approved: "Approved",
-  processing: "Processing",
-  partially_delivered: "Partially delivered",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
-
-const STATUS_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: "", label: "All statuses" },
+const STATUS_FILTERS: readonly { value: string; label: string }[] = [
+  { value: "", label: "All" },
   { value: "draft", label: "Draft" },
   { value: "submitted", label: "Submitted" },
   { value: "approved", label: "Approved" },
-  { value: "processing", label: "Processing" },
   { value: "partially_delivered", label: "Partially delivered" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
 
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
+// ─────────────────────────────────────────────────────────────
+// Stat tile
+// ─────────────────────────────────────────────────────────────
 
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
-}
-
-function formatDate(value: Date | null): string {
-  if (!value) {return "—";}
-  return new Date(value).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+  tint,
+  index,
+  currency,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly value: number;
+  readonly tint: string;
+  readonly index: number;
+  readonly currency?: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+    >
+      <Card className="relative overflow-hidden p-4">
+        <div
+          className={cn(
+            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
+            tint
+          )}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
+              tint
+            )}
+          >
+            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {label}
+            </p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {currency ? (
+                formatCurrency(value)
+              ) : (
+                <AnimatedNumber value={value} />
+              )}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -86,6 +124,7 @@ function formatDate(value: Date | null): string {
 interface SalesOrdersViewProps {
   readonly organizationId: string;
   readonly result: SalesOrderListResult;
+  readonly stats: SalesOrderStats;
   readonly filters: {
     readonly search?: string;
     readonly status?: SalesOrderStatus;
@@ -95,6 +134,7 @@ interface SalesOrdersViewProps {
 
 export function SalesOrdersView({
   result,
+  stats,
   filters,
   canManage,
 }: SalesOrdersViewProps) {
@@ -104,14 +144,20 @@ export function SalesOrdersView({
 
   const { items, total, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(total, page * pageSize);
+  const hasFilters = Boolean(filters.search || filters.status);
+  const org = searchParams.get("org");
 
-  const withOrg = (path: string): string => {
-    const org = searchParams.get("org");
-    return org ? `${path}?org=${org}` : path;
-  };
+  const withOrg = (path: string): string =>
+    org ? `${path}${path.includes("?") ? "&" : "?"}org=${org}` : path;
 
   const detailHref = (id: string): string => withOrg(`/sales-orders/${id}`);
   const newHref = (): string => withOrg("/sales-orders/new");
+
+  const subNavLinks: readonly { label: string; href: string }[] = [
+    { label: "Invoices", href: withOrg("/invoices") },
+  ];
 
   const pushWith = (patch: Record<string, string | undefined>): void => {
     const params = new URLSearchParams(searchParams.toString());
@@ -131,58 +177,111 @@ export function SalesOrdersView({
     pushWith({ search: searchInput.trim() || undefined, page: undefined });
   };
 
-  const handleStatusChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
+  const handleSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement>
   ): void => {
-    pushWith({ status: event.target.value || undefined, page: undefined });
-  };
-
-  const goToPage = (next: number): void => {
-    pushWith({ page: next <= 1 ? undefined : String(next) });
+    const value = event.target.value;
+    setSearchInput(value);
+    // Clearing the field (native ✕ or deleting the text) resets the list
+    // immediately, without waiting for a submit.
+    if (value === "" && filters.search) {
+      pushWith({ search: undefined, page: undefined });
+    }
   };
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Sales orders"
-        description="Manage confirmed customer orders"
-        icon={TrendingUp}
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <TrendingUp className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Sales orders
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {total}
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Manage confirmed customer orders
+            </p>
+          </div>
+        </div>
+
         {canManage && (
-          <Button asChild variant="gradient">
-            <Link href={newHref()}>
-              <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              New sales order
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="gradient">
+              <Link href={newHref()}>
+                <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                New sales order
+              </Link>
+            </Button>
+          </div>
         )}
-      </PageHeader>
+      </motion.div>
 
       {/* Sub-navigation */}
       <nav
         aria-label="Sales sections"
         className="mt-4 flex flex-wrap items-center gap-2"
       >
-        <Link
-          href={withOrg("/sales/quotations")}
-          className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 shadow-sm transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-primary-600 dark:hover:text-primary-400"
-        >
-          Quotations
-        </Link>
-        <Link
-          href={withOrg("/invoices")}
-          className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 shadow-sm transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:text-primary-600 dark:hover:text-primary-400"
-        >
-          Invoices
-        </Link>
+        {subNavLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:text-primary-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-primary-400"
+          >
+            {link.label}
+          </Link>
+        ))}
       </nav>
 
+      {/* Stat tiles */}
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          icon={Wallet}
+          label="Total value"
+          value={stats.totalValue}
+          tint="bg-gradient-brand"
+          index={0}
+          currency
+        />
+        <StatTile
+          icon={FileEdit}
+          label="Draft"
+          value={stats.draft}
+          tint="bg-gradient-violet"
+          index={1}
+        />
+        <StatTile
+          icon={Clock}
+          label="Awaiting approval"
+          value={stats.awaitingApproval}
+          tint="bg-gradient-info"
+          index={2}
+        />
+        <StatTile
+          icon={PackageOpen}
+          label="Open"
+          value={stats.open}
+          tint="bg-gradient-success"
+          index={3}
+        />
+      </div>
+
       {/* Filters */}
-      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
-          className="relative flex-1"
+          className="relative w-full lg:max-w-sm"
         >
           <Search
             className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -191,24 +290,44 @@ export function SalesOrdersView({
           <Input
             type="search"
             aria-label="Search sales orders"
-            placeholder="Search by SO number or customer"
+            placeholder="Search by SO number…"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-9"
           />
         </form>
-        <select
+
+        <div
+          className="flex flex-wrap items-center gap-1.5"
+          role="tablist"
           aria-label="Filter by status"
-          value={filters.status ?? ""}
-          onChange={handleStatusChange}
-          className="h-9 rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-[border-color,box-shadow] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
-          {STATUS_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          {STATUS_FILTERS.map((option) => {
+            const active = (filters.status ?? "") === option.value;
+            return (
+              <button
+                key={option.value || "all"}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() =>
+                  pushWith({
+                    status: option.value || undefined,
+                    page: undefined,
+                  })
+                }
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  active
+                    ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
+                )}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Table / empty state */}
@@ -216,20 +335,25 @@ export function SalesOrdersView({
         {items.length === 0 ? (
           <EmptyState
             icon={TrendingUp}
-            title="No sales orders found"
+            title={hasFilters ? "No matching sales orders" : "No sales orders yet"}
             description={
-              filters.search || filters.status
-                ? "No sales orders match your current filters. Try adjusting your search."
-                : "Create your first sales order to confirm customer purchases."
+              hasFilters
+                ? "No sales orders match your current filters. Try adjusting your search or clearing the filters."
+                : "Create your first sales order to confirm a customer purchase."
             }
             action={
-              canManage
+              hasFilters
                 ? {
-                    label: "New sales order",
-                    icon: Plus,
-                    onClick: () => router.push(newHref()),
+                    label: "Clear filters",
+                    onClick: () => router.push(withOrg("/sales-orders")),
                   }
-                : undefined
+                : canManage
+                  ? {
+                      label: "New sales order",
+                      icon: Plus,
+                      onClick: () => router.push(newHref()),
+                    }
+                  : undefined
             }
           />
         ) : (
@@ -237,73 +361,55 @@ export function SalesOrdersView({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      SO number
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Customer
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Status
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Order date
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Delivery date
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-3 py-2 text-right font-medium"
-                    >
-                      Amount
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {items.map((so: SalesOrderListItem) => (
-                    <tr
-                      key={so.id}
-                      onClick={() => router.push(detailHref(so.id))}
-                      className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    >
-                      <td className="px-3 py-2 font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
-                        <Link
-                          href={detailHref(so.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="hover:text-primary-600 dark:hover:text-primary-400 hover:underline"
-                        >
-                          {so.soNumber}
-                        </Link>
-                      </td>
-                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                        {so.customerName ?? "—"}
-                      </td>
-                      <td className="px-3 py-2">
-                        <Badge dot variant={SO_STATUS_VARIANT[so.status]}>
-                          {SO_STATUS_LABEL[so.status]}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {formatDate(so.orderDate)}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                        {formatDate(so.deliveryDate)}
-                      </td>
-                      <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
-                        {formatCurrency(so.totalAmount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table wrapperClassName="shadow-card">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>SO number</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Order date</TableHead>
+                  <TableHead>Delivery date</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((so: SalesOrderListItem) => (
+                  <TableRow
+                    key={so.id}
+                    onClick={() => router.push(detailHref(so.id))}
+                    className="cursor-pointer"
+                  >
+                    <TableCell>
+                      <Link
+                        href={detailHref(so.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-mono text-xs font-medium text-slate-700 hover:text-primary-600 hover:underline dark:text-slate-300 dark:hover:text-primary-400"
+                      >
+                        {so.soNumber}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-slate-700 dark:text-slate-300">
+                      {so.customerName ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge dot variant={SO_STATUS_VARIANT[so.status]}>
+                        {SO_STATUS_LABEL[so.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {formatDate(so.orderDate)}
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {so.deliveryDate ? formatDate(so.deliveryDate) : "—"}
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                      {formatCurrency(so.totalAmount, true)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </motion.div>
         )}
       </div>
@@ -312,8 +418,10 @@ export function SalesOrdersView({
       {items.length > 0 && (
         <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            {total} {total === 1 ? "sales order" : "sales orders"} · Page{" "}
-            {page} of {totalPages}
+            Showing{" "}
+            <span className="font-medium text-foreground">{rangeStart}</span>–
+            <span className="font-medium text-foreground">{rangeEnd}</span> of{" "}
+            <span className="font-medium text-foreground">{total}</span>
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -321,17 +429,22 @@ export function SalesOrdersView({
               variant="outline"
               size="sm"
               disabled={page <= 1}
-              onClick={() => goToPage(page - 1)}
+              onClick={() =>
+                pushWith({ page: page <= 2 ? undefined : String(page - 1) })
+              }
             >
               <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
               Previous
             </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
             <Button
               type="button"
               variant="outline"
               size="sm"
               disabled={page >= totalPages}
-              onClick={() => goToPage(page + 1)}
+              onClick={() => pushWith({ page: String(page + 1) })}
             >
               Next
               <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />

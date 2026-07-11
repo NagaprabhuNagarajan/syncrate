@@ -417,7 +417,7 @@ describe("inviteUserAction", () => {
       "user-1"
     );
     expect(result).toBe(success);
-    expect(revalidateMock).toHaveBeenCalledWith("/settings/team");
+    expect(revalidateMock).toHaveBeenCalledWith("/team");
     expect(logMock).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "invitation.create",
@@ -686,7 +686,7 @@ describe("createBranchAction", () => {
       "user-1"
     );
     expect(result).toBe(success);
-    expect(revalidateMock).toHaveBeenCalledWith("/settings/branches");
+    expect(revalidateMock).toHaveBeenCalledWith("/branches");
     expect(logMock).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "branch.create",
@@ -790,7 +790,7 @@ describe("updateBranchAction", () => {
       "user-1"
     );
     expect(result).toBe(success);
-    expect(revalidateMock).toHaveBeenCalledWith("/settings/branches");
+    expect(revalidateMock).toHaveBeenCalledWith("/branches");
     expect(logMock).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "branch.update",
@@ -861,7 +861,7 @@ describe("deleteBranchAction", () => {
 
     expect(mockService.deleteBranch).toHaveBeenCalledWith("branch-1", "user-1");
     expect(result).toBe(success);
-    expect(revalidateMock).toHaveBeenCalledWith("/settings/branches");
+    expect(revalidateMock).toHaveBeenCalledWith("/branches");
     expect(logMock).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "branch.delete",

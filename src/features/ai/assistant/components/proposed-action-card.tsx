@@ -16,7 +16,6 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
 
 const DOC_LABEL: Record<string, string> = {
   propose_invoice: "Draft invoice",
-  propose_quotation: "Draft quotation",
 };
 
 interface ProposedActionCardProps {
@@ -27,7 +26,7 @@ interface ProposedActionCardProps {
 }
 
 /**
- * Renders a proposed (NOT yet created) invoice/quotation as a review card with
+ * Renders a proposed (NOT yet created) invoice as a review card with
  * an explicit "Approve & Create" affordance — the human-in-the-loop gate that
  * satisfies the assistant's "user approval for AI actions" acceptance criterion.
  */
@@ -142,7 +141,7 @@ export function ProposedActionCard({
         {approved ? (
           <span className="text-success inline-flex items-center gap-1.5 text-sm font-medium">
             <Check className="h-4 w-4" aria-hidden="true" />
-            {approved.kind === "invoice" ? "Invoice" : "Quotation"} created
+            Invoice created
           </span>
         ) : (
           <Button

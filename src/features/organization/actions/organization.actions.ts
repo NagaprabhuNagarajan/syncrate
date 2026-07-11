@@ -219,7 +219,7 @@ export async function inviteUserAction(
   );
 
   if (result.success) {
-    revalidatePath("/settings/team");
+    revalidatePath("/team");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: authData.user.id,
@@ -284,7 +284,7 @@ export async function cancelInvitationAction(
   );
 
   if (result.success) {
-    revalidatePath("/settings/team");
+    revalidatePath("/team");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: authData.user.id,
@@ -422,7 +422,7 @@ export async function createBranchAction(
   );
 
   if (result.success) {
-    revalidatePath("/settings/branches");
+    revalidatePath("/branches");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: authData.user.id,
@@ -496,7 +496,7 @@ export async function updateBranchAction(
   );
 
   if (result.success) {
-    revalidatePath("/settings/branches");
+    revalidatePath("/branches");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: authData.user.id,
@@ -536,7 +536,7 @@ export async function deleteBranchAction(
   const result = await service.deleteBranch(branchId, authData.user.id);
 
   if (result.success) {
-    revalidatePath("/settings/branches");
+    revalidatePath("/branches");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: authData.user.id,

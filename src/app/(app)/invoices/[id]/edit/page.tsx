@@ -22,11 +22,16 @@ async function loadCustomers(
 ) {
   const { data } = await supabase
     .from("customers")
-    .select("id, name")
+    .select("id, name, billing_state, shipping_state")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
     .order("name");
-  return (data ?? []).map((r) => ({ id: r.id, name: r.name }));
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    billingState: r.billing_state ?? null,
+    shippingState: r.shipping_state ?? null,
+  }));
 }
 
 async function loadProducts(
@@ -53,11 +58,15 @@ async function loadBranches(
 ) {
   const { data } = await supabase
     .from("branches")
-    .select("id, name")
+    .select("id, name, state")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
     .order("name");
-  return (data ?? []).map((r) => ({ id: r.id, name: r.name }));
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    state: r.state ?? null,
+  }));
 }
 
 export default async function EditInvoicePage({
@@ -134,7 +143,7 @@ export default async function EditInvoicePage({
   const orgState = context.organization.state;
 
   return (
-    <div className="mx-auto max-w-5xl p-6 lg:p-8">
+    <div className="mx-auto max-w-6xl p-6 lg:p-8">
       <InvoiceForm
         organizationId={activeOrg.id}
         orgState={orgState}

@@ -26,6 +26,7 @@ import {
   Network,
   Store,
   Search,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { signOutAction } from "@/features/identity/actions/auth.actions";
@@ -77,8 +78,9 @@ const NAV_ITEMS: readonly NavItem[] = [
 ];
 
 const NAV_FOOTER: readonly NavItem[] = [
-  { label: "Team", href: "/settings/team", icon: Users },
-  { label: "Branches", href: "/settings/branches", icon: Building2 },
+  { label: "Organization", href: "/organization", icon: Landmark },
+  { label: "Team", href: "/team", icon: Users },
+  { label: "Branches", href: "/branches", icon: Building2 },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

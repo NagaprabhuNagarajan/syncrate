@@ -69,7 +69,6 @@ export const createInvoiceSchema = z.object({
     .string({ required_error: "Customer is required" })
     .min(1, "Customer is required"),
   salesOrderId: z.string().trim().optional().or(z.literal("")),
-  quotationId: z.string().trim().optional().or(z.literal("")),
   branchId: z.string().trim().optional().or(z.literal("")),
   invoiceDate: z.string().trim().optional().or(z.literal("")),
   dueDate: z.string().trim().optional().or(z.literal("")),

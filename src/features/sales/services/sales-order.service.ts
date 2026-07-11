@@ -1,7 +1,6 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type { Database } from "@/types/database.types";
 import { SalesOrderRepository } from "@/features/sales/repositories/sales-order.repository";
-import { QuotationRepository } from "@/features/sales/repositories/quotation.repository";
 import { computeGST } from "@/features/sales/utils/gst-engine";
 import { computeDiscount } from "@/features/sales/utils/discount-engine";
 import type {
@@ -11,8 +10,10 @@ import type {
   SalesOrderActionResult,
   SalesOrderError,
   SalesOrderErrorCode,
+  SalesOrderItem,
   SalesOrderListParams,
   SalesOrderListResult,
+  SalesOrderStats,
   SalesOrderWithItems,
   UpdateSalesOrderInput,
 } from "@/features/sales/types/sales-order.types";
@@ -182,11 +183,9 @@ function computeTotals(
 
 export class SalesOrderService {
   private readonly repo: SalesOrderRepository;
-  private readonly quotationRepo: QuotationRepository;
 
   constructor(supabase: AppSupabaseClient) {
     this.repo = new SalesOrderRepository(supabase);
-    this.quotationRepo = new QuotationRepository(supabase);
   }
 
   // ── Reads ──────────────────────────────────────────────────
@@ -208,6 +207,10 @@ export class SalesOrderService {
     return ok(so);
   }
 
+  async getSalesOrderStats(organizationId: string): Promise<SalesOrderStats> {
+    return this.repo.getStats(organizationId);
+  }
+
   // ── Create ─────────────────────────────────────────────────
 
   async createSalesOrder(
@@ -227,7 +230,6 @@ export class SalesOrderService {
       organization_id: organizationId,
       so_number: soNumber,
       customer_id: input.customerId,
-      quotation_id: nz(input.quotationId),
       branch_id: nz(input.branchId),
       salesperson_id: nz(input.salespersonId),
       reference_number: nz(input.referenceNumber),
@@ -298,7 +300,6 @@ export class SalesOrderService {
       salesOrderId,
       {
         customer_id: input.customerId,
-        quotation_id: nz(input.quotationId),
         branch_id: nz(input.branchId),
         salesperson_id: nz(input.salespersonId),
         reference_number: nz(input.referenceNumber),
@@ -402,73 +403,125 @@ export class SalesOrderService {
     );
   }
 
+  // ── Fulfilment (delivery) ──────────────────────────────────
+
   /**
-   * Creates a Sales Order from an existing Quotation's data, then marks
-   * the quotation as `converted` stamping the new SO id.
+   * Records delivered quantities against a sales order's line items and
+   * recomputes the header status from the resulting totals:
+   *   - every item fully delivered  → `completed`
+   *   - some quantity delivered     → `partially_delivered`
+   *   - nothing delivered           → status left unchanged
+   *
+   * Delivery is only permitted from `approved`, `processing` or
+   * `partially_delivered`. When a `version` is supplied the load is checked
+   * against it so a stale client is reported as a `conflict`.
    */
-  async convertFromQuotation(
-    quotationId: string,
+  async recordDelivery(
     organizationId: string,
+    salesOrderId: string,
     userId: string,
-    orgState?: string | null
+    lines: readonly { readonly itemId: string; readonly deliverQty: number }[],
+    version?: number
   ): Promise<SalesOrderActionResult<SalesOrderWithItems>> {
-    const quotation = await this.quotationRepo.findWithItems(quotationId);
-    if (!quotation || quotation.organizationId !== organizationId) {
-      return fail("not_found", "Quotation not found");
+    const existing = await this.repo.findWithItems(salesOrderId);
+    if (!existing || existing.organizationId !== organizationId) {
+      return fail("not_found", "Sales order not found");
     }
+
     if (
-      quotation.status !== "accepted" &&
-      quotation.status !== "sent" &&
-      quotation.status !== "viewed"
+      existing.status !== "approved" &&
+      existing.status !== "processing" &&
+      existing.status !== "partially_delivered"
     ) {
       return fail(
         "invalid_status",
-        "Only accepted, sent, or viewed quotations can be converted to a sales order"
+        "Only approved, processing or partially delivered sales orders can be delivered"
       );
     }
 
-    // Build the SO input from the quotation data
-    const soInput: CreateSalesOrderInput = {
-      customerId: quotation.customerId,
-      quotationId,
-      branchId: quotation.branchId ?? undefined,
-      salespersonId: quotation.salespersonId ?? undefined,
-      referenceNumber: quotation.quotationNumber, // carry QT number as reference
-      supplyState: quotation.supplyState ?? undefined,
-      notes: quotation.notes ?? undefined,
-      terms: quotation.terms ?? undefined,
-      items: quotation.items.map((item) => ({
-        productId: item.productId,
-        description: item.description ?? undefined,
-        hsnCode: item.hsnCode ?? undefined,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        discountPercent: item.discountPercent,
-        gstRate: item.gstRate,
-        sortOrder: item.sortOrder,
-      })),
-    };
-
-    const result = await this.createSalesOrder(
-      soInput,
-      organizationId,
-      userId,
-      orgState
-    );
-
-    if (!result.success) {
-      return result;
+    if (version !== undefined && existing.version !== version) {
+      return fail(
+        "conflict",
+        "This sales order was changed by someone else. Reload and try again."
+      );
     }
 
-    // Mark the quotation as converted
-    await this.quotationRepo.updateStatus(
-      quotationId,
-      "converted",
-      userId,
-      result.data.id
-    );
+    const itemsById = new Map(existing.items.map((item) => [item.id, item]));
+    const nextQtyById = new Map<string, number>();
 
-    return result;
+    for (const line of lines) {
+      const item = itemsById.get(line.itemId);
+      if (!item) {
+        return fail("validation", "Delivery line refers to an unknown item");
+      }
+      if (line.deliverQty < 0) {
+        return fail("validation", "Delivered quantity cannot be negative");
+      }
+      const resulting = round2(item.deliveredQty + line.deliverQty);
+      if (resulting > item.quantity) {
+        const label = item.description ?? item.productId;
+        return fail(
+          "validation",
+          `Cannot deliver more than the ordered quantity for ${label}`
+        );
+      }
+      if (line.deliverQty > 0) {
+        nextQtyById.set(line.itemId, resulting);
+      }
+    }
+
+    const updates = [...nextQtyById.entries()].map(([itemId, deliveredQty]) => ({
+      itemId,
+      deliveredQty,
+    }));
+
+    if (updates.length > 0) {
+      const applied = await this.repo.recordItemDeliveries(
+        organizationId,
+        salesOrderId,
+        updates
+      );
+      if (!applied) {
+        return fail(
+          "unknown",
+          "Failed to record delivery. Please try again."
+        );
+      }
+    }
+
+    // Recompute status from the resulting per-item delivered totals.
+    const resolvedQty = (item: SalesOrderItem): number =>
+      nextQtyById.get(item.id) ?? item.deliveredQty;
+
+    const everyFullyDelivered = existing.items.every(
+      (item) => resolvedQty(item) >= item.quantity
+    );
+    const anyDelivered = existing.items.some((item) => resolvedQty(item) > 0);
+
+    let nextStatus: SalesOrder["status"] = existing.status;
+    if (everyFullyDelivered) {
+      nextStatus = "completed";
+    } else if (anyDelivered) {
+      nextStatus = "partially_delivered";
+    }
+
+    if (nextStatus !== existing.status) {
+      const updated = await this.repo.updateStatus(
+        salesOrderId,
+        nextStatus,
+        userId,
+        false
+      );
+      if (!updated) {
+        return fail(
+          "unknown",
+          "Failed to update sales order. Please try again."
+        );
+      }
+    }
+
+    const full = await this.repo.findWithItems(salesOrderId);
+    return ok(full ?? existing);
   }
 
   // ── Helpers ────────────────────────────────────────────────

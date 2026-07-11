@@ -62,6 +62,7 @@ export default async function NewSalesOrderPage({
       <div className="mx-auto w-full max-w-5xl">
         <SalesOrderForm
           organizationId={activeOrg.id}
+          orgState={context.organization.state ?? ""}
           customers={options.customers}
           branches={options.branches}
           products={options.products}

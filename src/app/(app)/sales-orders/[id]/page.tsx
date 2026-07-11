@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { SalesOrderService } from "@/features/sales/services/sales-order.service";
+import { InvoiceService } from "@/features/sales/services/invoice.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { SalesOrderDetail } from "@/features/sales/components/sales-order-detail";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
@@ -35,6 +36,19 @@ async function lookupName(
     .eq("id", id)
     .single();
   return data?.name ?? null;
+}
+
+async function lookupUserName(
+  supabase: AppSupabaseClient,
+  id: string | null
+): Promise<string | null> {
+  if (!id) {return null;}
+  const { data } = await supabase
+    .from("users")
+    .select("full_name,email")
+    .eq("id", id)
+    .single();
+  return data?.full_name ?? data?.email ?? null;
 }
 
 async function lookupProductNames(
@@ -113,13 +127,21 @@ export default async function SalesOrderDetailPage({
 
   const so = result.data;
 
-  const [customerName, branchName, productNames] = await Promise.all([
+  const [
+    customerName,
+    branchName,
+    productNames,
+    approvedByName,
+    linkedInvoices,
+  ] = await Promise.all([
     lookupName(supabase, "customers", so.customerId),
     lookupName(supabase, "branches", so.branchId),
     lookupProductNames(
       supabase,
       so.items.map((item) => item.productId)
     ),
+    lookupUserName(supabase, so.approvedBy),
+    new InvoiceService(supabase).listInvoicesForSalesOrder(so.id),
   ]);
 
   return (
@@ -128,6 +150,8 @@ export default async function SalesOrderDetailPage({
       customerName={customerName}
       branchName={branchName}
       productNames={productNames}
+      linkedInvoices={linkedInvoices}
+      approvedByName={approvedByName}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("sales.create")}
       canApprove={context.permissions.includes("sales.approve")}

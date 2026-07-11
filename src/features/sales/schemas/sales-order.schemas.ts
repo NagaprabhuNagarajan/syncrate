@@ -1,6 +1,11 @@
 import { z } from "zod";
-import { SALES_GST_RATES } from "./quotation.schemas";
-export { SALES_GST_RATES } from "./quotation.schemas";
+
+// ─────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────
+
+/** Valid India GST slabs. */
+export const SALES_GST_RATES = [0, 5, 12, 18, 28] as const;
 
 // ─────────────────────────────────────────────────────────────
 // Line item
@@ -59,7 +64,6 @@ export const createSalesOrderSchema = z.object({
   customerId: z
     .string({ required_error: "Customer is required" })
     .min(1, "Customer is required"),
-  quotationId: z.string().trim().optional().or(z.literal("")),
   branchId: z.string().trim().optional().or(z.literal("")),
   salespersonId: z.string().trim().optional().or(z.literal("")),
   referenceNumber: z
@@ -111,3 +115,30 @@ export const updateSalesOrderSchema = createSalesOrderSchema.extend({
 });
 
 export type UpdateSalesOrderFormValues = z.infer<typeof updateSalesOrderSchema>;
+
+// ─────────────────────────────────────────────────────────────
+// Record delivery (fulfilment)
+// ─────────────────────────────────────────────────────────────
+
+export const recordDeliveryLineSchema = z.object({
+  itemId: z
+    .string({ required_error: "Item is required" })
+    .min(1, "Item is required"),
+  deliverQty: z.coerce
+    .number({ invalid_type_error: "Delivered quantity must be a number" })
+    .min(0, "Delivered quantity cannot be negative")
+    .max(9_999_999, "Delivered quantity is too large"),
+});
+
+export const recordDeliverySchema = z.object({
+  version: z.coerce
+    .number({ invalid_type_error: "Version must be a number" })
+    .int("Version must be an integer")
+    .min(1, "Version is required")
+    .optional(),
+  lines: z
+    .array(recordDeliveryLineSchema)
+    .min(1, "Add at least one delivery line"),
+});
+
+export type RecordDeliveryFormValues = z.infer<typeof recordDeliverySchema>;
