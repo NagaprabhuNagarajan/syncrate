@@ -1,20 +1,38 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Download, RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ShoppingCart,
+  Download,
+  Wallet,
+  CheckCircle2,
+  Clock,
+  FileText,
+  RefreshCw,
+  ChevronLeft,
+} from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { StatTile } from '@/components/shared/stat-tile';
+import { ErrorBanner } from '@/components/shared/error-banner';
 import { createClient } from '@/lib/supabase/client';
 import { getPurchaseReport } from '../services/purchase-report.service';
 import { ReportDateFilter } from './report-date-filter';
 import { objectsToCsv } from '@/utils/csv';
+import { formatCurrency } from '@/utils/format';
 import type { PurchaseReport, DateRangeFilter } from '../types/report.types';
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n);
-}
 
 function downloadCsv(filename: string, csv: string) {
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -35,7 +53,7 @@ const SKELETON_KEYS = ['sk-1', 'sk-2', 'sk-3', 'sk-4'] as const;
 
 function TableSkeleton() {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 p-5">
       {SKELETON_KEYS.map((key) => (
         <Skeleton key={key} className="h-10 w-full" />
       ))}
@@ -43,10 +61,17 @@ function TableSkeleton() {
   );
 }
 
-const fadeIn = { hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } };
+export function PurchaseReportView({
+  initialData,
+  orgId,
+}: PurchaseReportViewProps) {
+  const searchParams = useSearchParams();
+  const org = searchParams.get('org');
+  const reportsHref = org ? `/reports?org=${org}` : '/reports';
 
-export function PurchaseReportView({ initialData, orgId }: PurchaseReportViewProps) {
-  const [dateRange, setDateRange] = useState<DateRangeFilter>(initialData.dateRange);
+  const [dateRange, setDateRange] = useState<DateRangeFilter>(
+    initialData.dateRange
+  );
   const [data, setData] = useState<PurchaseReport>(initialData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,153 +108,263 @@ export function PurchaseReportView({ initialData, orgId }: PurchaseReportViewPro
 
   function handleExportBySupplier() {
     const csv = objectsToCsv(
-      ['supplierCode', 'supplierName', 'invoiceCount', 'totalAmount', 'amountPaid', 'outstanding'],
+      [
+        'supplierCode',
+        'supplierName',
+        'invoiceCount',
+        'totalAmount',
+        'amountPaid',
+        'outstanding',
+      ],
       data.bySupplier as unknown as Record<string, unknown>[]
     );
     downloadCsv('purchase-by-supplier.csv', csv);
   }
 
+  const billCount = data.summary.reduce((sum, row) => sum + row.invoiceCount, 0);
+
   return (
-    <motion.div
-      className="space-y-4 p-4 lg:p-6"
-      variants={fadeIn}
-      initial="hidden"
-      animate="visible"
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Purchase Report</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Purchase totals and supplier breakdown</p>
+    <div className="p-4 lg:p-6">
+      {/* Back to reports */}
+      <Link
+        href={reportsHref}
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+      >
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        Reports
+      </Link>
+
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-violet shadow-glow-primary">
+            <ShoppingCart className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Purchase Report
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Purchase totals and supplier breakdown
+            </p>
+          </div>
         </div>
+
         <ReportDateFilter value={dateRange} onChange={handleDateChange} />
+      </motion.div>
+
+      {error !== null && <ErrorBanner message={error} className="mt-5" />}
+
+      {/* Stat tiles */}
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          icon={Wallet}
+          label="Total purchased"
+          value={data.totals.totalAmount}
+          tint="bg-gradient-brand"
+          index={0}
+          currency
+        />
+        <StatTile
+          icon={CheckCircle2}
+          label="Amount paid"
+          value={data.totals.amountPaid}
+          tint="bg-gradient-success"
+          index={1}
+          currency
+        />
+        <StatTile
+          icon={Clock}
+          label="Outstanding"
+          value={data.totals.outstanding}
+          tint="bg-gradient-warning"
+          index={2}
+          currency
+        />
+        <StatTile
+          icon={FileText}
+          label="Bills"
+          value={billCount}
+          tint="bg-gradient-info"
+          index={3}
+        />
       </div>
 
-      {error !== null && (
-        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
-          {error}
-        </div>
-      )}
+      {/* Monthly summary */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: 0.1 }}
+        className="mt-5"
+      >
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Monthly summary
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportSummary}
+              disabled={isLoading || data.summary.length === 0}
+              aria-label="Export summary CSV"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+              Export
+            </Button>
+          </div>
 
-      {/* Summary Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base">Monthly Summary</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportSummary}
-            disabled={isLoading || data.summary.length === 0}
-            aria-label="Export summary CSV"
-          >
-            <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-            Export
-          </Button>
-        </CardHeader>
-        <CardContent>
           {isLoading ? (
             <TableSkeleton />
           ) : data.summary.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">
+            <p className="px-5 pb-8 pt-2 text-center text-sm text-slate-500 dark:text-slate-400">
               No purchase data found for the selected period.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm" aria-label="Monthly purchase summary">
-                <thead>
-                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:border-slate-800 dark:text-slate-400">
-                    <th className="pb-2 pr-4">Month</th>
-                    <th className="pb-2 pr-4 text-right">Invoices</th>
-                    <th className="pb-2 pr-4 text-right">Total</th>
-                    <th className="pb-2 pr-4 text-right">Paid</th>
-                    <th className="pb-2 text-right">Outstanding</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y dark:divide-slate-800">
-                  {data.summary.map((row) => (
-                    <tr key={row.period} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
-                      <td className="py-2.5 pr-4 font-medium">{row.period}</td>
-                      <td className="nums py-2.5 pr-4 text-right">{row.invoiceCount}</td>
-                      <td className="nums py-2.5 pr-4 text-right font-medium">{fmt(row.totalAmount)}</td>
-                      <td className="nums py-2.5 pr-4 text-right text-green-700 dark:text-green-400">{fmt(row.amountPaid)}</td>
-                      <td className="nums py-2.5 text-right text-orange-700 dark:text-orange-400">{fmt(row.outstanding)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="border-t-2 dark:border-slate-700">
-                  <tr className="font-semibold">
-                    <td className="pt-2.5 pr-4">Total</td>
-                    <td className="pt-2.5 pr-4" />
-                    <td className="nums pt-2.5 pr-4 text-right">{fmt(data.totals.totalAmount)}</td>
-                    <td className="nums pt-2.5 pr-4 text-right text-green-700 dark:text-green-400">{fmt(data.totals.amountPaid)}</td>
-                    <td className="nums pt-2.5 text-right text-orange-700 dark:text-orange-400">{fmt(data.totals.outstanding)}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+            <Table
+              aria-label="Monthly purchase summary"
+              className="[&_td]:px-5 [&_th]:px-5"
+              wrapperClassName="rounded-none border-0 border-t border-slate-100 bg-transparent dark:border-slate-800"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Month</TableHead>
+                  <TableHead className="text-right">Invoices</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Paid</TableHead>
+                  <TableHead className="text-right">Outstanding</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.summary.map((row) => (
+                  <TableRow key={row.period}>
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">
+                      {row.period}
+                    </TableCell>
+                    <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                      {row.invoiceCount}
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                      {formatCurrency(row.totalAmount, true)}
+                    </TableCell>
+                    <TableCell className="nums text-right text-success-600 dark:text-success-400">
+                      {formatCurrency(row.amountPaid, true)}
+                    </TableCell>
+                    <TableCell className="nums text-right text-warning-600 dark:text-warning-400">
+                      {formatCurrency(row.outstanding, true)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="border-t-2 border-slate-200 font-semibold hover:bg-transparent dark:border-slate-700 dark:hover:bg-transparent">
+                  <TableCell className="text-slate-900 dark:text-slate-100">
+                    Total
+                  </TableCell>
+                  <TableCell />
+                  <TableCell className="nums text-right text-slate-900 dark:text-slate-100">
+                    {formatCurrency(data.totals.totalAmount, true)}
+                  </TableCell>
+                  <TableCell className="nums text-right text-success-600 dark:text-success-400">
+                    {formatCurrency(data.totals.amountPaid, true)}
+                  </TableCell>
+                  <TableCell className="nums text-right text-warning-600 dark:text-warning-400">
+                    {formatCurrency(data.totals.outstanding, true)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           )}
-        </CardContent>
-      </Card>
+        </Card>
+      </motion.div>
 
-      {/* By Supplier Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base">By Supplier</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportBySupplier}
-            disabled={isLoading || data.bySupplier.length === 0}
-            aria-label="Export by-supplier CSV"
-          >
-            <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-            Export
-          </Button>
-        </CardHeader>
-        <CardContent>
+      {/* By supplier */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: 0.15 }}
+        className="mt-4"
+      >
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              By supplier
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportBySupplier}
+              disabled={isLoading || data.bySupplier.length === 0}
+              aria-label="Export by-supplier CSV"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+              Export
+            </Button>
+          </div>
+
           {isLoading ? (
             <TableSkeleton />
           ) : data.bySupplier.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">No supplier data found.</p>
+            <p className="px-5 pb-8 pt-2 text-center text-sm text-slate-500 dark:text-slate-400">
+              No supplier data found.
+            </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm" aria-label="Purchases by supplier">
-                <thead>
-                  <tr className="border-b text-left text-xs font-medium uppercase text-gray-500 dark:border-slate-800 dark:text-slate-400">
-                    <th className="pb-2 pr-4">Code</th>
-                    <th className="pb-2 pr-4">Supplier</th>
-                    <th className="pb-2 pr-4 text-right">Invoices</th>
-                    <th className="pb-2 pr-4 text-right">Total</th>
-                    <th className="pb-2 pr-4 text-right">Paid</th>
-                    <th className="pb-2 text-right">Outstanding</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y dark:divide-slate-800">
-                  {data.bySupplier.map((row) => (
-                    <tr key={row.supplierId} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-800/50">
-                      <td className="nums py-2.5 pr-4 font-mono text-xs text-gray-500 dark:text-slate-400">
-                        {row.supplierCode}
-                      </td>
-                      <td className="py-2.5 pr-4 font-medium">{row.supplierName}</td>
-                      <td className="nums py-2.5 pr-4 text-right">{row.invoiceCount}</td>
-                      <td className="nums py-2.5 pr-4 text-right font-medium">{fmt(row.totalAmount)}</td>
-                      <td className="nums py-2.5 pr-4 text-right text-green-700 dark:text-green-400">{fmt(row.amountPaid)}</td>
-                      <td className="nums py-2.5 text-right text-orange-700 dark:text-orange-400">{fmt(row.outstanding)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              aria-label="Purchases by supplier"
+              className="[&_td]:px-5 [&_th]:px-5"
+              wrapperClassName="rounded-none border-0 border-t border-slate-100 bg-transparent dark:border-slate-800"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead className="text-right">Invoices</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Paid</TableHead>
+                  <TableHead className="text-right">Outstanding</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.bySupplier.map((row) => (
+                  <TableRow key={row.supplierId}>
+                    <TableCell className="nums font-mono text-xs text-slate-500 dark:text-slate-400">
+                      {row.supplierCode}
+                    </TableCell>
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">
+                      {row.supplierName}
+                    </TableCell>
+                    <TableCell className="nums text-right text-slate-700 dark:text-slate-300">
+                      {row.invoiceCount}
+                    </TableCell>
+                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                      {formatCurrency(row.totalAmount, true)}
+                    </TableCell>
+                    <TableCell className="nums text-right text-success-600 dark:text-success-400">
+                      {formatCurrency(row.amountPaid, true)}
+                    </TableCell>
+                    <TableCell className="nums text-right text-warning-600 dark:text-warning-400">
+                      {formatCurrency(row.outstanding, true)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </CardContent>
-      </Card>
+        </Card>
+      </motion.div>
 
       {isLoading && (
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-slate-400" aria-live="polite">
+        <div
+          className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400"
+          aria-live="polite"
+        >
           <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
           Loading report…
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
