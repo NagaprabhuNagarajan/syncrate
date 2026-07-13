@@ -225,7 +225,7 @@ describe("PurchaseOrderDetail", () => {
     renderDetail(makeOrder("ordered"), { canManage: true });
     expect(
       screen.getByRole("link", { name: /create bill/i })
-    ).toHaveAttribute("href", "/purchases/bills/new?fromPurchaseOrder=po-1");
+    ).toHaveAttribute("href", "/bills/new?fromPurchaseOrder=po-1");
     expect(
       screen.getByRole("link", { name: /create return/i })
     ).toHaveAttribute(
@@ -267,7 +267,7 @@ describe("PurchaseOrderDetail", () => {
 
     expect(screen.getByRole("link", { name: "BILL-001" })).toHaveAttribute(
       "href",
-      "/purchases/bills/bill-1"
+      "/bills/bill-1"
     );
     expect(screen.getByRole("link", { name: "PRET-001" })).toHaveAttribute(
       "href",

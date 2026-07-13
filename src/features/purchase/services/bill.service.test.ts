@@ -109,7 +109,7 @@ describe("BillService.createBill", () => {
     expect(header.discount_amount).toBe(0);
     expect(header.tax_amount).toBe(192.5);
     expect(header.total_amount).toBe(1442.5);
-    expect(header.invoice_number).toBe("PINV-00003"); // count 2 + 1
+    expect(header.invoice_number).toBe("BILL-00003"); // count 2 + 1
     expect(header.status).toBe("draft");
 
     const items = mockRepo.insertItems.mock.calls[0][0] as Array<

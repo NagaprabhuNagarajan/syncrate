@@ -96,7 +96,7 @@ export function PurchaseOrdersView({
 
   const subNavLinks: readonly { label: string; href: string }[] = [
     { label: "Goods receipts", href: withOrg("/purchases/goods-receipts") },
-    { label: "Bills", href: withOrg("/purchases/bills") },
+    { label: "Bills", href: withOrg("/bills") },
     { label: "Returns", href: withOrg("/purchases/returns") },
   ];
 
@@ -306,7 +306,7 @@ export function PurchaseOrdersView({
             <Table wrapperClassName="shadow-card">
               <TableHeader>
                 <TableRow>
-                  <TableHead>PO number</TableHead>
+                  <TableHead>PO #</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Order date</TableHead>

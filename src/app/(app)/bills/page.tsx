@@ -100,6 +100,7 @@ export default async function BillsPage({
   }
 
   const canManage = context.permissions.includes("purchase.create");
+  const canMakePayment = context.permissions.includes("payment.make");
 
   const search = params.search?.trim() || undefined;
   const status = parseStatus(params.status);
@@ -119,6 +120,7 @@ export default async function BillsPage({
       stats={stats}
       filters={{ search, status, paymentStatus }}
       canManage={canManage}
+      canMakePayment={canMakePayment}
     />
   );
 }

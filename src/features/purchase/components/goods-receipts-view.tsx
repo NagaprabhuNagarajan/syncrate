@@ -74,7 +74,7 @@ export function GoodsReceiptsView({
 
   const subNavLinks: readonly { label: string; href: string }[] = [
     { label: "Purchase orders", href: withOrg("/purchases") },
-    { label: "Bills", href: withOrg("/purchases/bills") },
+    { label: "Bills", href: withOrg("/bills") },
     { label: "Returns", href: withOrg("/purchases/returns") },
   ];
 
@@ -236,7 +236,7 @@ export function GoodsReceiptsView({
             <Table wrapperClassName="shadow-card">
               <TableHeader>
                 <TableRow>
-                  <TableHead>GRN number</TableHead>
+                  <TableHead>GRN #</TableHead>
                   <TableHead>Purchase order</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Received date</TableHead>

@@ -139,16 +139,22 @@ export default async function BillDetailPage({
   const invoice = result.data;
 
   const paymentService = new SupplierPaymentService(supabase);
-  const [supplierName, productNames, purchaseOrderNumber, availableCredit] =
-    await Promise.all([
-      lookupSupplierName(supabase, invoice.supplierId),
-      lookupProductNames(
-        supabase,
-        invoice.items.map((item) => item.productId)
-      ),
-      lookupPurchaseOrderNumber(supabase, invoice.purchaseOrderId),
-      paymentService.getAvailableCredit(activeOrg.id, invoice.supplierId),
-    ]);
+  const [
+    supplierName,
+    productNames,
+    purchaseOrderNumber,
+    availableCredit,
+    payments,
+  ] = await Promise.all([
+    lookupSupplierName(supabase, invoice.supplierId),
+    lookupProductNames(
+      supabase,
+      invoice.items.map((item) => item.productId)
+    ),
+    lookupPurchaseOrderNumber(supabase, invoice.purchaseOrderId),
+    paymentService.getAvailableCredit(activeOrg.id, invoice.supplierId),
+    paymentService.listPaymentsForBill(activeOrg.id, invoice.id),
+  ]);
 
   return (
     <BillDetail
@@ -157,6 +163,7 @@ export default async function BillDetailPage({
       productNames={productNames}
       purchaseOrderNumber={purchaseOrderNumber}
       availableCredit={availableCredit}
+      payments={payments}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("purchase.create")}
       canCancel={context.permissions.includes("purchase.cancel")}

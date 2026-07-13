@@ -132,11 +132,20 @@ function SectionCard({
 interface PaymentDetailProps {
   readonly payment: PaymentWithAllocations;
   readonly invoiceNumbers?: Readonly<Record<string, string>>;
+  /** Party noun for the sidebar/header — "Customer" (default) or "Supplier". */
+  readonly partyLabel?: string;
+  /** Allocated-entity noun — "Invoice" (default) or "Bill". */
+  readonly entityLabel?: string;
+  /** Route base for an allocated entity link — "/invoices" (default) or "/bills". */
+  readonly entityHrefBase?: string;
 }
 
 export function PaymentDetail({
   payment,
   invoiceNumbers = {},
+  partyLabel = "Customer",
+  entityLabel = "Invoice",
+  entityHrefBase = "/invoices",
 }: PaymentDetailProps) {
   const searchParams = useSearchParams();
   const org = searchParams.get("org");
@@ -222,17 +231,17 @@ export function PaymentDetail({
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Main column */}
         <div className="space-y-4 lg:col-span-2">
-          <SectionCard title="Invoice allocations" delay={0.1}>
+          <SectionCard title={`${entityLabel} allocations`} delay={0.1}>
             {payment.allocations.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                This payment has not been allocated to any invoices.
+                {`This payment has not been allocated to any ${entityLabel.toLowerCase()}s.`}
               </p>
             ) : (
               <>
                 <Table wrapperClassName="shadow-none">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice</TableHead>
+                      <TableHead>{entityLabel}</TableHead>
                       <TableHead className="text-right">
                         Allocated amount
                       </TableHead>
@@ -243,7 +252,9 @@ export function PaymentDetail({
                       <TableRow key={allocation.id}>
                         <TableCell>
                           <Link
-                            href={withOrg(`/invoices/${allocation.invoiceId}`)}
+                            href={withOrg(
+                              `${entityHrefBase}/${allocation.invoiceId}`
+                            )}
                             className="font-mono text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
                           >
                             {invoiceNumbers[allocation.invoiceId] ??
@@ -289,7 +300,7 @@ export function PaymentDetail({
         <div className="space-y-4">
           <SectionCard title="Details" delay={0.1}>
             <dl className="space-y-4">
-              <InfoRow icon={User} label="Customer" value={partyName} />
+              <InfoRow icon={User} label={partyLabel} value={partyName} />
               <InfoRow
                 icon={Wallet}
                 label="Payment method"

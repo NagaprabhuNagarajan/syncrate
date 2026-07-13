@@ -97,7 +97,7 @@ export function PurchaseRequestsView({
   const subNavLinks: readonly { label: string; href: string }[] = [
     { label: "Purchase orders", href: withOrg("/purchases") },
     { label: "Goods receipts", href: withOrg("/purchases/goods-receipts") },
-    { label: "Bills", href: withOrg("/purchases/bills") },
+    { label: "Bills", href: withOrg("/bills") },
     { label: "Returns", href: withOrg("/purchases/returns") },
   ];
 

@@ -157,7 +157,7 @@ describe("DashboardView", () => {
     ).toHaveAttribute("href", "/invoices/new");
     expect(
       screen.getByRole("link", { name: /new purchase invoice/i })
-    ).toHaveAttribute("href", "/purchases/bills/new");
+    ).toHaveAttribute("href", "/bills/new");
     expect(
       screen.getByRole("link", { name: /record payment/i })
     ).toHaveAttribute("href", "/payments/new");

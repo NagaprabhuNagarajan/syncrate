@@ -1,7 +1,10 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type { Database } from "@/types/database.types";
 import type {
+  InvoicePaymentSummary,
+  PaymentMethod,
   PaymentStats,
+  PaymentStatus,
   SupplierPayment,
   SupplierPaymentAllocation,
   SupplierPaymentListParams,
@@ -269,5 +272,45 @@ export class SupplierPaymentRepository {
       totalAmount,
       thisMonth,
     };
+  }
+
+  /** Payments allocated to a specific bill, newest first (bill detail panel). */
+  async listPaymentsForBill(
+    organizationId: string,
+    billId: string
+  ): Promise<InvoicePaymentSummary[]> {
+    const { data, error } = await this.supabase
+      .from("supplier_payment_allocations")
+      .select(
+        "allocated_amount, supplier_payments!inner(id, payment_number, payment_date, payment_method, status)"
+      )
+      .eq("organization_id", organizationId)
+      .eq("purchase_invoice_id", billId);
+
+    if (error || !data) {
+      return [];
+    }
+
+    const rows = data as unknown as {
+      allocated_amount: number;
+      supplier_payments: {
+        id: string;
+        payment_number: string;
+        payment_date: string;
+        payment_method: PaymentMethod;
+        status: PaymentStatus;
+      };
+    }[];
+
+    return rows
+      .map((row) => ({
+        id: row.supplier_payments.id,
+        paymentNumber: row.supplier_payments.payment_number,
+        paymentDate: row.supplier_payments.payment_date,
+        paymentMethod: row.supplier_payments.payment_method,
+        allocatedAmount: Number(row.allocated_amount),
+        status: row.supplier_payments.status,
+      }))
+      .sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
   }
 }

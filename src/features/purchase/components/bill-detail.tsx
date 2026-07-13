@@ -14,10 +14,11 @@ import {
   ChevronLeft,
   Receipt,
   Wallet,
-  Percent,
+  Clock,
   ShoppingCart,
   CreditCard,
   Banknote,
+  Pencil,
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,21 @@ import {
 } from "@/features/purchase/utils/bill-display";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type { BillWithItems } from "@/features/purchase/types/bill.types";
+import type {
+  InvoicePaymentSummary,
+  PaymentMethod,
+} from "@/features/payment/types/payment.types";
+
+const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
+  cash: "Cash",
+  upi: "UPI",
+  bank_transfer: "Bank Transfer",
+  cheque: "Cheque",
+  credit_card: "Credit Card",
+  debit_card: "Debit Card",
+  wallet: "Wallet",
+  other: "Other",
+};
 
 // ─────────────────────────────────────────────────────────────
 // Cancel confirmation dialog
@@ -345,6 +361,8 @@ interface BillDetailProps {
   readonly purchaseOrderNumber?: string | null;
   /** The supplier's unallocated advance credit — enables "Apply credit" when > 0. */
   readonly availableCredit?: number;
+  /** Payments allocated to this bill (for the "Payments" panel). */
+  readonly payments?: readonly InvoicePaymentSummary[];
   readonly organizationId: string;
   readonly canManage: boolean;
   readonly canCancel: boolean;
@@ -357,6 +375,7 @@ export function BillDetail({
   productNames,
   purchaseOrderNumber,
   availableCredit = 0,
+  payments = [],
   organizationId,
   canManage,
   canCancel,
@@ -438,7 +457,7 @@ export function BillDetail({
     <div className="p-4 lg:p-6">
       {/* Back link */}
       <Link
-        href={withOrg("/purchases/bills")}
+        href={withOrg("/bills")}
         className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -466,6 +485,14 @@ export function BillDetail({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {isDraft && canManage && (
+              <Button asChild type="button" variant="outline" size="sm">
+                <Link href={withOrg(`/bills/${bill.id}/edit`)}>
+                  <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Edit
+                </Link>
+              </Button>
+            )}
             {isDraft && canManage && (
               <Button
                 type="button"
@@ -533,24 +560,24 @@ export function BillDetail({
         />
         <KpiTile
           icon={Wallet}
-          label="Subtotal"
-          value={bill.subtotal}
-          tint="bg-gradient-violet"
+          label="Amount paid"
+          value={bill.amountPaid}
+          tint="bg-gradient-success"
           index={1}
         />
         <KpiTile
-          icon={Percent}
-          label="Tax"
-          value={bill.taxAmount}
-          tint="bg-gradient-info"
+          icon={Clock}
+          label="Balance due"
+          value={balanceDue}
+          tint="bg-gradient-violet"
           index={2}
         />
         <KpiTile
           icon={Calendar}
-          label="Bill date"
+          label="Due date"
           value={0}
-          displayValue={formatDate(bill.invoiceDate)}
-          tint="bg-gradient-success"
+          displayValue={bill.dueDate ? formatDate(bill.dueDate) : "—"}
+          tint="bg-gradient-info"
           index={3}
         />
       </div>
@@ -617,6 +644,50 @@ export function BillDetail({
               </p>
             </SectionCard>
           )}
+
+          <SectionCard title={`Payments (${payments.length})`} delay={0.2}>
+            {payments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No payments have been recorded against this bill yet.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Payment #</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>
+                        <Link
+                          href={`${withOrg(`/payments/${payment.id}`)}${
+                            org ? "&" : "?"
+                          }type=supplier`}
+                          className="text-primary-600 hover:underline dark:text-primary-400"
+                        >
+                          {payment.paymentNumber}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-slate-700 dark:text-slate-300">
+                        {formatDate(new Date(payment.paymentDate))}
+                      </TableCell>
+                      <TableCell className="text-slate-700 dark:text-slate-300">
+                        {PAYMENT_METHOD_LABEL[payment.paymentMethod]}
+                      </TableCell>
+                      <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                        {formatCurrency(payment.allocatedAmount, true)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </SectionCard>
         </div>
 
         {/* Sidebar */}

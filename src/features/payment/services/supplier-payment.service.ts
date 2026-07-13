@@ -5,10 +5,12 @@ import type {
   PaymentError,
   PaymentErrorCode,
   PaymentStats,
+  InvoicePaymentSummary,
   RecordSupplierPaymentInput,
   SupplierPayment,
   SupplierPaymentListParams,
   SupplierPaymentListResult,
+  SupplierPaymentWithAllocations,
 } from "@/features/payment/types/payment.types";
 
 // ─────────────────────────────────────────────────────────────
@@ -87,6 +89,26 @@ export class SupplierPaymentService {
       return fail("not_found", "Payment not found");
     }
     return ok(payment);
+  }
+
+  /** The supplier payment together with its bill allocations (detail view). */
+  async getSupplierPaymentWithAllocations(
+    id: string
+  ): Promise<PaymentActionResult<SupplierPaymentWithAllocations>> {
+    const payment = await this.repo.findById(id);
+    if (!payment) {
+      return fail("not_found", "Payment not found");
+    }
+    const allocations = await this.repo.findAllocations(id);
+    return ok({ ...payment, allocations });
+  }
+
+  /** Lists the supplier payments allocated to a specific bill. */
+  async listPaymentsForBill(
+    organizationId: string,
+    billId: string
+  ): Promise<InvoicePaymentSummary[]> {
+    return this.repo.listPaymentsForBill(organizationId, billId);
   }
 
   /** The supplier's unallocated advance credit (see repository). */

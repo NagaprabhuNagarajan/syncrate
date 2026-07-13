@@ -18,6 +18,7 @@ const { mockRepo } = vi.hoisted(() => ({
     findAllocations: vi.fn(),
     countByOrg: vi.fn(),
     getAvailableCredit: vi.fn(),
+    listPaymentsForBill: vi.fn(),
   },
 }));
 
@@ -111,6 +112,73 @@ describe("SupplierPaymentService.getSupplierPayment", () => {
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
     }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// getSupplierPaymentWithAllocations
+// ─────────────────────────────────────────────────────────────
+
+describe("SupplierPaymentService.getSupplierPaymentWithAllocations", () => {
+  it("returns the payment with its bill allocations", async () => {
+    mockRepo.findById.mockResolvedValue(buildPayment());
+    mockRepo.findAllocations.mockResolvedValue([
+      {
+        id: "alloc-1",
+        organizationId: "org-1",
+        supplierPaymentId: "spay-1",
+        purchaseInvoiceId: "bill-1",
+        allocatedAmount: 5000,
+        createdAt: "2026-06-27T00:00:00Z",
+        createdBy: "user-1",
+      },
+    ]);
+
+    const result = await service.getSupplierPaymentWithAllocations("spay-1");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.allocations).toHaveLength(1);
+      expect(result.data.allocations[0]?.purchaseInvoiceId).toBe("bill-1");
+    }
+    expect(mockRepo.findAllocations).toHaveBeenCalledWith("spay-1");
+  });
+
+  it("returns not_found when the payment does not exist", async () => {
+    mockRepo.findById.mockResolvedValue(null);
+
+    const result = await service.getSupplierPaymentWithAllocations("missing");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+    expect(mockRepo.findAllocations).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// listPaymentsForBill
+// ─────────────────────────────────────────────────────────────
+
+describe("SupplierPaymentService.listPaymentsForBill", () => {
+  it("delegates to the repository", async () => {
+    const summaries = [
+      {
+        id: "spay-1",
+        paymentNumber: "PAY-2026-000009",
+        paymentDate: "2026-06-20",
+        paymentMethod: "bank_transfer" as const,
+        allocatedAmount: 750,
+        status: "completed" as const,
+      },
+    ];
+    mockRepo.listPaymentsForBill.mockResolvedValue(summaries);
+
+    const result = await service.listPaymentsForBill("org-1", "bill-1");
+    expect(result).toBe(summaries);
+    expect(mockRepo.listPaymentsForBill).toHaveBeenCalledWith(
+      "org-1",
+      "bill-1"
+    );
   });
 });
 

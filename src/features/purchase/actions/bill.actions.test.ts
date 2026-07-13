@@ -197,7 +197,7 @@ describe("createBillAction", () => {
       "org-1",
       "user-1"
     );
-    expect(revalidateMock).toHaveBeenCalledWith("/purchases/bills");
+    expect(revalidateMock).toHaveBeenCalledWith("/bills");
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "bill.create",
@@ -264,8 +264,8 @@ describe("updateBillAction", () => {
       "user-1",
       5
     );
-    expect(revalidateMock).toHaveBeenCalledWith("/purchases/bills");
-    expect(revalidateMock).toHaveBeenCalledWith("/purchases/bills/pinv-1");
+    expect(revalidateMock).toHaveBeenCalledWith("/bills");
+    expect(revalidateMock).toHaveBeenCalledWith("/bills/pinv-1");
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: "bill.update" })
     );
@@ -350,7 +350,7 @@ describe("status transition actions", () => {
     );
     mockService.cancelBill.mockResolvedValue(invoiceResult);
     await cancelBillAction("org-1", "pinv-1");
-    expect(revalidateMock).toHaveBeenCalledWith("/purchases/bills/pinv-1");
+    expect(revalidateMock).toHaveBeenCalledWith("/bills/pinv-1");
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: "bill.cancel" })
     );

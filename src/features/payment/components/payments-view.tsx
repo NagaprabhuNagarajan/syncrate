@@ -165,16 +165,22 @@ interface PaymentRow {
   readonly status: PaymentStatus;
 }
 
-function detailHref(id: string): string {
-  return `/payments/${id}`;
+function detailHref(id: string, kind: "customer" | "supplier"): string {
+  // Supplier payments live in a separate table, so the detail page needs the
+  // kind to load the right record — without it, supplier ids 404.
+  return kind === "supplier"
+    ? `/payments/${id}?type=supplier`
+    : `/payments/${id}`;
 }
 
 function PaymentsTable({
   rows,
   partyLabel,
+  kind,
 }: {
   readonly rows: readonly PaymentRow[];
   readonly partyLabel: string;
+  readonly kind: "customer" | "supplier";
 }) {
   const router = useRouter();
 
@@ -202,12 +208,12 @@ function PaymentsTable({
           {rows.map((row) => (
             <TableRow
               key={row.id}
-              onClick={() => router.push(detailHref(row.id))}
+              onClick={() => router.push(detailHref(row.id, kind))}
               className="group cursor-pointer"
             >
               <TableCell>
                 <Link
-                  href={detailHref(row.id)}
+                  href={detailHref(row.id, kind)}
                   onClick={(e) => e.stopPropagation()}
                   className="font-mono text-xs font-medium text-slate-700 hover:text-primary-600 hover:underline dark:text-slate-300 dark:hover:text-primary-400"
                 >
@@ -247,7 +253,7 @@ function PaymentsTable({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <Link href={detailHref(row.id)}>
+                      <Link href={detailHref(row.id, kind)}>
                         <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                         View
                       </Link>
@@ -256,7 +262,7 @@ function PaymentsTable({
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                          <Link href={detailHref(row.id)}>
+                          <Link href={detailHref(row.id, kind)}>
                             <Ban className="h-4 w-4" aria-hidden="true" />
                             Void
                           </Link>
@@ -488,7 +494,7 @@ function CustomerPaymentsTab({
         />
       ) : (
         <>
-          <PaymentsTable rows={rows} partyLabel="Customer" />
+          <PaymentsTable rows={rows} partyLabel="Customer" kind="customer" />
           <Pagination
             page={result.page}
             pageSize={result.pageSize}
@@ -658,7 +664,7 @@ function SupplierPaymentsTab({
         />
       ) : (
         <>
-          <PaymentsTable rows={rows} partyLabel="Supplier" />
+          <PaymentsTable rows={rows} partyLabel="Supplier" kind="supplier" />
           <Pagination
             page={result.page}
             pageSize={result.pageSize}

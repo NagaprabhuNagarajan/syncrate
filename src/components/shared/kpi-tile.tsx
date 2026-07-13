@@ -61,7 +61,7 @@ export function KpiTile({
             </p>
             <p
               className={cn(
-                "mt-1.5 truncate font-bold leading-tight text-slate-900 dark:text-slate-100",
+                "truncate font-bold leading-tight text-slate-900 dark:text-slate-100",
                 emphasis ? "text-2xl" : "text-xl"
               )}
             >

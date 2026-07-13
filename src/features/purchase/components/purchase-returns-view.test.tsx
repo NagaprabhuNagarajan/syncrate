@@ -164,7 +164,7 @@ describe("PurchaseReturnsView", () => {
     ).toHaveAttribute("href", "/purchases/goods-receipts");
     expect(screen.getByRole("link", { name: /bills/i })).toHaveAttribute(
       "href",
-      "/purchases/bills"
+      "/bills"
     );
   });
 

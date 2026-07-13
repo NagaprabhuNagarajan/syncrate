@@ -678,102 +678,6 @@ export function InvoiceDetail({
             </Card>
           </motion.div>
 
-          <SectionCard title="Summary" delay={0.15}>
-            <dl className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Subtotal</dt>
-                <dd className="nums text-slate-700 dark:text-slate-300">
-                  {formatCurrency(invoice.subtotal, true)}
-                </dd>
-              </div>
-              {invoice.discountAmount > 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Discount</dt>
-                  <dd className="nums text-slate-700 dark:text-slate-300">
-                    −{formatCurrency(invoice.discountAmount, true)}
-                  </dd>
-                </div>
-              )}
-              {invoice.isInterstate ? (
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">IGST</dt>
-                  <dd className="nums text-slate-700 dark:text-slate-300">
-                    {formatCurrency(invoice.igstAmount, true)}
-                  </dd>
-                </div>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">CGST</dt>
-                    <dd className="nums text-slate-700 dark:text-slate-300">
-                      {formatCurrency(invoice.cgstAmount, true)}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">SGST</dt>
-                    <dd className="nums text-slate-700 dark:text-slate-300">
-                      {formatCurrency(invoice.sgstAmount, true)}
-                    </dd>
-                  </div>
-                </>
-              )}
-              {invoice.roundOff !== 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Round off</dt>
-                  <dd className="nums text-slate-700 dark:text-slate-300">
-                    {invoice.roundOff > 0 ? "+" : ""}
-                    {formatCurrency(invoice.roundOff, true)}
-                  </dd>
-                </div>
-              )}
-              <div className="flex justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
-                <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  Total
-                </dt>
-                <dd className="nums text-xl font-semibold text-slate-900 dark:text-slate-100">
-                  {formatCurrency(invoice.totalAmount, true)}
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Amount paid</dt>
-                <dd className="nums text-slate-700 dark:text-slate-300">
-                  {formatCurrency(invoice.amountPaid, true)}
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Balance due</dt>
-                <dd className="nums font-medium text-slate-900 dark:text-slate-100">
-                  {formatCurrency(balanceDue, true)}
-                </dd>
-              </div>
-            </dl>
-          </SectionCard>
-
-          {(invoice.notes || invoice.terms) && (
-            <SectionCard title="Notes & terms" delay={0.2}>
-              <div className="space-y-4">
-                {invoice.notes && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Notes</dt>
-                    <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
-                      {invoice.notes}
-                    </dd>
-                  </div>
-                )}
-                {invoice.terms && (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">
-                      Terms &amp; conditions
-                    </dt>
-                    <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
-                      {invoice.terms}
-                    </dd>
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-          )}
-
           <SectionCard
             title={`Payments received (${payments.length})`}
             delay={0.25}
@@ -818,6 +722,31 @@ export function InvoiceDetail({
               </Table>
             )}
           </SectionCard>
+
+          {(invoice.notes || invoice.terms) && (
+            <SectionCard title="Notes & terms" delay={0.2}>
+              <div className="space-y-4">
+                {invoice.notes && (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Notes</dt>
+                    <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
+                      {invoice.notes}
+                    </dd>
+                  </div>
+                )}
+                {invoice.terms && (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Terms &amp; conditions
+                    </dt>
+                    <dd className="mt-1 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
+                      {invoice.terms}
+                    </dd>
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -887,6 +816,77 @@ export function InvoiceDetail({
                   </div>
                 </div>
               )}
+            </dl>
+          </SectionCard>
+
+          <SectionCard title="Summary" delay={0.15}>
+            <dl className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Subtotal</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(invoice.subtotal, true)}
+                </dd>
+              </div>
+              {invoice.discountAmount > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Discount</dt>
+                  <dd className="nums text-slate-700 dark:text-slate-300">
+                    −{formatCurrency(invoice.discountAmount, true)}
+                  </dd>
+                </div>
+              )}
+              {invoice.isInterstate ? (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">IGST</dt>
+                  <dd className="nums text-slate-700 dark:text-slate-300">
+                    {formatCurrency(invoice.igstAmount, true)}
+                  </dd>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">CGST</dt>
+                    <dd className="nums text-slate-700 dark:text-slate-300">
+                      {formatCurrency(invoice.cgstAmount, true)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">SGST</dt>
+                    <dd className="nums text-slate-700 dark:text-slate-300">
+                      {formatCurrency(invoice.sgstAmount, true)}
+                    </dd>
+                  </div>
+                </>
+              )}
+              {invoice.roundOff !== 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Round off</dt>
+                  <dd className="nums text-slate-700 dark:text-slate-300">
+                    {invoice.roundOff > 0 ? "+" : ""}
+                    {formatCurrency(invoice.roundOff, true)}
+                  </dd>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+                <dt className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Total
+                </dt>
+                <dd className="nums text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  {formatCurrency(invoice.totalAmount, true)}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Amount paid</dt>
+                <dd className="nums text-slate-700 dark:text-slate-300">
+                  {formatCurrency(invoice.amountPaid, true)}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Balance due</dt>
+                <dd className="nums font-medium text-slate-900 dark:text-slate-100">
+                  {formatCurrency(balanceDue, true)}
+                </dd>
+              </div>
             </dl>
           </SectionCard>
         </div>

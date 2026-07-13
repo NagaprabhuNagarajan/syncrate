@@ -94,7 +94,7 @@ export function PurchaseReturnsView({
   const subNavLinks: readonly { label: string; href: string }[] = [
     { label: "Purchase orders", href: withOrg("/purchases") },
     { label: "Goods receipts", href: withOrg("/purchases/goods-receipts") },
-    { label: "Bills", href: withOrg("/purchases/bills") },
+    { label: "Bills", href: withOrg("/bills") },
   ];
 
   const pushWith = (patch: Record<string, string | undefined>): void => {
@@ -303,7 +303,7 @@ export function PurchaseReturnsView({
             <Table wrapperClassName="shadow-card">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Return number</TableHead>
+                  <TableHead>Return #</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Return date</TableHead>

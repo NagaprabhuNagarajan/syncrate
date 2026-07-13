@@ -453,7 +453,7 @@ export function BillForm({
       }
 
       const id = result.success ? result.data.id : bill?.id;
-      router.push(id ? `/purchases/bills/${id}` : "/purchases/bills");
+      router.push(id ? `/bills/${id}` : "/bills");
     });
   });
 
@@ -754,7 +754,7 @@ export function BillForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/purchases/bills")}
+              onClick={() => router.push("/bills")}
               disabled={isPending}
             >
               Cancel
