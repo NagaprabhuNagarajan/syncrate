@@ -418,19 +418,22 @@ describe("BillRepository", () => {
   });
 
   describe("getStats", () => {
-    it("aggregates status counts, sums total_amount and counts overdue invoices", async () => {
+    it("sums total billed / outstanding / paid and the overdue balance", async () => {
       const { client } = createMockClient([
         { data: null, error: null, count: 3 }, // draft
         { data: null, error: null, count: 5 }, // posted
         {
-          data: [{ total_amount: 100 }, { total_amount: 250.5 }],
+          data: [
+            { total_amount: 100, amount_paid: 40 },
+            { total_amount: 250.5, amount_paid: 0 },
+          ],
           error: null,
         }, // value rows (non-cancelled)
         {
           data: [
-            { total_amount: 500, amount_paid: 0 }, // overdue (unpaid)
-            { total_amount: 300, amount_paid: 150 }, // overdue (partial)
-            { total_amount: 200, amount_paid: 200 }, // fully paid, not overdue
+            { total_amount: 500, amount_paid: 0 }, // overdue balance 500
+            { total_amount: 300, amount_paid: 150 }, // overdue balance 150
+            { total_amount: 200, amount_paid: 200 }, // fully paid, no balance
           ],
           error: null,
         }, // overdue rows
@@ -439,14 +442,16 @@ describe("BillRepository", () => {
         "org-1"
       );
       expect(stats).toEqual({
-        totalValue: 350.5,
+        totalBilled: 350.5,
+        outstanding: 310.5,
+        overdue: 650,
+        paid: 40,
         draft: 3,
         posted: 5,
-        overdue: 2,
       });
     });
 
-    it("defaults counts, totalValue and overdue to 0 when data is missing", async () => {
+    it("defaults all aggregates to 0 when data is missing", async () => {
       const { client } = createMockClient([
         { data: null, error: null, count: null },
         { data: null, error: null, count: undefined },
@@ -457,10 +462,12 @@ describe("BillRepository", () => {
         "org-1"
       );
       expect(stats).toEqual({
-        totalValue: 0,
+        totalBilled: 0,
+        outstanding: 0,
+        overdue: 0,
+        paid: 0,
         draft: 0,
         posted: 0,
-        overdue: 0,
       });
     });
   });

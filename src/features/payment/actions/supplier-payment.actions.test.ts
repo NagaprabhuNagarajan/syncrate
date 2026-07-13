@@ -290,7 +290,7 @@ describe("applySupplierCreditAction", () => {
       500,
       "user-1"
     );
-    expect(revalidateMock).toHaveBeenCalledWith("/purchases/bills/bill-1");
+    expect(revalidateMock).toHaveBeenCalledWith("/bills/bill-1");
     expect(revalidateMock).toHaveBeenCalledWith("/suppliers");
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -534,7 +534,7 @@ export function InvoicesView({
                   <TableHead>Due date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Payment</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Total / Due</TableHead>
                   <TableHead className="text-right">
                     <span className="sr-only">Actions</span>
                   </TableHead>
@@ -603,8 +603,19 @@ export function InvoicesView({
                           {PAYMENT_STATUS_LABEL[invoice.paymentStatus]}
                         </Badge>
                       </TableCell>
-                      <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
-                        {formatCurrency(invoice.totalAmount, true)}
+                      <TableCell className="text-right">
+                        <div className="nums font-medium text-slate-900 dark:text-slate-100">
+                          {formatCurrency(invoice.totalAmount, true)}
+                        </div>
+                        {invoice.totalAmount - invoice.amountPaid > 0 && (
+                          <div className="nums text-[11px] text-amber-600 dark:text-amber-400">
+                            Due{" "}
+                            {formatCurrency(
+                              invoice.totalAmount - invoice.amountPaid,
+                              true
+                            )}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell
                         className="text-right"

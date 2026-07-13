@@ -98,6 +98,10 @@ export interface PaymentWithAllocations extends CustomerPayment {
   readonly allocations: readonly CustomerPaymentAllocation[];
 }
 
+export interface SupplierPaymentWithAllocations extends SupplierPayment {
+  readonly allocations: readonly SupplierPaymentAllocation[];
+}
+
 // ─────────────────────────────────────────────────────────────
 // Inputs / commands
 // ─────────────────────────────────────────────────────────────

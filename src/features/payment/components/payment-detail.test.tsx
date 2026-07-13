@@ -119,4 +119,37 @@ describe("PaymentDetail", () => {
     render(<PaymentDetail payment={makePayment()} />);
     expect(screen.queryByText("Void reason")).not.toBeInTheDocument();
   });
+
+  it("relabels for a supplier payment and links allocations to bills", () => {
+    render(
+      <PaymentDetail
+        payment={makePayment()}
+        partyLabel="Supplier"
+        entityLabel="Bill"
+        entityHrefBase="/bills"
+      />
+    );
+    // Sidebar party noun + allocations section noun.
+    expect(screen.getByText("Supplier")).toBeInTheDocument();
+    expect(screen.getByText("Bill allocations")).toBeInTheDocument();
+    // Allocation link routes to the bill, not the invoice.
+    expect(screen.getByRole("link", { name: "inv-1" })).toHaveAttribute(
+      "href",
+      "/bills/inv-1"
+    );
+  });
+
+  it("uses the bill noun in the empty allocations message for suppliers", () => {
+    render(
+      <PaymentDetail
+        payment={makePayment({ allocations: [] })}
+        partyLabel="Supplier"
+        entityLabel="Bill"
+        entityHrefBase="/bills"
+      />
+    );
+    expect(
+      screen.getByText(/not been allocated to any bills/i)
+    ).toBeInTheDocument();
+  });
 });

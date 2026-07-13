@@ -135,7 +135,7 @@ export async function createBillAction(
   );
 
   if (result.success) {
-    revalidatePath("/purchases/bills");
+    revalidatePath("/bills");
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
@@ -184,8 +184,8 @@ export async function updateBillAction(
   );
 
   if (result.success) {
-    revalidatePath("/purchases/bills");
-    revalidatePath(`/purchases/bills/${billId}`);
+    revalidatePath("/bills");
+    revalidatePath(`/bills/${billId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,
@@ -222,8 +222,8 @@ async function runTransition(
   const result = await run(service, auth.userId);
 
   if (result.success) {
-    revalidatePath("/purchases/bills");
-    revalidatePath(`/purchases/bills/${billId}`);
+    revalidatePath("/bills");
+    revalidatePath(`/bills/${billId}`);
     await new AuditService(supabase).log({
       organizationId,
       actorUserId: auth.userId,

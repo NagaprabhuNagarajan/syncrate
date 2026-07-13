@@ -285,15 +285,21 @@ export class BillRepository {
 
     const { data: valueRows } = await this.supabase
       .from("purchase_invoices")
-      .select("total_amount")
+      .select("total_amount, amount_paid")
       .eq("organization_id", organizationId)
       .is("deleted_at", null)
       .neq("status", "cancelled");
 
-    const totalValue = (valueRows ?? []).reduce(
-      (sum, row) => sum + Number(row.total_amount),
-      0
-    );
+    let totalBilled = 0;
+    let outstanding = 0;
+    let paid = 0;
+    for (const row of valueRows ?? []) {
+      const totalAmount = Number(row.total_amount);
+      const amountPaid = Number(row.amount_paid);
+      totalBilled += totalAmount;
+      outstanding += totalAmount - amountPaid;
+      paid += amountPaid;
+    }
 
     const today = new Date().toISOString().slice(0, 10);
     const { data: overdueRows } = await this.supabase
@@ -304,15 +310,18 @@ export class BillRepository {
       .eq("status", "posted")
       .lt("due_date", today);
 
-    const overdue = (overdueRows ?? []).filter(
-      (row) => Number(row.amount_paid) < Number(row.total_amount)
-    ).length;
+    const overdue = (overdueRows ?? []).reduce((sum, row) => {
+      const balance = Number(row.total_amount) - Number(row.amount_paid);
+      return balance > 0 ? sum + balance : sum;
+    }, 0);
 
     return {
-      totalValue,
+      totalBilled,
+      outstanding,
+      overdue,
+      paid,
       draft: draft.count ?? 0,
       posted: posted.count ?? 0,
-      overdue,
     };
   }
 

@@ -62,7 +62,15 @@ function makeResult(
 function makeStats(
   overrides: Partial<BillStats> = {}
 ): BillStats {
-  return { totalValue: 1180, draft: 1, posted: 0, overdue: 0, ...overrides };
+  return {
+    totalBilled: 1180,
+    outstanding: 1180,
+    overdue: 0,
+    paid: 0,
+    draft: 1,
+    posted: 0,
+    ...overrides,
+  };
 }
 
 describe("BillsView", () => {
@@ -71,9 +79,10 @@ describe("BillsView", () => {
       <BillsView
         organizationId="org-1"
         result={makeResult([])}
-        stats={makeStats({ totalValue: 0, draft: 0 })}
+        stats={makeStats({ totalBilled: 0, outstanding: 0, draft: 0 })}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     expect(screen.getByText("No bills yet")).toBeInTheDocument();
@@ -87,12 +96,14 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     expect(screen.getByText("PINV-00001")).toBeInTheDocument();
     expect(screen.getByText("Acme Supply")).toBeInTheDocument();
     expect(screen.getAllByText("Draft").length).toBeGreaterThan(0);
-    expect(screen.getByText("₹1,180.00")).toBeInTheDocument();
+    // ₹1,180.00 shows in both Total and Balance due for an unpaid bill.
+    expect(screen.getAllByText("₹1,180.00").length).toBeGreaterThan(0);
   });
 
   it("renders a derived payment badge for unpaid and paid rows", () => {
@@ -110,6 +121,7 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     // "Unpaid"/"Paid" also appear as payment filter pill labels, so scope the
@@ -128,19 +140,21 @@ describe("BillsView", () => {
         organizationId="org-1"
         result={makeResult([makeInvoice()])}
         stats={makeStats({
-          totalValue: 5000,
-          draft: 2,
-          posted: 3,
-          overdue: 1,
+          totalBilled: 5000,
+          outstanding: 3200,
+          overdue: 500,
+          paid: 1800,
         })}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
-    expect(screen.getByText("Total value")).toBeInTheDocument();
-    expect(screen.getAllByText("Posted").length).toBeGreaterThan(0);
-    // "Overdue" now appears both as a stat-tile label and a payment pill.
+    expect(screen.getByText("Total billed")).toBeInTheDocument();
+    expect(screen.getByText("Outstanding")).toBeInTheDocument();
+    // "Overdue"/"Paid" appear both as a stat-tile label and a payment pill.
     expect(screen.getAllByText("Overdue").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Paid").length).toBeGreaterThan(0);
   });
 
   it("shows the new invoice button only when canManage is true", () => {
@@ -151,6 +165,7 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     expect(
@@ -164,6 +179,7 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage={false}
+        canMakePayment
       />
     );
     expect(
@@ -180,6 +196,7 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     await user.type(
@@ -188,7 +205,7 @@ describe("BillsView", () => {
     );
     await user.keyboard("{Enter}");
     expect(mockPush).toHaveBeenCalledWith(
-      "/purchases/bills?search=PINV-001"
+      "/bills?search=PINV-001"
     );
   });
 
@@ -201,11 +218,12 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{ search: "PINV-001" }}
         canManage
+        canMakePayment
       />
     );
     const input = screen.getByLabelText("Search bills");
     await user.clear(input);
-    expect(mockPush).toHaveBeenCalledWith("/purchases/bills");
+    expect(mockPush).toHaveBeenCalledWith("/bills");
   });
 
   it("pushes a status filter change via the status pills", async () => {
@@ -217,11 +235,12 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     await user.click(screen.getByRole("tab", { name: "Posted" }));
     expect(mockPush).toHaveBeenCalledWith(
-      "/purchases/bills?status=posted"
+      "/bills?status=posted"
     );
   });
 
@@ -233,6 +252,7 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     const paymentRow = screen.getByRole("tablist", {
@@ -257,11 +277,12 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     await user.click(screen.getByRole("tab", { name: "Overdue" }));
     expect(mockPush).toHaveBeenCalledWith(
-      "/purchases/bills?paymentStatus=overdue"
+      "/bills?paymentStatus=overdue"
     );
   });
 
@@ -273,11 +294,109 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{ paymentStatus: "partial" }}
         canManage
+        canMakePayment
       />
     );
     expect(
       screen.getByRole("tab", { name: "Partial", selected: true })
     ).toBeInTheDocument();
+  });
+
+  it("reveals the bulk record-payment bar when a payable bill is selected", async () => {
+    const user = userEvent.setup();
+    const payable = makeInvoice({
+      id: "b-payable",
+      status: "posted",
+      amountPaid: 500,
+    });
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([payable])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+        canMakePayment
+      />
+    );
+    // No bulk bar until something is selected.
+    expect(
+      screen.queryByRole("button", { name: /record payment/i })
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("checkbox", { name: `Select ${payable.invoiceNumber}` })
+    );
+
+    expect(screen.getByText(/1 selected/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /record payment/i })
+    ).toBeInTheDocument();
+  });
+
+  it("does not offer selection for draft or fully paid bills", () => {
+    const draft = makeInvoice({ id: "b-draft", status: "draft" });
+    const paid = makeInvoice({
+      id: "b-paid",
+      invoiceNumber: "PINV-00002",
+      status: "posted",
+      amountPaid: 1180,
+    });
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([draft, paid])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+        canMakePayment
+      />
+    );
+    expect(
+      screen.queryByRole("checkbox", { name: /select pinv/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("exposes View and Edit actions for a draft bill", async () => {
+    const user = userEvent.setup();
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([makeInvoice()])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+        canMakePayment
+      />
+    );
+    await user.click(
+      screen.getByRole("button", { name: /actions for pinv-00001/i })
+    );
+    expect(screen.getByRole("menuitem", { name: /view/i })).toBeInTheDocument();
+    const edit = screen.getByRole("menuitem", { name: /edit/i });
+    expect(edit).toBeInTheDocument();
+    expect(edit).toHaveAttribute("href", "/bills/pinv-1/edit");
+  });
+
+  it("hides the Edit action for a posted bill", async () => {
+    const user = userEvent.setup();
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([makeInvoice({ status: "posted" })])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+        canMakePayment
+      />
+    );
+    await user.click(
+      screen.getByRole("button", { name: /actions for pinv-00001/i })
+    );
+    expect(screen.getByRole("menuitem", { name: /view/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /edit/i })
+    ).not.toBeInTheDocument();
   });
 
   it("renders pagination summary and navigates pages", async () => {
@@ -293,6 +412,7 @@ describe("BillsView", () => {
         stats={makeStats()}
         filters={{}}
         canManage
+        canMakePayment
       />
     );
     expect(screen.getByText(/showing/i)).toBeInTheDocument();
@@ -301,9 +421,9 @@ describe("BillsView", () => {
     expect(screen.getAllByText("45").length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("button", { name: /next/i }));
-    expect(mockPush).toHaveBeenCalledWith("/purchases/bills?page=3");
+    expect(mockPush).toHaveBeenCalledWith("/bills?page=3");
 
     await user.click(screen.getByRole("button", { name: /previous/i }));
-    expect(mockPush).toHaveBeenCalledWith("/purchases/bills");
+    expect(mockPush).toHaveBeenCalledWith("/bills");
   });
 });

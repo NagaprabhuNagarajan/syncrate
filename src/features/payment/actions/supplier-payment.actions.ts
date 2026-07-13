@@ -202,8 +202,8 @@ export async function applySupplierCreditAction(
   );
 
   if (result.success) {
-    revalidatePath(`/purchases/bills/${billId}`);
-    revalidatePath("/purchases/bills");
+    revalidatePath(`/bills/${billId}`);
+    revalidatePath("/bills");
     revalidatePath("/suppliers");
     revalidatePath("/dashboard");
     await new AuditService(supabase).log({

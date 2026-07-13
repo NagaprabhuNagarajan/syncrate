@@ -133,12 +133,16 @@ export interface BillListResult {
 
 /** Aggregate counts/sums for the list header stat tiles. */
 export interface BillStats {
-  /** Sum of total_amount across all non-cancelled invoices. */
-  readonly totalValue: number;
+  /** Sum of total_amount across non-cancelled bills. */
+  readonly totalBilled: number;
+  /** Sum of (total_amount − amount_paid), i.e. balance due, non-cancelled. */
+  readonly outstanding: number;
+  /** Sum of balance due for posted bills past their due date. */
+  readonly overdue: number;
+  /** Sum of amount_paid across non-cancelled bills. */
+  readonly paid: number;
   readonly draft: number;
   readonly posted: number;
-  /** Posted invoices past their due date with an outstanding balance. */
-  readonly overdue: number;
 }
 
 /**

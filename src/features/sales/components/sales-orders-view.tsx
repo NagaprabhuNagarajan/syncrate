@@ -303,7 +303,7 @@ export function SalesOrdersView({
             <Table wrapperClassName="shadow-card">
               <TableHeader>
                 <TableRow>
-                  <TableHead>SO number</TableHead>
+                  <TableHead>SO #</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Order date</TableHead>

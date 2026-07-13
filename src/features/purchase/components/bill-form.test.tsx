@@ -197,7 +197,7 @@ describe("BillForm", () => {
     });
 
     await waitFor(() =>
-      expect(mockPush).toHaveBeenCalledWith("/purchases/bills/pinv-9")
+      expect(mockPush).toHaveBeenCalledWith("/bills/pinv-9")
     );
   });
 

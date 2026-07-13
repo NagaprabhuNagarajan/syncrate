@@ -321,7 +321,7 @@ export function PurchaseOrderDetail({
   const editHref = withOrg(`/purchases/${purchaseOrder.id}/edit`);
   const receiveHref = withOrg(`/purchases/${purchaseOrder.id}/receive`);
   const newBillHref = withOrg(
-    `/purchases/bills/new?fromPurchaseOrder=${purchaseOrder.id}`
+    `/bills/new?fromPurchaseOrder=${purchaseOrder.id}`
   );
   const newReturnHref = withOrg(
     `/purchases/returns/new?fromPurchaseOrder=${purchaseOrder.id}`
@@ -644,7 +644,7 @@ export function PurchaseOrderDetail({
                       trailingLabel="Total"
                       rows={linkedBills.map((b) => ({
                         id: b.id,
-                        href: withOrg(`/purchases/bills/${b.id}`),
+                        href: withOrg(`/bills/${b.id}`),
                         number: b.invoiceNumber,
                         date: formatDate(b.invoiceDate),
                         trailing: formatCurrency(b.totalAmount),

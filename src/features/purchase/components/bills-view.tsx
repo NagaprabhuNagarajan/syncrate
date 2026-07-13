@@ -7,17 +7,23 @@ import { motion } from "framer-motion";
 import {
   FileText,
   Wallet,
-  FileEdit,
+  Clock,
   CheckCircle2,
   AlertTriangle,
   Plus,
   Search,
   ChevronLeft,
   ChevronRight,
+  MoreHorizontal,
+  ArrowUpRight,
+  Pencil,
+  Banknote,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -26,8 +32,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
+import { RecordSupplierPaymentDialog } from "@/features/payment/components/record-supplier-payment-dialog";
 import {
   BILL_STATUS_LABEL,
   BILL_STATUS_VARIANT,
@@ -123,17 +136,24 @@ interface BillsViewProps {
     readonly paymentStatus?: BillPaymentStatusFilter;
   };
   readonly canManage: boolean;
+  readonly canMakePayment: boolean;
 }
 
 export function BillsView({
+  organizationId,
   result,
   stats,
   filters,
   canManage,
+  canMakePayment,
 }: BillsViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
+  const [showPayment, setShowPayment] = useState(false);
 
   const { items, total, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -147,15 +167,8 @@ export function BillsView({
   const withOrg = (path: string): string =>
     org ? `${path}${path.includes("?") ? "&" : "?"}org=${org}` : path;
 
-  const detailHref = (id: string): string =>
-    withOrg(`/purchases/bills/${id}`);
-  const newHref = (): string => withOrg("/purchases/bills/new");
-
-  const subNavLinks: readonly { label: string; href: string }[] = [
-    { label: "Purchase orders", href: withOrg("/purchases") },
-    { label: "Goods receipts", href: withOrg("/purchases/goods-receipts") },
-    { label: "Returns", href: withOrg("/purchases/returns") },
-  ];
+  const detailHref = (id: string): string => withOrg(`/bills/${id}`);
+  const newHref = (): string => withOrg("/bills/new");
 
   const pushWith = (patch: Record<string, string | undefined>): void => {
     const params = new URLSearchParams(searchParams.toString());
@@ -167,9 +180,7 @@ export function BillsView({
       }
     });
     const query = params.toString();
-    router.push(
-      query ? `/purchases/bills?${query}` : "/purchases/bills"
-    );
+    router.push(query ? `/bills?${query}` : "/bills");
   };
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -196,6 +207,85 @@ export function BillsView({
   const handlePaymentSelect = (value: string): void => {
     pushWith({ paymentStatus: value || undefined, page: undefined });
   };
+
+  const editHref = (id: string): string => withOrg(`/bills/${id}/edit`);
+
+  // ── Bulk selection ─────────────────────────────────────────
+  // A bill is payable only once posted and while it still carries a balance.
+  const isSelectable = (bill: BillListItem): boolean =>
+    bill.status === "posted" &&
+    deriveBillPaymentStatus(bill) !== "paid" &&
+    bill.totalAmount - bill.amountPaid > 0;
+
+  const selectableItems = items.filter(isSelectable);
+  const selectedBills = items.filter((bill) => selectedIds.has(bill.id));
+  const selectedCount = selectedBills.length;
+
+  const allSelectableSelected =
+    selectableItems.length > 0 &&
+    selectableItems.every((bill) => selectedIds.has(bill.id));
+
+  const headerChecked: boolean | "indeterminate" = allSelectableSelected
+    ? true
+    : selectedCount > 0
+      ? "indeterminate"
+      : false;
+
+  const toggleRow = (id: string): void => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleAll = (): void => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (
+        selectableItems.length > 0 &&
+        selectableItems.every((bill) => prev.has(bill.id))
+      ) {
+        selectableItems.forEach((bill) => next.delete(bill.id));
+      } else {
+        selectableItems.forEach((bill) => next.add(bill.id));
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = (): void => setSelectedIds(new Set());
+
+  // A payment settles bills for a single supplier, so the selection must not span more.
+  const selectedSupplierIds = new Set(
+    selectedBills.map((bill) => bill.supplierId)
+  );
+  const isSingleSupplier = selectedSupplierIds.size === 1;
+  const bulkOutstanding = selectedBills.reduce(
+    (sum, bill) => sum + (bill.totalAmount - bill.amountPaid),
+    0
+  );
+  const paymentSupplier = selectedBills[0];
+
+  const openPayment = (): void => {
+    if (isSingleSupplier && selectedCount > 0) {
+      setShowPayment(true);
+    }
+  };
+
+  const closePayment = (): void => setShowPayment(false);
+
+  const handlePaymentDone = (): void => {
+    setShowPayment(false);
+    clearSelection();
+    router.refresh();
+  };
+
+  const showSelection = canMakePayment;
 
   return (
     <div className="p-4 lg:p-6">
@@ -235,52 +325,39 @@ export function BillsView({
         )}
       </motion.div>
 
-      {/* Sub-navigation */}
-      <nav
-        aria-label="Purchases sections"
-        className="mt-4 flex flex-wrap items-center gap-2"
-      >
-        {subNavLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:text-primary-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-primary-400"
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
-
       {/* Stat tiles */}
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
           icon={Wallet}
-          label="Total value"
-          value={stats.totalValue}
+          label="Total billed"
+          value={stats.totalBilled}
           tint="bg-gradient-brand"
           index={0}
           currency
         />
         <StatTile
-          icon={FileEdit}
-          label="Draft"
-          value={stats.draft}
-          tint="bg-gradient-violet"
+          icon={Clock}
+          label="Outstanding"
+          value={stats.outstanding}
+          tint="bg-gradient-info"
           index={1}
-        />
-        <StatTile
-          icon={CheckCircle2}
-          label="Posted"
-          value={stats.posted}
-          tint="bg-gradient-success"
-          index={2}
+          currency
         />
         <StatTile
           icon={AlertTriangle}
           label="Overdue"
           value={stats.overdue}
-          tint="bg-gradient-info"
+          tint="bg-gradient-warning"
+          index={2}
+          currency
+        />
+        <StatTile
+          icon={CheckCircle2}
+          label="Paid"
+          value={stats.paid}
+          tint="bg-gradient-success"
           index={3}
+          currency
         />
       </div>
 
@@ -325,14 +402,59 @@ export function BillsView({
         </div>
       </div>
 
+      {/* Bulk action bar */}
+      {showSelection && selectedCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18 }}
+          className="sticky top-2 z-30 mt-4 flex flex-col gap-3 rounded-xl border border-primary-200 bg-primary-50/80 px-4 py-3 shadow-card backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-primary-500/30 dark:bg-primary-500/10"
+        >
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              {selectedCount} selected ·{" "}
+              <span className="nums">
+                {formatCurrency(bulkOutstanding, true)}
+              </span>{" "}
+              outstanding
+            </span>
+            {!isSingleSupplier && (
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Select bills from a single supplier to record one payment
+                together.
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+            >
+              <X className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Clear
+            </Button>
+            <Button
+              type="button"
+              variant="gradient"
+              size="sm"
+              onClick={openPayment}
+              disabled={!isSingleSupplier}
+            >
+              <Banknote className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Record payment
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Table / empty state */}
       <div className="mt-4">
         {items.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title={
-              hasFilters ? "No matching bills" : "No bills yet"
-            }
+            title={hasFilters ? "No matching bills" : "No bills yet"}
             description={
               hasFilters
                 ? "No bills match your current filters. Try adjusting your search or clearing the filters."
@@ -342,7 +464,7 @@ export function BillsView({
               hasFilters
                 ? {
                     label: "Clear filters",
-                    onClick: () => router.push(withOrg("/purchases/bills")),
+                    onClick: () => router.push(withOrg("/bills")),
                   }
                 : canManage
                   ? {
@@ -362,21 +484,53 @@ export function BillsView({
             <Table wrapperClassName="shadow-card">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Bill number</TableHead>
+                  {showSelection && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={headerChecked}
+                        onCheckedChange={toggleAll}
+                        disabled={selectableItems.length === 0}
+                        aria-label="Select all payable bills"
+                      />
+                    </TableHead>
+                  )}
+                  <TableHead>Bill #</TableHead>
                   <TableHead>Supplier</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Due date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Payment</TableHead>
-                  <TableHead>Bill date</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Total / Due</TableHead>
+                  <TableHead className="text-right">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((invoice: BillListItem) => (
+                {items.map((invoice: BillListItem) => {
+                  const selectable = isSelectable(invoice);
+                  return (
                   <TableRow
                     key={invoice.id}
                     onClick={() => router.push(detailHref(invoice.id))}
-                    className="cursor-pointer"
+                    className="group cursor-pointer"
+                    data-state={
+                      selectedIds.has(invoice.id) ? "selected" : undefined
+                    }
                   >
+                    {showSelection && (
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        {selectable ? (
+                          <Checkbox
+                            checked={selectedIds.has(invoice.id)}
+                            onCheckedChange={() => toggleRow(invoice.id)}
+                            aria-label={`Select ${invoice.invoiceNumber}`}
+                          />
+                        ) : (
+                          <span className="sr-only">Not payable</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Link
                         href={detailHref(invoice.id)}
@@ -388,6 +542,12 @@ export function BillsView({
                     </TableCell>
                     <TableCell className="text-slate-700 dark:text-slate-300">
                       {invoice.supplierName ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {formatDate(invoice.invoiceDate)}
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-400">
+                      {invoice.dueDate ? formatDate(invoice.dueDate) : "—"}
                     </TableCell>
                     <TableCell>
                       <Badge dot variant={BILL_STATUS_VARIANT[invoice.status]}>
@@ -410,14 +570,64 @@ export function BillsView({
                         }
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-slate-600 dark:text-slate-400">
-                      {formatDate(invoice.invoiceDate)}
+                    <TableCell className="text-right">
+                      <div className="nums font-medium text-slate-900 dark:text-slate-100">
+                        {formatCurrency(invoice.totalAmount, true)}
+                      </div>
+                      {invoice.totalAmount - invoice.amountPaid > 0 && (
+                        <div className="nums text-[11px] text-amber-600 dark:text-amber-400">
+                          Due{" "}
+                          {formatCurrency(
+                            invoice.totalAmount - invoice.amountPaid,
+                            true
+                          )}
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
-                      {formatCurrency(invoice.totalAmount, true)}
+                    <TableCell
+                      className="text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Actions for ${invoice.invoiceNumber}`}
+                            className="rounded-md p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                          >
+                            <MoreHorizontal
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={detailHref(invoice.id)}>
+                              <ArrowUpRight
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
+                              View
+                            </Link>
+                          </DropdownMenuItem>
+                          {canManage && invoice.status === "draft" && (
+                            <DropdownMenuItem asChild>
+                              <Link href={editHref(invoice.id)}>
+                                <Pencil
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </motion.div>
@@ -461,6 +671,25 @@ export function BillsView({
             </Button>
           </div>
         </div>
+      )}
+
+      {showPayment && paymentSupplier && (
+        <RecordSupplierPaymentDialog
+          organizationId={organizationId}
+          supplierId={paymentSupplier.supplierId}
+          supplierName={paymentSupplier.supplierName ?? "Supplier"}
+          outstandingInvoices={selectedBills.map((bill) => ({
+            id: bill.id,
+            invoiceNumber: bill.invoiceNumber,
+            invoiceDate: bill.invoiceDate.toISOString(),
+            totalAmount: bill.totalAmount,
+            amountPaid: bill.amountPaid,
+            outstandingAmount: bill.totalAmount - bill.amountPaid,
+          }))}
+          preselectedInvoiceIds={selectedBills.map((bill) => bill.id)}
+          onClose={closePayment}
+          onDone={handlePaymentDone}
+        />
       )}
     </div>
   );

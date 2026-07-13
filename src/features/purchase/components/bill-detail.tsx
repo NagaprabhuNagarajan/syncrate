@@ -14,7 +14,7 @@ import {
   ChevronLeft,
   Receipt,
   Wallet,
-  Percent,
+  Clock,
   ShoppingCart,
   CreditCard,
   Banknote,
@@ -438,7 +438,7 @@ export function BillDetail({
     <div className="p-4 lg:p-6">
       {/* Back link */}
       <Link
-        href={withOrg("/purchases/bills")}
+        href={withOrg("/bills")}
         className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -533,24 +533,24 @@ export function BillDetail({
         />
         <KpiTile
           icon={Wallet}
-          label="Subtotal"
-          value={bill.subtotal}
-          tint="bg-gradient-violet"
+          label="Amount paid"
+          value={bill.amountPaid}
+          tint="bg-gradient-success"
           index={1}
         />
         <KpiTile
-          icon={Percent}
-          label="Tax"
-          value={bill.taxAmount}
-          tint="bg-gradient-info"
+          icon={Clock}
+          label="Balance due"
+          value={balanceDue}
+          tint="bg-gradient-violet"
           index={2}
         />
         <KpiTile
           icon={Calendar}
-          label="Bill date"
+          label="Due date"
           value={0}
-          displayValue={formatDate(bill.invoiceDate)}
-          tint="bg-gradient-success"
+          displayValue={bill.dueDate ? formatDate(bill.dueDate) : "—"}
+          tint="bg-gradient-info"
           index={3}
         />
       </div>
