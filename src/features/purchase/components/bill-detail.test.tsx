@@ -6,6 +6,7 @@ import type {
   BillStatus,
   BillWithItems,
 } from "@/features/purchase/types/bill.types";
+import type { InvoicePaymentSummary } from "@/features/payment/types/payment.types";
 
 const { mockRefresh, postMock, cancelMock, applyCreditMock } = vi.hoisted(
   () => ({
@@ -100,6 +101,7 @@ function renderDetail(
     canCancel?: boolean;
     canMakePayment?: boolean;
     availableCredit?: number;
+    payments?: InvoicePaymentSummary[];
   } = {}
 ) {
   return render(
@@ -108,6 +110,7 @@ function renderDetail(
       supplierName="Acme Supply"
       productNames={{ "p-1": "Widget" }}
       availableCredit={perms.availableCredit ?? 0}
+      payments={perms.payments}
       organizationId="org-1"
       canManage={perms.canManage ?? false}
       canCancel={perms.canCancel ?? false}
@@ -342,5 +345,46 @@ describe("BillDetail", () => {
       canMakePayment: true,
     });
     expect(screen.getByText("Unpaid")).toBeInTheDocument();
+  });
+
+  it("shows an Edit link for a draft bill when the user can manage", () => {
+    renderDetail(makeInvoice("draft"), { canManage: true });
+    const edit = screen.getByRole("link", { name: /edit/i });
+    expect(edit).toHaveAttribute("href", "/bills/pinv-1/edit");
+  });
+
+  it("hides the Edit link for a posted bill", () => {
+    renderDetail(makeInvoice("posted"), { canManage: true });
+    expect(
+      screen.queryByRole("link", { name: /edit/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows an empty message when the bill has no payments", () => {
+    renderDetail(makeInvoice("posted"));
+    expect(screen.getByText("Payments (0)")).toBeInTheDocument();
+    expect(
+      screen.getByText(/no payments have been recorded against this bill/i)
+    ).toBeInTheDocument();
+  });
+
+  it("lists bill payments linking to each supplier payment", () => {
+    const payments: InvoicePaymentSummary[] = [
+      {
+        id: "spay-1",
+        paymentNumber: "PAY-2026-000009",
+        paymentDate: "2026-06-20",
+        paymentMethod: "bank_transfer",
+        allocatedAmount: 750,
+        status: "completed",
+      },
+    ];
+    renderDetail(makeInvoice("posted"), { payments });
+    expect(screen.getByText("Payments (1)")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "PAY-2026-000009" });
+    // Supplier payments need the ?type=supplier param to load on the detail page.
+    expect(link).toHaveAttribute("href", "/payments/spay-1?type=supplier");
+    expect(screen.getByText("Bank Transfer")).toBeInTheDocument();
+    expect(screen.getByText("₹750.00")).toBeInTheDocument();
   });
 });

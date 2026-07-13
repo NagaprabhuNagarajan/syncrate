@@ -5,6 +5,7 @@ import type {
   PaymentError,
   PaymentErrorCode,
   PaymentStats,
+  InvoicePaymentSummary,
   RecordSupplierPaymentInput,
   SupplierPayment,
   SupplierPaymentListParams,
@@ -100,6 +101,14 @@ export class SupplierPaymentService {
     }
     const allocations = await this.repo.findAllocations(id);
     return ok({ ...payment, allocations });
+  }
+
+  /** Lists the supplier payments allocated to a specific bill. */
+  async listPaymentsForBill(
+    organizationId: string,
+    billId: string
+  ): Promise<InvoicePaymentSummary[]> {
+    return this.repo.listPaymentsForBill(organizationId, billId);
   }
 
   /** The supplier's unallocated advance credit (see repository). */

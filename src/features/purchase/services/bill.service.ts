@@ -170,7 +170,7 @@ export class BillService {
   ): Promise<BillActionResult<BillWithItems>> {
     const provided = nz(input.invoiceNumber);
     const invoiceNumber =
-      provided?.toUpperCase() ?? (await this.nextInvoiceNumber(organizationId));
+      provided?.toUpperCase() ?? (await this.nextBillNumber(organizationId));
     const computed = input.items.map(computeItem);
     const totals = computeTotals(computed);
 
@@ -372,9 +372,9 @@ export class BillService {
     });
   }
 
-  /** Generates the next sequential invoice number: `PINV-#####`. */
-  private async nextInvoiceNumber(organizationId: string): Promise<string> {
+  /** Generates the next sequential bill number: `BILL-#####`. */
+  private async nextBillNumber(organizationId: string): Promise<string> {
     const { total } = await this.repo.list(organizationId, { pageSize: 1 });
-    return `PINV-${String(total + 1).padStart(5, "0")}`;
+    return `BILL-${String(total + 1).padStart(5, "0")}`;
   }
 }
