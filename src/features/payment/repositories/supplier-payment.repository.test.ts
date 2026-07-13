@@ -24,6 +24,7 @@ interface MockBuilder {
   eq: Mock;
   is: Mock;
   or: Mock;
+  in: Mock;
   order: Mock;
   range: Mock;
   single: Mock;
@@ -53,6 +54,7 @@ function createMockClient(results: QueryResult[]): MockClient {
       eq: vi.fn(() => builder),
       is: vi.fn(() => builder),
       or: vi.fn(() => builder),
+      in: vi.fn(() => builder),
       order: vi.fn(() => builder),
       range: vi.fn(() => builder),
       single: vi.fn(() => Promise.resolve(result)),
@@ -318,6 +320,59 @@ describe("SupplierPaymentRepository", () => {
       const { client } = createMockClient([{ data: null, error: null }]);
       const repo = new SupplierPaymentRepository(client);
       expect(await repo.findAllocations("pay-1")).toEqual([]);
+    });
+  });
+
+  describe("getAvailableCredit", () => {
+    it("sums the unallocated portion of completed payments", async () => {
+      const { client, builders } = createMockClient([
+        {
+          data: [
+            { id: "pay-1", amount: 5000 },
+            { id: "pay-2", amount: 2000 },
+          ],
+          error: null,
+        },
+        {
+          data: [{ supplier_payment_id: "pay-1", allocated_amount: 1500 }],
+          error: null,
+        },
+      ]);
+      const repo = new SupplierPaymentRepository(client);
+
+      // pay-1: 5000 − 1500 = 3500; pay-2: 2000 − 0 = 2000 → 5500
+      expect(await repo.getAvailableCredit("org-1", "supp-1")).toBe(5500);
+      expect(builders[0].eq).toHaveBeenCalledWith("status", "completed");
+      expect(builders[1].in).toHaveBeenCalledWith(
+        "supplier_payment_id",
+        ["pay-1", "pay-2"]
+      );
+    });
+
+    it("returns 0 when the supplier has no completed payments", async () => {
+      const { client } = createMockClient([{ data: [], error: null }]);
+      const repo = new SupplierPaymentRepository(client);
+      expect(await repo.getAvailableCredit("org-1", "supp-1")).toBe(0);
+    });
+
+    it("clamps to 0 when payments are fully allocated", async () => {
+      const { client } = createMockClient([
+        { data: [{ id: "pay-1", amount: 5000 }], error: null },
+        {
+          data: [{ supplier_payment_id: "pay-1", allocated_amount: 5000 }],
+          error: null,
+        },
+      ]);
+      const repo = new SupplierPaymentRepository(client);
+      expect(await repo.getAvailableCredit("org-1", "supp-1")).toBe(0);
+    });
+
+    it("returns 0 when the payments query errors", async () => {
+      const { client } = createMockClient([
+        { data: null, error: { message: "boom" } },
+      ]);
+      const repo = new SupplierPaymentRepository(client);
+      expect(await repo.getAvailableCredit("org-1", "supp-1")).toBe(0);
     });
   });
 

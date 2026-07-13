@@ -6,6 +6,7 @@ import {
   updateRuleAction,
 } from "@/features/approvals/actions/approval.actions";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import type {
   ApprovalOperator,
   ApprovalRule,
@@ -84,14 +85,7 @@ export function RuleForm({
         <input type="hidden" name="version" value={String(rule.version)} />
       )}
 
-      {error && (
-        <p
-          role="alert"
-          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mb-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {error}
-        </p>
-      )}
+      {error && <ErrorBanner message={error} className="mb-4" />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">

@@ -14,12 +14,10 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -29,15 +27,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
-import { AnimatedNumber } from "@/components/shared/animated-number";
+import { StatTile } from "@/components/shared/stat-tile";
 import {
   BILL_STATUS_LABEL,
   BILL_STATUS_VARIANT,
+  BILL_PAYMENT_STATUS_LABEL,
+  BILL_PAYMENT_STATUS_VARIANT,
+  deriveBillPaymentStatus,
 } from "@/features/purchase/utils/bill-display";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type {
   BillListItem,
   BillListResult,
+  BillPaymentStatusFilter,
   BillStats,
   BillStatus,
 } from "@/features/purchase/types/bill.types";
@@ -49,68 +51,61 @@ import { cn } from "@/utils/cn";
 
 const STATUS_FILTERS: readonly { value: string; label: string }[] = [
   { value: "", label: "All" },
-  { value: "draft", label: "Draft" },
-  { value: "posted", label: "Posted" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "draft", label: BILL_STATUS_LABEL.draft },
+  { value: "posted", label: BILL_STATUS_LABEL.posted },
+  { value: "cancelled", label: BILL_STATUS_LABEL.cancelled },
+];
+
+const PAYMENT_FILTERS: readonly { value: string; label: string }[] = [
+  { value: "", label: "All" },
+  { value: "unpaid", label: BILL_PAYMENT_STATUS_LABEL.unpaid },
+  { value: "partial", label: BILL_PAYMENT_STATUS_LABEL.partial },
+  { value: "paid", label: BILL_PAYMENT_STATUS_LABEL.paid },
+  { value: "overdue", label: BILL_PAYMENT_STATUS_LABEL.overdue },
 ];
 
 // ─────────────────────────────────────────────────────────────
-// Stat tile
+// Filter pill row
 // ─────────────────────────────────────────────────────────────
 
-function StatTile({
-  icon: Icon,
+function FilterPills({
   label,
-  value,
-  tint,
-  index,
-  currency,
+  options,
+  active,
+  onSelect,
 }: {
-  readonly icon: LucideIcon;
   readonly label: string;
-  readonly value: number;
-  readonly tint: string;
-  readonly index: number;
-  readonly currency?: boolean;
+  readonly options: readonly { value: string; label: string }[];
+  readonly active: string;
+  readonly onSelect: (value: string) => void;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
+    <div
+      className="flex flex-wrap items-center gap-1.5"
+      role="tablist"
+      aria-label={`Filter by ${label.toLowerCase()}`}
     >
-      <Card className="relative overflow-hidden p-4">
-        <div
-          className={cn(
-            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
-            tint
-          )}
-          aria-hidden="true"
-        />
-        <div className="relative flex items-center gap-3">
-          <div
+      {options.map((option) => {
+        const isActive = active === option.value;
+        return (
+          <button
+            key={option.value || "all"}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onSelect(option.value)}
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
-              tint
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              isActive
+                ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
+                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
             )}
           >
-            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {label}
-            </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {currency ? (
-                formatCurrency(value)
-              ) : (
-                <AnimatedNumber value={value} />
-              )}
-            </p>
-          </div>
-        </div>
-      </Card>
-    </motion.div>
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -125,6 +120,7 @@ interface BillsViewProps {
   readonly filters: {
     readonly search?: string;
     readonly status?: BillStatus;
+    readonly paymentStatus?: BillPaymentStatusFilter;
   };
   readonly canManage: boolean;
 }
@@ -143,7 +139,9 @@ export function BillsView({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(total, page * pageSize);
-  const hasFilters = Boolean(filters.search || filters.status);
+  const hasFilters = Boolean(
+    filters.search || filters.status || filters.paymentStatus
+  );
   const org = searchParams.get("org");
 
   const withOrg = (path: string): string =>
@@ -189,6 +187,14 @@ export function BillsView({
     if (value === "" && filters.search) {
       pushWith({ search: undefined, page: undefined });
     }
+  };
+
+  const handleStatusSelect = (value: string): void => {
+    pushWith({ status: value || undefined, page: undefined });
+  };
+
+  const handlePaymentSelect = (value: string): void => {
+    pushWith({ paymentStatus: value || undefined, page: undefined });
   };
 
   return (
@@ -278,12 +284,12 @@ export function BillsView({
         />
       </div>
 
-      {/* Filters */}
-      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      {/* Search + filter pills */}
+      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <form
           onSubmit={handleSearchSubmit}
           role="search"
-          className="relative w-full lg:max-w-sm"
+          className="relative w-full lg:max-w-sm lg:shrink-0"
         >
           <Search
             className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -299,36 +305,23 @@ export function BillsView({
           />
         </form>
 
-        <div
-          className="flex flex-wrap items-center gap-1.5"
-          role="tablist"
-          aria-label="Filter by status"
-        >
-          {STATUS_FILTERS.map((option) => {
-            const active = (filters.status ?? "") === option.value;
-            return (
-              <button
-                key={option.value || "all"}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() =>
-                  pushWith({
-                    status: option.value || undefined,
-                    page: undefined,
-                  })
-                }
-                className={cn(
-                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                  active
-                    ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
-                )}
-              >
-                {option.label}
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5">
+          <FilterPills
+            label="Status"
+            options={STATUS_FILTERS}
+            active={filters.status ?? ""}
+            onSelect={handleStatusSelect}
+          />
+          <div
+            className="h-6 w-px shrink-0 bg-slate-200 dark:bg-slate-700"
+            aria-hidden="true"
+          />
+          <FilterPills
+            label="Payment"
+            options={PAYMENT_FILTERS}
+            active={filters.paymentStatus ?? ""}
+            onSelect={handlePaymentSelect}
+          />
         </div>
       </div>
 
@@ -372,6 +365,7 @@ export function BillsView({
                   <TableHead>Bill number</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
                   <TableHead>Bill date</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                 </TableRow>
@@ -398,6 +392,22 @@ export function BillsView({
                     <TableCell>
                       <Badge dot variant={BILL_STATUS_VARIANT[invoice.status]}>
                         {BILL_STATUS_LABEL[invoice.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        dot
+                        variant={
+                          BILL_PAYMENT_STATUS_VARIANT[
+                            deriveBillPaymentStatus(invoice)
+                          ]
+                        }
+                      >
+                        {
+                          BILL_PAYMENT_STATUS_LABEL[
+                            deriveBillPaymentStatus(invoice)
+                          ]
+                        }
                       </Badge>
                     </TableCell>
                     <TableCell className="text-slate-600 dark:text-slate-400">

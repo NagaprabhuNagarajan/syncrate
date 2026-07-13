@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { deleteBranchAction } from "@/features/organization/actions/organization.actions";
 import type {
   Branch,
@@ -184,14 +185,7 @@ function DeleteDialog({
           </div>
         </div>
 
-        {error && (
-          <div
-            className="border-error-200 bg-error-50 text-error-800 mt-4 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button

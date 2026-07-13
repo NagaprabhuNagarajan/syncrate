@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { SlidersHorizontal, AlertCircle } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { adjustStockAction } from "@/features/inventory/actions/inventory.actions";
 import type {
   ProductOption,
@@ -95,18 +96,7 @@ export function AdjustStockDialog({
           </div>
         </div>
 
-        {error && (
-          <div
-            className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
-            role="alert"
-          >
-            <AlertCircle
-              className="text-error-500 mt-0.5 h-4 w-4 shrink-0"
-              aria-hidden="true"
-            />
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mb-5" />}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

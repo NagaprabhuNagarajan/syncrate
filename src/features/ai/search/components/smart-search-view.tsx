@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { runSmartSearchAction } from "@/features/ai/search/actions/search.actions";
 import type {
   SearchResultGroup,
@@ -184,14 +185,7 @@ export function SmartSearchView({
         </p>
       )}
 
-      {error && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30"
-        >
-          {error}
-        </p>
-      )}
+      {error && <ErrorBanner message={error} className="mt-4" />}
 
       {result && (
         <motion.div

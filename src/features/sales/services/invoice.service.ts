@@ -16,6 +16,7 @@ import type {
   InvoiceStats,
   InvoiceType,
   InvoiceWithItems,
+  OutstandingInvoiceSummary,
   UpdateInvoiceInput,
 } from "@/features/sales/types/invoice.types";
 
@@ -62,8 +63,22 @@ function mapPostError(message: string): InvoiceErrorCode {
   if (lower.includes("invalid_status")) {
     return "invalid_status";
   }
+  if (lower.includes("negative_stock")) {
+    return "insufficient_stock";
+  }
   return "unknown";
 }
+
+const POST_ERROR_MESSAGES: Record<InvoiceErrorCode, string> = {
+  not_found: "Invoice not found.",
+  invalid_status: "Only draft invoices can be posted.",
+  insufficient_stock:
+    "Not enough stock to post this invoice — one or more tracked items would go below zero at the selected branch. Add stock, or remove the branch from the invoice.",
+  forbidden: "You do not have permission to post this invoice.",
+  validation: "This invoice cannot be posted.",
+  conflict: "This invoice was changed by someone else. Reload and try again.",
+  unknown: "Failed to post invoice. Please try again.",
+};
 
 // ─────────────────────────────────────────────────────────────
 // Totals computation (GST-aware)
@@ -208,6 +223,17 @@ export class InvoiceService {
     salesOrderId: string
   ): Promise<InvoiceListItem[]> {
     return this.repo.findBySalesOrder(salesOrderId);
+  }
+
+  /**
+   * A customer's invoices with a balance due, for the record-payment picker.
+   * Each row's `outstandingAmount` (= total − paid) is guaranteed > 0.
+   */
+  async listOutstandingInvoicesForCustomer(
+    organizationId: string,
+    customerId: string
+  ): Promise<OutstandingInvoiceSummary[]> {
+    return this.repo.listOutstandingByCustomer(organizationId, customerId);
   }
 
   async getInvoice(
@@ -387,7 +413,8 @@ export class InvoiceService {
   ): Promise<InvoiceActionResult<Invoice>> {
     const { error } = await this.repo.postInvoiceRpc(invoiceId);
     if (error) {
-      return fail(mapPostError(error.message), "Failed to post invoice.");
+      const code = mapPostError(error.message);
+      return fail(code, POST_ERROR_MESSAGES[code]);
     }
 
     const posted = await this.repo.findById(invoiceId);

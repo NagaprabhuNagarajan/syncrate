@@ -24,6 +24,7 @@ interface MockBuilder {
   eq: Mock;
   is: Mock;
   or: Mock;
+  in: Mock;
   order: Mock;
   range: Mock;
   single: Mock;
@@ -53,6 +54,7 @@ function createMockClient(results: QueryResult[]): MockClient {
       eq: vi.fn(() => builder),
       is: vi.fn(() => builder),
       or: vi.fn(() => builder),
+      in: vi.fn(() => builder),
       order: vi.fn(() => builder),
       range: vi.fn(() => builder),
       single: vi.fn(() => Promise.resolve(result)),
@@ -318,6 +320,59 @@ describe("CustomerPaymentRepository", () => {
       const { client } = createMockClient([{ data: null, error: null }]);
       const repo = new CustomerPaymentRepository(client);
       expect(await repo.findAllocations("pay-1")).toEqual([]);
+    });
+  });
+
+  describe("getAvailableCredit", () => {
+    it("sums the unallocated portion of completed payments", async () => {
+      const { client, builders } = createMockClient([
+        {
+          data: [
+            { id: "pay-1", amount: 1000 },
+            { id: "pay-2", amount: 500 },
+          ],
+          error: null,
+        },
+        {
+          data: [{ customer_payment_id: "pay-1", allocated_amount: 400 }],
+          error: null,
+        },
+      ]);
+      const repo = new CustomerPaymentRepository(client);
+
+      // pay-1: 1000 − 400 = 600; pay-2: 500 − 0 = 500 → 1100
+      expect(await repo.getAvailableCredit("org-1", "cust-1")).toBe(1100);
+      expect(builders[0].eq).toHaveBeenCalledWith("status", "completed");
+      expect(builders[1].in).toHaveBeenCalledWith(
+        "customer_payment_id",
+        ["pay-1", "pay-2"]
+      );
+    });
+
+    it("returns 0 when the customer has no completed payments", async () => {
+      const { client } = createMockClient([{ data: [], error: null }]);
+      const repo = new CustomerPaymentRepository(client);
+      expect(await repo.getAvailableCredit("org-1", "cust-1")).toBe(0);
+    });
+
+    it("clamps to 0 when payments are fully allocated", async () => {
+      const { client } = createMockClient([
+        { data: [{ id: "pay-1", amount: 1000 }], error: null },
+        {
+          data: [{ customer_payment_id: "pay-1", allocated_amount: 1000 }],
+          error: null,
+        },
+      ]);
+      const repo = new CustomerPaymentRepository(client);
+      expect(await repo.getAvailableCredit("org-1", "cust-1")).toBe(0);
+    });
+
+    it("returns 0 when the payments query errors", async () => {
+      const { client } = createMockClient([
+        { data: null, error: { message: "boom" } },
+      ]);
+      const repo = new CustomerPaymentRepository(client);
+      expect(await repo.getAvailableCredit("org-1", "cust-1")).toBe(0);
     });
   });
 

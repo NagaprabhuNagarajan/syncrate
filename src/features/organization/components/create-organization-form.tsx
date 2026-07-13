@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Building2, AlertCircle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import {
   createOrganizationSchema,
   type CreateOrganizationFormValues,
@@ -182,20 +183,7 @@ export function CreateOrganizationForm() {
         </div>
       </div>
 
-      {serverError && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 bg-error-50 text-error-800 mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
-          role="alert"
-        >
-          <AlertCircle
-            className="text-error-500 mt-0.5 h-4 w-4 shrink-0"
-            aria-hidden="true"
-          />
-          <span>{serverError}</span>
-        </motion.div>
-      )}
+      {serverError && <ErrorBanner message={serverError} className="mb-4" />}
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         {/* Organization Name */}

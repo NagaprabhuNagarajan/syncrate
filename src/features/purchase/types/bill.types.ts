@@ -102,9 +102,22 @@ export type BillSortField =
   | "created_at"
   | "total_amount";
 
+/**
+ * Payment-status filter values for the bill list. Kept as an inline union here
+ * (rather than importing `BillPaymentStatus` from `utils/bill-display`) to avoid
+ * a circular import, since `bill-display` imports `BillStatus` from this module.
+ * Must stay in sync with `BillPaymentStatus` in `utils/bill-display`.
+ */
+export type BillPaymentStatusFilter =
+  | "unpaid"
+  | "partial"
+  | "paid"
+  | "overdue";
+
 export interface BillListParams {
   readonly search?: string;
   readonly status?: BillStatus;
+  readonly paymentStatus?: BillPaymentStatusFilter;
   readonly page?: number;
   readonly pageSize?: number;
   readonly sortBy?: BillSortField;
@@ -126,6 +139,22 @@ export interface BillStats {
   readonly posted: number;
   /** Posted invoices past their due date with an outstanding balance. */
   readonly overdue: number;
+}
+
+/**
+ * A lightweight summary of a bill that still has a balance due, used to build
+ * the "settle outstanding" checkbox list in the make-payment dialog.
+ * `outstandingAmount` = `totalAmount` − `amountPaid` and is always > 0.
+ * `invoiceNumber` is the bill's own number; `invoiceDate` is the bill date.
+ */
+export interface OutstandingBillSummary {
+  readonly id: string;
+  readonly invoiceNumber: string;
+  /** ISO date string (YYYY-MM-DD). */
+  readonly invoiceDate: string;
+  readonly totalAmount: number;
+  readonly amountPaid: number;
+  readonly outstandingAmount: number;
 }
 
 // ─────────────────────────────────────────────────────────────

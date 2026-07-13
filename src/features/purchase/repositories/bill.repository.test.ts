@@ -111,6 +111,7 @@ function buildDbInvoice(
     tax_amount: 180,
     total_amount: 1180,
     amount_paid: 0,
+    payment_status: "unpaid",
     notes: "note",
     posted_at: null,
     posted_by: null,
@@ -326,6 +327,61 @@ describe("BillRepository", () => {
         ascending: true,
       });
       expect(builders[0].range).toHaveBeenCalledWith(10, 19);
+    });
+
+    it("filters paid bills with an exact payment_status match", async () => {
+      const { client, builders } = createMockClient([
+        { data: [], error: null, count: 0 },
+      ]);
+      await new BillRepository(client).list("org-1", {
+        paymentStatus: "paid",
+      });
+      expect(builders[0].eq).toHaveBeenCalledWith("payment_status", "paid");
+      expect(builders[0].neq).not.toHaveBeenCalled();
+      expect(builders[0].lt).not.toHaveBeenCalled();
+      expect(builders[0].or).not.toHaveBeenCalled();
+    });
+
+    it("filters unpaid bills, excluding overdue rows", async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { client, builders } = createMockClient([
+        { data: [], error: null, count: 0 },
+      ]);
+      await new BillRepository(client).list("org-1", {
+        paymentStatus: "unpaid",
+      });
+      expect(builders[0].eq).toHaveBeenCalledWith("payment_status", "unpaid");
+      expect(builders[0].or).toHaveBeenCalledWith(
+        `status.neq.posted,due_date.is.null,due_date.gte.${today}`
+      );
+    });
+
+    it("filters partial bills, excluding overdue rows", async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { client, builders } = createMockClient([
+        { data: [], error: null, count: 0 },
+      ]);
+      await new BillRepository(client).list("org-1", {
+        paymentStatus: "partial",
+      });
+      expect(builders[0].eq).toHaveBeenCalledWith("payment_status", "partial");
+      expect(builders[0].or).toHaveBeenCalledWith(
+        `status.neq.posted,due_date.is.null,due_date.gte.${today}`
+      );
+    });
+
+    it("filters overdue bills: posted, past-due and not fully paid", async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { client, builders } = createMockClient([
+        { data: [], error: null, count: 0 },
+      ]);
+      await new BillRepository(client).list("org-1", {
+        paymentStatus: "overdue",
+      });
+      expect(builders[0].eq).toHaveBeenCalledWith("status", "posted");
+      expect(builders[0].neq).toHaveBeenCalledWith("payment_status", "paid");
+      expect(builders[0].lt).toHaveBeenCalledWith("due_date", today);
+      expect(builders[0].or).not.toHaveBeenCalled();
     });
 
     it("skips search when the sanitized term is empty", async () => {
@@ -659,6 +715,62 @@ describe("BillRepository", () => {
       expect(
         await new BillRepository(client).softDelete("pinv-1", "u")
       ).toBe(false);
+    });
+  });
+
+  describe("listOutstandingBySupplier", () => {
+    it("maps rows with a positive balance and drops fully-paid ones", async () => {
+      const { client, builders } = createMockClient([
+        {
+          data: [
+            {
+              id: "pinv-1",
+              invoice_number: "PINV-001",
+              invoice_date: "2026-06-01",
+              total_amount: 1000,
+              amount_paid: 200,
+            },
+            {
+              id: "pinv-2",
+              invoice_number: "PINV-002",
+              invoice_date: "2026-06-05",
+              total_amount: 500,
+              amount_paid: 500,
+            },
+          ],
+          error: null,
+        },
+      ]);
+
+      const result = await new BillRepository(
+        client
+      ).listOutstandingBySupplier("org-1", "sup-1");
+
+      expect(result).toEqual([
+        {
+          id: "pinv-1",
+          invoiceNumber: "PINV-001",
+          invoiceDate: "2026-06-01",
+          totalAmount: 1000,
+          amountPaid: 200,
+          outstandingAmount: 800,
+        },
+      ]);
+      // Only posted bills accrue a payable balance.
+      expect(builders[0].eq).toHaveBeenCalledWith("status", "posted");
+      expect(builders[0].order).toHaveBeenCalledWith("invoice_date", {
+        ascending: true,
+      });
+    });
+
+    it("returns an empty list on error", async () => {
+      const { client } = createMockClient([
+        { data: null, error: { message: "boom" } },
+      ]);
+      const result = await new BillRepository(
+        client
+      ).listOutstandingBySupplier("org-1", "sup-1");
+      expect(result).toEqual([]);
     });
   });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { render, screen, waitFor } from "@/tests/utils";
+import { render, screen, waitFor, within } from "@/tests/utils";
 import { InvoiceDetail } from "./invoice-detail";
 import type {
   InvoiceStatus,
@@ -8,11 +8,14 @@ import type {
   PaymentStatus,
 } from "@/features/sales/types/invoice.types";
 
-const { mockRefresh, postMock, cancelMock } = vi.hoisted(() => ({
-  mockRefresh: vi.fn(),
-  postMock: vi.fn(),
-  cancelMock: vi.fn(),
-}));
+const { mockRefresh, postMock, cancelMock, applyCreditMock } = vi.hoisted(
+  () => ({
+    mockRefresh: vi.fn(),
+    postMock: vi.fn(),
+    cancelMock: vi.fn(),
+    applyCreditMock: vi.fn(),
+  })
+);
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: mockRefresh }),
@@ -22,6 +25,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/features/sales/actions/invoice.actions", () => ({
   postInvoiceAction: postMock,
   cancelInvoiceAction: cancelMock,
+}));
+
+vi.mock("@/features/payment/actions/customer-payment.actions", () => ({
+  applyCustomerCreditAction: applyCreditMock,
 }));
 
 // The payment dialog owns its own action/form; stub it so these tests stay
@@ -113,6 +120,7 @@ function renderDetail(
     canManage?: boolean;
     canCancel?: boolean;
     canReceivePayment?: boolean;
+    availableCredit?: number;
   } = {}
 ) {
   return render(
@@ -120,6 +128,7 @@ function renderDetail(
       invoice={invoice}
       customerName="Acme Retail"
       productNames={{ "p-1": "Widget" }}
+      availableCredit={perms.availableCredit ?? 0}
       organizationId="org-1"
       canManage={perms.canManage ?? false}
       canCancel={perms.canCancel ?? false}
@@ -319,5 +328,78 @@ describe("InvoiceDetail", () => {
     expect(
       screen.getByRole("dialog", { name: "Record customer payment" })
     ).toBeInTheDocument();
+  });
+
+  // ── Apply credit ───────────────────────────────────────────
+
+  it("shows Apply credit for a posted invoice with balance, credit and permission", () => {
+    renderDetail(makeInvoice("posted"), {
+      canReceivePayment: true,
+      availableCredit: 300,
+    });
+    expect(
+      screen.getByRole("button", { name: /apply credit/i })
+    ).toBeInTheDocument();
+  });
+
+  it("surfaces available credit in the details section", () => {
+    renderDetail(makeInvoice("posted"), {
+      canReceivePayment: true,
+      availableCredit: 300,
+    });
+    expect(screen.getByText("Available credit")).toBeInTheDocument();
+    expect(screen.getAllByText("₹300.00").length).toBeGreaterThan(0);
+  });
+
+  it("hides Apply credit when there is no available credit", () => {
+    renderDetail(makeInvoice("posted"), {
+      canReceivePayment: true,
+      availableCredit: 0,
+    });
+    expect(
+      screen.queryByRole("button", { name: /apply credit/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides Apply credit when canReceivePayment is false", () => {
+    renderDetail(makeInvoice("posted"), {
+      canReceivePayment: false,
+      availableCredit: 300,
+    });
+    expect(
+      screen.queryByRole("button", { name: /apply credit/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides Apply credit for a draft invoice", () => {
+    renderDetail(makeInvoice("draft"), {
+      canReceivePayment: true,
+      availableCredit: 300,
+    });
+    expect(
+      screen.queryByRole("button", { name: /apply credit/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("applies credit and refreshes on success", async () => {
+    const user = userEvent.setup();
+    applyCreditMock.mockResolvedValue({ success: true, data: undefined });
+    renderDetail(makeInvoice("posted"), {
+      canReceivePayment: true,
+      availableCredit: 300,
+    });
+
+    await user.click(screen.getByRole("button", { name: /apply credit/i }));
+    const dialog = screen.getByRole("dialog", { name: /apply credit/i });
+    await user.click(
+      within(dialog).getByRole("button", { name: /apply credit/i })
+    );
+
+    await waitFor(() => expect(applyCreditMock).toHaveBeenCalled());
+    const [orgArg, formArg] = applyCreditMock.mock.calls[0];
+    expect(orgArg).toBe("org-1");
+    expect((formArg as FormData).get("invoiceId")).toBe("inv-1");
+    expect((formArg as FormData).get("customerId")).toBe("cust-1");
+    await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
   });
 });

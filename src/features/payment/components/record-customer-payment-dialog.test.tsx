@@ -7,23 +7,40 @@ import { RecordCustomerPaymentDialog } from "./record-customer-payment-dialog";
 // Mocks
 // ─────────────────────────────────────────────────────────────
 
-const { recordActionMock } = vi.hoisted(() => ({
+const { recordActionMock, outstandingActionMock } = vi.hoisted(() => ({
   recordActionMock: vi.fn(),
+  outstandingActionMock: vi.fn(),
 }));
 
 vi.mock("@/features/payment/actions/customer-payment.actions", () => ({
   recordCustomerPaymentAction: recordActionMock,
+  getOutstandingCustomerInvoicesAction: outstandingActionMock,
 }));
+
+const CUSTOMER_ID = "550e8400-e29b-41d4-a716-446655440001";
+const INVOICE_ONE = "550e8400-e29b-41d4-a716-446655440099";
+const INVOICE_TWO = "550e8400-e29b-41d4-a716-4466554400aa";
 
 const outstandingInvoices = [
   {
-    id: "inv-1",
+    id: INVOICE_ONE,
     invoiceNumber: "INV-001",
+    invoiceDate: "2026-06-01",
     totalAmount: 1000,
     amountPaid: 0,
     outstandingAmount: 1000,
   },
+  {
+    id: INVOICE_TWO,
+    invoiceNumber: "INV-002",
+    invoiceDate: "2026-06-05",
+    totalAmount: 700,
+    amountPaid: 200,
+    outstandingAmount: 500,
+  },
 ];
+
+const customers = [{ id: CUSTOMER_ID, name: "Acme Traders" }];
 
 function renderDialog(
   props: Partial<React.ComponentProps<typeof RecordCustomerPaymentDialog>> = {}
@@ -33,7 +50,7 @@ function renderDialog(
   render(
     <RecordCustomerPaymentDialog
       organizationId="org-1"
-      customerId="550e8400-e29b-41d4-a716-446655440001"
+      customerId={CUSTOMER_ID}
       customerName="Acme Traders"
       onClose={onClose}
       onDone={onDone}
@@ -45,6 +62,10 @@ function renderDialog(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  outstandingActionMock.mockResolvedValue({
+    success: true,
+    data: outstandingInvoices,
+  });
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -52,15 +73,18 @@ beforeEach(() => {
 // ─────────────────────────────────────────────────────────────
 
 describe("RecordCustomerPaymentDialog", () => {
-  it("renders the dialog with the customer name and core fields", () => {
+  it("renders the dialog with the customer name and core fields", async () => {
     renderDialog();
 
     expect(
       screen.getByRole("dialog", { name: /record customer payment/i })
     ).toBeInTheDocument();
     expect(screen.getByText("Acme Traders")).toBeInTheDocument();
-    expect(screen.getByLabelText(/payment amount/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/payment method/i)).toBeInTheDocument();
+    // Pre-seeded party fetches its outstanding invoices on mount.
+    await waitFor(() =>
+      expect(outstandingActionMock).toHaveBeenCalledWith("org-1", CUSTOMER_ID)
+    );
   });
 
   it("calls onClose when the close button is clicked", async () => {
@@ -70,78 +94,58 @@ describe("RecordCustomerPaymentDialog", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("shows a validation error when amount is missing or zero", async () => {
+  it("shows a party picker and loads outstanding invoices on selection", async () => {
     const user = userEvent.setup();
-    renderDialog();
+    renderDialog({ customerId: "", customerName: "Select Customer", customers });
 
-    await user.click(screen.getByRole("button", { name: /record payment/i }));
-
+    // No fetch until a customer is chosen.
+    expect(outstandingActionMock).not.toHaveBeenCalled();
     expect(
-      await screen.findByText(/payment amount must be greater than 0/i)
+      screen.getByText(/select a customer to see their outstanding/i)
     ).toBeInTheDocument();
-    expect(recordActionMock).not.toHaveBeenCalled();
-  });
 
-  it("blocks submission and shows an error when allocations exceed the amount", async () => {
-    const user = userEvent.setup();
-    renderDialog();
-
-    await user.type(screen.getByLabelText(/payment amount/i), "100");
-    await user.click(screen.getByRole("button", { name: /add invoice/i }));
-    await user.type(
-      screen.getByLabelText(/amount for allocation 1/i),
-      "200"
+    await user.selectOptions(
+      screen.getByLabelText(/^customer/i),
+      CUSTOMER_ID
     );
 
-    await user.click(screen.getByRole("button", { name: /record payment/i }));
-
-    expect(
-      await screen.findByText(/exceeds payment amount/i)
-    ).toBeInTheDocument();
-    expect(recordActionMock).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(outstandingActionMock).toHaveBeenCalledWith("org-1", CUSTOMER_ID)
+    );
+    expect(await screen.findByText("INV-001")).toBeInTheDocument();
+    expect(screen.getByText("INV-002")).toBeInTheDocument();
   });
 
-  it("adds and removes allocation rows", async () => {
-    const user = userEvent.setup();
+  it("shows an empty message when there are no outstanding invoices", async () => {
+    outstandingActionMock.mockResolvedValue({ success: true, data: [] });
     renderDialog();
 
-    await user.click(screen.getByRole("button", { name: /add invoice/i }));
     expect(
-      screen.getByLabelText(/invoice id for allocation 1/i)
+      await screen.findByText(/no outstanding invoices for this customer/i)
     ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: /remove allocation 1/i })
-    );
-    expect(
-      screen.queryByLabelText(/invoice id for allocation 1/i)
-    ).not.toBeInTheDocument();
   });
 
-  it("renders a select when outstanding invoices are provided", async () => {
-    const user = userEvent.setup();
-    renderDialog({ outstandingInvoices });
-
-    await user.click(screen.getByRole("button", { name: /add invoice/i }));
-    expect(
-      screen.getByLabelText(/invoice for allocation 1/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/INV-001/)).toBeInTheDocument();
-  });
-
-  it("submits the action with the correct payload and calls onDone on success", async () => {
+  it("sums the checked invoices and submits one allocation per checked row", async () => {
     const user = userEvent.setup();
     recordActionMock.mockResolvedValue({ success: true, data: { id: "pay-1" } });
     const { onDone } = renderDialog();
 
-    await user.type(screen.getByLabelText(/payment amount/i), "1500");
+    // Wait for the outstanding list.
+    const rowOne = await screen.findByRole("checkbox", {
+      name: /select invoice INV-001/i,
+    });
+    const rowTwo = screen.getByRole("checkbox", {
+      name: /select invoice INV-002/i,
+    });
+
+    // Submit is disabled until at least one row is checked.
+    expect(
+      screen.getByRole("button", { name: /record payment/i })
+    ).toBeDisabled();
+
+    await user.click(rowOne);
+    await user.click(rowTwo);
     await user.type(screen.getByLabelText(/reference number/i), " UTR-1 ");
-    await user.click(screen.getByRole("button", { name: /add invoice/i }));
-    await user.type(
-      screen.getByLabelText(/invoice id for allocation 1/i),
-      "550e8400-e29b-41d4-a716-446655440099"
-    );
-    await user.type(screen.getByLabelText(/amount for allocation 1/i), "400");
 
     await user.click(screen.getByRole("button", { name: /record payment/i }));
 
@@ -153,16 +157,89 @@ describe("RecordCustomerPaymentDialog", () => {
       FormData,
     ];
     expect(orgId).toBe("org-1");
-    expect(formData.get("customerId")).toBe(
-      "550e8400-e29b-41d4-a716-446655440001"
-    );
+    expect(formData.get("customerId")).toBe(CUSTOMER_ID);
+    // amount = 1000 + 500
     expect(formData.get("amount")).toBe("1500");
     expect(formData.get("paymentMethod")).toBe("bank_transfer");
     expect(formData.get("referenceNumber")).toBe("UTR-1");
-    expect(
-      JSON.parse(formData.get("allocations") as string)
-    ).toEqual([
-      { invoiceId: "550e8400-e29b-41d4-a716-446655440099", amount: 400 },
+    expect(JSON.parse(formData.get("allocations") as string)).toEqual([
+      { invoiceId: INVOICE_ONE, amount: 1000 },
+      { invoiceId: INVOICE_TWO, amount: 500 },
+    ]);
+  });
+
+  it("allows overpayment — the excess beyond outstanding stays unallocated", async () => {
+    const user = userEvent.setup();
+    recordActionMock.mockResolvedValue({ success: true, data: { id: "pay-1" } });
+    const { onDone } = renderDialog();
+
+    const rowOne = await screen.findByRole("checkbox", {
+      name: /select invoice INV-001/i,
+    });
+    const rowTwo = screen.getByRole("checkbox", {
+      name: /select invoice INV-002/i,
+    });
+    await user.click(rowOne);
+    await user.click(rowTwo);
+
+    // Bump the amount above the 1500 selected total.
+    const amount = screen.getByLabelText(/amount received/i);
+    await user.clear(amount);
+    await user.type(amount, "2000");
+
+    await user.click(screen.getByRole("button", { name: /record payment/i }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+
+    const [, formData] = recordActionMock.mock.calls[0] as [string, FormData];
+    expect(formData.get("amount")).toBe("2000");
+    // Each invoice is capped at its outstanding; the extra 500 is unallocated.
+    expect(JSON.parse(formData.get("allocations") as string)).toEqual([
+      { invoiceId: INVOICE_ONE, amount: 1000 },
+      { invoiceId: INVOICE_TWO, amount: 500 },
+    ]);
+  });
+
+  it("records a pure advance with no invoices selected", async () => {
+    const user = userEvent.setup();
+    recordActionMock.mockResolvedValue({ success: true, data: { id: "pay-1" } });
+    const { onDone } = renderDialog();
+
+    // Party is pre-seeded and the list has loaded — the amount box is shown.
+    const amount = await screen.findByLabelText(/amount received/i);
+    await user.clear(amount);
+    await user.type(amount, "300");
+
+    await user.click(screen.getByRole("button", { name: /record payment/i }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+
+    const [, formData] = recordActionMock.mock.calls[0] as [string, FormData];
+    expect(formData.get("amount")).toBe("300");
+    expect(JSON.parse(formData.get("allocations") as string)).toEqual([]);
+  });
+
+  it("uses the override list and pre-checks the given invoice ids", async () => {
+    const user = userEvent.setup();
+    recordActionMock.mockResolvedValue({ success: true, data: { id: "pay-1" } });
+    const { onDone } = renderDialog({
+      outstandingInvoices,
+      preselectedInvoiceIds: [INVOICE_ONE],
+    });
+
+    // Override means no fetch.
+    expect(outstandingActionMock).not.toHaveBeenCalled();
+
+    const rowOne = await screen.findByRole("checkbox", {
+      name: /select invoice INV-001/i,
+    });
+    expect(rowOne).toBeChecked();
+
+    await user.click(screen.getByRole("button", { name: /record payment/i }));
+
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    const [, formData] = recordActionMock.mock.calls[0] as [string, FormData];
+    expect(formData.get("amount")).toBe("1000");
+    expect(JSON.parse(formData.get("allocations") as string)).toEqual([
+      { invoiceId: INVOICE_ONE, amount: 1000 },
     ]);
   });
 
@@ -174,7 +251,10 @@ describe("RecordCustomerPaymentDialog", () => {
     });
     const { onDone } = renderDialog();
 
-    await user.type(screen.getByLabelText(/payment amount/i), "500");
+    const rowOne = await screen.findByRole("checkbox", {
+      name: /select invoice INV-001/i,
+    });
+    await user.click(rowOne);
     await user.click(screen.getByRole("button", { name: /record payment/i }));
 
     expect(await screen.findByText("Customer not found")).toBeInTheDocument();

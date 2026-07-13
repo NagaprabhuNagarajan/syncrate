@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { SupplierService } from "@/features/supplier/services/supplier.service";
+import { SupplierPaymentService } from "@/features/payment/services/supplier-payment.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { SupplierProfile } from "@/features/supplier/components/supplier-profile";
 
@@ -69,7 +70,13 @@ export default async function SupplierDetailPage({
     context.permissions.includes("supplier.update") ||
     context.permissions.includes("supplier.archive");
 
-  const ledger = await service.getSupplierLedger(result.data);
+  const [ledger, availableCredit] = await Promise.all([
+    service.getSupplierLedger(result.data),
+    new SupplierPaymentService(supabase).getAvailableCredit(
+      activeOrg.id,
+      result.data.id
+    ),
+  ]);
 
   return (
     <SupplierProfile
@@ -77,6 +84,7 @@ export default async function SupplierDetailPage({
       supplier={result.data}
       ledger={ledger}
       canManage={canManage}
+      availableCredit={availableCredit}
     />
   );
 }

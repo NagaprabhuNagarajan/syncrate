@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import {
   SRETURN_STATUS_LABEL,
   SRETURN_STATUS_VARIANT,
@@ -112,11 +113,7 @@ function ActionDialog({
           </div>
         </div>
 
-        {error && (
-          <div className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm" role="alert">
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
@@ -249,11 +246,7 @@ export function SalesReturnDetail({
         </Badge>
       </div>
 
-      {actionError && (
-        <p role="alert" className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm">
-          {actionError}
-        </p>
-      )}
+      {actionError && <ErrorBanner message={actionError} className="mt-4" />}
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Details */}

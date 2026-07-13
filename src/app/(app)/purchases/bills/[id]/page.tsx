@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { BillService } from "@/features/purchase/services/bill.service";
+import { SupplierPaymentService } from "@/features/payment/services/supplier-payment.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { BillDetail } from "@/features/purchase/components/bill-detail";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
@@ -137,14 +138,17 @@ export default async function BillDetailPage({
 
   const invoice = result.data;
 
-  const [supplierName, productNames, purchaseOrderNumber] = await Promise.all([
-    lookupSupplierName(supabase, invoice.supplierId),
-    lookupProductNames(
-      supabase,
-      invoice.items.map((item) => item.productId)
-    ),
-    lookupPurchaseOrderNumber(supabase, invoice.purchaseOrderId),
-  ]);
+  const paymentService = new SupplierPaymentService(supabase);
+  const [supplierName, productNames, purchaseOrderNumber, availableCredit] =
+    await Promise.all([
+      lookupSupplierName(supabase, invoice.supplierId),
+      lookupProductNames(
+        supabase,
+        invoice.items.map((item) => item.productId)
+      ),
+      lookupPurchaseOrderNumber(supabase, invoice.purchaseOrderId),
+      paymentService.getAvailableCredit(activeOrg.id, invoice.supplierId),
+    ]);
 
   return (
     <BillDetail
@@ -152,9 +156,11 @@ export default async function BillDetailPage({
       supplierName={supplierName}
       productNames={productNames}
       purchaseOrderNumber={purchaseOrderNumber}
+      availableCredit={availableCredit}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("purchase.create")}
       canCancel={context.permissions.includes("purchase.cancel")}
+      canMakePayment={context.permissions.includes("payment.make")}
     />
   );
 }

@@ -102,7 +102,7 @@ export default async function SalesInvoicesPage({
 
   const service = new InvoiceService(supabase);
   const [result, stats] = await Promise.all([
-    service.listInvoices(activeOrg.id, { search, status, page }),
+    service.listInvoices(activeOrg.id, { search, status, paymentStatus, page }),
     service.getInvoiceStats(activeOrg.id),
   ]);
 

@@ -83,6 +83,17 @@ export interface SupplierPaymentAllocation {
   readonly createdBy: string | null;
 }
 
+/** A payment (with its amount allocated to a specific invoice) — for the
+ * invoice detail "payments received" panel. */
+export interface InvoicePaymentSummary {
+  readonly id: string;
+  readonly paymentNumber: string;
+  readonly paymentDate: string;
+  readonly paymentMethod: PaymentMethod;
+  readonly allocatedAmount: number;
+  readonly status: PaymentStatus;
+}
+
 export interface PaymentWithAllocations extends CustomerPayment {
   readonly allocations: readonly CustomerPaymentAllocation[];
 }
@@ -122,6 +133,26 @@ export interface RecordSupplierPaymentInput {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Outstanding transactions (record-payment picker)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * A transaction with a balance still due — an unpaid/partial customer invoice
+ * or supplier bill — surfaced by the record-payment dialog so the user can
+ * check the ones to settle. `outstandingAmount` (= `totalAmount` − `amountPaid`)
+ * is always > 0. For supplier bills, `invoiceNumber`/`invoiceDate` carry the
+ * bill's own number and date.
+ */
+export interface OutstandingTransaction {
+  readonly id: string;
+  readonly invoiceNumber: string;
+  readonly invoiceDate: string;
+  readonly totalAmount: number;
+  readonly amountPaid: number;
+  readonly outstandingAmount: number;
+}
+
+// ─────────────────────────────────────────────────────────────
 // Listing / search
 // ─────────────────────────────────────────────────────────────
 
@@ -151,6 +182,23 @@ export interface SupplierPaymentListResult {
   readonly total: number;
   readonly page: number;
   readonly pageSize: number;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Stats (list header tiles)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Aggregate figures for the payments list header tiles. Reused by both the
+ * customer (received) and supplier (paid) tabs. `totalAmount` and `thisMonth`
+ * sum only completed payments; voided payments are excluded from the money.
+ */
+export interface PaymentStats {
+  readonly total: number;
+  readonly completed: number;
+  readonly voided: number;
+  readonly totalAmount: number;
+  readonly thisMonth: number;
 }
 
 // ─────────────────────────────────────────────────────────────

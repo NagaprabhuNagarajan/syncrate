@@ -95,6 +95,33 @@ describe("BillsView", () => {
     expect(screen.getByText("₹1,180.00")).toBeInTheDocument();
   });
 
+  it("renders a derived payment badge for unpaid and paid rows", () => {
+    const unpaid = makeInvoice({ id: "b-unpaid", amountPaid: 0 });
+    const paid = makeInvoice({
+      id: "b-paid",
+      invoiceNumber: "PINV-00002",
+      status: "posted",
+      amountPaid: 1180,
+    });
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([unpaid, paid])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
+    // "Unpaid"/"Paid" also appear as payment filter pill labels, so scope the
+    // assertion to the row payment badges (rendered inside table cells).
+    const badges = screen
+      .getAllByText(/^(Unpaid|Paid)$/)
+      .filter((el) => el.closest("td") !== null)
+      .map((el) => el.textContent);
+    expect(badges).toContain("Unpaid");
+    expect(badges).toContain("Paid");
+  });
+
   it("renders the stat tiles", () => {
     render(
       <BillsView
@@ -112,7 +139,8 @@ describe("BillsView", () => {
     );
     expect(screen.getByText("Total value")).toBeInTheDocument();
     expect(screen.getAllByText("Posted").length).toBeGreaterThan(0);
-    expect(screen.getByText("Overdue")).toBeInTheDocument();
+    // "Overdue" now appears both as a stat-tile label and a payment pill.
+    expect(screen.getAllByText("Overdue").length).toBeGreaterThan(0);
   });
 
   it("shows the new invoice button only when canManage is true", () => {
@@ -195,6 +223,61 @@ describe("BillsView", () => {
     expect(mockPush).toHaveBeenCalledWith(
       "/purchases/bills?status=posted"
     );
+  });
+
+  it("renders the payment filter pills", () => {
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([makeInvoice()])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
+    const paymentRow = screen.getByRole("tablist", {
+      name: /filter by payment/i,
+    });
+    expect(paymentRow).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: "Unpaid" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: "Partial" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Overdue" })).toBeInTheDocument();
+  });
+
+  it("pushes a payment filter change via the payment pills", async () => {
+    const user = userEvent.setup();
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([makeInvoice()])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+      />
+    );
+    await user.click(screen.getByRole("tab", { name: "Overdue" }));
+    expect(mockPush).toHaveBeenCalledWith(
+      "/purchases/bills?paymentStatus=overdue"
+    );
+  });
+
+  it("marks the active payment pill as selected", () => {
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([makeInvoice()])}
+        stats={makeStats()}
+        filters={{ paymentStatus: "partial" }}
+        canManage
+      />
+    );
+    expect(
+      screen.getByRole("tab", { name: "Partial", selected: true })
+    ).toBeInTheDocument();
   });
 
   it("renders pagination summary and navigates pages", async () => {

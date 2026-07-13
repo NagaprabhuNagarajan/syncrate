@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { BrandForm } from "@/features/brand/components/brand-form";
 import { archiveBrandAction } from "@/features/brand/actions/brand.actions";
 import type {
@@ -143,14 +144,7 @@ export function BrandsView({
         )}
       </PageHeader>
 
-      {archiveError && (
-        <p
-          role="alert"
-          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {archiveError}
-        </p>
-      )}
+      {archiveError && <ErrorBanner message={archiveError} className="mt-4" />}
 
       {formMode && (
         <div className="mt-4">

@@ -5,7 +5,10 @@ import { OrganizationService } from "@/features/organization/services/organizati
 import { BillService } from "@/features/purchase/services/bill.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { BillsView } from "@/features/purchase/components/bills-view";
-import type { BillStatus } from "@/features/purchase/types/bill.types";
+import type {
+  BillPaymentStatusFilter,
+  BillStatus,
+} from "@/features/purchase/types/bill.types";
 
 export const metadata: Metadata = {
   title: "Bills",
@@ -18,9 +21,25 @@ const BILL_STATUSES: readonly BillStatus[] = [
   "cancelled",
 ];
 
+const BILL_PAYMENT_STATUSES: readonly BillPaymentStatusFilter[] = [
+  "unpaid",
+  "partial",
+  "paid",
+  "overdue",
+];
+
 function parseStatus(value?: string): BillStatus | undefined {
   if (value && BILL_STATUSES.includes(value as BillStatus)) {
     return value as BillStatus;
+  }
+  return undefined;
+}
+
+function parsePaymentStatus(
+  value?: string
+): BillPaymentStatusFilter | undefined {
+  if (value && BILL_PAYMENT_STATUSES.includes(value as BillPaymentStatusFilter)) {
+    return value as BillPaymentStatusFilter;
   }
   return undefined;
 }
@@ -37,6 +56,7 @@ export default async function BillsPage({
     org?: string;
     search?: string;
     status?: string;
+    paymentStatus?: string;
     page?: string;
   }>;
 }) {
@@ -83,11 +103,12 @@ export default async function BillsPage({
 
   const search = params.search?.trim() || undefined;
   const status = parseStatus(params.status);
+  const paymentStatus = parsePaymentStatus(params.paymentStatus);
   const page = parsePage(params.page);
 
   const service = new BillService(supabase);
   const [result, stats] = await Promise.all([
-    service.listBills(activeOrg.id, { search, status, page }),
+    service.listBills(activeOrg.id, { search, status, paymentStatus, page }),
     service.getBillStats(activeOrg.id),
   ]);
 
@@ -96,7 +117,7 @@ export default async function BillsPage({
       organizationId={activeOrg.id}
       result={result}
       stats={stats}
-      filters={{ search, status }}
+      filters={{ search, status, paymentStatus }}
       canManage={canManage}
     />
   );

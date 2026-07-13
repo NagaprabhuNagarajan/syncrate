@@ -20,12 +20,10 @@ import {
   Share2,
   Banknote,
   X,
-  type LucideIcon,
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -43,7 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
-import { AnimatedNumber } from "@/components/shared/animated-number";
+import { StatTile } from "@/components/shared/stat-tile";
 import { RecordCustomerPaymentDialog } from "@/features/payment/components/record-customer-payment-dialog";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -111,66 +109,6 @@ const PAYMENT_FILTERS: readonly { value: string; label: string }[] = [
   { value: "paid", label: PAYMENT_STATUS_LABEL.paid },
   { value: "overdue", label: PAYMENT_STATUS_LABEL.overdue },
 ];
-
-// ─────────────────────────────────────────────────────────────
-// Stat tile
-// ─────────────────────────────────────────────────────────────
-
-function StatTile({
-  icon: Icon,
-  label,
-  value,
-  tint,
-  index,
-  currency,
-}: {
-  readonly icon: LucideIcon;
-  readonly label: string;
-  readonly value: number;
-  readonly tint: string;
-  readonly index: number;
-  readonly currency?: boolean;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
-    >
-      <Card className="relative overflow-hidden p-4">
-        <div
-          className={cn(
-            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
-            tint
-          )}
-          aria-hidden="true"
-        />
-        <div className="relative flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
-              tint
-            )}
-          >
-            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {label}
-            </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {currency ? (
-                formatCurrency(value)
-              ) : (
-                <AnimatedNumber value={value} />
-              )}
-            </p>
-          </div>
-        </div>
-      </Card>
-    </motion.div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────
 // Filter pill row
@@ -777,6 +715,7 @@ export function InvoicesView({
           outstandingInvoices={selectedInvoices.map((invoice) => ({
             id: invoice.id,
             invoiceNumber: invoice.invoiceNumber,
+            invoiceDate: invoice.invoiceDate.toISOString(),
             totalAmount: invoice.totalAmount,
             amountPaid: invoice.amountPaid,
             outstandingAmount: invoice.totalAmount - invoice.amountPaid,

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { RuleForm, type RoleOption } from "@/features/approvals/components/rule-form";
 import {
   approveRequestAction,
@@ -181,14 +182,7 @@ export function ApprovalsView({
         </button>
       </div>
 
-      {actionError && (
-        <p
-          role="alert"
-          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {actionError}
-        </p>
-      )}
+      {actionError && <ErrorBanner message={actionError} className="mt-4" />}
 
       {/* Rules tab */}
       {tab === "rules" && (

@@ -5,6 +5,7 @@ import type { OrganizationContext } from "@/features/organization/types/organiza
 import {
   recordSupplierPaymentAction,
   listSupplierPaymentsAction,
+  applySupplierCreditAction,
 } from "./supplier-payment.actions";
 
 // ─────────────────────────────────────────────────────────────
@@ -22,6 +23,7 @@ const {
   mockPaymentService: {
     recordPayment: vi.fn(),
     listSupplierPayments: vi.fn(),
+    applyCredit: vi.fn(),
   },
   mockOrgService: {
     getOrganizationContext: vi.fn(),
@@ -227,6 +229,89 @@ describe("recordSupplierPaymentAction", () => {
     });
 
     const result = await recordSupplierPaymentAction("org-1", validFormData);
+    expect(result.success).toBe(false);
+    expect(revalidateMock).not.toHaveBeenCalled();
+    expect(auditLogMock).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// applySupplierCreditAction
+// ─────────────────────────────────────────────────────────────
+
+describe("applySupplierCreditAction", () => {
+  const creditForm = fd({
+    supplierId: "550e8400-e29b-41d4-a716-446655440001",
+    billId: "bill-1",
+    amount: "500",
+  });
+
+  it("returns forbidden when the user is not authenticated", async () => {
+    unauthenticated();
+
+    const result = await applySupplierCreditAction("org-1", creditForm);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("forbidden");
+    }
+  });
+
+  it("returns validation for a non-positive amount", async () => {
+    const result = await applySupplierCreditAction(
+      "org-1",
+      fd({
+        supplierId: "550e8400-e29b-41d4-a716-446655440001",
+        billId: "bill-1",
+        amount: "0",
+      })
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+    }
+  });
+
+  it("calls the service, revalidates and audits on success", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["payment.make"])
+    );
+    mockPaymentService.applyCredit.mockResolvedValue({
+      success: true,
+      data: undefined,
+    });
+
+    const result = await applySupplierCreditAction("org-1", creditForm);
+    expect(result.success).toBe(true);
+    expect(mockPaymentService.applyCredit).toHaveBeenCalledWith(
+      "org-1",
+      "550e8400-e29b-41d4-a716-446655440001",
+      "bill-1",
+      500,
+      "user-1"
+    );
+    expect(revalidateMock).toHaveBeenCalledWith("/purchases/bills/bill-1");
+    expect(revalidateMock).toHaveBeenCalledWith("/suppliers");
+    expect(auditLogMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "supplier_credit.apply",
+        entityType: "bill",
+        entityId: "bill-1",
+      })
+    );
+  });
+
+  it("does not revalidate or audit when the service returns an error", async () => {
+    authedAs("user-1");
+    mockOrgService.getOrganizationContext.mockResolvedValue(
+      contextWith(["payment.make"])
+    );
+    mockPaymentService.applyCredit.mockResolvedValue({
+      success: false,
+      error: { code: "validation", message: "amount exceeds credit" },
+    });
+
+    const result = await applySupplierCreditAction("org-1", creditForm);
     expect(result.success).toBe(false);
     expect(revalidateMock).not.toHaveBeenCalled();
     expect(auditLogMock).not.toHaveBeenCalled();

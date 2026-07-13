@@ -16,10 +16,14 @@ import {
   Wallet,
   Percent,
   ShoppingCart,
+  CreditCard,
+  Banknote,
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/shared/error-banner";
+import { KpiTile } from "@/components/shared/kpi-tile";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -33,13 +37,17 @@ import {
   postBillAction,
   cancelBillAction,
 } from "@/features/purchase/actions/bill.actions";
+import { applySupplierCreditAction } from "@/features/payment/actions/supplier-payment.actions";
+import { RecordSupplierPaymentDialog } from "@/features/payment/components/record-supplier-payment-dialog";
 import {
   BILL_STATUS_LABEL,
   BILL_STATUS_VARIANT,
+  BILL_PAYMENT_STATUS_LABEL,
+  BILL_PAYMENT_STATUS_VARIANT,
+  deriveBillPaymentStatus,
 } from "@/features/purchase/utils/bill-display";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type { BillWithItems } from "@/features/purchase/types/bill.types";
-import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
 // Cancel confirmation dialog
@@ -101,14 +109,7 @@ function CancelDialog({
           </div>
         </div>
 
-        {error && (
-          <div
-            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
@@ -135,65 +136,143 @@ function CancelDialog({
 }
 
 // ─────────────────────────────────────────────────────────────
-// KPI tile
+// Apply-credit confirmation dialog
 // ─────────────────────────────────────────────────────────────
 
-function KpiTile({
-  icon: Icon,
-  label,
-  value,
-  tint,
-  emphasis,
-  displayValue,
-  index,
-}: {
-  readonly icon: LucideIcon;
-  readonly label: string;
-  readonly value: number;
-  readonly tint: string;
-  readonly emphasis?: boolean;
-  readonly displayValue?: string;
-  readonly index: number;
-}) {
+interface ApplyCreditDialogProps {
+  readonly availableCredit: number;
+  readonly balanceDue: number;
+  readonly applicableCredit: number;
+  readonly isPending: boolean;
+  readonly error: string | null;
+  readonly onConfirm: (amount: number) => void;
+  readonly onClose: () => void;
+}
+
+function ApplyCreditDialog({
+  availableCredit,
+  balanceDue,
+  applicableCredit,
+  isPending,
+  error,
+  onConfirm,
+  onClose,
+}: ApplyCreditDialogProps) {
+  const [amount, setAmount] = useState<number>(applicableCredit);
+
+  const handleAmountChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setAmount(Number(event.target.value));
+  };
+
+  const isValid = amount > 0 && amount <= applicableCredit;
+
+  const handleConfirm = (): void => {
+    if (isValid) {
+      onConfirm(amount);
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
-    >
-      <Card className="relative h-full overflow-hidden p-3">
-        <div
-          className={cn(
-            "absolute -right-8 -top-8 h-20 w-20 rounded-full opacity-20 blur-2xl",
-            tint
-          )}
-          aria-hidden="true"
-        />
-        <div className="relative flex items-center gap-2.5">
-          <div
-            className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
-              tint
-            )}
-          >
-            <Icon className="h-4 w-4 text-white" aria-hidden="true" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Close dialog"
+        className="absolute inset-0 bg-slate-900/40"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.18 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="apply-credit-title"
+        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
+      >
+        <div className="flex items-start gap-4">
+          <div className="bg-success-50 dark:bg-success-500/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+            <CreditCard
+              className="text-success-600 dark:text-success-400 h-5 w-5"
+              aria-hidden="true"
+            />
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {label}
-            </p>
-            <p
-              className={cn(
-                "truncate font-bold leading-tight text-slate-900 dark:text-slate-100",
-                emphasis ? "text-lg" : "text-base"
-              )}
+          <div>
+            <h2
+              id="apply-credit-title"
+              className="text-base font-semibold text-slate-900 dark:text-slate-100"
             >
-              {displayValue ?? formatCurrency(value, true)}
+              Apply credit
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Settle this bill using the supplier&apos;s available advance
+              credit.
             </p>
           </div>
         </div>
-      </Card>
-    </motion.div>
+
+        <dl className="mt-5 space-y-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800/50">
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Available credit</dt>
+            <dd className="nums font-medium text-slate-900 dark:text-slate-100">
+              {formatCurrency(availableCredit, true)}
+            </dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Bill balance due</dt>
+            <dd className="nums font-medium text-slate-900 dark:text-slate-100">
+              {formatCurrency(balanceDue, true)}
+            </dd>
+          </div>
+        </dl>
+
+        <div className="mt-4">
+          <label
+            htmlFor="apply-credit-amount"
+            className="text-xs font-medium text-slate-600 dark:text-slate-400"
+          >
+            Amount to apply
+          </label>
+          <input
+            id="apply-credit-amount"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={applicableCredit}
+            step="0.01"
+            value={amount}
+            onChange={handleAmountChange}
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Up to {formatCurrency(applicableCredit, true)} can be applied.
+          </p>
+        </div>
+
+        {error && <ErrorBanner message={error} className="mt-4" />}
+
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="gradient"
+            onClick={handleConfirm}
+            loading={isPending}
+            disabled={isPending || !isValid}
+          >
+            Apply credit
+          </Button>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -264,9 +343,12 @@ interface BillDetailProps {
   readonly productNames: Readonly<Record<string, string>>;
   /** PO number of the linked purchase order, if this bill was raised from one. */
   readonly purchaseOrderNumber?: string | null;
+  /** The supplier's unallocated advance credit — enables "Apply credit" when > 0. */
+  readonly availableCredit?: number;
   readonly organizationId: string;
   readonly canManage: boolean;
   readonly canCancel: boolean;
+  readonly canMakePayment?: boolean;
 }
 
 export function BillDetail({
@@ -274,14 +356,19 @@ export function BillDetail({
   supplierName,
   productNames,
   purchaseOrderNumber,
+  availableCredit = 0,
   organizationId,
   canManage,
   canCancel,
+  canMakePayment = false,
 }: BillDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [actionError, setActionError] = useState<string | null>(null);
   const [showCancel, setShowCancel] = useState(false);
+  const [showCredit, setShowCredit] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [creditError, setCreditError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const org = searchParams.get("org");
@@ -290,6 +377,42 @@ export function BillDetail({
 
   const { status } = bill;
   const isDraft = status === "draft";
+  const balanceDue = bill.totalAmount - bill.amountPaid;
+  const applicableCredit = Math.min(availableCredit, balanceDue);
+  const canPay = status === "posted" && balanceDue > 0 && canMakePayment;
+  const canApplyCredit = canPay && applicableCredit > 0;
+  const paymentStatus = deriveBillPaymentStatus(bill);
+
+  const openCredit = (): void => {
+    setCreditError(null);
+    setShowCredit(true);
+  };
+
+  const closeCredit = (): void => setShowCredit(false);
+
+  const openPayment = (): void => setShowPayment(true);
+  const closePayment = (): void => setShowPayment(false);
+  const handlePaymentDone = (): void => {
+    setShowPayment(false);
+    router.refresh();
+  };
+
+  const handleApplyCredit = (amount: number): void => {
+    setCreditError(null);
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("supplierId", bill.supplierId);
+      formData.set("billId", bill.id);
+      formData.set("amount", String(amount));
+      const result = await applySupplierCreditAction(organizationId, formData);
+      if (!result.success) {
+        setCreditError(result.error.message);
+        return;
+      }
+      setShowCredit(false);
+      router.refresh();
+    });
+  };
 
   const run = (
     action: () => Promise<{ success: boolean; error?: { message: string } }>
@@ -333,6 +456,9 @@ export function BillDetail({
               <Badge dot variant={BILL_STATUS_VARIANT[status]}>
                 {BILL_STATUS_LABEL[status]}
               </Badge>
+              <Badge dot variant={BILL_PAYMENT_STATUS_VARIANT[paymentStatus]}>
+                {BILL_PAYMENT_STATUS_LABEL[paymentStatus]}
+              </Badge>
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {supplierName ?? "No supplier"}
@@ -350,6 +476,28 @@ export function BillDetail({
               >
                 <CheckCircle2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
                 Post
+              </Button>
+            )}
+            {canPay && (
+              <Button
+                type="button"
+                variant="gradient"
+                size="sm"
+                onClick={openPayment}
+              >
+                <Banknote className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Record payment
+              </Button>
+            )}
+            {canApplyCredit && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openCredit}
+              >
+                <CreditCard className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Apply credit
               </Button>
             )}
             {isDraft && canCancel && (
@@ -371,14 +519,7 @@ export function BillDetail({
         </div>
       </div>
 
-      {actionError && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mb-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {actionError}
-        </p>
-      )}
+      {actionError && <ErrorBanner message={actionError} className="mb-4" />}
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -532,6 +673,13 @@ export function BillDetail({
                     : null
                 }
               />
+              {availableCredit > 0 && (
+                <InfoRow
+                  icon={Wallet}
+                  label="Available credit"
+                  value={formatCurrency(availableCredit, true)}
+                />
+              )}
             </dl>
           </SectionCard>
 
@@ -578,7 +726,39 @@ export function BillDetail({
             onCancel={() => setShowCancel(false)}
           />
         )}
+        {showCredit && (
+          <ApplyCreditDialog
+            availableCredit={availableCredit}
+            balanceDue={balanceDue}
+            applicableCredit={applicableCredit}
+            isPending={isPending}
+            error={creditError}
+            onConfirm={handleApplyCredit}
+            onClose={closeCredit}
+          />
+        )}
       </AnimatePresence>
+
+      {showPayment && (
+        <RecordSupplierPaymentDialog
+          organizationId={organizationId}
+          supplierId={bill.supplierId}
+          supplierName={supplierName ?? "Supplier"}
+          outstandingInvoices={[
+            {
+              id: bill.id,
+              invoiceNumber: bill.invoiceNumber,
+              invoiceDate: bill.invoiceDate.toISOString(),
+              totalAmount: bill.totalAmount,
+              amountPaid: bill.amountPaid,
+              outstandingAmount: balanceDue,
+            },
+          ]}
+          preselectedInvoiceIds={[bill.id]}
+          onClose={closePayment}
+          onDone={handlePaymentDone}
+        />
+      )}
     </div>
   );
 }

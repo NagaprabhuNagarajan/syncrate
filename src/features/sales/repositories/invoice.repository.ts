@@ -9,6 +9,7 @@ import type {
   InvoiceStats,
   InvoiceStatus,
   InvoiceWithItems,
+  OutstandingInvoiceSummary,
 } from "@/features/sales/types/invoice.types";
 
 type DbInvoice = Database["public"]["Tables"]["invoices"]["Row"];
@@ -208,6 +209,27 @@ export class InvoiceRepository {
       query = query.eq("status", params.status);
     }
 
+    if (params.paymentStatus) {
+      // Invoices carry a real `payment_status` column (unpaid/partial/paid);
+      // 'overdue' is never written, so it is derived here from due_date vs
+      // today — kept consistent with the payment badge (overdue wins over
+      // unpaid/partial for posted, past-due, still-owing invoices).
+      const today = new Date().toISOString().slice(0, 10);
+      if (params.paymentStatus === "overdue") {
+        query = query
+          .eq("status", "posted")
+          .neq("payment_status", "paid")
+          .lt("due_date", today);
+      } else if (params.paymentStatus === "paid") {
+        query = query.eq("payment_status", "paid");
+      } else {
+        // unpaid | partial — exact match, EXCLUDING rows shown as overdue.
+        query = query
+          .eq("payment_status", params.paymentStatus)
+          .or(`status.neq.posted,due_date.is.null,due_date.gte.${today}`);
+      }
+    }
+
     if (params.customerId) {
       query = query.eq("customer_id", params.customerId);
     }
@@ -334,6 +356,53 @@ export class InvoiceRepository {
       ...mapInvoice(row),
       customerName: readCustomerName(row.customers),
     }));
+  }
+
+  /**
+   * Lists a single customer's invoices that still carry a balance due, for the
+   * record-payment "settle outstanding" picker. Filters to POSTED invoices only
+   * (drafts aren't payable, cancelled are void) with unsettled payment statuses
+   * (`unpaid`/`partial`/`overdue`) that are non-deleted, then keeps only rows
+   * where `total_amount − amount_paid > 0`. Ordered by invoice date (oldest
+   * first) so the earliest debts surface first.
+   */
+  async listOutstandingByCustomer(
+    organizationId: string,
+    customerId: string
+  ): Promise<OutstandingInvoiceSummary[]> {
+    const { data, error } = await this.supabase
+      .from("invoices")
+      .select(
+        "id, invoice_number, invoice_date, total_amount, amount_paid"
+      )
+      .eq("organization_id", organizationId)
+      .eq("customer_id", customerId)
+      .is("deleted_at", null)
+      .eq("status", "posted")
+      .in("payment_status", ["unpaid", "partial", "overdue"])
+      .order("invoice_date", { ascending: true });
+
+    if (error || !data) {
+      return [];
+    }
+
+    const summaries: OutstandingInvoiceSummary[] = [];
+    for (const row of data) {
+      const totalAmount = Number(row.total_amount);
+      const amountPaid = Number(row.amount_paid);
+      const outstandingAmount = totalAmount - amountPaid;
+      if (outstandingAmount > 0) {
+        summaries.push({
+          id: row.id,
+          invoiceNumber: row.invoice_number,
+          invoiceDate: row.invoice_date,
+          totalAmount,
+          amountPaid,
+          outstandingAmount,
+        });
+      }
+    }
+    return summaries;
   }
 
   async createHeader(input: DbInvoiceInsert): Promise<Invoice | null> {

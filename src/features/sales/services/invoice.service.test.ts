@@ -22,6 +22,7 @@ const mockUpdateStatus = vi.fn();
 const mockPostInvoiceRpc = vi.fn();
 const mockSoftDelete = vi.fn();
 const mockList = vi.fn();
+const mockListOutstandingByCustomer = vi.fn();
 
 vi.mock("@/features/sales/repositories/invoice.repository", () => ({
   InvoiceRepository: vi.fn().mockImplementation(() => ({
@@ -35,6 +36,7 @@ vi.mock("@/features/sales/repositories/invoice.repository", () => ({
     postInvoiceRpc: mockPostInvoiceRpc,
     softDelete: mockSoftDelete,
     list: mockList,
+    listOutstandingByCustomer: mockListOutstandingByCustomer,
   })),
 }));
 
@@ -143,6 +145,35 @@ describe("InvoiceService", () => {
     // Default: list returns 0 (for nextInvoiceNumber)
     mockList.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 1 });
     service = new InvoiceService(mockSupabase as never);
+  });
+
+  // ── listOutstandingInvoicesForCustomer ────────────────────
+
+  describe("listOutstandingInvoicesForCustomer", () => {
+    it("delegates to the repository with org + customer", async () => {
+      const rows = [
+        {
+          id: "inv-1",
+          invoiceNumber: "INV-001",
+          invoiceDate: "2026-06-01",
+          totalAmount: 1000,
+          amountPaid: 200,
+          outstandingAmount: 800,
+        },
+      ];
+      mockListOutstandingByCustomer.mockResolvedValue(rows);
+
+      const result = await service.listOutstandingInvoicesForCustomer(
+        ORG_ID,
+        "cust-1"
+      );
+
+      expect(mockListOutstandingByCustomer).toHaveBeenCalledWith(
+        ORG_ID,
+        "cust-1"
+      );
+      expect(result).toEqual(rows);
+    });
   });
 
   // ── createInvoice ─────────────────────────────────────────

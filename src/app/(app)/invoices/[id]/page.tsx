@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { InvoiceService } from "@/features/sales/services/invoice.service";
+import { CustomerPaymentService } from "@/features/payment/services/customer-payment.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { InvoiceDetail } from "@/features/sales/components/invoice-detail";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
@@ -129,14 +130,18 @@ export default async function InvoiceDetailPage({
 
   const invoice = result.data;
 
-  const [customerName, productNames, salesOrderNumber] = await Promise.all([
-    lookupCustomerName(supabase, invoice.customerId),
-    lookupProductNames(
-      supabase,
-      invoice.items.map((item) => item.productId)
-    ),
-    lookupSalesOrderNumber(supabase, invoice.salesOrderId),
-  ]);
+  const paymentService = new CustomerPaymentService(supabase);
+  const [customerName, productNames, salesOrderNumber, payments, availableCredit] =
+    await Promise.all([
+      lookupCustomerName(supabase, invoice.customerId),
+      lookupProductNames(
+        supabase,
+        invoice.items.map((item) => item.productId)
+      ),
+      lookupSalesOrderNumber(supabase, invoice.salesOrderId),
+      paymentService.listPaymentsForInvoice(activeOrg.id, invoice.id),
+      paymentService.getAvailableCredit(activeOrg.id, invoice.customerId),
+    ]);
 
   return (
     <InvoiceDetail
@@ -144,6 +149,8 @@ export default async function InvoiceDetailPage({
       customerName={customerName}
       productNames={productNames}
       salesOrderNumber={salesOrderNumber}
+      payments={payments}
+      availableCredit={availableCredit}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("invoice.create")}
       canCancel={context.permissions.includes("invoice.cancel")}

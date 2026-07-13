@@ -11,11 +11,9 @@ import {
   Archive,
   ChevronLeft,
   ChevronRight,
-  type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -25,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
-import { AnimatedNumber } from "@/components/shared/animated-number";
+import { StatTile } from "@/components/shared/stat-tile";
 import { BatchFormDialog } from "@/features/inventory/components/batch-form";
 import {
   BATCH_STATUS_LABEL,
@@ -38,7 +36,6 @@ import type {
   BatchStats,
 } from "@/features/inventory/types/batch.types";
 import type { ProductOption } from "@/features/inventory/types/inventory.types";
-import { cn } from "@/utils/cn";
 
 const numberFormatter = new Intl.NumberFormat("en-IN");
 
@@ -55,60 +52,6 @@ function formatBatchDate(value: string | null): string {
     return "—";
   }
   return formatDate(new Date(value));
-}
-
-// ─────────────────────────────────────────────────────────────
-// Stat tile
-// ─────────────────────────────────────────────────────────────
-
-function StatTile({
-  icon: Icon,
-  label,
-  value,
-  tint,
-  index,
-}: {
-  readonly icon: LucideIcon;
-  readonly label: string;
-  readonly value: number;
-  readonly tint: string;
-  readonly index: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
-    >
-      <Card className="relative overflow-hidden p-4">
-        <div
-          className={cn(
-            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
-            tint
-          )}
-          aria-hidden="true"
-        />
-        <div className="relative flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
-              tint
-            )}
-          >
-            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {label}
-            </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              <AnimatedNumber value={value} />
-            </p>
-          </div>
-        </div>
-      </Card>
-    </motion.div>
-  );
 }
 
 // ─────────────────────────────────────────────────────────────
