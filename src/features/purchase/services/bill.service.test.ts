@@ -23,6 +23,7 @@ const { mockRepo } = vi.hoisted(() => ({
     updateStatus: vi.fn(),
     postInvoiceRpc: vi.fn(),
     softDelete: vi.fn(),
+    listOutstandingBySupplier: vi.fn(),
   },
 }));
 
@@ -456,5 +457,28 @@ describe("BillService reads", () => {
     const result = await service.listBillsForPurchaseOrder("po-1");
     expect(result).toBe(bills);
     expect(mockRepo.findByPurchaseOrder).toHaveBeenCalledWith("po-1");
+  });
+
+  it("listOutstandingBillsForSupplier delegates to the repository", async () => {
+    const rows = [
+      {
+        id: "pinv-1",
+        invoiceNumber: "PINV-001",
+        invoiceDate: "2026-06-01",
+        totalAmount: 1000,
+        amountPaid: 200,
+        outstandingAmount: 800,
+      },
+    ];
+    mockRepo.listOutstandingBySupplier.mockResolvedValue(rows);
+    const result = await service.listOutstandingBillsForSupplier(
+      "org-1",
+      "sup-1"
+    );
+    expect(result).toBe(rows);
+    expect(mockRepo.listOutstandingBySupplier).toHaveBeenCalledWith(
+      "org-1",
+      "sup-1"
+    );
   });
 });

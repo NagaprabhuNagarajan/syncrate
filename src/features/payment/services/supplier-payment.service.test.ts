@@ -17,6 +17,7 @@ const { mockRepo } = vi.hoisted(() => ({
     findBySupplier: vi.fn(),
     findAllocations: vi.fn(),
     countByOrg: vi.fn(),
+    getAvailableCredit: vi.fn(),
   },
 }));
 
@@ -114,6 +115,144 @@ describe("SupplierPaymentService.getSupplierPayment", () => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// getAvailableCredit
+// ─────────────────────────────────────────────────────────────
+
+describe("SupplierPaymentService.getAvailableCredit", () => {
+  it("delegates to the repository", async () => {
+    mockRepo.getAvailableCredit.mockResolvedValue(1250);
+
+    const result = await service.getAvailableCredit("org-1", "supp-1");
+    expect(result).toBe(1250);
+    expect(mockRepo.getAvailableCredit).toHaveBeenCalledWith("org-1", "supp-1");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// applyCredit
+// ─────────────────────────────────────────────────────────────
+
+describe("SupplierPaymentService.applyCredit", () => {
+  it("fails with validation when amount is not positive", async () => {
+    const result = await service.applyCredit(
+      "org-1",
+      "supp-1",
+      "bill-1",
+      0,
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+    }
+    expect(mockRpc).not.toHaveBeenCalled();
+  });
+
+  it("calls the RPC with the correct arguments and returns ok on success", async () => {
+    mockRpc.mockResolvedValue({ data: null, error: null });
+
+    const result = await service.applyCredit(
+      "org-1",
+      "supp-1",
+      "bill-1",
+      500,
+      "user-1"
+    );
+    expect(result.success).toBe(true);
+    expect(mockRpc).toHaveBeenCalledWith("apply_supplier_credit", {
+      p_org_id: "org-1",
+      p_supplier_id: "supp-1",
+      p_bill_id: "bill-1",
+      p_amount: 500,
+    });
+  });
+
+  it("maps not_found RPC errors to a friendly message", async () => {
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { message: "not_found: bill" },
+    });
+
+    const result = await service.applyCredit(
+      "org-1",
+      "supp-1",
+      "bill-1",
+      500,
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+      expect(result.error.message).toBe("Bill not found");
+    }
+  });
+
+  it("maps validation RPC errors with the raw message", async () => {
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { message: "validation: amount exceeds the available credit" },
+    });
+
+    const result = await service.applyCredit(
+      "org-1",
+      "supp-1",
+      "bill-1",
+      9999,
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+      expect(result.error.message).toContain("available credit");
+    }
+  });
+
+  it("maps invalid_status RPC errors with the raw message", async () => {
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: {
+        message: "invalid_status: only posted bills can be settled with credit",
+      },
+    });
+
+    const result = await service.applyCredit(
+      "org-1",
+      "supp-1",
+      "bill-1",
+      500,
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+      expect(result.error.message).toContain("posted");
+    }
+  });
+
+  it("returns an unknown error for unrecognized RPC errors", async () => {
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { message: "internal server error" },
+    });
+
+    const result = await service.applyCredit(
+      "org-1",
+      "supp-1",
+      "bill-1",
+      500,
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("unknown");
+      expect(result.error.message).toBe(
+        "Failed to apply credit. Please try again."
+      );
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
 // recordPayment
 // ─────────────────────────────────────────────────────────────
 
@@ -182,9 +321,7 @@ describe("SupplierPaymentService.recordPayment", () => {
         p_amount: 3000,
         p_method: "cheque",
         p_reference: "CHQ-100",
-        p_allocations: JSON.stringify([
-          { purchase_invoice_id: "pinv-1", amount: 3000 },
-        ]),
+        p_allocations: [{ purchase_invoice_id: "pinv-1", amount: 3000 }],
       })
     );
   });

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { archiveUnitAction } from "@/features/unit/actions/unit.actions";
 import { UnitForm } from "@/features/unit/components/unit-form";
 import type {
@@ -137,14 +138,7 @@ export function UnitsView({
         )}
       </PageHeader>
 
-      {actionError && (
-        <p
-          role="alert"
-          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {actionError}
-        </p>
-      )}
+      {actionError && <ErrorBanner message={actionError} className="mt-4" />}
 
       {showForm && (
         <div className="mt-4">

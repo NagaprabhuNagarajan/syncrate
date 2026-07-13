@@ -847,6 +847,11 @@ type PurchaseInvoicesRow = AuditFields & {
   tax_amount: number;
   total_amount: number;
   amount_paid: number;
+  /**
+   * STORED generated column (paid | partial | unpaid). Read-only — computed by
+   * Postgres from amount_paid vs total_amount, never written by the app.
+   */
+  payment_status: string;
   notes: string | null;
   posted_at: string | null;
   posted_by: string | null;
@@ -3559,6 +3564,24 @@ export interface Database {
           p_allocations: Json;
         };
         Returns: string;
+      };
+      apply_customer_credit: {
+        Args: {
+          p_org_id: string;
+          p_customer_id: string;
+          p_invoice_id: string;
+          p_amount: number;
+        };
+        Returns: undefined;
+      };
+      apply_supplier_credit: {
+        Args: {
+          p_org_id: string;
+          p_supplier_id: string;
+          p_bill_id: string;
+          p_amount: number;
+        };
+        Returns: undefined;
       };
       // ── CBN Helper Functions ───────────────────────────────
       get_connected_organization_ids: {

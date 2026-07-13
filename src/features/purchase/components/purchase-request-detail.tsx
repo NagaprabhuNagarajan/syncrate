@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/shared/error-banner";
+import { KpiTile } from "@/components/shared/kpi-tile";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -45,7 +47,6 @@ import {
 } from "@/features/purchase/actions/purchase-request.actions";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type { PurchaseRequestWithItems } from "@/features/purchase/types/purchase-request.types";
-import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
 // Cancel confirmation dialog
@@ -107,14 +108,7 @@ function CancelDialog({
           </div>
         </div>
 
-        {error && (
-          <div
-            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
@@ -206,14 +200,7 @@ function RejectDialog({
           />
         </div>
 
-        {error && (
-          <div
-            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
@@ -314,14 +301,7 @@ function ConvertDialog({
           </select>
         </div>
 
-        {error && (
-          <div
-            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
@@ -343,67 +323,6 @@ function ConvertDialog({
         </div>
       </motion.div>
     </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// KPI tile
-// ─────────────────────────────────────────────────────────────
-
-function KpiTile({
-  icon: Icon,
-  label,
-  displayValue,
-  tint,
-  emphasis,
-  index,
-}: {
-  readonly icon: LucideIcon;
-  readonly label: string;
-  readonly displayValue: string;
-  readonly tint: string;
-  readonly emphasis?: boolean;
-  readonly index: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
-    >
-      <Card className="relative h-full overflow-hidden p-3">
-        <div
-          className={cn(
-            "absolute -right-8 -top-8 h-20 w-20 rounded-full opacity-20 blur-2xl",
-            tint
-          )}
-          aria-hidden="true"
-        />
-        <div className="relative flex items-center gap-2.5">
-          <div
-            className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
-              tint
-            )}
-          >
-            <Icon className="h-4 w-4 text-white" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {label}
-            </p>
-            <p
-              className={cn(
-                "truncate font-bold leading-tight text-slate-900 dark:text-slate-100",
-                emphasis ? "text-lg" : "text-base"
-              )}
-            >
-              {displayValue}
-            </p>
-          </div>
-        </div>
-      </Card>
-    </motion.div>
   );
 }
 
@@ -685,14 +604,7 @@ export function PurchaseRequestDetail({
         </div>
       </div>
 
-      {actionError && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mb-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {actionError}
-        </p>
-      )}
+      {actionError && <ErrorBanner message={actionError} className="mb-4" />}
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

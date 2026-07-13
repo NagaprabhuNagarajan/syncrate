@@ -18,6 +18,7 @@ import type { BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { WorkflowForm } from "@/features/workflows/components/workflow-form";
 import {
   deleteWorkflowAction,
@@ -187,14 +188,7 @@ export function WorkflowsView({
         </button>
       </div>
 
-      {actionError && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {actionError}
-        </p>
-      )}
+      {actionError && <ErrorBanner message={actionError} className="mt-4" />}
 
       {/* Workflows tab */}
       {tab === "workflows" && (

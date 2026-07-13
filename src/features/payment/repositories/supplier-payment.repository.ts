@@ -1,6 +1,7 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type { Database } from "@/types/database.types";
 import type {
+  PaymentStats,
   SupplierPayment,
   SupplierPaymentAllocation,
   SupplierPaymentListParams,
@@ -162,6 +163,52 @@ export class SupplierPaymentRepository {
     return data.map(mapAllocation);
   }
 
+  /**
+   * The supplier's unallocated advance credit — Σ over their completed payments
+   * of `(amount − Σ its allocations)`, clamped to `>= 0`. Mirrors the
+   * `apply_supplier_credit` RPC's availability calc (completed payments only, no
+   * soft-delete filter) so the UI never offers more credit than the RPC will
+   * draw down. Returns 0 when the supplier has no completed payments.
+   */
+  async getAvailableCredit(
+    organizationId: string,
+    supplierId: string
+  ): Promise<number> {
+    const { data: payments, error } = await this.supabase
+      .from("supplier_payments")
+      .select("id, amount")
+      .eq("organization_id", organizationId)
+      .eq("supplier_id", supplierId)
+      .eq("status", "completed");
+
+    if (error || !payments || payments.length === 0) {
+      return 0;
+    }
+
+    const paymentIds = payments.map((p) => p.id);
+    const { data: allocations } = await this.supabase
+      .from("supplier_payment_allocations")
+      .select("supplier_payment_id, allocated_amount")
+      .in("supplier_payment_id", paymentIds);
+
+    const allocatedByPayment = new Map<string, number>();
+    for (const row of allocations ?? []) {
+      const prior = allocatedByPayment.get(row.supplier_payment_id) ?? 0;
+      allocatedByPayment.set(
+        row.supplier_payment_id,
+        prior + Number(row.allocated_amount)
+      );
+    }
+
+    const total = payments.reduce((sum, p) => {
+      const unallocated =
+        Number(p.amount) - (allocatedByPayment.get(p.id) ?? 0);
+      return sum + Math.max(0, unallocated);
+    }, 0);
+
+    return Math.max(0, total);
+  }
+
   async countByOrg(orgId: string): Promise<number> {
     const { count } = await this.supabase
       .from("supplier_payments")
@@ -170,5 +217,57 @@ export class SupplierPaymentRepository {
       .is("deleted_at", null);
 
     return count ?? 0;
+  }
+
+  /**
+   * Aggregate counts + money sums for the list header tiles. Head-only count
+   * queries run in parallel for the status tiles. The money aggregates (total
+   * paid + this month) need sums PostgREST cannot compute via head queries, so
+   * we fetch the minimal `amount`/`payment_date` columns for completed
+   * payments and reduce in JS.
+   */
+  async getStats(orgId: string): Promise<PaymentStats> {
+    const base = () =>
+      this.supabase
+        .from("supplier_payments")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", orgId)
+        .is("deleted_at", null);
+
+    const [total, completed, voided] = await Promise.all([
+      base(),
+      base().eq("status", "completed"),
+      base().eq("status", "voided"),
+    ]);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthStartIso = monthStart.toISOString().slice(0, 10);
+
+    const { data: amountRows } = await this.supabase
+      .from("supplier_payments")
+      .select("amount, payment_date")
+      .eq("organization_id", orgId)
+      .is("deleted_at", null)
+      .eq("status", "completed");
+
+    let totalAmount = 0;
+    let thisMonth = 0;
+    for (const row of amountRows ?? []) {
+      const amount = Number(row.amount);
+      totalAmount += amount;
+      if (row.payment_date >= monthStartIso) {
+        thisMonth += amount;
+      }
+    }
+
+    return {
+      total: total.count ?? 0,
+      completed: completed.count ?? 0,
+      voided: voided.count ?? 0,
+      totalAmount,
+      thisMonth,
+    };
   }
 }

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import {
   createWorkflowAction,
   updateWorkflowAction,
@@ -227,14 +228,7 @@ export function WorkflowForm({
         <input type="hidden" name="version" value={String(workflow.version)} />
       )}
 
-      {error && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mb-4 rounded-lg border px-3 py-2.5 text-sm dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
-        >
-          {error}
-        </p>
-      )}
+      {error && <ErrorBanner message={error} className="mb-4" />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">

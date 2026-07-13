@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { runSmartReportAction } from "@/features/ai/reports/actions/report.actions";
 import { REPORT_TYPES } from "@/features/ai/reports/schemas/reportSchema";
 import type {
@@ -202,14 +203,7 @@ export function SmartReportsView({
         </p>
       )}
 
-      {error && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 mt-4 rounded-lg border px-3 py-2.5 text-sm dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30"
-        >
-          {error}
-        </p>
-      )}
+      {error && <ErrorBanner message={error} className="mt-4" />}
 
       {!report && !error && !isPending && (
         <div className="mt-4">

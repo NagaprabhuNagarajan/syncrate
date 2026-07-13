@@ -4,6 +4,7 @@ import type {
   PaymentActionResult,
   PaymentError,
   PaymentErrorCode,
+  PaymentStats,
   RecordSupplierPaymentInput,
   SupplierPayment,
   SupplierPaymentListParams,
@@ -36,6 +37,21 @@ function mapRpcError(message: string): PaymentErrorCode {
   return "unknown";
 }
 
+/**
+ * Maps the `apply_supplier_credit` RPC's exception prefixes to typed error
+ * codes. Both `validation:` and `invalid_status:` surface the raw message, so
+ * they collapse to the `validation` code (which passes the message through).
+ */
+function mapSupplierCreditRpcError(message: string): PaymentErrorCode {
+  if (message.includes("not_found")) {
+    return "not_found";
+  }
+  if (message.includes("invalid_status") || message.includes("validation")) {
+    return "validation";
+  }
+  return "unknown";
+}
+
 function generatePaymentNumber(existingCount: number, year: number): string {
   const sequence = String(existingCount + 1).padStart(6, "0");
   return `PAY-${year}-${sequence}`;
@@ -59,6 +75,10 @@ export class SupplierPaymentService {
     return this.repo.findAll(orgId, params);
   }
 
+  async getStats(orgId: string): Promise<PaymentStats> {
+    return this.repo.getStats(orgId);
+  }
+
   async getSupplierPayment(
     id: string
   ): Promise<PaymentActionResult<SupplierPayment>> {
@@ -67,6 +87,53 @@ export class SupplierPaymentService {
       return fail("not_found", "Payment not found");
     }
     return ok(payment);
+  }
+
+  /** The supplier's unallocated advance credit (see repository). */
+  async getAvailableCredit(
+    organizationId: string,
+    supplierId: string
+  ): Promise<number> {
+    return this.repo.getAvailableCredit(organizationId, supplierId);
+  }
+
+  /**
+   * Settles an outstanding bill using the supplier's unallocated advance credit.
+   * Pure re-allocation handled by the `apply_supplier_credit` RPC — no new
+   * ledger entry. Validates the amount client-side, then maps the RPC's
+   * `not_found` / `invalid_status` / `validation` exceptions to typed errors.
+   */
+  async applyCredit(
+    organizationId: string,
+    supplierId: string,
+    billId: string,
+    amount: number,
+    _userId: string
+  ): Promise<PaymentActionResult<void>> {
+    if (amount <= 0) {
+      return fail("validation", "Amount must be greater than 0");
+    }
+
+    const { error } = await this.supabase.rpc("apply_supplier_credit", {
+      p_org_id: organizationId,
+      p_supplier_id: supplierId,
+      p_bill_id: billId,
+      p_amount: amount,
+    });
+
+    if (error) {
+      const code = mapSupplierCreditRpcError(error.message);
+      const messages: Record<PaymentErrorCode, string> = {
+        not_found: "Bill not found",
+        duplicate: "Failed to apply credit. Please try again.",
+        forbidden: "You do not have permission to apply credit",
+        validation: error.message,
+        unknown: "Failed to apply credit. Please try again.",
+      };
+      return fail(code, messages[code]);
+    }
+
+    return ok(undefined);
   }
 
   async recordPayment(
@@ -113,7 +180,10 @@ export class SupplierPaymentService {
         p_payment_date: input.paymentDate ?? null,
         p_notes: input.notes ?? null,
         p_payment_number: paymentNumber,
-        p_allocations: JSON.stringify(allocationsPayload),
+        // p_allocations is a JSONB param — pass the array directly so PostgREST
+        // binds it as a jsonb array (stringifying yields a scalar string that
+        // jsonb_array_length rejects).
+        p_allocations: allocationsPayload,
       }
     );
 

@@ -3,7 +3,7 @@
 import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { AlertCircle, Lock, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Lock, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { deleteRoleAction } from "@/features/rbac/actions/role.actions";
 import { RoleFormDialog } from "@/features/rbac/components/role-form-dialog";
 import type {
@@ -137,16 +138,7 @@ function DeleteRoleDialog({
         </CardHeader>
         {error && (
           <CardContent>
-            <p
-              role="alert"
-              className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
-            >
-              <AlertCircle
-                className="mt-0.5 h-4 w-4 shrink-0"
-                aria-hidden="true"
-              />
-              <span>{error}</span>
-            </p>
+            <ErrorBanner message={error} />
           </CardContent>
         )}
         <CardFooter className="justify-end gap-2">

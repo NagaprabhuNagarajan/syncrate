@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import {
   createWebhookEndpointAction,
   updateWebhookEndpointAction,
@@ -261,14 +262,7 @@ function EndpointForm({
       className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900"
       aria-label={isEdit ? "Edit webhook endpoint" : "Create webhook endpoint"}
     >
-      {formError && (
-        <p
-          role="alert"
-          className="mb-4 rounded-lg border border-error-200 bg-error-50 px-3 py-2.5 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
-        >
-          {formError}
-        </p>
-      )}
+      {formError && <ErrorBanner message={formError} className="mb-4" />}
 
       <div className="grid gap-4">
         <div>

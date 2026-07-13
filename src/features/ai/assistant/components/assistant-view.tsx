@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, Send, AlertCircle } from "lucide-react";
+import { Sparkles, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { MessageBubble } from "@/features/ai/assistant/components/message-bubble";
 import { useAssistant } from "@/features/ai/assistant/hooks/useAssistant";
 
@@ -158,15 +159,7 @@ export function AssistantView({ organizationId }: AssistantViewProps) {
         )}
       </div>
 
-      {error && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mt-4 flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {error}
-        </p>
-      )}
+      {error && <ErrorBanner message={error} className="mt-4" />}
 
       <form
         onSubmit={handleSubmit}

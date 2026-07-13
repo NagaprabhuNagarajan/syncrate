@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import {
   inviteUserSchema,
   type InviteUserFormValues,
@@ -165,7 +166,7 @@ export function InviteUserForm({
           {successMessage && (
             <AlertBanner type="success" message={successMessage} />
           )}
-          {serverError && <AlertBanner type="error" message={serverError} />}
+          {serverError && <ErrorBanner message={serverError} />}
         </div>
       )}
 

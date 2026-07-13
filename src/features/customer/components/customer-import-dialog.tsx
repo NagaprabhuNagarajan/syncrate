@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { AlertCircle, CheckCircle2, Upload, X } from "lucide-react";
+import { CheckCircle2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { importCustomersAction } from "@/features/customer/actions/customer.actions";
 import { objectsToCsv } from "@/utils/csv";
 import { downloadTextFile } from "@/utils/download";
@@ -172,18 +173,7 @@ export function CustomerImportDialog({
             </div>
           )}
 
-          {error && (
-            <p
-              role="alert"
-              className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
-            >
-              <AlertCircle
-                className="mt-0.5 h-4 w-4 shrink-0"
-                aria-hidden="true"
-              />
-              <span>{error}</span>
-            </p>
-          )}
+          {error && <ErrorBanner message={error} />}
 
           {result && (
             <div className="space-y-3">

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { render, screen } from "@/tests/utils";
+import { render, screen, within } from "@/tests/utils";
 import { PaymentsView } from "./payments-view";
 import type {
   CustomerPayment,
   CustomerPaymentListResult,
+  PaymentStats,
   SupplierPayment,
   SupplierPaymentListResult,
 } from "@/features/payment/types/payment.types";
@@ -24,10 +25,16 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/features/payment/actions/customer-payment.actions", () => ({
   recordCustomerPaymentAction: vi.fn(),
+  getOutstandingCustomerInvoicesAction: vi
+    .fn()
+    .mockResolvedValue({ success: true, data: [] }),
 }));
 
 vi.mock("@/features/payment/actions/supplier-payment.actions", () => ({
   recordSupplierPaymentAction: vi.fn(),
+  getOutstandingSupplierBillsAction: vi
+    .fn()
+    .mockResolvedValue({ success: true, data: [] }),
 }));
 
 // ─────────────────────────────────────────────────────────────
@@ -108,6 +115,17 @@ function supplierResult(
   };
 }
 
+function makeStats(overrides: Partial<PaymentStats> = {}): PaymentStats {
+  return {
+    total: 1,
+    completed: 1,
+    voided: 0,
+    totalAmount: 1500,
+    thisMonth: 1500,
+    ...overrides,
+  };
+}
+
 function renderView(
   customer: CustomerPaymentListResult = customerResult(),
   supplier: SupplierPaymentListResult = supplierResult()
@@ -117,6 +135,12 @@ function renderView(
       organizationId="org-1"
       customerPayments={customer}
       supplierPayments={supplier}
+      customerStats={makeStats()}
+      supplierStats={makeStats({ completed: 0, voided: 1 })}
+      customers={[{ id: "cust-1", name: "Acme Traders" }]}
+      suppliers={[{ id: "sup-1", name: "Globex Supplies" }]}
+      customerFilters={{}}
+      supplierFilters={{}}
     />
   );
 }
@@ -144,7 +168,10 @@ describe("PaymentsView", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("PAY-2026-000001")).toBeInTheDocument();
     expect(screen.getByText("Acme Traders")).toBeInTheDocument();
-    expect(screen.getByText("Completed")).toBeInTheDocument();
+    // "Completed" also appears as a status filter pill, so scope to the table.
+    expect(
+      within(screen.getByRole("table")).getByText("Completed")
+    ).toBeInTheDocument();
   });
 
   it("renders the customer empty state when there are no customer payments", () => {
@@ -162,7 +189,10 @@ describe("PaymentsView", () => {
 
     expect(screen.getByText("SPAY-2026-000001")).toBeInTheDocument();
     expect(screen.getByText("Globex Supplies")).toBeInTheDocument();
-    expect(screen.getByText("Voided")).toBeInTheDocument();
+    // "Voided" also appears as a status filter pill, so scope to the table.
+    expect(
+      within(screen.getByRole("table")).getByText("Voided")
+    ).toBeInTheDocument();
   });
 
   it("renders the supplier empty state when there are no supplier payments", async () => {
@@ -181,9 +211,8 @@ describe("PaymentsView", () => {
 
     await user.type(
       screen.getByLabelText(/search customer payments/i),
-      "PAY-1"
+      "PAY-1{Enter}"
     );
-    await user.click(screen.getByRole("button", { name: /^search$/i }));
 
     expect(mockPush).toHaveBeenCalledWith("?cSearch=PAY-1");
   });
@@ -195,9 +224,8 @@ describe("PaymentsView", () => {
     await user.click(screen.getByRole("tab", { name: /supplier payments/i }));
     await user.type(
       screen.getByLabelText(/search supplier payments/i),
-      "SPAY-1"
+      "SPAY-1{Enter}"
     );
-    await user.click(screen.getByRole("button", { name: /^search$/i }));
 
     expect(mockPush).toHaveBeenCalledWith("?sSearch=SPAY-1");
   });

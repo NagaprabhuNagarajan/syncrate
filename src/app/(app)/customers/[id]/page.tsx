@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { CustomerService } from "@/features/customer/services/customer.service";
+import { CustomerPaymentService } from "@/features/payment/services/customer-payment.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { CustomerProfile } from "@/features/customer/components/customer-profile";
 
@@ -88,7 +89,13 @@ export default async function CustomerDetailPage({
     context.permissions.includes("customer.update") ||
     context.permissions.includes("customer.archive");
 
-  const ledger = await customerService.getCustomerLedger(result.data);
+  const [ledger, availableCredit] = await Promise.all([
+    customerService.getCustomerLedger(result.data),
+    new CustomerPaymentService(supabase).getAvailableCredit(
+      activeOrg.id,
+      result.data.id
+    ),
+  ]);
 
   return (
     <CustomerProfile
@@ -96,6 +103,7 @@ export default async function CustomerDetailPage({
       ledger={ledger}
       organizationId={activeOrg.id}
       canManage={canManage}
+      availableCredit={availableCredit}
     />
   );
 }

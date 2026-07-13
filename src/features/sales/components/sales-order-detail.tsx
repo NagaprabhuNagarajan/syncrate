@@ -25,6 +25,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ErrorBanner } from "@/components/shared/error-banner";
+import { KpiTile } from "@/components/shared/kpi-tile";
 import {
   Table,
   TableBody,
@@ -49,7 +51,6 @@ import {
 import { formatCurrency, formatDate } from "@/utils/format";
 import type { SalesOrderWithItems } from "@/features/sales/types/sales-order.types";
 import type { InvoiceListItem } from "@/features/sales/types/invoice.types";
-import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
 // Cancel confirmation dialog
@@ -111,14 +112,7 @@ function CancelDialog({
           </div>
         </div>
 
-        {error && (
-          <div
-            className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 mt-4 rounded-lg border px-4 py-3 text-sm"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
@@ -141,69 +135,6 @@ function CancelDialog({
         </div>
       </motion.div>
     </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// KPI tile
-// ─────────────────────────────────────────────────────────────
-
-function KpiTile({
-  icon: Icon,
-  label,
-  value,
-  tint,
-  emphasis,
-  displayValue,
-  index,
-}: {
-  readonly icon: LucideIcon;
-  readonly label: string;
-  readonly value: number;
-  readonly tint: string;
-  readonly emphasis?: boolean;
-  readonly displayValue?: string;
-  readonly index: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
-    >
-      <Card className="relative h-full overflow-hidden p-3">
-        <div
-          className={cn(
-            "absolute -right-8 -top-8 h-20 w-20 rounded-full opacity-20 blur-2xl",
-            tint
-          )}
-          aria-hidden="true"
-        />
-        <div className="relative flex items-center gap-2.5">
-          <div
-            className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
-              tint
-            )}
-          >
-            <Icon className="h-4 w-4 text-white" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {label}
-            </p>
-            <p
-              className={cn(
-                "truncate font-bold leading-tight text-slate-900 dark:text-slate-100",
-                emphasis ? "text-lg" : "text-base"
-              )}
-            >
-              {displayValue ?? formatCurrency(value, true)}
-            </p>
-          </div>
-        </div>
-      </Card>
-    </motion.div>
   );
 }
 
@@ -441,14 +372,7 @@ export function SalesOrderDetail({
         </div>
       </div>
 
-      {actionError && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 mb-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {actionError}
-        </p>
-      )}
+      {actionError && <ErrorBanner message={actionError} className="mb-4" />}
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

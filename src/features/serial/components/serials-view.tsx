@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import {
   updateSerialAction,
   archiveSerialAction,
@@ -189,14 +190,7 @@ export function SerialsView({
         )}
       </PageHeader>
 
-      {rowError && (
-        <p
-          role="alert"
-          className="text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/30 mt-4 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {rowError}
-        </p>
-      )}
+      {rowError && <ErrorBanner message={rowError} className="mt-4" />}
 
       {/* Filters */}
       <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">

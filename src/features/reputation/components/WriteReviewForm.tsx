@@ -7,6 +7,7 @@ import { AlertCircle, Star, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { cn } from "@/utils/cn";
 import { StarRatingInput } from "@/features/reputation/components/StarRating";
 import {
@@ -160,18 +161,7 @@ export function WriteReviewForm({
         </p>
       </div>
 
-      {serverError && (
-        <div
-          className="border-error-200 bg-error-50 text-error-800 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
-          role="alert"
-        >
-          <AlertCircle
-            className="text-error-500 mt-0.5 h-4 w-4 shrink-0"
-            aria-hidden="true"
-          />
-          <span>{serverError}</span>
-        </div>
-      )}
+      {serverError && <ErrorBanner message={serverError} />}
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">

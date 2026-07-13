@@ -13,12 +13,10 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -28,7 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
-import { AnimatedNumber } from "@/components/shared/animated-number";
+import { StatTile } from "@/components/shared/stat-tile";
 import {
   GRN_STATUS_LABEL,
   GRN_STATUS_VARIANT,
@@ -39,61 +37,6 @@ import type {
   GoodsReceiptListResult,
   GoodsReceiptStats,
 } from "@/features/purchase/types/goods-receipt.types";
-import { cn } from "@/utils/cn";
-
-// ─────────────────────────────────────────────────────────────
-// Stat tile
-// ─────────────────────────────────────────────────────────────
-
-function StatTile({
-  icon: Icon,
-  label,
-  value,
-  tint,
-  index,
-}: {
-  readonly icon: LucideIcon;
-  readonly label: string;
-  readonly value: number;
-  readonly tint: string;
-  readonly index: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
-    >
-      <Card className="relative overflow-hidden p-4">
-        <div
-          className={cn(
-            "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl",
-            tint
-          )}
-          aria-hidden="true"
-        />
-        <div className="relative flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
-              tint
-            )}
-          >
-            <Icon className="h-5 w-5 text-white" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {label}
-            </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              <AnimatedNumber value={value} />
-            </p>
-          </div>
-        </div>
-      </Card>
-    </motion.div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────
 // Props

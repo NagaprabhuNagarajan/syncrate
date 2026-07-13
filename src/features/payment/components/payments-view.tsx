@@ -5,52 +5,57 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  DollarSign,
+  IndianRupee,
   CreditCard,
   Plus,
   Search,
   ChevronLeft,
   ChevronRight,
   Receipt,
+  Wallet,
+  CalendarClock,
+  CheckCircle2,
+  Ban,
+  MoreHorizontal,
+  ArrowUpRight,
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/shared/page-header";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatTile } from "@/components/shared/stat-tile";
 import { RecordCustomerPaymentDialog } from "@/features/payment/components/record-customer-payment-dialog";
 import { RecordSupplierPaymentDialog } from "@/features/payment/components/record-supplier-payment-dialog";
+import { formatCurrency, formatDate } from "@/utils/format";
+import { cn } from "@/utils/cn";
 import type {
   CustomerPayment,
   CustomerPaymentListResult,
   PaymentMethod,
+  PaymentStats,
   PaymentStatus,
   SupplierPayment,
   SupplierPaymentListResult,
 } from "@/features/payment/types/payment.types";
 
 // ─────────────────────────────────────────────────────────────
-// Formatters
+// Status / method presentation
 // ─────────────────────────────────────────────────────────────
-
-const currencyFmt = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
-
-function formatCurrency(value: number): string {
-  return currencyFmt.format(value);
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 const METHOD_LABELS: Record<PaymentMethod, string> = {
   cash: "Cash",
@@ -63,32 +68,268 @@ const METHOD_LABELS: Record<PaymentMethod, string> = {
   other: "Other",
 };
 
-const STATUS_VARIANT: Record<PaymentStatus, BadgeProps["variant"]> = {
+export const STATUS_VARIANT: Record<PaymentStatus, BadgeProps["variant"]> = {
   completed: "success",
   voided: "destructive",
 };
 
-// ─────────────────────────────────────────────────────────────
-// Row animations
-// ─────────────────────────────────────────────────────────────
-
-const rowVariants = {
-  hidden: { opacity: 0, y: 4 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.04, duration: 0.2, ease: "easeOut" },
-  }),
+const STATUS_LABEL: Record<PaymentStatus, string> = {
+  completed: "Completed",
+  voided: "Voided",
 };
 
+const STATUS_FILTERS: readonly { value: string; label: string }[] = [
+  { value: "", label: "All" },
+  { value: "completed", label: STATUS_LABEL.completed },
+  { value: "voided", label: STATUS_LABEL.voided },
+];
+
 // ─────────────────────────────────────────────────────────────
-// Props
+// URL helpers
 // ─────────────────────────────────────────────────────────────
 
-interface PaymentsViewProps {
-  readonly organizationId: string;
-  readonly customerPayments: CustomerPaymentListResult;
-  readonly supplierPayments: SupplierPaymentListResult;
+/**
+ * Patches the current query string, preserving every other param (including
+ * `?org=` and the sibling tab's params), and returns the resulting URL.
+ */
+function patchQuery(patch: Record<string, string | undefined>): string {
+  const params = new URLSearchParams(window.location.search);
+  Object.entries(patch).forEach(([key, value]) => {
+    if (value === undefined || value === "") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+  });
+  const query = params.toString();
+  return query ? `?${query}` : window.location.pathname;
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// Filter pill row
+// ─────────────────────────────────────────────────────────────
+
+function FilterPills({
+  label,
+  options,
+  active,
+  onSelect,
+}: {
+  readonly label: string;
+  readonly options: readonly { value: string; label: string }[];
+  readonly active: string;
+  readonly onSelect: (value: string) => void;
+}) {
+  return (
+    <div
+      className="flex flex-wrap items-center gap-1.5"
+      role="tablist"
+      aria-label={`Filter by ${label.toLowerCase()}`}
+    >
+      {options.map((option) => {
+        const isActive = active === option.value;
+        return (
+          <button
+            key={option.value || "all"}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onSelect(option.value)}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              isActive
+                ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
+                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
+            )}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Shared payment row view-model + table
+// ─────────────────────────────────────────────────────────────
+
+interface PaymentRow {
+  readonly id: string;
+  readonly paymentNumber: string;
+  readonly partyName: string;
+  readonly paymentDate: string;
+  readonly paymentMethod: PaymentMethod;
+  readonly amount: number;
+  readonly status: PaymentStatus;
+}
+
+function detailHref(id: string): string {
+  return `/payments/${id}`;
+}
+
+function PaymentsTable({
+  rows,
+  partyLabel,
+}: {
+  readonly rows: readonly PaymentRow[];
+  readonly partyLabel: string;
+}) {
+  const router = useRouter();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Table wrapperClassName="shadow-card">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Payment #</TableHead>
+            <TableHead>{partyLabel}</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Method</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">
+              <span className="sr-only">Actions</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow
+              key={row.id}
+              onClick={() => router.push(detailHref(row.id))}
+              className="group cursor-pointer"
+            >
+              <TableCell>
+                <Link
+                  href={detailHref(row.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-mono text-xs font-medium text-slate-700 hover:text-primary-600 hover:underline dark:text-slate-300 dark:hover:text-primary-400"
+                >
+                  {row.paymentNumber}
+                </Link>
+              </TableCell>
+              <TableCell className="text-slate-700 dark:text-slate-300">
+                {row.partyName}
+              </TableCell>
+              <TableCell className="text-slate-600 dark:text-slate-400">
+                {formatDate(new Date(row.paymentDate))}
+              </TableCell>
+              <TableCell className="text-slate-600 dark:text-slate-400">
+                {METHOD_LABELS[row.paymentMethod]}
+              </TableCell>
+              <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                {formatCurrency(row.amount, true)}
+              </TableCell>
+              <TableCell>
+                <Badge dot variant={STATUS_VARIANT[row.status]}>
+                  {STATUS_LABEL[row.status]}
+                </Badge>
+              </TableCell>
+              <TableCell
+                className="text-right"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={`Actions for ${row.paymentNumber}`}
+                      className="rounded-md p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                    >
+                      <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href={detailHref(row.id)}>
+                        <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                        View
+                      </Link>
+                    </DropdownMenuItem>
+                    {row.status === "completed" && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href={detailHref(row.id)}>
+                            <Ban className="h-4 w-4" aria-hidden="true" />
+                            Void
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Pagination
+// ─────────────────────────────────────────────────────────────
+
+function Pagination({
+  page,
+  pageSize,
+  total,
+  onPageChange,
+}: {
+  readonly page: number;
+  readonly pageSize: number;
+  readonly total: number;
+  readonly onPageChange: (page: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(total, page * pageSize);
+
+  return (
+    <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+      <p className="text-sm text-muted-foreground">
+        Showing{" "}
+        <span className="font-medium text-foreground">{rangeStart}</span>–
+        <span className="font-medium text-foreground">{rangeEnd}</span> of{" "}
+        <span className="font-medium text-foreground">{total}</span>
+      </p>
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          aria-label="Previous page"
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          Page {page} of {totalPages}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+          aria-label="Next page"
+        >
+          Next
+          <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -96,246 +337,167 @@ interface PaymentsViewProps {
 // ─────────────────────────────────────────────────────────────
 
 interface CustomerPaymentsTabProps {
-  readonly organizationId: string;
   readonly result: CustomerPaymentListResult;
+  readonly stats: PaymentStats;
+  readonly filters: {
+    readonly search?: string;
+    readonly status?: PaymentStatus;
+  };
+  readonly onRecordPayment: () => void;
 }
 
 function CustomerPaymentsTab({
-  organizationId,
   result,
+  stats,
+  filters,
+  onRecordPayment,
 }: CustomerPaymentsTabProps) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
+  const [search, setSearch] = useState(filters.search ?? "");
   const [, startTransition] = useTransition();
 
-  function handleSearch(event: React.FormEvent<HTMLFormElement>): void {
+  const hasFilters = Boolean(filters.search || filters.status);
+
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    const params = new URLSearchParams(window.location.search);
-    if (search.trim()) {
-      params.set("cSearch", search.trim());
-    } else {
-      params.delete("cSearch");
+    startTransition(() => {
+      router.push(patchQuery({ cSearch: search.trim() || undefined, cPage: undefined }));
+    });
+  };
+
+  const handleSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value = event.target.value;
+    setSearch(value);
+    if (value === "" && filters.search) {
+      startTransition(() => {
+        router.push(patchQuery({ cSearch: undefined, cPage: undefined }));
+      });
     }
-    params.delete("cPage");
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
-  }
+  };
 
-  function handlePageChange(newPage: number): void {
-    const params = new URLSearchParams(window.location.search);
-    params.set("cPage", String(newPage));
+  const handleStatusSelect = (value: string): void => {
     startTransition(() => {
-      router.push(`?${params.toString()}`);
+      router.push(patchQuery({ cStatus: value || undefined, cPage: undefined }));
     });
-  }
+  };
 
-  const totalPages = Math.ceil(result.total / result.pageSize);
+  const handlePageChange = (newPage: number): void => {
+    startTransition(() => {
+      router.push(patchQuery({ cPage: newPage <= 1 ? undefined : String(newPage) }));
+    });
+  };
+
+  const handleClearFilters = (): void => {
+    startTransition(() => {
+      router.push(patchQuery({ cSearch: undefined, cStatus: undefined, cPage: undefined }));
+    });
+  };
+
+  const rows: readonly PaymentRow[] = result.payments.map(
+    (payment: CustomerPayment) => ({
+      id: payment.id,
+      paymentNumber: payment.paymentNumber,
+      partyName: payment.customerName ?? payment.customerId,
+      paymentDate: payment.paymentDate,
+      paymentMethod: payment.paymentMethod,
+      amount: payment.amount,
+      status: payment.status,
+    })
+  );
 
   return (
-    <div>
-      {/* Toolbar */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="relative">
+    <div className="space-y-5">
+      {/* Stat tiles */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          icon={Wallet}
+          label="Total received"
+          value={stats.totalAmount}
+          tint="bg-gradient-brand"
+          index={0}
+          currency
+        />
+        <StatTile
+          icon={CalendarClock}
+          label="This month"
+          value={stats.thisMonth}
+          tint="bg-gradient-info"
+          index={1}
+          currency
+        />
+        <StatTile
+          icon={CheckCircle2}
+          label="Completed"
+          value={stats.completed}
+          tint="bg-gradient-success"
+          index={2}
+        />
+        <StatTile
+          icon={Ban}
+          label="Voided"
+          value={stats.voided}
+          tint="bg-gradient-warning"
+          index={3}
+        />
+      </div>
+
+      {/* Search + filter pills */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <form onSubmit={handleSearch} role="search" className="flex gap-2">
+          <div className="relative w-full sm:w-72">
             <Search
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
             />
             <Input
               type="search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               placeholder="Search by payment no., reference…"
-              className="w-72 pl-9"
+              className="pl-9"
               aria-label="Search customer payments"
             />
           </div>
-          <Button type="submit" variant="outline" size="sm">
-            Search
-          </Button>
         </form>
 
-        <Button
-          onClick={() => setShowDialog(true)}
-          variant="gradient"
-          size="sm"
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Record Payment
-        </Button>
+        <FilterPills
+          label="Status"
+          options={STATUS_FILTERS}
+          active={filters.status ?? ""}
+          onSelect={handleStatusSelect}
+        />
       </div>
 
-      {/* Table */}
-      {result.payments.length === 0 ? (
+      {/* Table / empty state */}
+      {rows.length === 0 ? (
         <EmptyState
-          icon={DollarSign}
-          title="No customer payments yet"
-          description="Record your first customer payment to get started."
-          action={{
-            label: "Record Payment",
-            onClick: () => setShowDialog(true),
-            icon: Plus,
-          }}
+          icon={IndianRupee}
+          title={hasFilters ? "No matching payments" : "No customer payments yet"}
+          description={
+            hasFilters
+              ? "No customer payments match your current filters. Try adjusting your search or clearing the filters."
+              : "Record your first customer payment to get started."
+          }
+          action={
+            hasFilters
+              ? { label: "Clear filters", onClick: handleClearFilters }
+              : { label: "Record Payment", onClick: onRecordPayment, icon: Plus }
+          }
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-card dark:border-slate-800">
-            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-              <thead className="bg-slate-50/70 dark:bg-slate-800/40">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Payment #
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Customer
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Date
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Method
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Amount
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Status
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
-                {result.payments.map((payment: CustomerPayment, index: number) => (
-                    <motion.tr
-                      key={payment.id}
-                      custom={index}
-                      initial="hidden"
-                      animate="visible"
-                      variants={rowVariants}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    >
-                      <td className="px-3 py-2">
-                        <span className="font-mono text-sm font-medium text-slate-900 dark:text-slate-100">
-                          {payment.paymentNumber}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className="text-sm text-slate-700 dark:text-slate-300">
-                          {payment.customerName ?? payment.customerId}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className="text-sm text-slate-600 dark:text-slate-400">
-                          {formatDate(payment.paymentDate)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className="text-sm text-slate-600 dark:text-slate-400">
-                          {METHOD_LABELS[payment.paymentMethod]}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <span className="nums text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          {formatCurrency(payment.amount)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <Badge dot variant={STATUS_VARIANT[payment.status]}>
-                          {payment.status === "completed"
-                            ? "Completed"
-                            : "Voided"}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <Link
-                          href={`/payments/${payment.id}`}
-                          className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </motion.tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Showing {(result.page - 1) * result.pageSize + 1}–
-                {Math.min(result.page * result.pageSize, result.total)} of{" "}
-                {result.total} payments
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(result.page - 1)}
-                  disabled={result.page <= 1}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                </Button>
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  {result.page} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(result.page + 1)}
-                  disabled={result.page >= totalPages}
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </div>
-            </div>
-          )}
+          <PaymentsTable rows={rows} partyLabel="Customer" />
+          <Pagination
+            page={result.page}
+            pageSize={result.pageSize}
+            total={result.total}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
 
-      {/* Record Payment Dialog */}
-      {showDialog && (
-        <RecordCustomerPaymentDialog
-          organizationId={organizationId}
-          customerId=""
-          customerName="Select Customer"
-          onClose={() => setShowDialog(false)}
-          onDone={() => {
-            setShowDialog(false);
-            router.refresh();
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -345,307 +507,198 @@ function CustomerPaymentsTab({
 // ─────────────────────────────────────────────────────────────
 
 interface SupplierPaymentsTabProps {
-  readonly organizationId: string;
   readonly result: SupplierPaymentListResult;
+  readonly stats: PaymentStats;
+  readonly filters: {
+    readonly search?: string;
+    readonly status?: PaymentStatus;
+  };
+  readonly onRecordPayment: () => void;
 }
 
 function SupplierPaymentsTab({
-  organizationId,
   result,
+  stats,
+  filters,
+  onRecordPayment,
 }: SupplierPaymentsTabProps) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
+  const [search, setSearch] = useState(filters.search ?? "");
   const [, startTransition] = useTransition();
 
-  function handleSearch(event: React.FormEvent<HTMLFormElement>): void {
+  const hasFilters = Boolean(filters.search || filters.status);
+
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    const params = new URLSearchParams(window.location.search);
-    if (search.trim()) {
-      params.set("sSearch", search.trim());
-    } else {
-      params.delete("sSearch");
+    startTransition(() => {
+      router.push(patchQuery({ sSearch: search.trim() || undefined, sPage: undefined }));
+    });
+  };
+
+  const handleSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value = event.target.value;
+    setSearch(value);
+    if (value === "" && filters.search) {
+      startTransition(() => {
+        router.push(patchQuery({ sSearch: undefined, sPage: undefined }));
+      });
     }
-    params.delete("sPage");
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
-  }
+  };
 
-  function handlePageChange(newPage: number): void {
-    const params = new URLSearchParams(window.location.search);
-    params.set("sPage", String(newPage));
+  const handleStatusSelect = (value: string): void => {
     startTransition(() => {
-      router.push(`?${params.toString()}`);
+      router.push(patchQuery({ sStatus: value || undefined, sPage: undefined }));
     });
-  }
+  };
 
-  const totalPages = Math.ceil(result.total / result.pageSize);
+  const handlePageChange = (newPage: number): void => {
+    startTransition(() => {
+      router.push(patchQuery({ sPage: newPage <= 1 ? undefined : String(newPage) }));
+    });
+  };
+
+  const handleClearFilters = (): void => {
+    startTransition(() => {
+      router.push(patchQuery({ sSearch: undefined, sStatus: undefined, sPage: undefined }));
+    });
+  };
+
+  const rows: readonly PaymentRow[] = result.payments.map(
+    (payment: SupplierPayment) => ({
+      id: payment.id,
+      paymentNumber: payment.paymentNumber,
+      partyName: payment.supplierName ?? payment.supplierId,
+      paymentDate: payment.paymentDate,
+      paymentMethod: payment.paymentMethod,
+      amount: payment.amount,
+      status: payment.status,
+    })
+  );
 
   return (
-    <div>
-      {/* Toolbar */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="relative">
+    <div className="space-y-5">
+      {/* Stat tiles */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          icon={Wallet}
+          label="Total paid"
+          value={stats.totalAmount}
+          tint="bg-gradient-brand"
+          index={0}
+          currency
+        />
+        <StatTile
+          icon={CalendarClock}
+          label="This month"
+          value={stats.thisMonth}
+          tint="bg-gradient-info"
+          index={1}
+          currency
+        />
+        <StatTile
+          icon={CheckCircle2}
+          label="Completed"
+          value={stats.completed}
+          tint="bg-gradient-success"
+          index={2}
+        />
+        <StatTile
+          icon={Ban}
+          label="Voided"
+          value={stats.voided}
+          tint="bg-gradient-warning"
+          index={3}
+        />
+      </div>
+
+      {/* Search + filter pills */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <form onSubmit={handleSearch} role="search" className="flex gap-2">
+          <div className="relative w-full sm:w-72">
             <Search
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
             />
             <Input
               type="search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               placeholder="Search by payment no., reference…"
-              className="w-72 pl-9"
+              className="pl-9"
               aria-label="Search supplier payments"
             />
           </div>
-          <Button type="submit" variant="outline" size="sm">
-            Search
-          </Button>
         </form>
 
-        <Button
-          onClick={() => setShowDialog(true)}
-          variant="gradient"
-          size="sm"
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Make Payment
-        </Button>
+        <FilterPills
+          label="Status"
+          options={STATUS_FILTERS}
+          active={filters.status ?? ""}
+          onSelect={handleStatusSelect}
+        />
       </div>
 
-      {/* Table */}
-      {result.payments.length === 0 ? (
+      {/* Table / empty state */}
+      {rows.length === 0 ? (
         <EmptyState
           icon={CreditCard}
-          title="No supplier payments yet"
-          description="Record your first supplier payment to get started."
-          action={{
-            label: "Make Payment",
-            onClick: () => setShowDialog(true),
-            icon: Plus,
-          }}
+          title={hasFilters ? "No matching payments" : "No supplier payments yet"}
+          description={
+            hasFilters
+              ? "No supplier payments match your current filters. Try adjusting your search or clearing the filters."
+              : "Record your first supplier payment to get started."
+          }
+          action={
+            hasFilters
+              ? { label: "Clear filters", onClick: handleClearFilters }
+              : { label: "Make Payment", onClick: onRecordPayment, icon: Plus }
+          }
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-card dark:border-slate-800">
-            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-              <thead className="bg-slate-50/70 dark:bg-slate-800/40">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Payment #
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Supplier
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Date
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Method
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Amount
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Status
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
-                {result.payments.map(
-                  (payment: SupplierPayment, index: number) => (
-                    <motion.tr
-                      key={payment.id}
-                      custom={index}
-                      initial="hidden"
-                      animate="visible"
-                      variants={rowVariants}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    >
-                      <td className="px-3 py-2">
-                        <span className="font-mono text-sm font-medium text-slate-900 dark:text-slate-100">
-                          {payment.paymentNumber}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className="text-sm text-slate-700 dark:text-slate-300">
-                          {payment.supplierName ?? payment.supplierId}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className="text-sm text-slate-600 dark:text-slate-400">
-                          {formatDate(payment.paymentDate)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className="text-sm text-slate-600 dark:text-slate-400">
-                          {METHOD_LABELS[payment.paymentMethod]}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <span className="nums text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          {formatCurrency(payment.amount)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <Badge dot variant={STATUS_VARIANT[payment.status]}>
-                          {payment.status === "completed"
-                            ? "Completed"
-                            : "Voided"}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <Link
-                          href={`/payments/${payment.id}`}
-                          className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </motion.tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Showing {(result.page - 1) * result.pageSize + 1}–
-                {Math.min(result.page * result.pageSize, result.total)} of{" "}
-                {result.total} payments
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(result.page - 1)}
-                  disabled={result.page <= 1}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                </Button>
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  {result.page} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(result.page + 1)}
-                  disabled={result.page >= totalPages}
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </div>
-            </div>
-          )}
+          <PaymentsTable rows={rows} partyLabel="Supplier" />
+          <Pagination
+            page={result.page}
+            pageSize={result.pageSize}
+            total={result.total}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
-
-      {/* Make Payment Dialog */}
-      {showDialog && (
-        <RecordSupplierPaymentDialog
-          organizationId={organizationId}
-          supplierId=""
-          supplierName="Select Supplier"
-          onClose={() => setShowDialog(false)}
-          onDone={() => {
-            setShowDialog(false);
-            router.refresh();
-          }}
-        />
-      )}
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Loading skeleton
-// ─────────────────────────────────────────────────────────────
-
-const SKELETON_COLUMN_KEYS = [
-  "col-1",
-  "col-2",
-  "col-3",
-  "col-4",
-  "col-5",
-  "col-6",
-  "col-7",
-] as const;
-
-const SKELETON_ROW_KEYS = [
-  "row-1",
-  "row-2",
-  "row-3",
-  "row-4",
-  "row-5",
-] as const;
-
-function PaymentsTableSkeleton() {
-  return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-card dark:border-slate-800">
-      <table className="min-w-full">
-        <thead className="bg-slate-50/70 dark:bg-slate-800/40">
-          <tr>
-            {SKELETON_COLUMN_KEYS.map((columnKey) => (
-              <th key={columnKey} className="px-3 py-2">
-                <Skeleton className="h-4 w-20" />
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {SKELETON_ROW_KEYS.map((rowKey) => (
-            <tr key={rowKey}>
-              {SKELETON_COLUMN_KEYS.map((columnKey) => (
-                <td key={`${rowKey}-${columnKey}`} className="px-3 py-2">
-                  <Skeleton className="h-4 w-full" />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// Tab type
+// Tab type + props
 // ─────────────────────────────────────────────────────────────
 
 type ActiveTab = "customer" | "supplier";
+
+interface PartyOption {
+  readonly id: string;
+  readonly name: string;
+}
+
+interface PaymentsViewProps {
+  readonly organizationId: string;
+  readonly customerPayments: CustomerPaymentListResult;
+  readonly supplierPayments: SupplierPaymentListResult;
+  readonly customerStats: PaymentStats;
+  readonly supplierStats: PaymentStats;
+  readonly customers: readonly PartyOption[];
+  readonly suppliers: readonly PartyOption[];
+  readonly customerFilters: {
+    readonly search?: string;
+    readonly status?: PaymentStatus;
+  };
+  readonly supplierFilters: {
+    readonly search?: string;
+    readonly status?: PaymentStatus;
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 // Main component
@@ -655,33 +708,73 @@ export function PaymentsView({
   organizationId,
   customerPayments,
   supplierPayments,
+  customerStats,
+  supplierStats,
+  customers,
+  suppliers,
+  customerFilters,
+  supplierFilters,
 }: PaymentsViewProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<ActiveTab>("customer");
+  const [showDialog, setShowDialog] = useState(false);
+
+  const totalCount = customerPayments.total + supplierPayments.total;
+
+  const selectCustomer = (): void => setActiveTab("customer");
+  const selectSupplier = (): void => setActiveTab("supplier");
+
+  const openDialog = (): void => setShowDialog(true);
+  const closeDialog = (): void => setShowDialog(false);
+  const handleDone = (): void => {
+    setShowDialog(false);
+    router.refresh();
+  };
+
+  const actionLabel =
+    activeTab === "customer" ? "Record payment" : "Make payment";
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Payments"
-        description="Manage customer receipts and supplier disbursements"
-        icon={Receipt}
-      />
+    <div className="space-y-5">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex items-center gap-3"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+          <Receipt className="h-5 w-5 text-white" aria-hidden="true" />
+        </div>
+        <div>
+          <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            Payments
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+              {totalCount}
+            </span>
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Manage customer receipts and supplier disbursements
+          </p>
+        </div>
+      </motion.div>
 
-      {/* Tabs */}
-      <div className="border-b border-slate-200 dark:border-slate-800">
+      {/* Tabs + action */}
+      <div className="flex items-end justify-between gap-3 border-b border-slate-200 dark:border-slate-800">
         <nav className="-mb-px flex gap-6" aria-label="Payment tabs">
           <button
             type="button"
-            onClick={() => setActiveTab("customer")}
-            className={[
+            onClick={selectCustomer}
+            className={cn(
               "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition-colors",
               activeTab === "customer"
                 ? "border-primary-600 text-primary-600 dark:text-primary-400"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300",
-            ].join(" ")}
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300"
+            )}
             aria-selected={activeTab === "customer"}
             role="tab"
           >
-            <DollarSign className="h-4 w-4" aria-hidden="true" />
+            <IndianRupee className="h-4 w-4" aria-hidden="true" />
             Customer Payments
             {customerPayments.total > 0 && (
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
@@ -691,13 +784,13 @@ export function PaymentsView({
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("supplier")}
-            className={[
+            onClick={selectSupplier}
+            className={cn(
               "flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition-colors",
               activeTab === "supplier"
                 ? "border-primary-600 text-primary-600 dark:text-primary-400"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300",
-            ].join(" ")}
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-300"
+            )}
             aria-selected={activeTab === "supplier"}
             role="tab"
           >
@@ -710,6 +803,15 @@ export function PaymentsView({
             )}
           </button>
         </nav>
+        <Button
+          onClick={openDialog}
+          variant="gradient"
+          size="sm"
+          className="mb-2 gap-2"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {actionLabel}
+        </Button>
       </div>
 
       {/* Tab content */}
@@ -722,18 +824,41 @@ export function PaymentsView({
       >
         {activeTab === "customer" ? (
           <CustomerPaymentsTab
-            organizationId={organizationId}
             result={customerPayments}
+            stats={customerStats}
+            filters={customerFilters}
+            onRecordPayment={openDialog}
           />
         ) : (
           <SupplierPaymentsTab
-            organizationId={organizationId}
             result={supplierPayments}
+            stats={supplierStats}
+            filters={supplierFilters}
+            onRecordPayment={openDialog}
           />
         )}
       </motion.div>
+
+      {showDialog &&
+        (activeTab === "customer" ? (
+          <RecordCustomerPaymentDialog
+            organizationId={organizationId}
+            customerId=""
+            customerName="Select Customer"
+            customers={customers}
+            onClose={closeDialog}
+            onDone={handleDone}
+          />
+        ) : (
+          <RecordSupplierPaymentDialog
+            organizationId={organizationId}
+            supplierId=""
+            supplierName="Select Supplier"
+            suppliers={suppliers}
+            onClose={closeDialog}
+            onDone={handleDone}
+          />
+        ))}
     </div>
   );
 }
-
-export { PaymentsTableSkeleton };

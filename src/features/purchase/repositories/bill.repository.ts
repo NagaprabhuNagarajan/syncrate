@@ -9,6 +9,7 @@ import type {
   BillStats,
   BillStatus,
   BillWithItems,
+  OutstandingBillSummary,
 } from "@/features/purchase/types/bill.types";
 
 type DbBill =
@@ -188,6 +189,28 @@ export class BillRepository {
       query = query.eq("status", params.status);
     }
 
+    if (params.paymentStatus) {
+      // The stored `payment_status` generated column only knows
+      // paid/partial/unpaid. "overdue" is time-dependent (due_date vs today),
+      // so it is layered on with an explicit due_date condition — kept
+      // consistent with the badge's `deriveBillPaymentStatus` (overdue wins).
+      const today = new Date().toISOString().slice(0, 10);
+      if (params.paymentStatus === "overdue") {
+        query = query
+          .eq("status", "posted")
+          .neq("payment_status", "paid")
+          .lt("due_date", today);
+      } else if (params.paymentStatus === "paid") {
+        query = query.eq("payment_status", "paid");
+      } else {
+        // unpaid | partial — exact match, but EXCLUDE rows the badge would show
+        // as overdue (posted + past-due + still owing), so the two agree.
+        query = query
+          .eq("payment_status", params.paymentStatus)
+          .or(`status.neq.posted,due_date.is.null,due_date.gte.${today}`);
+      }
+    }
+
     if (params.search) {
       const term = sanitizeSearch(params.search);
       if (term) {
@@ -291,6 +314,50 @@ export class BillRepository {
       posted: posted.count ?? 0,
       overdue,
     };
+  }
+
+  /**
+   * Lists a single supplier's bills that still carry a balance due, for the
+   * make-payment "settle outstanding" picker. A bill only accrues a balance
+   * once posted (drafts have no ledger impact and cancelled bills are void),
+   * so this filters to `status = 'posted'` on non-deleted bills, then keeps
+   * only rows where `total_amount − amount_paid > 0`. Ordered by bill date
+   * (oldest first) so the earliest dues surface first.
+   */
+  async listOutstandingBySupplier(
+    organizationId: string,
+    supplierId: string
+  ): Promise<OutstandingBillSummary[]> {
+    const { data, error } = await this.supabase
+      .from("purchase_invoices")
+      .select("id, invoice_number, invoice_date, total_amount, amount_paid")
+      .eq("organization_id", organizationId)
+      .eq("supplier_id", supplierId)
+      .is("deleted_at", null)
+      .eq("status", "posted")
+      .order("invoice_date", { ascending: true });
+
+    if (error || !data) {
+      return [];
+    }
+
+    const summaries: OutstandingBillSummary[] = [];
+    for (const row of data) {
+      const totalAmount = Number(row.total_amount);
+      const amountPaid = Number(row.amount_paid);
+      const outstandingAmount = totalAmount - amountPaid;
+      if (outstandingAmount > 0) {
+        summaries.push({
+          id: row.id,
+          invoiceNumber: row.invoice_number,
+          invoiceDate: row.invoice_date,
+          totalAmount,
+          amountPaid,
+          outstandingAmount,
+        });
+      }
+    }
+    return summaries;
   }
 
   async createHeader(

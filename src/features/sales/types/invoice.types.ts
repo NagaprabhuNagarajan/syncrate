@@ -151,6 +151,7 @@ export type InvoiceSortField =
 export interface InvoiceListParams {
   readonly search?: string;
   readonly status?: InvoiceStatus;
+  readonly paymentStatus?: PaymentStatus;
   readonly customerId?: string;
   readonly dateFrom?: string;
   readonly dateTo?: string;
@@ -186,6 +187,21 @@ export interface InvoiceStats {
   readonly paid: number;
 }
 
+/**
+ * A lightweight summary of an invoice that still has a balance due, used to
+ * build the "settle outstanding" checkbox list in the record-payment dialog.
+ * `outstandingAmount` = `totalAmount` − `amountPaid` and is always > 0.
+ */
+export interface OutstandingInvoiceSummary {
+  readonly id: string;
+  readonly invoiceNumber: string;
+  /** ISO date string (YYYY-MM-DD). */
+  readonly invoiceDate: string;
+  readonly totalAmount: number;
+  readonly amountPaid: number;
+  readonly outstandingAmount: number;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Result types
 // ─────────────────────────────────────────────────────────────
@@ -195,6 +211,7 @@ export type InvoiceErrorCode =
   | "forbidden"
   | "validation"
   | "invalid_status"
+  | "insufficient_stock"
   | "conflict"
   | "unknown";
 

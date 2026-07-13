@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SupplierPaymentService } from "@/features/payment/services/supplier-payment.service";
+import { BillService } from "@/features/purchase/services/bill.service";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { AuditService } from "@/features/audit/services/audit.service";
 import { recordSupplierPaymentSchema } from "@/features/payment/schemas/payment.schemas";
 import type {
+  OutstandingTransaction,
   PaymentActionResult,
   SupplierPayment,
   SupplierPaymentListResult,
@@ -126,6 +128,91 @@ export async function recordSupplierPaymentAction(
       entityType: "supplier_payment",
       entityId: result.data.id,
       summary: `Recorded supplier payment ${result.data.paymentNumber} for ${result.data.amount}`,
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Read-side: a supplier's outstanding bills (balance due > 0) for the
+ * make-payment dialog's "settle outstanding" picker. Gated on the same
+ * `payment.make` permission used to record the payment. Never throws — an
+ * auth failure returns a forbidden result, and a query error yields an empty
+ * list via the repository.
+ */
+export async function getOutstandingSupplierBillsAction(
+  organizationId: string,
+  supplierId: string
+): Promise<PaymentActionResult<readonly OutstandingTransaction[]>> {
+  const supabase = await createServerSupabaseClient();
+  const auth = await authorize(supabase, organizationId, "payment.make");
+  if (!auth.ok) {
+    return auth.result;
+  }
+
+  const service = new BillService(supabase);
+  const bills = await service.listOutstandingBillsForSupplier(
+    organizationId,
+    supplierId
+  );
+  return { success: true, data: bills };
+}
+
+/**
+ * Settles an outstanding bill using the supplier's unallocated advance credit.
+ * Gated on `payment.make` (same as recording a payment — it moves money onto
+ * the bill). Parses `supplierId`/`billId`/`amount` from the FormData, delegates
+ * the re-allocation to the service (backed by the `apply_supplier_credit` RPC),
+ * then audits and revalidates on success.
+ */
+export async function applySupplierCreditAction(
+  organizationId: string,
+  formData: FormData
+): Promise<PaymentActionResult<void>> {
+  const supplierId = formData.get("supplierId");
+  const billId = formData.get("billId");
+  const amountRaw = formData.get("amount");
+
+  if (typeof supplierId !== "string" || supplierId.trim() === "") {
+    return invalid("Supplier is required");
+  }
+  if (typeof billId !== "string" || billId.trim() === "") {
+    return invalid("Bill is required");
+  }
+
+  const amount = typeof amountRaw === "string" ? Number(amountRaw) : NaN;
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return invalid("Amount must be greater than 0");
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const auth = await authorize(supabase, organizationId, "payment.make");
+  if (!auth.ok) {
+    return auth.result;
+  }
+
+  const service = new SupplierPaymentService(supabase);
+  const result = await service.applyCredit(
+    organizationId,
+    supplierId,
+    billId,
+    amount,
+    auth.userId
+  );
+
+  if (result.success) {
+    revalidatePath(`/purchases/bills/${billId}`);
+    revalidatePath("/purchases/bills");
+    revalidatePath("/suppliers");
+    revalidatePath("/dashboard");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: auth.userId,
+      action: "supplier_credit.apply",
+      entityType: "bill",
+      entityId: billId,
+      summary: `Applied ${amount} supplier credit to bill ${billId}`,
     });
   }
 

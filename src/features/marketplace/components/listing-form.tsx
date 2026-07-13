@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import {
   createListingAction,
   updateListingAction,
@@ -188,14 +189,7 @@ export function ListingForm({
         <input type="hidden" name="version" value={listing.version} />
       )}
 
-      {error && (
-        <p
-          role="alert"
-          className="text-error-700 bg-error-50 border-error-200 dark:text-error-300 dark:bg-error-500/10 dark:border-error-500/30 rounded-lg border px-3 py-2.5 text-sm"
-        >
-          {error}
-        </p>
-      )}
+      {error && <ErrorBanner message={error} />}
 
       <div className="flex items-center justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>

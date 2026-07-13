@@ -13,6 +13,7 @@ import type {
   BillListResult,
   BillStats,
   BillWithItems,
+  OutstandingBillSummary,
   UpdateBillInput,
 } from "@/features/purchase/types/bill.types";
 
@@ -131,6 +132,17 @@ export class BillService {
     purchaseOrderId: string
   ): Promise<BillListItem[]> {
     return this.repo.findByPurchaseOrder(purchaseOrderId);
+  }
+
+  /**
+   * A supplier's bills with a balance due, for the make-payment picker.
+   * Each row's `outstandingAmount` (= total − paid) is guaranteed > 0.
+   */
+  async listOutstandingBillsForSupplier(
+    organizationId: string,
+    supplierId: string
+  ): Promise<OutstandingBillSummary[]> {
+    return this.repo.listOutstandingBySupplier(organizationId, supplierId);
   }
 
   async getBill(

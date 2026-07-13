@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { ClipboardList, AlertCircle, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/shared/error-banner";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -360,20 +361,7 @@ export function PurchaseRequestForm({
         </div>
       </motion.div>
 
-      {serverError && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="border-error-200 dark:border-error-500/30 bg-error-50 dark:bg-error-500/10 text-error-800 dark:text-error-300 mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm"
-          role="alert"
-        >
-          <AlertCircle
-            className="text-error-500 mt-0.5 h-4 w-4 shrink-0"
-            aria-hidden="true"
-          />
-          <span>{serverError}</span>
-        </motion.div>
-      )}
+      {serverError && <ErrorBanner message={serverError} className="mb-5" />}
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         {/* Request details */}
