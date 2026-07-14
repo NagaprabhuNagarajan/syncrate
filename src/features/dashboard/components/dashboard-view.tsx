@@ -17,9 +17,20 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AnimatedNumber } from "@/components/shared/animated-number";
 import type { Organization } from "@/features/organization/types/organization.types";
-import type { DashboardKpis, RecentActivityItem } from "@/features/dashboard/services/dashboard.service";
+import type {
+  DashboardKpis,
+  RecentActivityItem,
+} from "@/features/dashboard/services/dashboard.service";
 import type { DashboardAnalytics } from "@/features/dashboard/services/dashboard-analytics.service";
 import {
   SalesTrendChart,
@@ -101,12 +112,7 @@ function KpiCard({
             </p>
           </div>
           <div className="relative">
-            <div
-              className={cn(
-                "rounded-xl p-2.5 shadow-sm",
-                gradient
-              )}
-            >
+            <div className={cn("rounded-xl p-2.5 shadow-sm", gradient)}>
               <Icon className="h-5 w-5 text-white" aria-hidden="true" />
             </div>
             {badge !== undefined && (
@@ -119,9 +125,15 @@ function KpiCard({
         {sub !== undefined && (
           <div className="relative mt-3 flex items-center gap-1.5">
             {subPositive === true ? (
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+              <TrendingUp
+                className="h-3.5 w-3.5 text-emerald-500"
+                aria-hidden="true"
+              />
             ) : subPositive === false ? (
-              <TrendingDown className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+              <TrendingDown
+                className="h-3.5 w-3.5 text-red-500"
+                aria-hidden="true"
+              />
             ) : null}
             <span
               className={cn(
@@ -136,7 +148,9 @@ function KpiCard({
               {sub}
             </span>
             {subPositive !== undefined && (
-              <span className="text-xs text-slate-400 dark:text-slate-500">vs last month</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                vs last month
+              </span>
             )}
           </div>
         )}
@@ -159,19 +173,51 @@ const ACTIVITY_COLORS: Record<
   RecentActivityItem["type"],
   { bg: string; text: string }
 > = {
-  invoice: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-700 dark:text-blue-300" },
-  purchase_invoice: { bg: "bg-purple-50 dark:bg-purple-500/10", text: "text-purple-700 dark:text-purple-300" },
-  customer_payment: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-300" },
+  invoice: {
+    bg: "bg-blue-50 dark:bg-blue-500/10",
+    text: "text-blue-700 dark:text-blue-300",
+  },
+  purchase_invoice: {
+    bg: "bg-purple-50 dark:bg-purple-500/10",
+    text: "text-purple-700 dark:text-purple-300",
+  },
+  customer_payment: {
+    bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    text: "text-emerald-700 dark:text-emerald-300",
+  },
 };
 
-function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
+// Detail route for each activity kind — the reference links straight to it.
+const ACTIVITY_HREF_BASE: Record<RecentActivityItem["type"], string> = {
+  invoice: "/invoices",
+  purchase_invoice: "/bills",
+  customer_payment: "/payments",
+};
+
+function ActivityTable({
+  items,
+  orgId,
+}: {
+  readonly items: RecentActivityItem[];
+  readonly orgId: string;
+}) {
+  const activityHref = (item: RecentActivityItem): string => {
+    const base = `${ACTIVITY_HREF_BASE[item.type]}/${item.id}`;
+    return orgId ? `${base}?org=${orgId}` : base;
+  };
+
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-          <Zap className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
+          <Zap
+            className="h-5 w-5 text-slate-400 dark:text-slate-500"
+            aria-hidden="true"
+          />
         </div>
-        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">No activity yet</p>
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+          No activity yet
+        </p>
         <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
           Recent transactions will appear here
         </p>
@@ -180,64 +226,57 @@ function ActivityTable({ items }: { readonly items: RecentActivityItem[] }) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-slate-100 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-          <tr>
-            <th scope="col" className="px-3 py-2 font-medium">
-              Type
-            </th>
-            <th scope="col" className="px-3 py-2 font-medium">
-              Reference
-            </th>
-            <th scope="col" className="px-3 py-2 font-medium">
-              Party
-            </th>
-            <th scope="col" className="px-3 py-2 font-medium">
-              Date
-            </th>
-            <th scope="col" className="px-3 py-2 text-right font-medium">
-              Amount
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {items.map((item) => {
-            const colors = ACTIVITY_COLORS[item.type];
-            return (
-              <tr key={`${item.type}-${item.id}`} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <td className="px-3 py-2">
-                  <span
-                    className={cn(
-                      "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                      colors.bg,
-                      colors.text
-                    )}
-                  >
-                    {ACTIVITY_LABELS[item.type]}
-                  </span>
-                </td>
-                <td className="px-3 py-2 font-mono text-xs text-slate-600 dark:text-slate-400">
+    <Table wrapperClassName="rounded-none border-0 bg-transparent">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Type</TableHead>
+          <TableHead>Reference</TableHead>
+          <TableHead>Party</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead className="text-right">Amount</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.map((item) => {
+          const colors = ACTIVITY_COLORS[item.type];
+          return (
+            <TableRow key={`${item.type}-${item.id}`}>
+              <TableCell>
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                    colors.bg,
+                    colors.text
+                  )}
+                >
+                  {ACTIVITY_LABELS[item.type]}
+                </span>
+              </TableCell>
+              <TableCell>
+                <Link
+                  href={activityHref(item)}
+                  className="font-mono text-xs text-primary-600 hover:underline dark:text-primary-400"
+                >
                   {item.reference}
-                </td>
-                <td className="max-w-[180px] truncate px-3 py-2 text-slate-700 dark:text-slate-300">
-                  {item.partyName}
-                </td>
-                <td className="px-3 py-2 text-slate-500 dark:text-slate-400">
-                  {new Date(item.date).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </td>
-                <td className="nums px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
-                  {formatINR(item.amount)}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                </Link>
+              </TableCell>
+              <TableCell className="max-w-[180px] truncate text-slate-700 dark:text-slate-300">
+                {item.partyName}
+              </TableCell>
+              <TableCell className="text-slate-500 dark:text-slate-400">
+                {new Date(item.date).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                })}
+              </TableCell>
+              <TableCell className="nums text-right font-medium text-slate-900 dark:text-slate-100">
+                {formatINR(item.amount)}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -253,7 +292,13 @@ interface QuickActionProps {
   readonly color: string;
 }
 
-function QuickAction({ label, description, icon: Icon, href, color }: QuickActionProps) {
+function QuickAction({
+  label,
+  description,
+  icon: Icon,
+  href,
+  color,
+}: QuickActionProps) {
   return (
     <Link
       href={href}
@@ -271,7 +316,9 @@ function QuickAction({ label, description, icon: Icon, href, color }: QuickActio
         <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 dark:text-slate-100 dark:group-hover:text-blue-300">
           {label}
         </p>
-        <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{description}</p>
+        <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+          {description}
+        </p>
       </div>
       <ArrowUpRight
         className="ml-auto h-4 w-4 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-blue-500 dark:text-slate-600"
@@ -297,10 +344,10 @@ const QUICK_ACTIONS: QuickActionProps[] = [
     color: "bg-gradient-violet",
   },
   {
-    label: "Record Payment",
-    description: "Log a received payment",
+    label: "View Payments",
+    description: "See customer and supplier payments",
     icon: CreditCard,
-    href: "/payments/new",
+    href: "/payments",
     color: "bg-gradient-success",
   },
   {
@@ -344,7 +391,9 @@ function Panel({
           {title}
         </h2>
         {subtitle && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {subtitle}
+          </p>
         )}
       </div>
       {children}
@@ -508,23 +557,23 @@ export function DashboardView({
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Recent Activity */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.2 }}
-          className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
+          className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900 lg:col-span-2"
         >
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Recent Activity
             </h2>
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="info" className="text-xs">
               {kpis.recentActivity.length} items
             </Badge>
           </div>
-          <ActivityTable items={kpis.recentActivity} />
+          <ActivityTable items={kpis.recentActivity} orgId={organization.id} />
         </motion.div>
 
         {/* Quick Actions */}
@@ -539,7 +588,7 @@ export function DashboardView({
               Quick Actions
             </h2>
           </div>
-          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-1">
             {QUICK_ACTIONS.map((action) => (
               <QuickAction key={action.label} {...action} />
             ))}
