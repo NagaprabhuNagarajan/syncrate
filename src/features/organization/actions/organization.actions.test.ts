@@ -59,6 +59,8 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: createClientMock,
+  // Invitation accept/decline read pre-membership data with the service role.
+  createServiceRoleClient: createClientMock,
 }));
 
 vi.mock("@/features/organization/services/organization.service", () => ({
@@ -414,7 +416,8 @@ describe("inviteUserAction", () => {
     expect(mockService.inviteUser).toHaveBeenCalledWith(
       expect.objectContaining({ email: "new@example.com", roleId: ROLE_ID }),
       "org-1",
-      "user-1"
+      "user-1",
+      null
     );
     expect(result).toBe(success);
     expect(revalidateMock).toHaveBeenCalledWith("/team");

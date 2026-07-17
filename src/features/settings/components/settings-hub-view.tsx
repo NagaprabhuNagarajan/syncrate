@@ -4,7 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Users,
-  Building2,
   ShieldCheck,
   KeyRound,
   ScrollText,
@@ -12,14 +11,9 @@ import {
   Webhook,
   Workflow as WorkflowIcon,
   Settings as SettingsIcon,
+  ArrowUpRight,
   type LucideIcon,
 } from "lucide-react";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 interface SettingsSection {
   readonly key: string;
@@ -33,29 +27,12 @@ interface SettingsSection {
 
 const SECTIONS: readonly SettingsSection[] = [
   {
-    key: "organization",
-    label: "Organization",
-    description:
-      "Update business details and state — sets CGST/SGST vs IGST on sales.",
-    href: "/organization",
-    icon: Building2,
-    permission: "settings.manage",
-  },
-  {
     key: "team",
     label: "Team",
     description: "Invite members and manage who has access.",
-    href: "/team",
+    href: "/settings/team",
     icon: Users,
     permission: "settings.users",
-  },
-  {
-    key: "branches",
-    label: "Branches",
-    description: "Manage business locations and branch settings.",
-    href: "/branches",
-    icon: Building2,
-    permission: "settings.branches",
   },
   {
     key: "roles",
@@ -129,7 +106,7 @@ export function SettingsHubView({ permissions }: SettingsHubViewProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
         {visible.map((section, index) => {
           const Icon = section.icon;
           return (
@@ -139,18 +116,27 @@ export function SettingsHubView({ permissions }: SettingsHubViewProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.03 }}
             >
-              <Link href={section.href} className="block h-full">
-                <Card hover className="h-full">
-                  <CardHeader>
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-brand text-white shadow-glow-primary">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                    <CardTitle className="mt-3 text-base">
+              <Link
+                href={section.href}
+                className="group flex h-full items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-card transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-brand text-white shadow-glow-primary">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       {section.label}
-                    </CardTitle>
-                    <CardDescription>{section.description}</CardDescription>
-                  </CardHeader>
-                </Card>
+                    </h2>
+                    <ArrowUpRight
+                      className="h-4 w-4 shrink-0 text-slate-300 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-500 dark:text-slate-600 dark:group-hover:text-primary-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+                    {section.description}
+                  </p>
+                </div>
               </Link>
             </motion.div>
           );

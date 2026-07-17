@@ -54,12 +54,14 @@ export default async function TeamPage({
     );
   }
 
-  const [members, roles, branches, pendingInvitations] = await Promise.all([
-    service.listMembersWithUser(activeOrg.id),
-    service.listRoles(activeOrg.id),
-    service.listBranches(activeOrg.id),
-    service.listPendingInvitations(activeOrg.id),
-  ]);
+  const [members, roles, branches, pendingInvitations, declinedInvitations] =
+    await Promise.all([
+      service.listMembersWithUser(activeOrg.id),
+      service.listRoles(activeOrg.id),
+      service.listBranches(activeOrg.id),
+      service.listPendingInvitations(activeOrg.id),
+      service.listDeclinedInvitations(activeOrg.id),
+    ]);
 
   return (
     <TeamManagementView
@@ -68,6 +70,7 @@ export default async function TeamPage({
       roles={roles}
       branches={branches}
       pendingInvitations={pendingInvitations}
+      declinedInvitations={declinedInvitations}
     />
   );
 }

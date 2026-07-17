@@ -460,9 +460,12 @@ export class OrganizationRepository {
     const { data, error } = await this.supabase
       .from("organization_members")
       .select(
+        // organization_members has several FKs to users (user_id, invited_by,
+        // created_by, …), so the embed MUST name the user_id relationship —
+        // otherwise PostgREST can't disambiguate and the query errors out.
         `
         *,
-        users(email, full_name, avatar_url),
+        users!user_id(email, full_name, avatar_url),
         roles(name)
       `
       )
@@ -511,6 +514,60 @@ export class OrganizationRepository {
       return null;
     }
     return mapMember(data);
+  }
+
+  /** The role name of a user in an org — for the sidebar's "you are" badge.
+   * organization_members has a single FK to roles, so this embed is safe. */
+  async findMemberRoleName(
+    organizationId: string,
+    userId: string
+  ): Promise<string | null> {
+    const { data, error } = await this.supabase
+      .from("organization_members")
+      .select("roles(name)")
+      .eq("organization_id", organizationId)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+    const row = data as unknown as { roles: { name: string } | null };
+    return row.roles?.name ?? null;
+  }
+
+  async updateMemberRole(
+    memberId: string,
+    roleId: string,
+    updatedBy: string
+  ): Promise<boolean> {
+    const { error } = await this.supabase
+      .from("organization_members")
+      .update({
+        role_id: roleId,
+        updated_by: updatedBy,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", memberId)
+      .is("deleted_at", null);
+    return !error;
+  }
+
+  async softDeleteMember(
+    memberId: string,
+    deletedBy: string
+  ): Promise<boolean> {
+    const { error } = await this.supabase
+      .from("organization_members")
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: deletedBy,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", memberId)
+      .is("deleted_at", null);
+    return !error;
   }
 
   // ── Roles & Permissions ───────────────────────────────────
@@ -641,6 +698,91 @@ export class OrganizationRepository {
       return [];
     }
     return data.map(mapInvitation);
+  }
+
+  /** The single live invitation for an (org, email), whatever its status.
+   * Emails are stored lower-cased, so the lookup is case-insensitive. */
+  async findInvitationByEmail(
+    organizationId: string,
+    email: string
+  ): Promise<OrganizationInvitation | null> {
+    const { data, error } = await this.supabase
+      .from("organization_invitations")
+      .select("*")
+      .eq("organization_id", organizationId)
+      .eq("email", email.toLowerCase().trim())
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+    return mapInvitation(data);
+  }
+
+  async findInvitationsByStatus(
+    organizationId: string,
+    status: OrganizationInvitation["status"]
+  ): Promise<OrganizationInvitation[]> {
+    const { data, error } = await this.supabase
+      .from("organization_invitations")
+      .select("*")
+      .eq("organization_id", organizationId)
+      .eq("status", status)
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+    return data.map(mapInvitation);
+  }
+
+  /** Re-activates an invitation (e.g. after it was declined): back to pending
+   * with a fresh 7-day expiry. An optional patch updates role/branch/inviter
+   * when the same email is re-invited with different details. */
+  async reactivateInvitation(
+    id: string,
+    patch?: {
+      roleId?: string;
+      branchId?: string | null;
+      createdBy?: string;
+    }
+  ): Promise<OrganizationInvitation | null> {
+    const expiresAt = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    ).toISOString();
+    const update: Database["public"]["Tables"]["organization_invitations"]["Update"] =
+      {
+        status: "pending",
+        expires_at: expiresAt,
+        accepted_at: null,
+        accepted_by: null,
+        updated_at: new Date().toISOString(),
+      };
+    if (patch?.roleId !== undefined) {
+      update.role_id = patch.roleId;
+    }
+    if (patch?.branchId !== undefined) {
+      update.branch_id = patch.branchId;
+    }
+    if (patch?.createdBy !== undefined) {
+      update.created_by = patch.createdBy;
+    }
+
+    const { data, error } = await this.supabase
+      .from("organization_invitations")
+      .update(update)
+      .eq("id", id)
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+    return mapInvitation(data);
   }
 
   async createInvitation(input: {

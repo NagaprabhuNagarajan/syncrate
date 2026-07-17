@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { AlertCircle, CheckCircle2, UserPlus } from "lucide-react";
+import { AlertCircle, CheckCircle2, UserPlus, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import {
@@ -97,6 +97,7 @@ interface InviteUserFormProps {
   readonly roles: Role[];
   readonly branches: Branch[];
   readonly onSuccess?: () => void;
+  readonly onClose?: () => void;
 }
 
 export function InviteUserForm({
@@ -104,6 +105,7 @@ export function InviteUserForm({
   roles,
   branches,
   onSuccess,
+  onClose,
 }: InviteUserFormProps) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -268,16 +270,29 @@ export function InviteUserForm({
           <FieldError message={errors.branchId?.message} />
         </div>
 
-        <Button
-          type="submit"
-          variant="gradient"
-          className="w-full"
-          loading={isPending}
-          disabled={isPending}
-        >
-          <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
-          Send invitation
-        </Button>
+        <div className="flex items-center gap-2">
+          {onClose && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isPending}
+            >
+              <CircleX className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Close
+            </Button>
+          )}
+          <Button
+            type="submit"
+            variant="gradient"
+            className="flex-1"
+            loading={isPending}
+            disabled={isPending}
+          >
+            <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
+            Send invitation
+          </Button>
+        </div>
       </form>
     </motion.div>
   );

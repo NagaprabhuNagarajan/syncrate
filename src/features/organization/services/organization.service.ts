@@ -1,6 +1,7 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import { OrganizationRepository } from "@/features/organization/repositories/organization.repository";
 import type {
+  InvitationDetails,
   Organization,
   Branch,
   OrganizationMember,
@@ -399,12 +400,96 @@ export class OrganizationService {
     return this.repo.findMembersWithUser(organizationId);
   }
 
+  /** The signed-in user's role name in an organization (e.g. "Owner"). */
+  async getUserRoleName(
+    organizationId: string,
+    userId: string
+  ): Promise<string | null> {
+    return this.repo.findMemberRoleName(organizationId, userId);
+  }
+
+  /** Counts active Owner members — used to protect the last owner. */
+  private countActiveOwners(members: OrganizationMemberWithUser[]): number {
+    return members.filter(
+      (m) => m.roleName === "Owner" && m.status === "active"
+    ).length;
+  }
+
+  async updateMemberRole(
+    organizationId: string,
+    memberId: string,
+    roleId: string,
+    actorUserId: string
+  ): Promise<OrganizationActionResult<void>> {
+    const members = await this.repo.findMembersWithUser(organizationId);
+    const target = members.find((m) => m.id === memberId);
+    if (!target) {
+      return fail("not_found", "Member not found.");
+    }
+
+    const role = await this.repo.findRoleById(roleId);
+    if (!role) {
+      return fail("not_found", "The selected role does not exist.");
+    }
+
+    // Never leave the organization without an owner.
+    if (
+      target.roleName === "Owner" &&
+      role.name !== "Owner" &&
+      this.countActiveOwners(members) <= 1
+    ) {
+      return fail(
+        "validation",
+        "You can't change the role of the last owner. Assign another owner first."
+      );
+    }
+
+    const updated = await this.repo.updateMemberRole(
+      memberId,
+      roleId,
+      actorUserId
+    );
+    if (!updated) {
+      return fail("unknown", "Failed to update the member's role.");
+    }
+    return ok(undefined);
+  }
+
+  async removeMember(
+    organizationId: string,
+    memberId: string,
+    actorUserId: string
+  ): Promise<OrganizationActionResult<void>> {
+    const members = await this.repo.findMembersWithUser(organizationId);
+    const target = members.find((m) => m.id === memberId);
+    if (!target) {
+      return fail("not_found", "Member not found.");
+    }
+
+    if (
+      target.roleName === "Owner" &&
+      this.countActiveOwners(members) <= 1
+    ) {
+      return fail(
+        "validation",
+        "You can't remove the last owner. Assign another owner first."
+      );
+    }
+
+    const removed = await this.repo.softDeleteMember(memberId, actorUserId);
+    if (!removed) {
+      return fail("unknown", "Failed to remove the member.");
+    }
+    return ok(undefined);
+  }
+
   // ── Invite User ───────────────────────────────────────────
 
   async inviteUser(
     input: InviteUserInput,
     organizationId: string,
-    invitedBy: string
+    invitedBy: string,
+    inviterEmail?: string | null
   ): Promise<OrganizationActionResult<OrganizationInvitation>> {
     // Validate role exists
     const role = await this.repo.findRoleById(input.roleId);
@@ -412,22 +497,56 @@ export class OrganizationService {
       return fail("not_found", "Selected role does not exist");
     }
 
-    // Check if a pending invitation for this email already exists.
-    // OrganizationMember stores userId (not email), so we cannot directly
-    // compare by email against the members table here. Duplicate-invite
-    // prevention is the guard we can enforce at this layer; actual
-    // membership uniqueness is enforced by the DB unique constraint.
-    const pendingInvitations =
-      await this.repo.findPendingInvitationsByOrg(organizationId);
-    const duplicateInvitation = pendingInvitations.find(
-      (inv) => inv.email.toLowerCase() === input.email.toLowerCase()
-    );
-
-    if (duplicateInvitation) {
+    // You can't invite your own (already-signed-in) email address.
+    if (
+      inviterEmail &&
+      inviterEmail.toLowerCase() === input.email.toLowerCase()
+    ) {
       return fail(
         "already_member",
-        "A pending invitation for this email address already exists"
+        "You're already a member — you can't invite your own email address."
       );
+    }
+
+    // One invitation record per (org, email). If a prior invitation exists in
+    // any state, reuse it instead of inserting a duplicate row — otherwise a
+    // declined/expired invite plus a fresh one would coexist for one address.
+    const existing = await this.repo.findInvitationByEmail(
+      organizationId,
+      input.email
+    );
+
+    if (existing) {
+      if (existing.status === "accepted") {
+        return fail(
+          "already_member",
+          "This email address already belongs to a member of this organization."
+        );
+      }
+      if (
+        existing.status === "pending" &&
+        new Date(existing.expiresAt) >= new Date()
+      ) {
+        return fail(
+          "already_member",
+          "A pending invitation for this email address already exists."
+        );
+      }
+
+      // declined / cancelled / expired (or a lapsed pending) → re-activate the
+      // same row with the newly-chosen role/branch and a fresh expiry.
+      const reactivated = await this.repo.reactivateInvitation(existing.id, {
+        roleId: input.roleId,
+        branchId: input.branchId ?? null,
+        createdBy: invitedBy,
+      });
+      if (!reactivated) {
+        return fail(
+          "unknown",
+          "Failed to send the invitation. Please try again."
+        );
+      }
+      return ok(reactivated);
     }
 
     const invitation = await this.repo.createInvitation({
@@ -511,6 +630,80 @@ export class OrganizationService {
     return ok(org);
   }
 
+  // ── Invitation preview (public accept page) ───────────────
+
+  /** Resolves an invitation token to its display details, or a typed error
+   * when it's missing, expired, or no longer pending. */
+  async getInvitationDetails(
+    token: string
+  ): Promise<OrganizationActionResult<InvitationDetails>> {
+    const invitation = await this.repo.findInvitationByToken(token);
+    if (!invitation) {
+      return fail("not_found", "This invitation could not be found.");
+    }
+
+    if (invitation.status !== "pending") {
+      if (invitation.status === "expired") {
+        return fail("invitation_expired", "This invitation has expired.");
+      }
+      return fail(
+        "invitation_already_used",
+        "This invitation is no longer active."
+      );
+    }
+
+    if (new Date(invitation.expiresAt) < new Date()) {
+      await this.repo.updateInvitationStatus(invitation.id, "expired");
+      return fail("invitation_expired", "This invitation has expired.");
+    }
+
+    const [org, role] = await Promise.all([
+      this.repo.findById(invitation.organizationId),
+      this.repo.findRoleById(invitation.roleId),
+    ]);
+    if (!org) {
+      return fail("not_found", "Organization not found.");
+    }
+
+    return ok({
+      email: invitation.email,
+      organizationName: org.name,
+      roleName: role?.name ?? "Member",
+      expiresAt: invitation.expiresAt,
+    });
+  }
+
+  // ── Decline Invitation (by the invitee) ───────────────────
+
+  async declineInvitation(
+    token: string,
+    _userId: string
+  ): Promise<OrganizationActionResult<void>> {
+    const invitation = await this.repo.findInvitationByToken(token);
+    if (!invitation) {
+      return fail("not_found", "This invitation could not be found.");
+    }
+
+    if (invitation.status !== "pending") {
+      return fail(
+        "invitation_already_used",
+        "This invitation is no longer active."
+      );
+    }
+
+    const updated = await this.repo.updateInvitationStatus(
+      invitation.id,
+      "declined"
+    );
+    if (!updated) {
+      return fail(
+        "unknown",
+        "Failed to decline the invitation. Please try again."
+      );
+    }
+    return ok(undefined);
+  }
+
   // ── Cancel Invitation ─────────────────────────────────────
 
   async cancelInvitation(
@@ -536,5 +729,24 @@ export class OrganizationService {
     organizationId: string
   ): Promise<OrganizationInvitation[]> {
     return this.repo.findPendingInvitationsByOrg(organizationId);
+  }
+
+  async listDeclinedInvitations(
+    organizationId: string
+  ): Promise<OrganizationInvitation[]> {
+    return this.repo.findInvitationsByStatus(organizationId, "declined");
+  }
+
+  /** Re-activates a previously declined (or otherwise inactive) invitation so
+   * the invitee can accept again, with a fresh 7-day expiry. */
+  async resendInvitation(
+    invitationId: string,
+    _resentBy: string
+  ): Promise<OrganizationActionResult<OrganizationInvitation>> {
+    const updated = await this.repo.reactivateInvitation(invitationId);
+    if (!updated) {
+      return fail("not_found", "Invitation not found.");
+    }
+    return ok(updated);
   }
 }

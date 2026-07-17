@@ -81,7 +81,6 @@ const NAV_ITEMS: readonly NavItem[] = [
 
 const NAV_FOOTER: readonly NavItem[] = [
   { label: "Organization", href: "/organization", icon: Landmark },
-  { label: "Team", href: "/team", icon: Users },
   { label: "Branches", href: "/branches", icon: Building2 },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
@@ -164,9 +163,13 @@ function NavLink({
 function Sidebar({
   collapsed,
   onToggle,
+  userEmail = null,
+  userRole = null,
 }: {
   readonly collapsed: boolean;
   readonly onToggle: () => void;
+  readonly userEmail?: string | null;
+  readonly userRole?: string | null;
 }) {
   return (
     <aside
@@ -247,6 +250,45 @@ function Sidebar({
           </li> */}
         </ul>
       </div>
+
+      {/* Signed-in user + their role */}
+      {userRole && (
+        <div
+          className={cn(
+            "border-t border-slate-100 dark:border-slate-800",
+            collapsed ? "px-2 py-3" : "px-3 py-3"
+          )}
+          title={collapsed ? `${userEmail ?? "Signed in"} — ${userRole}` : undefined}
+        >
+          {collapsed ? (
+            <div className="flex justify-center">
+              <Avatar className="h-7 w-7">
+                <AvatarFallback className="text-[10px]">
+                  {userRole.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarFallback className="text-[10px]">
+                  {(userEmail ?? userRole).slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                {userEmail && (
+                  <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {userEmail}
+                  </p>
+                )}
+                <span className="inline-flex items-center rounded-full bg-primary-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-700 dark:bg-primary-500/10 dark:text-primary-300">
+                  {userRole}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </aside>
   );
 }
@@ -428,9 +470,13 @@ function MobileDrawer({
 export function AppShell({
   children,
   userId: _userId,
+  userEmail = null,
+  userRole = null,
 }: {
   readonly children: React.ReactNode;
   readonly userId: string;
+  readonly userEmail?: string | null;
+  readonly userRole?: string | null;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -455,6 +501,8 @@ export function AppShell({
         <Sidebar
           collapsed={collapsed}
           onToggle={() => setCollapsed((c) => !c)}
+          userEmail={userEmail}
+          userRole={userRole}
         />
       </div>
 

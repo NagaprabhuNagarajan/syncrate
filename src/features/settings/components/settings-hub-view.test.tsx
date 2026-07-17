@@ -29,7 +29,6 @@ describe("SettingsHubView", () => {
       />
     );
     expect(screen.getByText("Team")).toBeInTheDocument();
-    expect(screen.getByText("Branches")).toBeInTheDocument();
     expect(screen.getByText("Roles & Permissions")).toBeInTheDocument();
     expect(screen.getByText("API Keys")).toBeInTheDocument();
     expect(screen.getByText("Approvals")).toBeInTheDocument();

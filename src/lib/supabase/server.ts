@@ -1,8 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { env } from "@/config/env";
 import type { Database } from "@/types/database.types";
+import type { AppSupabaseClient } from "@/lib/supabase/types";
 
 type CookieToSet = {
   name: string;
@@ -53,8 +55,13 @@ export async function createServerSupabaseClient() {
  * WARNING: This client bypasses Row Level Security.
  * ONLY use in trusted server-side code (background jobs, migrations, admin actions).
  * NEVER expose this in client-facing code or public API routes.
+ *
+ * Uses the plain (non-SSR) client with NO cookies: the SSR client would attach
+ * the request's user JWT as the Authorization header, which overrides the
+ * service_role key and re-applies RLS. A cookieless client sends the
+ * service_role key for auth, so it genuinely bypasses RLS.
  */
-export async function createServiceRoleClient() {
+export function createServiceRoleClient(): AppSupabaseClient {
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceRoleKey) {
     throw new Error(
@@ -62,31 +69,10 @@ export async function createServiceRoleClient() {
     );
   }
 
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    serviceRoleKey,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: CookieToSet[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              cookieStore.set(name, value, options as any)
-            );
-          } catch {
-            // Server Component context — session refresh handled by middleware
-          }
-        },
-      },
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  return createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }

@@ -5,6 +5,7 @@ import type {
   Organization,
   OrganizationInvitation,
   OrganizationMember,
+  OrganizationMemberWithUser,
 } from "@/features/organization/types/organization.types";
 import { OrganizationService } from "./organization.service";
 
@@ -31,11 +32,17 @@ const { mockRepo } = vi.hoisted(() => ({
     findRolesForOrg: vi.fn(),
     findMembersByOrg: vi.fn(),
     findMembersWithUser: vi.fn(),
+    findMemberRoleName: vi.fn(),
+    updateMemberRole: vi.fn(),
+    softDeleteMember: vi.fn(),
     findRoleById: vi.fn(),
     createInvitation: vi.fn(),
     findInvitationByToken: vi.fn(),
     updateInvitationStatus: vi.fn(),
     findPendingInvitationsByOrg: vi.fn(),
+    findInvitationByEmail: vi.fn(),
+    findInvitationsByStatus: vi.fn(),
+    reactivateInvitation: vi.fn(),
   },
 }));
 
@@ -329,10 +336,10 @@ describe("OrganizationService.inviteUser", () => {
     }
   });
 
-  it("creates an invitation when no pending invitation exists for this email", async () => {
+  it("creates an invitation when none exists for this email", async () => {
     mockRepo.findRoleById.mockResolvedValue({ id: "role-1" });
-    // No pending invitations for this email yet.
-    mockRepo.findPendingInvitationsByOrg.mockResolvedValue([]);
+    // No prior invitation for this email.
+    mockRepo.findInvitationByEmail.mockResolvedValue(null);
     mockRepo.createInvitation.mockResolvedValue(buildInvitation());
 
     const result = await service.inviteUser(input, "org-1", "user-1");
@@ -343,52 +350,75 @@ describe("OrganizationService.inviteUser", () => {
     expect(arg.createdBy).toBe("user-1");
   });
 
-  it("creates an invitation even when the org has other active members (different email)", async () => {
+  it("reactivates a declined invitation instead of creating a duplicate", async () => {
     mockRepo.findRoleById.mockResolvedValue({ id: "role-1" });
-    // A pending invitation exists, but for a DIFFERENT email address.
-    mockRepo.findPendingInvitationsByOrg.mockResolvedValue([
-      buildInvitation({ email: "other@example.com" }),
-    ]);
-    mockRepo.createInvitation.mockResolvedValue(buildInvitation());
+    mockRepo.findInvitationByEmail.mockResolvedValue(
+      buildInvitation({ status: "declined" })
+    );
+    mockRepo.reactivateInvitation.mockResolvedValue(
+      buildInvitation({ status: "pending" })
+    );
 
-    // input.email is "new@example.com", which differs from "other@example.com".
     const result = await service.inviteUser(input, "org-1", "user-1");
     expect(result.success).toBe(true);
+    expect(mockRepo.reactivateInvitation).toHaveBeenCalledWith(
+      "inv-1",
+      expect.objectContaining({ roleId: "role-1", createdBy: "user-1" })
+    );
+    // No new row is inserted for the re-invite.
+    expect(mockRepo.createInvitation).not.toHaveBeenCalled();
   });
 
-  it("fails with already_member when a pending invitation already exists for this email", async () => {
+  it("fails with already_member when inviting the inviter's own email", async () => {
     mockRepo.findRoleById.mockResolvedValue({ id: "role-1" });
-    // A pending invitation already exists for the SAME email.
-    mockRepo.findPendingInvitationsByOrg.mockResolvedValue([
-      buildInvitation({ email: "new@example.com" }),
-    ]);
+    mockRepo.findInvitationByEmail.mockResolvedValue(null);
+
+    // input.email is "new@example.com"; pass it (uppercased) as the inviter.
+    const result = await service.inviteUser(
+      input,
+      "org-1",
+      "user-1",
+      "NEW@example.com"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("already_member");
+    }
+    expect(mockRepo.createInvitation).not.toHaveBeenCalled();
+  });
+
+  it("fails with already_member when a live pending invitation already exists", async () => {
+    mockRepo.findRoleById.mockResolvedValue({ id: "role-1" });
+    // A non-expired pending invitation already exists for the same email.
+    mockRepo.findInvitationByEmail.mockResolvedValue(buildInvitation());
 
     const result = await service.inviteUser(input, "org-1", "user-1");
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.code).toBe("already_member");
     }
+    expect(mockRepo.reactivateInvitation).not.toHaveBeenCalled();
+    expect(mockRepo.createInvitation).not.toHaveBeenCalled();
   });
 
-  it("performs the email comparison case-insensitively", async () => {
+  it("fails with already_member when the email already accepted (is a member)", async () => {
     mockRepo.findRoleById.mockResolvedValue({ id: "role-1" });
-    // Invitation stored with uppercase email.
-    mockRepo.findPendingInvitationsByOrg.mockResolvedValue([
-      buildInvitation({ email: "NEW@EXAMPLE.COM" }),
-    ]);
+    mockRepo.findInvitationByEmail.mockResolvedValue(
+      buildInvitation({ status: "accepted" })
+    );
 
-    // input.email is lowercase "new@example.com" — should still match.
     const result = await service.inviteUser(input, "org-1", "user-1");
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.code).toBe("already_member");
     }
+    expect(mockRepo.reactivateInvitation).not.toHaveBeenCalled();
   });
 
   it("fails when invitation creation returns null", async () => {
     mockRepo.findRoleById.mockResolvedValue({ id: "role-1" });
-    // No pending invitation for this email, so the duplicate check passes.
-    mockRepo.findPendingInvitationsByOrg.mockResolvedValue([]);
+    // No prior invitation, so a fresh row is attempted.
+    mockRepo.findInvitationByEmail.mockResolvedValue(null);
     mockRepo.createInvitation.mockResolvedValue(null);
 
     const result = await service.inviteUser(input, "org-1", "user-1");
@@ -396,6 +426,231 @@ describe("OrganizationService.inviteUser", () => {
     if (!result.success) {
       expect(result.error.code).toBe("unknown");
     }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// getInvitationDetails
+// ─────────────────────────────────────────────────────────────
+
+describe("OrganizationService.getInvitationDetails", () => {
+  it("returns the org name, role and email for a valid token", async () => {
+    mockRepo.findInvitationByToken.mockResolvedValue(buildInvitation());
+    mockRepo.findById.mockResolvedValue({ id: "org-1", name: "Acme Inc" });
+    mockRepo.findRoleById.mockResolvedValue({ id: "role-1", name: "Manager" });
+
+    const result = await service.getInvitationDetails("tok-123");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.organizationName).toBe("Acme Inc");
+      expect(result.data.roleName).toBe("Manager");
+      expect(result.data.email).toBe("new@example.com");
+    }
+  });
+
+  it("fails with not_found when the token does not resolve", async () => {
+    mockRepo.findInvitationByToken.mockResolvedValue(null);
+
+    const result = await service.getInvitationDetails("nope");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+  });
+
+  it("fails with invitation_expired when the invitation has lapsed", async () => {
+    mockRepo.findInvitationByToken.mockResolvedValue(
+      buildInvitation({ expiresAt: new Date("2000-01-01T00:00:00Z") })
+    );
+    mockRepo.updateInvitationStatus.mockResolvedValue(buildInvitation());
+
+    const result = await service.getInvitationDetails("tok-123");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("invitation_expired");
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// listDeclinedInvitations / resendInvitation
+// ─────────────────────────────────────────────────────────────
+
+describe("OrganizationService.listDeclinedInvitations", () => {
+  it("queries invitations with the declined status", async () => {
+    const declined = [buildInvitation({ status: "declined" })];
+    mockRepo.findInvitationsByStatus.mockResolvedValue(declined);
+
+    const result = await service.listDeclinedInvitations("org-1");
+    expect(result).toBe(declined);
+    expect(mockRepo.findInvitationsByStatus).toHaveBeenCalledWith(
+      "org-1",
+      "declined"
+    );
+  });
+});
+
+describe("OrganizationService.resendInvitation", () => {
+  it("reactivates the invitation and returns it", async () => {
+    const reactivated = buildInvitation({ status: "pending" });
+    mockRepo.reactivateInvitation.mockResolvedValue(reactivated);
+
+    const result = await service.resendInvitation("inv-1", "user-1");
+    expect(result.success).toBe(true);
+    expect(mockRepo.reactivateInvitation).toHaveBeenCalledWith("inv-1");
+  });
+
+  it("fails with not_found when the invitation cannot be reactivated", async () => {
+    mockRepo.reactivateInvitation.mockResolvedValue(null);
+
+    const result = await service.resendInvitation("missing", "user-1");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// declineInvitation
+// ─────────────────────────────────────────────────────────────
+
+describe("OrganizationService.declineInvitation", () => {
+  it("marks a pending invitation as declined", async () => {
+    mockRepo.findInvitationByToken.mockResolvedValue(buildInvitation());
+    mockRepo.updateInvitationStatus.mockResolvedValue(
+      buildInvitation({ status: "declined" })
+    );
+
+    const result = await service.declineInvitation("tok-123", "user-9");
+    expect(result.success).toBe(true);
+    expect(mockRepo.updateInvitationStatus).toHaveBeenCalledWith(
+      "inv-1",
+      "declined"
+    );
+  });
+
+  it("fails when the invitation is not pending", async () => {
+    mockRepo.findInvitationByToken.mockResolvedValue(
+      buildInvitation({ status: "accepted" })
+    );
+
+    const result = await service.declineInvitation("tok-123", "user-9");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("invitation_already_used");
+    }
+    expect(mockRepo.updateInvitationStatus).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// updateMemberRole / removeMember
+// ─────────────────────────────────────────────────────────────
+
+function buildMemberWithUser(
+  overrides: Partial<OrganizationMemberWithUser> = {}
+): OrganizationMemberWithUser {
+  return {
+    id: "mem-1",
+    organizationId: "org-1",
+    userId: "user-1",
+    roleId: "role-1",
+    branchId: null,
+    status: "active",
+    invitedAt: null,
+    joinedAt: new Date("2026-01-01"),
+    invitedBy: null,
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-01-01"),
+    email: "member@example.com",
+    fullName: "Member One",
+    avatarUrl: null,
+    roleName: "Employee",
+    ...overrides,
+  };
+}
+
+describe("OrganizationService.getUserRoleName", () => {
+  it("returns the user's role name in the organization", async () => {
+    mockRepo.findMemberRoleName.mockResolvedValue("Owner");
+
+    const result = await service.getUserRoleName("org-1", "user-1");
+    expect(result).toBe("Owner");
+    expect(mockRepo.findMemberRoleName).toHaveBeenCalledWith("org-1", "user-1");
+  });
+
+  it("returns null when the user has no membership", async () => {
+    mockRepo.findMemberRoleName.mockResolvedValue(null);
+
+    expect(await service.getUserRoleName("org-1", "nobody")).toBeNull();
+  });
+});
+
+describe("OrganizationService.updateMemberRole", () => {
+  it("updates the role of a member", async () => {
+    mockRepo.findMembersWithUser.mockResolvedValue([buildMemberWithUser()]);
+    mockRepo.findRoleById.mockResolvedValue({ id: "role-2", name: "Admin" });
+    mockRepo.updateMemberRole.mockResolvedValue(true);
+
+    const result = await service.updateMemberRole(
+      "org-1",
+      "mem-1",
+      "role-2",
+      "actor-1"
+    );
+    expect(result.success).toBe(true);
+    expect(mockRepo.updateMemberRole).toHaveBeenCalledWith(
+      "mem-1",
+      "role-2",
+      "actor-1"
+    );
+  });
+
+  it("won't demote the last owner", async () => {
+    mockRepo.findMembersWithUser.mockResolvedValue([
+      buildMemberWithUser({ roleName: "Owner" }),
+    ]);
+    mockRepo.findRoleById.mockResolvedValue({ id: "role-2", name: "Employee" });
+
+    const result = await service.updateMemberRole(
+      "org-1",
+      "mem-1",
+      "role-2",
+      "actor-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+    }
+    expect(mockRepo.updateMemberRole).not.toHaveBeenCalled();
+  });
+});
+
+describe("OrganizationService.removeMember", () => {
+  it("removes a non-owner member", async () => {
+    mockRepo.findMembersWithUser.mockResolvedValue([
+      buildMemberWithUser({ id: "mem-1", roleName: "Owner" }),
+      buildMemberWithUser({ id: "mem-2", roleName: "Employee" }),
+    ]);
+    mockRepo.softDeleteMember.mockResolvedValue(true);
+
+    const result = await service.removeMember("org-1", "mem-2", "actor-1");
+    expect(result.success).toBe(true);
+    expect(mockRepo.softDeleteMember).toHaveBeenCalledWith("mem-2", "actor-1");
+  });
+
+  it("won't remove the last owner", async () => {
+    mockRepo.findMembersWithUser.mockResolvedValue([
+      buildMemberWithUser({ id: "mem-1", roleName: "Owner" }),
+    ]);
+
+    const result = await service.removeMember("org-1", "mem-1", "actor-1");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+    }
+    expect(mockRepo.softDeleteMember).not.toHaveBeenCalled();
   });
 });
 

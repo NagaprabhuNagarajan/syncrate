@@ -2,7 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  createServerSupabaseClient,
+  createServiceRoleClient,
+} from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { AuditService } from "@/features/audit/services/audit.service";
 import {
@@ -215,7 +218,8 @@ export async function inviteUserAction(
   const result = await service.inviteUser(
     parsed.data,
     organizationId,
-    authData.user.id
+    authData.user.id,
+    authData.user.email ?? null
   );
 
   if (result.success) {
@@ -315,7 +319,10 @@ export async function acceptInvitationAction(
     };
   }
 
-  const service = new OrganizationService(supabase);
+  // The accepting user isn't a member yet, so RLS would block reading the org
+  // and inserting their membership. The secret token authorises this, so run it
+  // with the service-role client (the userId still comes from the auth session).
+  const service = new OrganizationService(await createServiceRoleClient());
   const result = await service.acceptInvitation(token, authData.user.id);
 
   if (result.success) {
@@ -332,6 +339,173 @@ export async function acceptInvitationAction(
   }
 
   return result;
+}
+
+async function requireTeamManager(
+  organizationId: string
+): Promise<
+  | { ok: true; userId: string; service: OrganizationService; supabase: Awaited<ReturnType<typeof createServerSupabaseClient>> }
+  | { ok: false; result: OrganizationActionResult<void> }
+> {
+  const supabase = await createServerSupabaseClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return {
+      ok: false,
+      result: {
+        success: false,
+        error: { code: "forbidden", message: "Not authenticated" },
+      },
+    };
+  }
+
+  const service = new OrganizationService(supabase);
+  const context = await service.getOrganizationContext(
+    organizationId,
+    authData.user.id
+  );
+  if (!context || !context.permissions.includes("settings.users")) {
+    return {
+      ok: false,
+      result: {
+        success: false,
+        error: {
+          code: "forbidden",
+          message: "You do not have permission to manage the team",
+        },
+      },
+    };
+  }
+
+  return { ok: true, userId: authData.user.id, service, supabase };
+}
+
+export async function updateMemberRoleAction(
+  memberId: string,
+  roleId: string,
+  organizationId: string
+): Promise<OrganizationActionResult<void>> {
+  const gate = await requireTeamManager(organizationId);
+  if (!gate.ok) {
+    return gate.result;
+  }
+
+  const result = await gate.service.updateMemberRole(
+    organizationId,
+    memberId,
+    roleId,
+    gate.userId
+  );
+
+  if (result.success) {
+    revalidatePath("/settings/team");
+    await new AuditService(gate.supabase).log({
+      organizationId,
+      actorUserId: gate.userId,
+      action: "member.role_update",
+      entityType: "organization_member",
+      entityId: memberId,
+      summary: "Changed member role",
+    });
+  }
+
+  return result;
+}
+
+export async function removeMemberAction(
+  memberId: string,
+  organizationId: string
+): Promise<OrganizationActionResult<void>> {
+  const gate = await requireTeamManager(organizationId);
+  if (!gate.ok) {
+    return gate.result;
+  }
+
+  const result = await gate.service.removeMember(
+    organizationId,
+    memberId,
+    gate.userId
+  );
+
+  if (result.success) {
+    revalidatePath("/settings/team");
+    await new AuditService(gate.supabase).log({
+      organizationId,
+      actorUserId: gate.userId,
+      action: "member.remove",
+      entityType: "organization_member",
+      entityId: memberId,
+      summary: "Removed member from organization",
+    });
+  }
+
+  return result;
+}
+
+export async function resendInvitationAction(
+  invitationId: string,
+  organizationId: string
+): Promise<OrganizationActionResult<void>> {
+  const supabase = await createServerSupabaseClient();
+  const { data: authData } = await supabase.auth.getUser();
+
+  if (!authData.user) {
+    return {
+      success: false,
+      error: { code: "forbidden", message: "Not authenticated" },
+    };
+  }
+
+  const service = new OrganizationService(supabase);
+
+  const context = await service.getOrganizationContext(
+    organizationId,
+    authData.user.id
+  );
+  if (!context || !context.permissions.includes("settings.users")) {
+    return {
+      success: false,
+      error: {
+        code: "forbidden",
+        message: "You do not have permission to manage invitations",
+      },
+    };
+  }
+
+  const result = await service.resendInvitation(invitationId, authData.user.id);
+
+  if (result.success) {
+    revalidatePath("/team");
+    await new AuditService(supabase).log({
+      organizationId,
+      actorUserId: authData.user.id,
+      action: "invitation.resend",
+      entityType: "invitation",
+      entityId: invitationId,
+      summary: "Re-sent invitation",
+    });
+    return { success: true, data: undefined };
+  }
+
+  return result;
+}
+
+export async function declineInvitationAction(
+  token: string
+): Promise<OrganizationActionResult<void>> {
+  const supabase = await createServerSupabaseClient();
+  const { data: authData } = await supabase.auth.getUser();
+
+  if (!authData.user) {
+    return {
+      success: false,
+      error: { code: "forbidden", message: "Not authenticated" },
+    };
+  }
+
+  // Token-authorised, pre-membership action — bypass RLS with the service role.
+  const service = new OrganizationService(await createServiceRoleClient());
+  return service.declineInvitation(token, authData.user.id);
 }
 
 // ─────────────────────────────────────────────────────────────
