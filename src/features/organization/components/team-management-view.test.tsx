@@ -13,14 +13,26 @@ import { TeamManagementView } from "./team-management-view";
 // Mocks
 // ─────────────────────────────────────────────────────────────
 
-const { mockCancelInvitation, mockInviteUser } = vi.hoisted(() => ({
+const {
+  mockCancelInvitation,
+  mockInviteUser,
+  mockResendInvitation,
+  mockUpdateMemberRole,
+  mockRemoveMember,
+} = vi.hoisted(() => ({
   mockCancelInvitation: vi.fn(),
   mockInviteUser: vi.fn(),
+  mockResendInvitation: vi.fn(),
+  mockUpdateMemberRole: vi.fn(),
+  mockRemoveMember: vi.fn(),
 }));
 
 vi.mock("@/features/organization/actions/organization.actions", () => ({
   cancelInvitationAction: mockCancelInvitation,
   inviteUserAction: mockInviteUser,
+  resendInvitationAction: mockResendInvitation,
+  updateMemberRoleAction: mockUpdateMemberRole,
+  removeMemberAction: mockRemoveMember,
 }));
 
 // ─────────────────────────────────────────────────────────────
@@ -110,14 +122,79 @@ describe("TeamManagementView", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /^team$/i })
+      screen.getByRole("heading", { name: /^team\b/i })
     ).toBeInTheDocument();
     expect(screen.getByText("Olivia Owner")).toBeInTheDocument();
     expect(screen.getByText("owner@acme.com")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
   });
 
-  it("shows empty states when there are no members or invitations", () => {
+  it("links the member's role to the roles & permissions page", () => {
+    render(
+      <TeamManagementView
+        organizationId={ORG_ID}
+        members={[makeMember()]}
+        roles={roles}
+        branches={branches}
+        pendingInvitations={[]}
+      />
+    );
+
+    expect(screen.getByRole("link", { name: "Owner" })).toHaveAttribute(
+      "href",
+      "/settings/roles"
+    );
+  });
+
+  it("links back to the settings page", () => {
+    render(
+      <TeamManagementView
+        organizationId={ORG_ID}
+        members={[makeMember()]}
+        roles={roles}
+        branches={branches}
+        pendingInvitations={[]}
+      />
+    );
+
+    expect(screen.getByRole("link", { name: /settings/i })).toHaveAttribute(
+      "href",
+      "/settings"
+    );
+  });
+
+  it("removes a member via the row actions menu", async () => {
+    mockRemoveMember.mockResolvedValue({ success: true, data: undefined });
+    const user = userEvent.setup();
+    render(
+      <TeamManagementView
+        organizationId={ORG_ID}
+        members={[makeMember()]}
+        roles={roles}
+        branches={branches}
+        pendingInvitations={[]}
+      />
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /actions for olivia owner/i })
+    );
+    await user.click(
+      screen.getByRole("menuitem", { name: /remove from organization/i })
+    );
+
+    // Confirmation dialog → confirm.
+    await user.click(
+      screen.getByRole("button", { name: /^remove member$/i })
+    );
+
+    await waitFor(() =>
+      expect(mockRemoveMember).toHaveBeenCalledWith("member-1", ORG_ID)
+    );
+  });
+
+  it("shows empty states when there are no members or invitations", async () => {
+    const user = userEvent.setup();
     render(
       <TeamManagementView
         organizationId={ORG_ID}
@@ -128,11 +205,17 @@ describe("TeamManagementView", () => {
       />
     );
 
+    // Members tab is active by default.
     expect(screen.getByText(/no members yet/i)).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("tab", { name: /pending invitations/i })
+    );
     expect(screen.getByText(/no pending invitations/i)).toBeInTheDocument();
   });
 
-  it("renders pending invitations with email and role", () => {
+  it("renders pending invitations with email and role", async () => {
+    const user = userEvent.setup();
     render(
       <TeamManagementView
         organizationId={ORG_ID}
@@ -143,6 +226,9 @@ describe("TeamManagementView", () => {
       />
     );
 
+    await user.click(
+      screen.getByRole("tab", { name: /pending invitations/i })
+    );
     expect(screen.getByText("pending@acme.com")).toBeInTheDocument();
     expect(screen.getByText(/expires/i)).toBeInTheDocument();
   });
@@ -176,6 +262,74 @@ describe("TeamManagementView", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("copies the invite link to the clipboard", async () => {
+    const user = userEvent.setup();
+    // Define after setup() so this mock wins over user-event's clipboard stub.
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+    render(
+      <TeamManagementView
+        organizationId={ORG_ID}
+        members={[makeMember()]}
+        roles={roles}
+        branches={branches}
+        pendingInvitations={[makeInvitation()]}
+      />
+    );
+
+    await user.click(
+      screen.getByRole("tab", { name: /pending invitations/i })
+    );
+    await user.click(
+      screen.getByRole("button", {
+        name: /copy invite link for pending@acme.com/i,
+      })
+    );
+
+    expect(writeText).toHaveBeenCalledWith(
+      expect.stringContaining("/accept-invitation?token=tok-123")
+    );
+    expect(await screen.findByText(/copied/i)).toBeInTheDocument();
+  });
+
+  it("shows declined invitations with resend and cancel actions", async () => {
+    mockResendInvitation.mockResolvedValue({ success: true, data: undefined });
+    const user = userEvent.setup();
+    render(
+      <TeamManagementView
+        organizationId={ORG_ID}
+        members={[makeMember()]}
+        roles={roles}
+        branches={branches}
+        pendingInvitations={[]}
+        declinedInvitations={[
+          makeInvitation({
+            id: "inv-declined",
+            email: "declined@acme.com",
+            status: "declined",
+          }),
+        ]}
+      />
+    );
+
+    await user.click(
+      screen.getByRole("tab", { name: /declined invitations/i })
+    );
+    expect(screen.getByText("declined@acme.com")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /resend invitation to declined@acme.com/i,
+      })
+    );
+    await waitFor(() =>
+      expect(mockResendInvitation).toHaveBeenCalledWith("inv-declined", ORG_ID)
+    );
+  });
+
   it("cancels an invitation via the cancel button", async () => {
     mockCancelInvitation.mockResolvedValue({ success: true, data: undefined });
     const user = userEvent.setup();
@@ -189,6 +343,9 @@ describe("TeamManagementView", () => {
       />
     );
 
+    await user.click(
+      screen.getByRole("tab", { name: /pending invitations/i })
+    );
     await user.click(
       screen.getByRole("button", {
         name: /cancel invitation for pending@acme.com/i,
@@ -216,6 +373,9 @@ describe("TeamManagementView", () => {
       />
     );
 
+    await user.click(
+      screen.getByRole("tab", { name: /pending invitations/i })
+    );
     await user.click(
       screen.getByRole("button", {
         name: /cancel invitation for pending@acme.com/i,

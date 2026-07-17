@@ -63,6 +63,15 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Supabase sends the email-confirmation / magic-link redirect to the Site URL
+  // (often the root "/") with a PKCE ?code=. Forward it to the callback route
+  // that exchanges the code for a session — otherwise it lands on a dead page.
+  if (pathname === "/" && request.nextUrl.searchParams.has("code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   // Public auth routes
   const isAuthRoute = [
     "/login",
@@ -73,9 +82,13 @@ export async function middleware(request: NextRequest) {
 
   // Redirect unauthenticated users to login (protect app routes)
   if (!user && !isAuthRoute && pathname !== "/") {
+    // Preserve the full path incl. query (e.g. the invitation ?token=…) so the
+    // user lands back on the exact page after signing in.
+    const redirectTo = `${pathname}${request.nextUrl.search}`;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirectTo", pathname);
+    url.search = ""; // drop the original query so it doesn't leak onto /login
+    url.searchParams.set("redirectTo", redirectTo);
     return NextResponse.redirect(url);
   }
 

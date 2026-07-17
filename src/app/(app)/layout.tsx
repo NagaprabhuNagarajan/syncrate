@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { OrganizationService } from "@/features/organization/services/organization.service";
 import { AppShell } from "@/components/shared/app-shell";
 
 export const metadata: Metadata = {
@@ -26,5 +27,22 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  return <AppShell userId={data.user.id}>{children}</AppShell>;
+  // Resolve the signed-in user's role for the sidebar badge. The layout has no
+  // ?org= param, so this reflects their primary organization.
+  const orgService = new OrganizationService(supabase);
+  const organizations = await orgService.listUserOrganizations(data.user.id);
+  const primaryOrg = organizations[0];
+  const userRole = primaryOrg
+    ? await orgService.getUserRoleName(primaryOrg.id, data.user.id)
+    : null;
+
+  return (
+    <AppShell
+      userId={data.user.id}
+      userEmail={data.user.email ?? null}
+      userRole={userRole}
+    >
+      {children}
+    </AppShell>
+  );
 }

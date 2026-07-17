@@ -135,6 +135,14 @@ export interface OrganizationMemberWithUser extends OrganizationMember {
   readonly roleName: string | null;
 }
 
+/** Public-facing invitation preview shown on the accept page (by token). */
+export interface InvitationDetails {
+  readonly email: string;
+  readonly organizationName: string;
+  readonly roleName: string;
+  readonly expiresAt: Date;
+}
+
 export interface OrganizationInvitation {
   readonly id: string;
   readonly organizationId: string;
@@ -252,6 +260,7 @@ export interface OrganizationError {
 export type OrganizationErrorCode =
   | "not_found"
   | "forbidden"
+  | "validation"
   | "already_member"
   | "invitation_expired"
   | "invitation_already_used"
