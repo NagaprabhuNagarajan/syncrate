@@ -405,7 +405,7 @@ export function RoleFormDialog({
             {error && <ErrorBanner message={error} />}
           </CardContent>
 
-          <CardFooter className="justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+          <CardFooter className="pt-3 justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
