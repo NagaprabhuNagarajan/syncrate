@@ -216,7 +216,7 @@ function MemberRow({
               type="button"
               disabled={isPending}
               aria-label={`Actions for ${memberName}`}
-                   className="rounded-md p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+              className="rounded-md p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             >
               <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -469,6 +469,7 @@ function InvitationRow({
             onClick={handleCancel}
             loading={isPending}
             disabled={isPending}
+            className="text-destructive focus:text-destructive"
             aria-label={`Cancel invitation for ${invitation.email}`}
           >
             <X className="mr-1 h-4 w-4" aria-hidden="true" />
@@ -572,6 +573,7 @@ function DeclinedInvitationRow({
             onClick={handleCancel}
             loading={isCancelling}
             disabled={busy}
+            className="text-destructive focus:text-destructive"
             aria-label={`Cancel invitation for ${invitation.email}`}
           >
             <X className="mr-1 h-4 w-4" aria-hidden="true" />
