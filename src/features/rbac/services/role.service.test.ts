@@ -302,9 +302,9 @@ describe("RoleService.deleteRole", () => {
 });
 
 describe("RoleService.assignPermissions", () => {
-  it("blocks assigning to a system role", async () => {
+  it("blocks assigning to the Owner system role", async () => {
     mockRepo.findById.mockResolvedValue(
-      buildRole({ isSystem: true, organizationId: null })
+      buildRole({ isSystem: true, name: "Owner", organizationId: "org-1" })
     );
     const result = await service.assignPermissions(
       "role-1",
@@ -317,6 +317,43 @@ describe("RoleService.assignPermissions", () => {
       expect(result.error.code).toBe("system_role");
     }
     expect(mockRepo.replacePermissions).not.toHaveBeenCalled();
+  });
+
+  it("blocks assigning to a role from another organization", async () => {
+    mockRepo.findById.mockResolvedValue(
+      buildRole({ isSystem: true, name: "Accountant", organizationId: null })
+    );
+    const result = await service.assignPermissions(
+      "role-1",
+      ["p1"],
+      "org-1",
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("forbidden");
+    }
+    expect(mockRepo.replacePermissions).not.toHaveBeenCalled();
+  });
+
+  it("allows assigning permissions to a non-Owner system role", async () => {
+    mockRepo.findById.mockResolvedValue(
+      buildRole({ isSystem: true, name: "Accountant", organizationId: "org-1" })
+    );
+    mockRepo.replacePermissions.mockResolvedValue(true);
+    mockRepo.touch.mockResolvedValue(null);
+    const result = await service.assignPermissions(
+      "role-1",
+      ["p1", "p2"],
+      "org-1",
+      "user-1"
+    );
+    expect(result.success).toBe(true);
+    expect(mockRepo.replacePermissions).toHaveBeenCalledWith(
+      "role-1",
+      ["p1", "p2"],
+      "user-1"
+    );
   });
 
   it("replaces permissions and returns the new set", async () => {

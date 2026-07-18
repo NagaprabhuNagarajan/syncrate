@@ -187,7 +187,7 @@ export class RoleService {
     organizationId: string,
     userId: string
   ): Promise<RoleActionResult<RoleWithPermissions>> {
-    const guard = await this.assertManageable(roleId, organizationId);
+    const guard = await this.assertPermissionsEditable(roleId, organizationId);
     if (!guard.ok) {
       return guard.result;
     }
@@ -238,6 +238,45 @@ export class RoleService {
         result: fail(
           "forbidden",
           "This role belongs to another organization"
+        ),
+      };
+    }
+    return { ok: true, role };
+  }
+
+  /**
+   * Guard for permission-set edits. Unlike {@link assertManageable}, this allows
+   * editing the permissions of the org's system roles (e.g. Accountant) — but
+   * NOT the Owner role, which must retain full access, and NOT the global
+   * templates (organization_id IS NULL). The role's name and existence as a
+   * system role stay locked; only its permission assignments may change.
+   */
+  private async assertPermissionsEditable(
+    roleId: string,
+    organizationId: string
+  ): Promise<
+    | { ok: true; role: Role }
+    | { ok: false; result: RoleActionResult<never> }
+  > {
+    const role = await this.repo.findById(roleId);
+    if (!role) {
+      return { ok: false, result: fail("not_found", "Role not found") };
+    }
+    if (role.organizationId !== organizationId) {
+      return {
+        ok: false,
+        result: fail(
+          "forbidden",
+          "This role belongs to another organization"
+        ),
+      };
+    }
+    if (role.isSystem && role.name === "Owner") {
+      return {
+        ok: false,
+        result: fail(
+          "system_role",
+          "The Owner role's permissions cannot be modified"
         ),
       };
     }

@@ -1,9 +1,18 @@
 "use client";
 
 import { useCallback, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Lock, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  Copy,
+  Lock,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,9 +23,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PageHeader } from "@/components/shared/page-header";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { cn } from "@/utils/cn";
 import { deleteRoleAction } from "@/features/rbac/actions/role.actions";
 import { RoleFormDialog } from "@/features/rbac/components/role-form-dialog";
 import type {
@@ -33,9 +50,16 @@ interface RoleRowProps {
   readonly canManage: boolean;
   readonly onEdit: (role: RoleWithPermissions) => void;
   readonly onDelete: (role: RoleWithPermissions) => void;
+  readonly onDuplicate: (role: RoleWithPermissions) => void;
 }
 
-function RoleRow({ role, canManage, onEdit, onDelete }: RoleRowProps) {
+function RoleRow({
+  role,
+  canManage,
+  onEdit,
+  onDelete,
+  onDuplicate,
+}: RoleRowProps) {
   const handleEdit = useCallback(() => {
     onEdit(role);
   }, [onEdit, role]);
@@ -44,56 +68,108 @@ function RoleRow({ role, canManage, onEdit, onDelete }: RoleRowProps) {
     onDelete(role);
   }, [onDelete, role]);
 
-  const editable = canManage && !role.isSystem;
+  const handleDuplicate = useCallback(() => {
+    onDuplicate(role);
+  }, [onDuplicate, role]);
+
+  // The org owns its copy of each system role. Permissions on any role are
+  // editable — except the Owner role, which must keep full access. Only custom
+  // roles can be renamed or deleted; system roles can additionally be duplicated.
+  const isOwner = role.isSystem && role.name === "Owner";
+  const canEditPermissions = canManage && !isOwner;
+  const canDelete = canManage && !role.isSystem;
+  const canDuplicate = canManage && role.isSystem;
+  const hasActions = canEditPermissions || canDelete || canDuplicate;
 
   return (
-    <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-      <td className="px-3 py-2">
-        <div className="font-medium text-slate-900 dark:text-slate-100">{role.name}</div>
-        {role.description && (
-          <div className="text-xs text-slate-500 dark:text-slate-400">{role.description}</div>
-        )}
-      </td>
-      <td className="px-3 py-2">
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+              role.isSystem
+                ? "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                : "bg-gradient-brand text-white shadow-glow-primary"
+            )}
+          >
+            {role.isSystem ? (
+              <Lock className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {role.name}
+            </p>
+            {role.description && (
+              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                {role.description}
+              </p>
+            )}
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
         {role.isSystem ? (
           <Badge variant="muted">
             <Lock className="mr-1 h-3 w-3" aria-hidden="true" />
             System
           </Badge>
         ) : (
-          <Badge dot variant="info">Custom</Badge>
+          <Badge dot variant="info">
+            Custom
+          </Badge>
         )}
-      </td>
-      <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">
+      </TableCell>
+      <TableCell className="nums text-slate-600 dark:text-slate-400">
         {role.permissionIds.length}
-      </td>
-      <td className="px-3 py-2 text-right">
-        {editable ? (
+      </TableCell>
+      <TableCell className="text-right">
+        {hasActions ? (
           <div className="flex items-center justify-end gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleEdit}
-              aria-label={`Edit ${role.name}`}
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleDelete}
-              aria-label={`Delete ${role.name}`}
-            >
-              <Trash2 className="text-error h-4 w-4" aria-hidden="true" />
-            </Button>
+            {canEditPermissions && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleEdit}
+                aria-label={`Edit ${role.name}`}
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            )}
+            {canDuplicate && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleDuplicate}
+                aria-label={`Duplicate ${role.name}`}
+              >
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleDelete}
+                aria-label={`Delete ${role.name}`}
+              >
+                <Trash2 className="text-error h-4 w-4" aria-hidden="true" />
+              </Button>
+            )}
           </div>
         ) : (
-          <span className="text-xs text-slate-400 dark:text-slate-500">Read-only</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">
+            Read-only
+          </span>
         )}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -173,7 +249,8 @@ interface RolesViewProps {
 type DialogState =
   | { readonly mode: "closed" }
   | { readonly mode: "create" }
-  | { readonly mode: "edit"; readonly role: RoleWithPermissions };
+  | { readonly mode: "edit"; readonly role: RoleWithPermissions }
+  | { readonly mode: "duplicate"; readonly role: RoleWithPermissions };
 
 export function RolesView({
   organizationId,
@@ -182,6 +259,10 @@ export function RolesView({
   canManage,
 }: RolesViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const org = searchParams.get("org");
+  const settingsHref = org ? `/settings?org=${org}` : "/settings";
+
   const [dialog, setDialog] = useState<DialogState>({ mode: "closed" });
   const [deleteTarget, setDeleteTarget] =
     useState<RoleWithPermissions | null>(null);
@@ -194,6 +275,10 @@ export function RolesView({
 
   const handleOpenEdit = useCallback((role: RoleWithPermissions) => {
     setDialog({ mode: "edit", role });
+  }, []);
+
+  const handleOpenDuplicate = useCallback((role: RoleWithPermissions) => {
+    setDialog({ mode: "duplicate", role });
   }, []);
 
   const handleCloseDialog = useCallback(() => {
@@ -232,20 +317,48 @@ export function RolesView({
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Roles & Permissions"
-        description="Manage custom roles and the permissions they grant"
-        icon={ShieldCheck}
+      {/* Back to settings */}
+      <Link
+        href={settingsHref}
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        Settings
+      </Link>
+
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <ShieldCheck className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Roles &amp; Permissions
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {roles.length}
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Manage custom roles and the permissions they grant
+            </p>
+          </div>
+        </div>
+
         {canManage && (
           <Button type="button" variant="gradient" onClick={handleOpenCreate}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Create role
           </Button>
         )}
-      </PageHeader>
+      </motion.div>
 
-      <div className="mt-4">
+      <div className="mt-5">
         {roles.length === 0 ? (
           <EmptyState
             icon={ShieldCheck}
@@ -261,43 +374,34 @@ export function RolesView({
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
+            transition={{ duration: 0.2, delay: 0.1 }}
+            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Role
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Type
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Permissions
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-3 py-2 text-right font-medium"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {roles.map((role) => (
-                    <RoleRow
-                      key={role.id}
-                      role={role}
-                      canManage={canManage}
-                      onEdit={handleOpenEdit}
-                      onDelete={handleRequestDelete}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              className="[&_td]:px-5 [&_th]:px-5"
+              wrapperClassName="rounded-none border-0 bg-transparent"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Permissions</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {roles.map((role) => (
+                  <RoleRow
+                    key={role.id}
+                    role={role}
+                    canManage={canManage}
+                    onEdit={handleOpenEdit}
+                    onDelete={handleRequestDelete}
+                    onDuplicate={handleOpenDuplicate}
+                  />
+                ))}
+              </TableBody>
+            </Table>
           </motion.div>
         )}
       </div>
@@ -306,6 +410,15 @@ export function RolesView({
         <RoleFormDialog
           organizationId={organizationId}
           role={dialog.mode === "edit" ? dialog.role : null}
+          initial={
+            dialog.mode === "duplicate"
+              ? {
+                  name: `${dialog.role.name} (copy)`,
+                  description: dialog.role.description,
+                  permissionIds: dialog.role.permissionIds,
+                }
+              : undefined
+          }
           permissions={permissions}
           onClose={handleCloseDialog}
           onSaved={handleSaved}

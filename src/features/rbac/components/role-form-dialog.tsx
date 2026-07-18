@@ -170,6 +170,12 @@ interface RoleFormDialogProps {
   readonly organizationId: string;
   /** The role being edited, or null when creating a new one. */
   readonly role: RoleWithPermissions | null;
+  /** Prefill values for create mode (e.g. when duplicating a system role). */
+  readonly initial?: {
+    readonly name?: string;
+    readonly description?: string | null;
+    readonly permissionIds?: readonly string[];
+  };
   readonly permissions: readonly Permission[];
   readonly onClose: () => void;
   readonly onSaved: () => void;
@@ -178,17 +184,23 @@ interface RoleFormDialogProps {
 export function RoleFormDialog({
   organizationId,
   role,
+  initial,
   permissions,
   onClose,
   onSaved,
 }: RoleFormDialogProps) {
   const isEdit = role !== null;
+  // System roles are org-owned but canonical: their name can't change and they
+  // can't be deleted — only their permission set is editable here.
+  const isSystemEdit = isEdit && role.isSystem;
   const groups = useMemo(() => groupPermissions(permissions), [permissions]);
 
-  const [name, setName] = useState(role?.name ?? "");
-  const [description, setDescription] = useState(role?.description ?? "");
+  const [name, setName] = useState(role?.name ?? initial?.name ?? "");
+  const [description, setDescription] = useState(
+    role?.description ?? initial?.description ?? ""
+  );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(role?.permissionIds ?? [])
+    () => new Set(role?.permissionIds ?? initial?.permissionIds ?? [])
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -244,14 +256,18 @@ export function RoleFormDialog({
 
       startTransition(async () => {
         if (isEdit && role) {
-          const updated = await updateRoleAction(organizationId, role.id, {
-            name,
-            description,
-            version: role.version,
-          });
-          if (!updated.success) {
-            setError(updated.error.message);
-            return;
+          // System roles: name/description are locked, so only the permission
+          // set is persisted. Custom roles update their details first.
+          if (!isSystemEdit) {
+            const updated = await updateRoleAction(organizationId, role.id, {
+              name,
+              description,
+              version: role.version,
+            });
+            if (!updated.success) {
+              setError(updated.error.message);
+              return;
+            }
           }
           const assigned = await assignPermissionsAction(
             organizationId,
@@ -279,6 +295,7 @@ export function RoleFormDialog({
     },
     [
       isEdit,
+      isSystemEdit,
       role,
       organizationId,
       name,
@@ -302,9 +319,11 @@ export function RoleFormDialog({
             <div className="space-y-1.5">
               <CardTitle>{isEdit ? "Edit role" : "Create role"}</CardTitle>
               <CardDescription>
-                {isEdit
-                  ? "Update this custom role and the permissions it grants."
-                  : "Define a custom role and choose the permissions it grants."}
+                {isSystemEdit
+                  ? "Adjust the permissions granted by this system role. Its name can't be changed."
+                  : isEdit
+                    ? "Update this custom role and the permissions it grants."
+                    : "Define a custom role and choose the permissions it grants."}
               </CardDescription>
             </div>
             <Button
@@ -337,6 +356,7 @@ export function RoleFormDialog({
                 required
                 value={name}
                 onChange={handleNameChange}
+                disabled={isSystemEdit}
                 placeholder="e.g. Sales Manager"
               />
             </div>
@@ -353,6 +373,7 @@ export function RoleFormDialog({
                 rows={2}
                 value={description}
                 onChange={handleDescriptionChange}
+                disabled={isSystemEdit}
                 placeholder="What this role is for"
               />
             </div>

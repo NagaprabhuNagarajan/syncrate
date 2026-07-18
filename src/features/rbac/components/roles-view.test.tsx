@@ -14,6 +14,7 @@ const { mockRefresh, deleteActionMock } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: mockRefresh }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 vi.mock("@/features/rbac/actions/role.actions", () => ({
@@ -79,6 +80,11 @@ describe("RolesView", () => {
       screen.getByRole("button", { name: /create role/i })
     ).toBeInTheDocument();
     expect(screen.getByText("Sales Manager")).toBeInTheDocument();
+    // Back-to-settings link.
+    expect(screen.getByRole("link", { name: /settings/i })).toHaveAttribute(
+      "href",
+      "/settings"
+    );
   });
 
   it("distinguishes system roles from custom roles", () => {
@@ -100,11 +106,79 @@ describe("RolesView", () => {
     );
     expect(screen.getByText("System")).toBeInTheDocument();
     expect(screen.getByText("Custom")).toBeInTheDocument();
-    // System roles cannot be edited.
-    expect(screen.getByText("Read-only")).toBeInTheDocument();
+    // The Owner role is locked: no edit, no delete — only duplicate.
     expect(
       screen.queryByRole("button", { name: /edit owner/i })
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /delete owner/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /duplicate owner/i })
+    ).toBeInTheDocument();
+  });
+
+  it("lets a non-Owner system role's permissions be edited with a locked name", async () => {
+    const user = userEvent.setup();
+    render(
+      <RolesView
+        organizationId="org-1"
+        roles={[
+          makeRole({
+            id: "r2",
+            name: "Accountant",
+            isSystem: true,
+            permissionIds: [permissions[0].id],
+          }),
+        ]}
+        permissions={permissions}
+        canManage
+      />
+    );
+
+    // A non-Owner system role can be edited (permissions) but not deleted.
+    expect(
+      screen.queryByRole("button", { name: /delete accountant/i })
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /edit accountant/i }));
+
+    expect(
+      screen.getByRole("dialog", { name: /edit role/i })
+    ).toBeInTheDocument();
+    // The name is fixed for a system role.
+    expect(screen.getByLabelText(/role name/i)).toBeDisabled();
+  });
+
+  it("duplicates a system role into the create dialog prefilled", async () => {
+    const user = userEvent.setup();
+    render(
+      <RolesView
+        organizationId="org-1"
+        roles={[
+          makeRole({
+            id: "r2",
+            name: "Accountant",
+            isSystem: true,
+            organizationId: null,
+            permissionIds: [permissions[0].id],
+          }),
+        ]}
+        permissions={permissions}
+        canManage
+      />
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /duplicate accountant/i })
+    );
+
+    // Opens the create dialog (not edit) prefilled with "Accountant (copy)".
+    expect(
+      screen.getByRole("dialog", { name: /create role/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue("Accountant (copy)")
+    ).toBeInTheDocument();
   });
 
   it("hides management controls when the user cannot manage", () => {
