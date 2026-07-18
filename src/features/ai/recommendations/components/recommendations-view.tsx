@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { generateRecommendationsAction } from "../actions/recommendation.actions";
@@ -68,9 +69,10 @@ function RecommendationCard({ item, index }: RecommendationCardProps) {
         <CardHeader className="space-y-2 pb-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="info">{CATEGORY_LABELS[item.category]}</Badge>
-            <Badge dot variant={PRIORITY_VARIANT[item.priority]}>
-              {item.priority} priority
-            </Badge>
+            <StatusBadge
+              variant={PRIORITY_VARIANT[item.priority]}
+              label={`${item.priority} priority`}
+            />
             <Badge variant={confidenceVariant(item.confidence)}>
               {confidenceLabel(item.confidence)}
             </Badge>

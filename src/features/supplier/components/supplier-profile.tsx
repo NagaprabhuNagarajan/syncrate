@@ -39,6 +39,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import { KpiTile } from "@/components/shared/kpi-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { archiveSupplierAction } from "@/features/supplier/actions/supplier.actions";
 import {
   STATUS_LABEL,
@@ -281,9 +282,10 @@ export function SupplierProfile({
               <h1 className="truncate text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {supplier.name}
               </h1>
-              <Badge dot variant={STATUS_VARIANT[supplier.status]}>
-                {STATUS_LABEL[supplier.status]}
-              </Badge>
+              <StatusBadge
+                variant={STATUS_VARIANT[supplier.status]}
+                label={STATUS_LABEL[supplier.status]}
+              />
             </div>
             <p className="font-mono text-xs text-slate-400 dark:text-slate-500">
               {supplier.code}

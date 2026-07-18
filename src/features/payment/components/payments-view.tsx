@@ -19,7 +19,9 @@ import {
   MoreHorizontal,
   ArrowUpRight,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { type BadgeProps } from "@/components/ui/badge";
+import { FilterPills } from "@/components/shared/filter-pills";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -106,50 +108,6 @@ function patchQuery(patch: Record<string, string | undefined>): string {
 }
 
 
-// ─────────────────────────────────────────────────────────────
-// Filter pill row
-// ─────────────────────────────────────────────────────────────
-
-function FilterPills({
-  label,
-  options,
-  active,
-  onSelect,
-}: {
-  readonly label: string;
-  readonly options: readonly { value: string; label: string }[];
-  readonly active: string;
-  readonly onSelect: (value: string) => void;
-}) {
-  return (
-    <div
-      className="flex flex-wrap items-center gap-1.5"
-      role="tablist"
-      aria-label={`Filter by ${label.toLowerCase()}`}
-    >
-      {options.map((option) => {
-        const isActive = active === option.value;
-        return (
-          <button
-            key={option.value || "all"}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onSelect(option.value)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-              isActive
-                ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
-            )}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────
 // Shared payment row view-model + table
@@ -233,9 +191,10 @@ function PaymentsTable({
                 {formatCurrency(row.amount, true)}
               </TableCell>
               <TableCell>
-                <Badge dot variant={STATUS_VARIANT[row.status]}>
-                  {STATUS_LABEL[row.status]}
-                </Badge>
+                <StatusBadge
+                  variant={STATUS_VARIANT[row.status]}
+                  label={STATUS_LABEL[row.status]}
+                />
               </TableCell>
               <TableCell
                 className="text-right"

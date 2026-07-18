@@ -22,7 +22,6 @@ import {
   Archive,
   ArchiveRestore,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import {
   exportCustomersAction,
   archiveCustomerAction,
@@ -447,9 +447,10 @@ export function CustomersView({
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={STATUS_VARIANT[customer.status]}>
-                        {STATUS_LABEL[customer.status]}
-                      </Badge>
+                      <StatusBadge
+                        variant={STATUS_VARIANT[customer.status]}
+                        label={STATUS_LABEL[customer.status]}
+                      />
                     </TableCell>
                     <TableCell className="nums text-right font-medium text-slate-700 dark:text-slate-300">
                       {formatCurrency(customer.creditLimit)}

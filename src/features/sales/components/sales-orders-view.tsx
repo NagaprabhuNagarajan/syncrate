@@ -15,7 +15,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,11 +26,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { StatTile } from "@/components/shared/stat-tile";
-import {
-  SO_STATUS_LABEL,
-  SO_STATUS_VARIANT,
-} from "@/features/sales/utils/sales-order-display";
+import { SO_STATUS } from "@/features/sales/utils/sales-order-display";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type {
   SalesOrderListItem,
@@ -331,9 +328,7 @@ export function SalesOrdersView({
                       {so.customerName ?? "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={SO_STATUS_VARIANT[so.status]}>
-                        {SO_STATUS_LABEL[so.status]}
-                      </Badge>
+                      <StatusBadge {...SO_STATUS[so.status]} />
                     </TableCell>
                     <TableCell className="text-slate-600 dark:text-slate-400">
                       {formatDate(so.orderDate)}

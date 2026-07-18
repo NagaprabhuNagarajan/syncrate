@@ -11,10 +11,11 @@ import {
   Plus,
   Truck,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { ShipmentForm } from "@/features/marketplace-logistics/components/shipment-form";
 import { advanceShipmentAction } from "@/features/marketplace-logistics/actions/shipment.actions";
 import type {
@@ -172,9 +173,10 @@ function ShipmentRow({
         {shipment.trackingNumber ?? "—"}
       </td>
       <td className="px-3 py-2">
-        <Badge dot variant={STATUS_VARIANT[shipment.status]}>
-          {STATUS_LABEL[shipment.status]}
-        </Badge>
+        <StatusBadge
+          variant={STATUS_VARIANT[shipment.status]}
+          label={STATUS_LABEL[shipment.status]}
+        />
       </td>
       <td className="px-3 py-2">
         {actions.length > 0 ? (

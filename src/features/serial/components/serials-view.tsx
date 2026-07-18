@@ -12,12 +12,13 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import {
   updateSerialAction,
   archiveSerialAction,
@@ -325,9 +326,10 @@ export function SerialsView({
                         )}
                       </td>
                       <td className="px-3 py-2">
-                        <Badge dot variant={STATUS_VARIANT[serial.status]}>
-                          {SERIAL_STATUS_LABELS[serial.status]}
-                        </Badge>
+                        <StatusBadge
+                          variant={STATUS_VARIANT[serial.status]}
+                          label={SERIAL_STATUS_LABELS[serial.status]}
+                        />
                       </td>
                       <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
                         {serial.branchId

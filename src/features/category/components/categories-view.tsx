@@ -12,12 +12,13 @@ import {
   Pencil,
   Archive,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { CategoryForm } from "@/features/category/components/category-form";
 import { archiveCategoryAction } from "@/features/category/actions/category.actions";
 import type {
@@ -277,9 +278,10 @@ export function CategoriesView({
                         {category.description ?? "—"}
                       </td>
                       <td className="px-3 py-2">
-                        <Badge dot variant={STATUS_VARIANT[category.status]}>
-                          {STATUS_LABEL[category.status]}
-                        </Badge>
+                        <StatusBadge
+                          variant={STATUS_VARIANT[category.status]}
+                          label={STATUS_LABEL[category.status]}
+                        />
                       </td>
                       {canManage && (
                         <td className="px-3 py-2">

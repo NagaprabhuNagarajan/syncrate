@@ -21,10 +21,10 @@ import {
   Pencil,
   type LucideIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import { KpiTile } from "@/components/shared/kpi-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -41,10 +41,8 @@ import {
 import { applySupplierCreditAction } from "@/features/payment/actions/supplier-payment.actions";
 import { RecordSupplierPaymentDialog } from "@/features/payment/components/record-supplier-payment-dialog";
 import {
-  BILL_STATUS_LABEL,
-  BILL_STATUS_VARIANT,
-  BILL_PAYMENT_STATUS_LABEL,
-  BILL_PAYMENT_STATUS_VARIANT,
+  BILL_STATUS,
+  BILL_PAYMENT_STATUS,
   deriveBillPaymentStatus,
 } from "@/features/purchase/utils/bill-display";
 import { formatCurrency, formatDate } from "@/utils/format";
@@ -477,12 +475,8 @@ export function BillDetail({
               <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {bill.invoiceNumber}
               </h1>
-              <Badge dot variant={BILL_STATUS_VARIANT[status]}>
-                {BILL_STATUS_LABEL[status]}
-              </Badge>
-              <Badge dot variant={BILL_PAYMENT_STATUS_VARIANT[paymentStatus]}>
-                {BILL_PAYMENT_STATUS_LABEL[paymentStatus]}
-              </Badge>
+              <StatusBadge {...BILL_STATUS[status]} />
+              <StatusBadge {...BILL_PAYMENT_STATUS[paymentStatus]} />
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {supplierName ?? "No supplier"}

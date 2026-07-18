@@ -19,8 +19,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import type { AiCapability, AiInteraction } from "@/features/ai/types/ai.types";
 
 interface AiCapabilityCard {
@@ -128,7 +128,7 @@ function ActivityRow({ item }: { readonly item: AiInteraction }) {
             {Math.round(item.confidence * 100)}%
           </span>
         )}
-        <Badge dot variant={STATUS_VARIANT[item.status]}>{item.status}</Badge>
+        <StatusBadge variant={STATUS_VARIANT[item.status]} label={item.status} />
         <span className="text-xs text-slate-400 dark:text-slate-500">
           {formatTime(item.createdAt)}
         </span>

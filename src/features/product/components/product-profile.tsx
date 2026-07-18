@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import { KpiTile } from "@/components/shared/kpi-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { archiveProductAction } from "@/features/product/actions/product.actions";
@@ -287,9 +288,10 @@ export function ProductProfile({
               <h1 className="truncate text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {product.name}
               </h1>
-              <Badge dot variant={STATUS_VARIANT[product.status]}>
-                {STATUS_LABEL[product.status]}
-              </Badge>
+              <StatusBadge
+                variant={STATUS_VARIANT[product.status]}
+                label={STATUS_LABEL[product.status]}
+              />
               <Badge variant="info">{TYPE_LABEL[product.type]}</Badge>
             </div>
             <p className="font-mono text-xs text-slate-400 dark:text-slate-500">

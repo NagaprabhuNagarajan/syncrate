@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/shared/stat-tile";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { cn } from "@/utils/cn";
 import { deleteBranchAction } from "@/features/organization/actions/organization.actions";
 import type {
@@ -122,9 +123,10 @@ function BranchCard({ branch, index, onEdit, onDelete }: BranchCardProps) {
               >
                 &middot;
               </span>
-              <Badge dot variant={STATUS_VARIANT[branch.status]}>
-                {STATUS_LABEL[branch.status]}
-              </Badge>
+              <StatusBadge
+                variant={STATUS_VARIANT[branch.status]}
+                label={STATUS_LABEL[branch.status]}
+              />
             </div>
           </div>
         </div>

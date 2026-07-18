@@ -20,7 +20,8 @@ import {
   Banknote,
   X,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { FilterPills } from "@/components/shared/filter-pills";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,10 +43,8 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
 import { RecordSupplierPaymentDialog } from "@/features/payment/components/record-supplier-payment-dialog";
 import {
-  BILL_STATUS_LABEL,
-  BILL_STATUS_VARIANT,
-  BILL_PAYMENT_STATUS_LABEL,
-  BILL_PAYMENT_STATUS_VARIANT,
+  BILL_STATUS,
+  BILL_PAYMENT_STATUS,
   deriveBillPaymentStatus,
 } from "@/features/purchase/utils/bill-display";
 import { formatCurrency, formatDate } from "@/utils/format";
@@ -56,7 +55,6 @@ import type {
   BillStats,
   BillStatus,
 } from "@/features/purchase/types/bill.types";
-import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
 // Filters
@@ -64,63 +62,18 @@ import { cn } from "@/utils/cn";
 
 const STATUS_FILTERS: readonly { value: string; label: string }[] = [
   { value: "", label: "All" },
-  { value: "draft", label: BILL_STATUS_LABEL.draft },
-  { value: "posted", label: BILL_STATUS_LABEL.posted },
-  { value: "cancelled", label: BILL_STATUS_LABEL.cancelled },
+  { value: "draft", label: BILL_STATUS.draft.label },
+  { value: "posted", label: BILL_STATUS.posted.label },
+  { value: "cancelled", label: BILL_STATUS.cancelled.label },
 ];
 
 const PAYMENT_FILTERS: readonly { value: string; label: string }[] = [
   { value: "", label: "All" },
-  { value: "unpaid", label: BILL_PAYMENT_STATUS_LABEL.unpaid },
-  { value: "partial", label: BILL_PAYMENT_STATUS_LABEL.partial },
-  { value: "paid", label: BILL_PAYMENT_STATUS_LABEL.paid },
-  { value: "overdue", label: BILL_PAYMENT_STATUS_LABEL.overdue },
+  { value: "unpaid", label: BILL_PAYMENT_STATUS.unpaid.label },
+  { value: "partial", label: BILL_PAYMENT_STATUS.partial.label },
+  { value: "paid", label: BILL_PAYMENT_STATUS.paid.label },
+  { value: "overdue", label: BILL_PAYMENT_STATUS.overdue.label },
 ];
-
-// ─────────────────────────────────────────────────────────────
-// Filter pill row
-// ─────────────────────────────────────────────────────────────
-
-function FilterPills({
-  label,
-  options,
-  active,
-  onSelect,
-}: {
-  readonly label: string;
-  readonly options: readonly { value: string; label: string }[];
-  readonly active: string;
-  readonly onSelect: (value: string) => void;
-}) {
-  return (
-    <div
-      className="flex flex-wrap items-center gap-1.5"
-      role="tablist"
-      aria-label={`Filter by ${label.toLowerCase()}`}
-    >
-      {options.map((option) => {
-        const isActive = active === option.value;
-        return (
-          <button
-            key={option.value || "all"}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onSelect(option.value)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-              isActive
-                ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
-            )}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────
 // Props
@@ -550,25 +503,12 @@ export function BillsView({
                       {invoice.dueDate ? formatDate(invoice.dueDate) : "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={BILL_STATUS_VARIANT[invoice.status]}>
-                        {BILL_STATUS_LABEL[invoice.status]}
-                      </Badge>
+                      <StatusBadge {...BILL_STATUS[invoice.status]} />
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        dot
-                        variant={
-                          BILL_PAYMENT_STATUS_VARIANT[
-                            deriveBillPaymentStatus(invoice)
-                          ]
-                        }
-                      >
-                        {
-                          BILL_PAYMENT_STATUS_LABEL[
-                            deriveBillPaymentStatus(invoice)
-                          ]
-                        }
-                      </Badge>
+                      <StatusBadge
+                        {...BILL_PAYMENT_STATUS[deriveBillPaymentStatus(invoice)]}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="nums font-medium text-slate-900 dark:text-slate-100">

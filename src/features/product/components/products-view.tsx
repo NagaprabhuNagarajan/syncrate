@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import {
   exportProductsAction,
   archiveProductAction,
@@ -462,9 +463,10 @@ export function ProductsView({
                       {product.sku ?? "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={STATUS_VARIANT[product.status]}>
-                        {STATUS_LABEL[product.status]}
-                      </Badge>
+                      <StatusBadge
+                        variant={STATUS_VARIANT[product.status]}
+                        label={STATUS_LABEL[product.status]}
+                      />
                     </TableCell>
                     <TableCell className="nums text-right font-medium text-slate-700 dark:text-slate-300">
                       {formatCurrency(product.sellingPrice, true)}

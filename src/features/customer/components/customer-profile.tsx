@@ -36,6 +36,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import { KpiTile } from "@/components/shared/kpi-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { archiveCustomerAction } from "@/features/customer/actions/customer.actions";
 import {
   STATUS_LABEL,
@@ -285,9 +286,10 @@ export function CustomerProfile({
               <h1 className="truncate text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {customer.name}
               </h1>
-              <Badge dot variant={STATUS_VARIANT[customer.status]}>
-                {STATUS_LABEL[customer.status]}
-              </Badge>
+              <StatusBadge
+                variant={STATUS_VARIANT[customer.status]}
+                label={STATUS_LABEL[customer.status]}
+              />
             </div>
             <p className="font-mono text-xs text-slate-400 dark:text-slate-500">
               {customer.code}

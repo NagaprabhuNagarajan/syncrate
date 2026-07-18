@@ -19,10 +19,10 @@ import {
   ShoppingCart,
   type LucideIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import { KpiTile } from "@/components/shared/kpi-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -32,10 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  PRET_STATUS_LABEL,
-  PRET_STATUS_VARIANT,
-} from "@/features/purchase/utils/purchase-return-display";
+import { PRET_STATUS } from "@/features/purchase/utils/purchase-return-display";
 import { PURCHASE_RETURN_REASON_LABELS } from "@/features/purchase/schemas/purchase-return.schemas";
 import {
   completePurchaseReturnAction,
@@ -268,9 +265,7 @@ export function PurchaseReturnDetail({
               <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {purchaseReturn.returnNumber}
               </h1>
-              <Badge dot variant={PRET_STATUS_VARIANT[status]}>
-                {PRET_STATUS_LABEL[status]}
-              </Badge>
+              <StatusBadge {...PRET_STATUS[status]} />
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {supplierName ?? "No supplier"}

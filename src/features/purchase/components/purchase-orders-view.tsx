@@ -15,7 +15,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,10 +27,8 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
-import {
-  PO_STATUS_LABEL,
-  PO_STATUS_VARIANT,
-} from "@/features/purchase/utils/purchase-order-display";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { PO_STATUS } from "@/features/purchase/utils/purchase-order-display";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type {
   PurchaseOrderListItem,
@@ -333,9 +330,7 @@ export function PurchaseOrdersView({
                       {order.supplierName ?? "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={PO_STATUS_VARIANT[order.status]}>
-                        {PO_STATUS_LABEL[order.status]}
-                      </Badge>
+                      <StatusBadge {...PO_STATUS[order.status]} />
                     </TableCell>
                     <TableCell className="text-slate-600 dark:text-slate-400">
                       {formatDate(order.orderDate)}

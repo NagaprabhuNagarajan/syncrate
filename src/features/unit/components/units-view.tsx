@@ -4,12 +4,13 @@ import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Ruler, Plus, Search, Pencil, Archive } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { archiveUnitAction } from "@/features/unit/actions/unit.actions";
 import { UnitForm } from "@/features/unit/components/unit-form";
 import type {
@@ -249,9 +250,10 @@ export function UnitsView({
                         {unit.symbol}
                       </td>
                       <td className="px-3 py-2">
-                        <Badge dot variant={STATUS_VARIANT[unit.status]}>
-                          {STATUS_LABEL[unit.status]}
-                        </Badge>
+                        <StatusBadge
+                          variant={STATUS_VARIANT[unit.status]}
+                          label={STATUS_LABEL[unit.status]}
+                        />
                       </td>
                       {canManage && (
                         <td className="px-3 py-2">

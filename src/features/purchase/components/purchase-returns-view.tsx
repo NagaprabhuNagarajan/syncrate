@@ -15,7 +15,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,10 +27,8 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
-import {
-  PRET_STATUS_LABEL,
-  PRET_STATUS_VARIANT,
-} from "@/features/purchase/utils/purchase-return-display";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { PRET_STATUS } from "@/features/purchase/utils/purchase-return-display";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type {
   PurchaseReturnListItem,
@@ -330,9 +327,7 @@ export function PurchaseReturnsView({
                       {entry.supplierName ?? "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={PRET_STATUS_VARIANT[entry.status]}>
-                        {PRET_STATUS_LABEL[entry.status]}
-                      </Badge>
+                      <StatusBadge {...PRET_STATUS[entry.status]} />
                     </TableCell>
                     <TableCell className="text-slate-600 dark:text-slate-400">
                       {formatDate(entry.returnDate)}
