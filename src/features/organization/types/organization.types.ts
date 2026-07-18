@@ -267,6 +267,7 @@ export type OrganizationErrorCode =
   | "duplicate_slug"
   | "duplicate_code"
   | "cannot_delete_headquarters"
+  | "cannot_unset_headquarters"
   | "unknown";
 
 // ─────────────────────────────────────────────────────────────

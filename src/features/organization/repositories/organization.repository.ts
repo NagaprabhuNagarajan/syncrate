@@ -403,6 +403,43 @@ export class OrganizationRepository {
     return mapBranch(data);
   }
 
+  /** Counts the active headquarters branches in an organization. */
+  async countHeadquarters(organizationId: string): Promise<number> {
+    const { count, error } = await this.supabase
+      .from("branches")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId)
+      .eq("is_headquarters", true)
+      .is("deleted_at", null);
+
+    if (error) {
+      return 0;
+    }
+    return count ?? 0;
+  }
+
+  /**
+   * Clears the headquarters flag on every branch in the org except `exceptId`.
+   * Used to enforce a single headquarters per organization when one is promoted.
+   */
+  async demoteOtherHeadquarters(
+    organizationId: string,
+    exceptId: string,
+    updatedBy: string
+  ): Promise<void> {
+    await this.supabase
+      .from("branches")
+      .update({
+        is_headquarters: false,
+        updated_by: updatedBy,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("organization_id", organizationId)
+      .eq("is_headquarters", true)
+      .neq("id", exceptId)
+      .is("deleted_at", null);
+  }
+
   async softDeleteBranch(id: string, deletedBy: string): Promise<boolean> {
     const { error } = await this.supabase
       .from("branches")

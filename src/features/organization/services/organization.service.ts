@@ -299,6 +299,11 @@ export class OrganizationService {
       return fail("unknown", "Failed to create branch. Please try again.");
     }
 
+    // Only one branch can be the headquarters — demote any previous one.
+    if (branch.isHeadquarters) {
+      await this.repo.demoteOtherHeadquarters(organizationId, branch.id, userId);
+    }
+
     return ok(branch);
   }
 
@@ -319,6 +324,21 @@ export class OrganizationService {
           "duplicate_code",
           `A branch with code "${input.code.toUpperCase()}" already exists`
         );
+      }
+    }
+
+    // An organization must always have a headquarters: block turning off the
+    // flag on the only HQ. Promote another branch first (which demotes this one).
+    if (input.isHeadquarters === false) {
+      const current = await this.repo.findBranchById(branchId);
+      if (current?.isHeadquarters) {
+        const hqCount = await this.repo.countHeadquarters(organizationId);
+        if (hqCount <= 1) {
+          return fail(
+            "cannot_unset_headquarters",
+            "At least one branch must be the headquarters. Set another branch as headquarters instead."
+          );
+        }
       }
     }
 
@@ -353,6 +373,11 @@ export class OrganizationService {
 
     if (!branch) {
       return fail("not_found", "Branch not found or update failed");
+    }
+
+    // Only one branch can be the headquarters — demote any previous one.
+    if (input.isHeadquarters === true) {
+      await this.repo.demoteOtherHeadquarters(organizationId, branch.id, userId);
     }
 
     return ok(branch);

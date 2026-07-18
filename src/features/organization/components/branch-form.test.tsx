@@ -105,7 +105,7 @@ describe("BranchForm — create mode", () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
   });
 
-  it("omits the HQ flag from FormData when the checkbox is unchecked", async () => {
+  it("sends the HQ flag as 'off' when the checkbox is unchecked", async () => {
     mockCreateBranch.mockResolvedValue({
       success: true,
       data: { id: "branch-3" },
@@ -119,7 +119,8 @@ describe("BranchForm — create mode", () => {
 
     await waitFor(() => expect(mockCreateBranch).toHaveBeenCalledTimes(1));
     const formData = mockCreateBranch.mock.calls[0]?.[1] as FormData;
-    expect(formData.get("isHeadquarters")).toBeNull();
+    // Always sent (on/off) so unchecking persists as false on edit.
+    expect(formData.get("isHeadquarters")).toBe("off");
   });
 
   it("displays a server error returned by the create action", async () => {
@@ -150,7 +151,7 @@ describe("BranchForm — create mode", () => {
 });
 
 describe("BranchForm — edit mode", () => {
-  it("pre-fills the form from the branch and shows the status select", () => {
+  it("pre-fills the form from the branch and shows the status control", () => {
     render(
       <BranchForm organizationId={ORG_ID} branch={EXISTING_BRANCH} />
     );
@@ -160,7 +161,11 @@ describe("BranchForm — edit mode", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/branch name/i)).toHaveValue("Pune Branch");
     expect(screen.getByLabelText(/branch code/i)).toHaveValue("PUN01");
-    expect(screen.getByLabelText(/^status$/i)).toHaveValue("active");
+    // Status is a segmented control; the branch's status is the checked radio.
+    expect(screen.getByRole("radio", { name: "Active" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
     expect(
       screen.getByRole("button", { name: /save changes/i })
     ).toBeInTheDocument();
@@ -183,7 +188,7 @@ describe("BranchForm — edit mode", () => {
 
     await user.clear(screen.getByLabelText(/branch name/i));
     await user.type(screen.getByLabelText(/branch name/i), "Pune HQ Branch");
-    await user.selectOptions(screen.getByLabelText(/^status$/i), "inactive");
+    await user.click(screen.getByRole("radio", { name: "Inactive" }));
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => expect(mockUpdateBranch).toHaveBeenCalledTimes(1));
