@@ -80,7 +80,7 @@ describe("BranchesView", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /^branches$/i })
+      screen.getByRole("heading", { name: /^branches/i })
     ).toBeInTheDocument();
     expect(screen.getByText("Head Office")).toBeInTheDocument();
     expect(screen.getByText("Pune Branch")).toBeInTheDocument();

@@ -26,6 +26,8 @@ const { mockRepo } = vi.hoisted(() => ({
     findBranchByCode: vi.fn(),
     createBranch: vi.fn(),
     updateBranch: vi.fn(),
+    demoteOtherHeadquarters: vi.fn(),
+    countHeadquarters: vi.fn(),
     softDeleteBranch: vi.fn(),
     findUserPermissions: vi.fn(),
     findBranchesByOrg: vi.fn(),
@@ -896,6 +898,80 @@ describe("OrganizationService.updateBranch", () => {
     if (!result.success) {
       expect(result.error.code).toBe("not_found");
     }
+  });
+
+  it("demotes other headquarters when a branch is promoted to HQ", async () => {
+    mockRepo.updateBranch.mockResolvedValue(
+      buildBranch({ id: "branch-1", isHeadquarters: true })
+    );
+
+    const result = await service.updateBranch(
+      "branch-1",
+      { isHeadquarters: true },
+      "org-1",
+      "user-1"
+    );
+    expect(result.success).toBe(true);
+    expect(mockRepo.demoteOtherHeadquarters).toHaveBeenCalledWith(
+      "org-1",
+      "branch-1",
+      "user-1"
+    );
+  });
+
+  it("does not demote other branches when HQ is turned off", async () => {
+    mockRepo.findBranchById.mockResolvedValue(
+      buildBranch({ id: "branch-1", isHeadquarters: false })
+    );
+    mockRepo.updateBranch.mockResolvedValue(
+      buildBranch({ id: "branch-1", isHeadquarters: false })
+    );
+
+    const result = await service.updateBranch(
+      "branch-1",
+      { isHeadquarters: false },
+      "org-1",
+      "user-1"
+    );
+    expect(result.success).toBe(true);
+    expect(mockRepo.demoteOtherHeadquarters).not.toHaveBeenCalled();
+  });
+
+  it("blocks turning off the HQ flag on the only headquarters", async () => {
+    mockRepo.findBranchById.mockResolvedValue(
+      buildBranch({ id: "branch-1", isHeadquarters: true })
+    );
+    mockRepo.countHeadquarters.mockResolvedValue(1);
+
+    const result = await service.updateBranch(
+      "branch-1",
+      { isHeadquarters: false },
+      "org-1",
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("cannot_unset_headquarters");
+    }
+    expect(mockRepo.updateBranch).not.toHaveBeenCalled();
+  });
+
+  it("allows turning off HQ when another headquarters exists", async () => {
+    mockRepo.findBranchById.mockResolvedValue(
+      buildBranch({ id: "branch-1", isHeadquarters: true })
+    );
+    mockRepo.countHeadquarters.mockResolvedValue(2);
+    mockRepo.updateBranch.mockResolvedValue(
+      buildBranch({ id: "branch-1", isHeadquarters: false })
+    );
+
+    const result = await service.updateBranch(
+      "branch-1",
+      { isHeadquarters: false },
+      "org-1",
+      "user-1"
+    );
+    expect(result.success).toBe(true);
   });
 });
 
