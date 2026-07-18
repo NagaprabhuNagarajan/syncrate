@@ -8,7 +8,6 @@ import {
   KeyRound,
   ScrollText,
   CheckSquare,
-  Webhook,
   Workflow as WorkflowIcon,
   Settings as SettingsIcon,
   ArrowUpRight,
@@ -58,14 +57,8 @@ const SECTIONS: readonly SettingsSection[] = [
     icon: CheckSquare,
     permission: "approval.view",
   },
-  {
-    key: "webhooks",
-    label: "Webhooks",
-    description: "Deliver signed events to your external systems.",
-    href: "/settings/webhooks",
-    icon: Webhook,
-    permission: "webhook.view",
-  },
+  // Webhooks are hidden from the hub until more events emit and an SSRF guard
+  // is in place. The route and code remain — restore this entry to re-enable.
   {
     key: "workflows",
     label: "Workflows",
