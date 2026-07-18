@@ -8,7 +8,6 @@ import {
   KeyRound,
   ScrollText,
   CheckSquare,
-  Workflow as WorkflowIcon,
   Settings as SettingsIcon,
   ArrowUpRight,
   type LucideIcon,
@@ -57,16 +56,9 @@ const SECTIONS: readonly SettingsSection[] = [
     icon: CheckSquare,
     permission: "approval.view",
   },
-  // Webhooks are hidden from the hub until more events emit and an SSRF guard
-  // is in place. The route and code remain — restore this entry to re-enable.
-  {
-    key: "workflows",
-    label: "Workflows",
-    description: "Automate multi-step processes triggered by events.",
-    href: "/settings/workflows",
-    icon: WorkflowIcon,
-    permission: "workflow.view",
-  },
+  // Webhooks and Workflows are hidden from the hub until they have real use
+  // cases (more emitted events / richer step types) and an SSRF guard. Their
+  // routes and code remain — restore these entries to re-enable.
   {
     key: "audit",
     label: "Audit Center",
