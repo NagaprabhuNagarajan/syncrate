@@ -1,13 +1,15 @@
 "use client";
 
 import { useCallback, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
+  Check,
+  ChevronLeft,
+  Copy,
   KeyRound,
   Plus,
-  Copy,
-  Check,
   ShieldAlert,
   Trash2,
   X,
@@ -15,7 +17,14 @@ import {
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/shared/page-header";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import {
@@ -72,12 +81,23 @@ function ApiKeyRow({ apiKey, canManage, onRevoke }: ApiKeyRowProps) {
   }, [apiKey, onRevoke]);
 
   return (
-    <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-      <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100">{apiKey.name}</td>
-      <td className="px-3 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">
-        {apiKey.keyPrefix}…
-      </td>
-      <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400">
+            <KeyRound className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {apiKey.name}
+            </p>
+            <p className="truncate font-mono text-xs text-slate-400 dark:text-slate-500">
+              {apiKey.keyPrefix}…
+            </p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="text-slate-600 dark:text-slate-400">
         {apiKey.scopes.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {apiKey.scopes.map((scope) => (
@@ -89,29 +109,35 @@ function ApiKeyRow({ apiKey, canManage, onRevoke }: ApiKeyRowProps) {
         ) : (
           "—"
         )}
-      </td>
-      <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">{formatDate(apiKey.createdAt)}</td>
-      <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">
+      </TableCell>
+      <TableCell className="nums text-slate-600 dark:text-slate-400">
+        {formatDate(apiKey.createdAt)}
+      </TableCell>
+      <TableCell className="nums text-slate-600 dark:text-slate-400">
         {formatDate(apiKey.lastUsedAt)}
-      </td>
-      <td className="px-3 py-2">
-        <Badge dot variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
-      </td>
-      <td className="px-3 py-2 text-right">
-        {canManage && status === "active" && (
+      </TableCell>
+      <TableCell>
+        <Badge dot variant={STATUS_VARIANT[status]}>
+          {STATUS_LABEL[status]}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        {canManage && status === "active" ? (
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="icon-sm"
+            className="text-error hover:bg-error/10 hover:text-error dark:text-error dark:hover:bg-error/10"
             onClick={handleRevoke}
             aria-label={`Revoke ${apiKey.name}`}
           >
-            <Trash2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Revoke
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </Button>
+        ) : (
+          <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
         )}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -143,7 +169,7 @@ function RevealPanel({ plaintextKey, onDismiss }: RevealPanelProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       role="alert"
-      className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
+      className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
     >
       <div className="flex items-start gap-3">
         <ShieldAlert
@@ -155,8 +181,8 @@ function RevealPanel({ plaintextKey, onDismiss }: RevealPanelProps) {
             Copy your API key now
           </h3>
           <p className="mt-0.5 text-sm text-amber-800 dark:text-amber-300">
-            This is the only time the full key will be shown. Store it securely —
-            you won&apos;t be able to see it again.
+            This is the only time the full key will be shown. Store it securely
+            — you won&apos;t be able to see it again.
           </p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <code className="flex-1 break-all rounded-lg border border-amber-200 bg-white px-3 py-2 font-mono text-xs text-slate-800 dark:border-amber-500/30 dark:bg-slate-900 dark:text-slate-100">
@@ -202,6 +228,10 @@ export function ApiKeysView({
   canManage,
 }: ApiKeysViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const org = searchParams.get("org");
+  const settingsHref = org ? `/settings?org=${org}` : "/settings";
+
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
@@ -291,18 +321,47 @@ export function ApiKeysView({
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="API keys"
-        description="Generate and manage keys for programmatic access to your organization"
-        icon={KeyRound}
+      {/* Back to settings */}
+      <Link
+        href={settingsHref}
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        Settings
+      </Link>
+
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <KeyRound className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              API keys
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {apiKeys.length}
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Generate and manage keys for programmatic access to your
+              organization
+            </p>
+          </div>
+        </div>
+
         {canManage && (
           <Button type="button" variant="gradient" onClick={handleToggleForm}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             Create key
           </Button>
         )}
-      </PageHeader>
+      </motion.div>
 
       {revealKey && (
         <RevealPanel plaintextKey={revealKey} onDismiss={handleDismissReveal} />
@@ -315,7 +374,7 @@ export function ApiKeysView({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
           onSubmit={handleCreate}
-          className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900"
+          className="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900"
           aria-label="Create API key"
         >
           {formError && <ErrorBanner message={formError} className="mb-4" />}
@@ -395,9 +454,9 @@ export function ApiKeysView({
         <div
           role="alertdialog"
           aria-label="Revoke API key"
-          className="mt-4 rounded-xl border border-error-200 bg-error-50 p-4 dark:border-error-500/30 dark:bg-error-500/10"
+          className="border-error-200 bg-error-50 dark:border-error-500/30 dark:bg-error-500/10 mt-5 rounded-xl border p-4"
         >
-          <p className="text-sm text-error-800 dark:text-error-300">
+          <p className="text-error-800 dark:text-error-300 text-sm">
             Revoke <span className="font-semibold">{pendingRevoke.name}</span>?
             Any integration using this key will immediately stop working. This
             cannot be undone.
@@ -423,7 +482,7 @@ export function ApiKeysView({
       )}
 
       {/* Table / empty state */}
-      <div className="mt-4">
+      <div className="mt-5">
         {apiKeys.length === 0 ? (
           <EmptyState
             icon={KeyRound}
@@ -447,48 +506,34 @@ export function ApiKeysView({
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.2, delay: 0.1 }}
             className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Name
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Key
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Scopes
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Created
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Last used
-                    </th>
-                    <th scope="col" className="px-3 py-2 font-medium">
-                      Status
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {apiKeys.map((apiKey) => (
-                    <ApiKeyRow
-                      key={apiKey.id}
-                      apiKey={apiKey}
-                      canManage={canManage}
-                      onRevoke={handleRequestRevoke}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              className="[&_td]:px-5 [&_th]:px-5"
+              wrapperClassName="rounded-none border-0 bg-transparent"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Scopes</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Last used</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {apiKeys.map((apiKey) => (
+                  <ApiKeyRow
+                    key={apiKey.id}
+                    apiKey={apiKey}
+                    canManage={canManage}
+                    onRevoke={handleRequestRevoke}
+                  />
+                ))}
+              </TableBody>
+            </Table>
           </motion.div>
         )}
       </div>

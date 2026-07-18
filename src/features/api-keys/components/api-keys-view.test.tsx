@@ -16,6 +16,7 @@ const { mockRefresh, createActionMock, revokeActionMock } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: mockRefresh }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 vi.mock("@/features/api-keys/actions/api-key.actions", () => ({
@@ -62,7 +63,10 @@ describe("ApiKeysView", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Production server")).toBeInTheDocument();
     expect(screen.getByText("syk_live_a1b2…")).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    // Status badge lives in the table (the strip also has an "Active" tile).
+    expect(
+      within(screen.getByRole("table")).getByText("Active")
+    ).toBeInTheDocument();
   });
 
   it("shows expired and revoked status badges", () => {
@@ -76,8 +80,10 @@ describe("ApiKeysView", () => {
         canManage
       />
     );
-    expect(screen.getByText("Expired")).toBeInTheDocument();
-    expect(screen.getByText("Revoked")).toBeInTheDocument();
+    // Scope to the table — the stat strip also renders "Expired"/"Revoked".
+    const table = within(screen.getByRole("table"));
+    expect(table.getByText("Expired")).toBeInTheDocument();
+    expect(table.getByText("Revoked")).toBeInTheDocument();
   });
 
   it("hides the create button and revoke action when canManage is false", () => {
