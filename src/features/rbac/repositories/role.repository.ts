@@ -42,15 +42,16 @@ export class RoleRepository {
   constructor(private readonly supabase: AppSupabaseClient) {}
 
   /**
-   * Lists every role visible to an organization: the built-in system roles
-   * (organization_id IS NULL) plus the organization's own custom roles.
-   * System roles are returned first, then custom roles alphabetically.
+   * Lists the roles owned by an organization: its per-org copies of the built-in
+   * system roles plus its own custom roles. The global system-role templates
+   * (organization_id IS NULL) are cloned into each org on creation and are not
+   * listed here. System roles are returned first, then custom roles alphabetically.
    */
   async listRoles(organizationId: string): Promise<Role[]> {
     const { data, error } = await this.supabase
       .from("roles")
       .select("*")
-      .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
+      .eq("organization_id", organizationId)
       .is("deleted_at", null)
       .order("is_system", { ascending: false })
       .order("name", { ascending: true });
