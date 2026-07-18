@@ -1,21 +1,13 @@
 /**
- * Presentation-only mappings for goods receipt status — badge variant and
- * human-readable label. Shared by the list and any other surface that
- * renders a goods receipt status.
+ * Presentation-only status config for goods receipts — badge variant + label
+ * per status. Shared by the list and any other surface that renders a goods
+ * receipt status.
  */
 
-import type { BadgeProps } from "@/components/ui/badge";
+import type { StatusConfig } from "@/components/shared/status-badge";
 import type { GoodsReceiptStatus } from "@/features/purchase/types/goods-receipt.types";
 
-export const GRN_STATUS_VARIANT: Record<
-  GoodsReceiptStatus,
-  BadgeProps["variant"]
-> = {
-  draft: "muted",
-  completed: "success",
-};
-
-export const GRN_STATUS_LABEL: Record<GoodsReceiptStatus, string> = {
-  draft: "Draft",
-  completed: "Completed",
+export const GRN_STATUS: StatusConfig<GoodsReceiptStatus> = {
+  draft: { label: "Draft", variant: "muted" },
+  completed: { label: "Completed", variant: "success" },
 };

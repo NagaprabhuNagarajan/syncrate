@@ -14,7 +14,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,10 +26,8 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
-import {
-  GRN_STATUS_LABEL,
-  GRN_STATUS_VARIANT,
-} from "@/features/purchase/utils/goods-receipt-display";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { GRN_STATUS } from "@/features/purchase/utils/goods-receipt-display";
 import { formatDate } from "@/utils/format";
 import type {
   GoodsReceiptListItem,
@@ -272,9 +269,7 @@ export function GoodsReceiptsView({
                       {receipt.totalReceivedQuantity}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={GRN_STATUS_VARIANT[receipt.status]}>
-                        {GRN_STATUS_LABEL[receipt.status]}
-                      </Badge>
+                      <StatusBadge {...GRN_STATUS[receipt.status]} />
                     </TableCell>
                   </TableRow>
                 ))}

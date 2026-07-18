@@ -15,7 +15,6 @@ import {
   ChevronRight,
   History,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { StatTile } from "@/components/shared/stat-tile";
 import { AdjustStockDialog } from "@/features/inventory/components/adjust-stock-dialog";
 import { TransferStockDialog } from "@/features/inventory/components/transfer-stock-dialog";
@@ -408,9 +408,10 @@ export function InventoryView({
                         {formatQuantity(level.reorderLevel)}
                       </TableCell>
                       <TableCell>
-                        <Badge dot variant={STOCK_STATUS_VARIANT[status]}>
-                          {STOCK_STATUS_LABEL[status]}
-                        </Badge>
+                        <StatusBadge
+                          variant={STOCK_STATUS_VARIANT[status]}
+                          label={STOCK_STATUS_LABEL[status]}
+                        />
                       </TableCell>
                     </TableRow>
                   );
@@ -496,9 +497,10 @@ export function InventoryView({
                     {formatDateTime(tx.createdAt)}
                   </TableCell>
                   <TableCell>
-                    <Badge dot variant={TX_VARIANT[tx.type]}>
-                      {TX_LABEL[tx.type]}
-                    </Badge>
+                    <StatusBadge
+                      variant={TX_VARIANT[tx.type]}
+                      label={TX_LABEL[tx.type]}
+                    />
                   </TableCell>
                   <TableCell className="text-slate-700 dark:text-slate-300">
                     {tx.productName ?? "—"}

@@ -11,11 +11,14 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import {
+  StatusBadge,
+  type StatusConfig,
+} from "@/components/shared/status-badge";
 import type {
   SalesReturnListItem,
   SalesReturnListResult,
@@ -26,19 +29,10 @@ import type {
 // Status presentation
 // ─────────────────────────────────────────────────────────────
 
-export const SRETURN_STATUS_VARIANT: Record<
-  SalesReturnStatus,
-  BadgeProps["variant"]
-> = {
-  draft: "muted",
-  completed: "success",
-  cancelled: "destructive",
-};
-
-export const SRETURN_STATUS_LABEL: Record<SalesReturnStatus, string> = {
-  draft: "Draft",
-  completed: "Completed",
-  cancelled: "Cancelled",
+export const SRETURN_STATUS: StatusConfig<SalesReturnStatus> = {
+  draft: { label: "Draft", variant: "muted" },
+  completed: { label: "Completed", variant: "success" },
+  cancelled: { label: "Cancelled", variant: "destructive" },
 };
 
 const STATUS_OPTIONS: readonly { value: string; label: string }[] = [
@@ -272,9 +266,7 @@ export function SalesReturnsView({
                         {formatCurrency(ret.totalAmount)}
                       </td>
                       <td className="px-3 py-2">
-                        <Badge dot variant={SRETURN_STATUS_VARIANT[ret.status]}>
-                          {SRETURN_STATUS_LABEL[ret.status]}
-                        </Badge>
+                        <StatusBadge {...SRETURN_STATUS[ret.status]} />
                       </td>
                       <td className="px-3 py-2 text-right">
                         <Link

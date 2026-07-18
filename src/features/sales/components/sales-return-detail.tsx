@@ -12,15 +12,12 @@ import {
   Calendar,
   Hash,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorBanner } from "@/components/shared/error-banner";
-import {
-  SRETURN_STATUS_LABEL,
-  SRETURN_STATUS_VARIANT,
-} from "@/features/sales/components/sales-returns-view";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { SRETURN_STATUS } from "@/features/sales/components/sales-returns-view";
 import {
   completeSalesReturnAction,
   cancelSalesReturnAction,
@@ -241,9 +238,7 @@ export function SalesReturnDetail({
       </PageHeader>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Badge dot variant={SRETURN_STATUS_VARIANT[status]}>
-          {SRETURN_STATUS_LABEL[status]}
-        </Badge>
+        <StatusBadge {...SRETURN_STATUS[status]} />
       </div>
 
       {actionError && <ErrorBanner message={actionError} className="mt-4" />}

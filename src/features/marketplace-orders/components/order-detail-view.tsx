@@ -7,6 +7,7 @@ import { ArrowLeft, Package, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
+import { StatusBadge } from "@/components/shared/status-badge";
 import {
   transitionOrderAction,
   paymentAction,
@@ -169,9 +170,10 @@ function PaymentPanel({
         <dt className="text-slate-500 dark:text-slate-400">Status</dt>
         <dd>
           {payment ? (
-            <Badge dot variant={PAYMENT_STATUS_VARIANT[payment.status]}>
-              {PAYMENT_STATUS_LABEL[payment.status]}
-            </Badge>
+            <StatusBadge
+              variant={PAYMENT_STATUS_VARIANT[payment.status]}
+              label={PAYMENT_STATUS_LABEL[payment.status]}
+            />
           ) : (
             <Badge dot variant="muted">Not started</Badge>
           )}
@@ -268,9 +270,10 @@ export function OrderDetailView({
         }
         icon={Package}
       >
-        <Badge dot variant={ORDER_STATUS_VARIANT[order.status]}>
-          {ORDER_STATUS_LABEL[order.status]}
-        </Badge>
+        <StatusBadge
+          variant={ORDER_STATUS_VARIANT[order.status]}
+          label={ORDER_STATUS_LABEL[order.status]}
+        />
       </PageHeader>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">

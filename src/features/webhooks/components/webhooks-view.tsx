@@ -20,6 +20,7 @@ import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import {
@@ -398,9 +399,10 @@ function DeliveriesLog({ deliveries }: DeliveriesLogProps) {
                 {delivery.eventType}
               </td>
               <td className="px-3 py-2">
-                <Badge dot variant={STATUS_VARIANT[delivery.status]}>
-                  {STATUS_LABEL[delivery.status]}
-                </Badge>
+                <StatusBadge
+                  variant={STATUS_VARIANT[delivery.status]}
+                  label={STATUS_LABEL[delivery.status]}
+                />
               </td>
               <td className="nums px-3 py-2 text-slate-600 dark:text-slate-400">
                 {delivery.responseStatus ?? "—"}

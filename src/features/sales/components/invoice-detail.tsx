@@ -23,9 +23,9 @@ import {
   Banknote,
   type LucideIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { KpiTile } from "@/components/shared/kpi-tile";
 import { Card } from "@/components/ui/card";
 import {
@@ -37,10 +37,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  INV_STATUS_VARIANT,
-  INV_STATUS_LABEL,
-  PAYMENT_STATUS_VARIANT,
-  PAYMENT_STATUS_LABEL,
+  INV_STATUS,
+  PAYMENT_STATUS,
 } from "@/features/sales/components/invoices-view";
 import {
   postInvoiceAction,
@@ -496,12 +494,11 @@ export function InvoiceDetail({
               <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {invoice.invoiceNumber}
               </h1>
-              <Badge dot variant={INV_STATUS_VARIANT[status]}>
-                {INV_STATUS_LABEL[status]}
-              </Badge>
-              <Badge variant={PAYMENT_STATUS_VARIANT[invoice.paymentStatus]}>
-                {PAYMENT_STATUS_LABEL[invoice.paymentStatus]}
-              </Badge>
+              <StatusBadge {...INV_STATUS[status]} />
+              <StatusBadge
+                {...PAYMENT_STATUS[invoice.paymentStatus]}
+                dot={false}
+              />
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {customerName ?? "No customer"}

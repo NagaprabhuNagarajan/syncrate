@@ -1,25 +1,15 @@
 /**
- * Presentation-only mappings for bill status — badge variant and
- * human-readable label. Shared by the list, detail, and any other surface
- * that renders a bill status.
+ * Presentation-only status config for bills — badge variant + label per status.
+ * Shared by the list, detail, and any other surface that renders a bill status.
  */
 
-import type { BadgeProps } from "@/components/ui/badge";
+import type { StatusConfig } from "@/components/shared/status-badge";
 import type { BillStatus } from "@/features/purchase/types/bill.types";
 
-export const BILL_STATUS_VARIANT: Record<
-  BillStatus,
-  BadgeProps["variant"]
-> = {
-  draft: "muted",
-  posted: "success",
-  cancelled: "destructive",
-};
-
-export const BILL_STATUS_LABEL: Record<BillStatus, string> = {
-  draft: "Draft",
-  posted: "Posted",
-  cancelled: "Cancelled",
+export const BILL_STATUS: StatusConfig<BillStatus> = {
+  draft: { label: "Draft", variant: "muted" },
+  posted: { label: "Posted", variant: "success" },
+  cancelled: { label: "Cancelled", variant: "destructive" },
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -61,19 +51,9 @@ export function deriveBillPaymentStatus(bill: {
   return "unpaid";
 }
 
-export const BILL_PAYMENT_STATUS_LABEL: Record<BillPaymentStatus, string> = {
-  unpaid: "Unpaid",
-  partial: "Partial",
-  paid: "Paid",
-  overdue: "Overdue",
-};
-
-export const BILL_PAYMENT_STATUS_VARIANT: Record<
-  BillPaymentStatus,
-  BadgeProps["variant"]
-> = {
-  unpaid: "warning",
-  partial: "info",
-  paid: "success",
-  overdue: "destructive",
+export const BILL_PAYMENT_STATUS: StatusConfig<BillPaymentStatus> = {
+  unpaid: { label: "Unpaid", variant: "warning" },
+  partial: { label: "Partial", variant: "info" },
+  paid: { label: "Paid", variant: "success" },
+  overdue: { label: "Overdue", variant: "destructive" },
 };

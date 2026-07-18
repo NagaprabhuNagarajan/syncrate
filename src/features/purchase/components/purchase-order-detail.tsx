@@ -26,6 +26,7 @@ import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import { KpiTile } from "@/components/shared/kpi-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -41,27 +42,15 @@ import {
   orderPurchaseOrderAction,
   cancelPurchaseOrderAction,
 } from "@/features/purchase/actions/purchase-order.actions";
-import {
-  PO_STATUS_LABEL,
-  PO_STATUS_VARIANT,
-} from "@/features/purchase/utils/purchase-order-display";
+import { PO_STATUS } from "@/features/purchase/utils/purchase-order-display";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type { PurchaseOrderWithItems } from "@/features/purchase/types/purchase-order.types";
 import type { BillListItem } from "@/features/purchase/types/bill.types";
 import type { PurchaseReturnListItem } from "@/features/purchase/types/purchase-return.types";
 import type { GoodsReceiptListItem } from "@/features/purchase/types/goods-receipt.types";
-import {
-  BILL_STATUS_LABEL,
-  BILL_STATUS_VARIANT,
-} from "@/features/purchase/utils/bill-display";
-import {
-  PRET_STATUS_LABEL,
-  PRET_STATUS_VARIANT,
-} from "@/features/purchase/utils/purchase-return-display";
-import {
-  GRN_STATUS_LABEL,
-  GRN_STATUS_VARIANT,
-} from "@/features/purchase/utils/goods-receipt-display";
+import { BILL_STATUS } from "@/features/purchase/utils/bill-display";
+import { PRET_STATUS } from "@/features/purchase/utils/purchase-return-display";
+import { GRN_STATUS } from "@/features/purchase/utils/goods-receipt-display";
 
 // ─────────────────────────────────────────────────────────────
 // Cancel confirmation dialog
@@ -383,9 +372,7 @@ export function PurchaseOrderDetail({
               <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {purchaseOrder.poNumber}
               </h1>
-              <Badge dot variant={PO_STATUS_VARIANT[status]}>
-                {PO_STATUS_LABEL[status]}
-              </Badge>
+              <StatusBadge {...PO_STATUS[status]} />
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {supplierName ?? "No supplier"}
@@ -629,8 +616,8 @@ export function PurchaseOrderDetail({
                         number: g.grnNumber,
                         date: formatDate(g.receivedDate),
                         trailing: String(g.totalReceivedQuantity),
-                        statusLabel: GRN_STATUS_LABEL[g.status],
-                        statusVariant: GRN_STATUS_VARIANT[g.status],
+                        statusLabel: GRN_STATUS[g.status].label,
+                        statusVariant: GRN_STATUS[g.status].variant,
                       }))}
                     />
                   </div>
@@ -648,8 +635,8 @@ export function PurchaseOrderDetail({
                         number: b.invoiceNumber,
                         date: formatDate(b.invoiceDate),
                         trailing: formatCurrency(b.totalAmount),
-                        statusLabel: BILL_STATUS_LABEL[b.status],
-                        statusVariant: BILL_STATUS_VARIANT[b.status],
+                        statusLabel: BILL_STATUS[b.status].label,
+                        statusVariant: BILL_STATUS[b.status].variant,
                       }))}
                     />
                   </div>
@@ -667,8 +654,8 @@ export function PurchaseOrderDetail({
                         number: r.returnNumber,
                         date: formatDate(r.returnDate),
                         trailing: formatCurrency(r.totalAmount),
-                        statusLabel: PRET_STATUS_LABEL[r.status],
-                        statusVariant: PRET_STATUS_VARIANT[r.status],
+                        statusLabel: PRET_STATUS[r.status].label,
+                        statusVariant: PRET_STATUS[r.status].variant,
                       }))}
                     />
                   </div>

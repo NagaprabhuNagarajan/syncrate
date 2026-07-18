@@ -1,29 +1,17 @@
 /**
- * Presentation-only mappings for purchase request (requisition) status —
- * badge variant and human-readable label. Shared by the list, detail, and
- * any other surface that renders a purchase request status.
+ * Presentation-only status config for purchase requests (requisitions) — badge
+ * variant + label per status. Shared by the list, detail, and any other surface
+ * that renders a purchase request status.
  */
 
-import type { BadgeProps } from "@/components/ui/badge";
+import type { StatusConfig } from "@/components/shared/status-badge";
 import type { PurchaseRequestStatus } from "@/features/purchase/types/purchase-request.types";
 
-export const PR_STATUS_VARIANT: Record<
-  PurchaseRequestStatus,
-  BadgeProps["variant"]
-> = {
-  draft: "muted",
-  submitted: "info",
-  approved: "success",
-  rejected: "destructive",
-  converted: "success",
-  cancelled: "destructive",
-};
-
-export const PR_STATUS_LABEL: Record<PurchaseRequestStatus, string> = {
-  draft: "Draft",
-  submitted: "Submitted",
-  approved: "Approved",
-  rejected: "Rejected",
-  converted: "Converted",
-  cancelled: "Cancelled",
+export const PR_STATUS: StatusConfig<PurchaseRequestStatus> = {
+  draft: { label: "Draft", variant: "muted" },
+  submitted: { label: "Submitted", variant: "info" },
+  approved: { label: "Approved", variant: "success" },
+  rejected: { label: "Rejected", variant: "destructive" },
+  converted: { label: "Converted", variant: "success" },
+  cancelled: { label: "Cancelled", variant: "destructive" },
 };

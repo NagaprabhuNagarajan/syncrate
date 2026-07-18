@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { WorkflowForm } from "@/features/workflows/components/workflow-form";
 import {
   deleteWorkflowAction,
@@ -373,14 +374,10 @@ export function WorkflowsView({
                           </p>
                         </div>
                       </div>
-                      <Badge
-                        dot
-                        variant={
-                          INSTANCE_STATUS_VARIANT[run.instance.status]
-                        }
-                      >
-                        {run.instance.status}
-                      </Badge>
+                      <StatusBadge
+                        variant={INSTANCE_STATUS_VARIANT[run.instance.status]}
+                        label={run.instance.status}
+                      />
                     </button>
 
                     {isOpen && (
@@ -414,12 +411,10 @@ export function WorkflowsView({
                                     </p>
                                   )}
                                 </div>
-                                <Badge
-                                  dot
+                                <StatusBadge
                                   variant={STEP_STATUS_VARIANT[step.status]}
-                                >
-                                  {step.status}
-                                </Badge>
+                                  label={step.status}
+                                />
                               </li>
                             ))}
                           </ol>

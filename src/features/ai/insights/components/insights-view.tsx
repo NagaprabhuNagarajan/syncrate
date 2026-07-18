@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { generateInsightsAction } from "../actions/insight.actions";
@@ -83,9 +84,10 @@ function InsightCard({ item, index }: InsightCardProps) {
       <Card className="h-full">
         <CardHeader className="space-y-2 pb-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge dot variant={SEVERITY_VARIANT[item.severity]}>
-              {CATEGORY_LABELS[item.category]}
-            </Badge>
+            <StatusBadge
+              variant={SEVERITY_VARIANT[item.severity]}
+              label={CATEGORY_LABELS[item.category]}
+            />
             <Badge variant="muted">{confidenceLabel(item.confidence)}</Badge>
           </div>
           <div className="flex items-start justify-between gap-3">

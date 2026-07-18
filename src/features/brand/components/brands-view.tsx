@@ -12,12 +12,13 @@ import {
   Pencil,
   Archive,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { BrandForm } from "@/features/brand/components/brand-form";
 import { archiveBrandAction } from "@/features/brand/actions/brand.actions";
 import type {
@@ -252,9 +253,10 @@ export function BrandsView({
                         {brand.description ?? "—"}
                       </td>
                       <td className="px-3 py-2">
-                        <Badge dot variant={STATUS_VARIANT[brand.status]}>
-                          {STATUS_LABEL[brand.status]}
-                        </Badge>
+                        <StatusBadge
+                          variant={STATUS_VARIANT[brand.status]}
+                          label={STATUS_LABEL[brand.status]}
+                        />
                       </td>
                       {canManage && (
                         <td className="px-3 py-2">

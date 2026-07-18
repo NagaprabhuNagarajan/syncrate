@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeProps } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/status-badge";
 import {
   updateConnectionPermissions,
   disconnectBusiness,
@@ -170,9 +171,11 @@ function OverviewTab({
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
           <p className="text-xs text-slate-500 dark:text-slate-400">Status</p>
-          <Badge dot variant={STATUS_VARIANT[connection.status]} className="mt-1">
-            {connection.status}
-          </Badge>
+          <StatusBadge
+            variant={STATUS_VARIANT[connection.status]}
+            label={connection.status}
+            className="mt-1"
+          />
         </div>
         <div>
           <p className="text-xs text-slate-500 dark:text-slate-400">Requested</p>

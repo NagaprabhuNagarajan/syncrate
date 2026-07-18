@@ -19,10 +19,10 @@ import {
   FileText,
   type LucideIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import { KpiTile } from "@/components/shared/kpi-tile";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -33,10 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  PR_STATUS_LABEL,
-  PR_STATUS_VARIANT,
-} from "@/features/purchase/utils/purchase-request-display";
+import { PR_STATUS } from "@/features/purchase/utils/purchase-request-display";
 import type { PrSupplierOption } from "@/features/purchase/components/purchase-request-form";
 import {
   submitPurchaseRequestAction,
@@ -506,9 +503,7 @@ export function PurchaseRequestDetail({
               <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {purchaseRequest.requestNumber}
               </h1>
-              <Badge dot variant={PR_STATUS_VARIANT[status]}>
-                {PR_STATUS_LABEL[status]}
-              </Badge>
+              <StatusBadge {...PR_STATUS[status]} />
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {branchName ?? "No branch"}

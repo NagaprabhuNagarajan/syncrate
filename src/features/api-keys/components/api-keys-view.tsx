@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import {
   createApiKeyAction,
   revokeApiKeyAction,
@@ -117,9 +118,10 @@ function ApiKeyRow({ apiKey, canManage, onRevoke }: ApiKeyRowProps) {
         {formatDate(apiKey.lastUsedAt)}
       </TableCell>
       <TableCell>
-        <Badge dot variant={STATUS_VARIANT[status]}>
-          {STATUS_LABEL[status]}
-        </Badge>
+        <StatusBadge
+          variant={STATUS_VARIANT[status]}
+          label={STATUS_LABEL[status]}
+        />
       </TableCell>
       <TableCell className="text-right">
         {canManage && status === "active" ? (

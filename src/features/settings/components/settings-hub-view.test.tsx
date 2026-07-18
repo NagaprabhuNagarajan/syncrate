@@ -32,7 +32,8 @@ describe("SettingsHubView", () => {
     expect(screen.getByText("Roles & Permissions")).toBeInTheDocument();
     expect(screen.getByText("API Keys")).toBeInTheDocument();
     expect(screen.getByText("Approvals")).toBeInTheDocument();
-    expect(screen.getByText("Webhooks")).toBeInTheDocument();
+    // Webhooks is intentionally hidden from the hub for now.
+    expect(screen.queryByText("Webhooks")).not.toBeInTheDocument();
     expect(screen.getByText("Workflows")).toBeInTheDocument();
     expect(screen.getByText("Audit Center")).toBeInTheDocument();
   });

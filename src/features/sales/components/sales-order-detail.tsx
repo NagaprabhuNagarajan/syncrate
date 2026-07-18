@@ -22,10 +22,10 @@ import {
   Truck,
   type LucideIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/shared/error-banner";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { KpiTile } from "@/components/shared/kpi-tile";
 import {
   Table,
@@ -40,14 +40,8 @@ import {
   approveSalesOrderAction,
   cancelSalesOrderAction,
 } from "@/features/sales/actions/sales-order.actions";
-import {
-  SO_STATUS_LABEL,
-  SO_STATUS_VARIANT,
-} from "@/features/sales/utils/sales-order-display";
-import {
-  INV_STATUS_LABEL,
-  INV_STATUS_VARIANT,
-} from "@/features/sales/components/invoices-view";
+import { SO_STATUS } from "@/features/sales/utils/sales-order-display";
+import { INV_STATUS } from "@/features/sales/components/invoices-view";
 import { formatCurrency, formatDate } from "@/utils/format";
 import type { SalesOrderWithItems } from "@/features/sales/types/sales-order.types";
 import type { InvoiceListItem } from "@/features/sales/types/invoice.types";
@@ -295,9 +289,7 @@ export function SalesOrderDetail({
               <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {salesOrder.soNumber}
               </h1>
-              <Badge dot variant={SO_STATUS_VARIANT[status]}>
-                {SO_STATUS_LABEL[status]}
-              </Badge>
+              <StatusBadge {...SO_STATUS[status]} />
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {customerName ?? "No customer"}
@@ -529,9 +521,10 @@ export function SalesOrderDetail({
                         {formatDate(inv.invoiceDate)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={INV_STATUS_VARIANT[inv.status]}>
-                          {INV_STATUS_LABEL[inv.status]}
-                        </Badge>
+                        <StatusBadge
+                          {...INV_STATUS[inv.status]}
+                          dot={false}
+                        />
                       </TableCell>
                       <TableCell className="nums text-right font-medium text-slate-700 dark:text-slate-300">
                         {formatCurrency(inv.totalAmount)}

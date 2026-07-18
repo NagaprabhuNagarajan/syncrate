@@ -15,7 +15,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,10 +27,8 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
-import {
-  PR_STATUS_LABEL,
-  PR_STATUS_VARIANT,
-} from "@/features/purchase/utils/purchase-request-display";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { PR_STATUS } from "@/features/purchase/utils/purchase-request-display";
 import { formatDate } from "@/utils/format";
 import type {
   PurchaseRequestListItem,
@@ -337,9 +334,7 @@ export function PurchaseRequestsView({
                       {request.branchName ?? "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={PR_STATUS_VARIANT[request.status]}>
-                        {PR_STATUS_LABEL[request.status]}
-                      </Badge>
+                      <StatusBadge {...PR_STATUS[request.status]} />
                     </TableCell>
                     <TableCell className="text-slate-600 dark:text-slate-400">
                       {request.requiredDate

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { ListingForm } from "@/features/marketplace/components/listing-form";
 import {
   archiveListingAction,
@@ -161,9 +162,10 @@ function ListingRow({
         </Badge>
       </td>
       <td className="px-3 py-2">
-        <Badge dot variant={STATUS_VARIANT[listing.status]}>
-          {STATUS_LABEL[listing.status]}
-        </Badge>
+        <StatusBadge
+          variant={STATUS_VARIANT[listing.status]}
+          label={STATUS_LABEL[listing.status]}
+        />
       </td>
       <td className="px-3 py-2">
         {canManage && !archived && (

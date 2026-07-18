@@ -16,8 +16,8 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import type { BadgeProps } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { KpiTile } from "@/components/shared/kpi-tile";
 import { Card } from "@/components/ui/card";
 import {
@@ -180,9 +180,10 @@ export function PaymentDetail({
               <h1 className="truncate font-mono text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {payment.paymentNumber}
               </h1>
-              <Badge dot variant={PAYMENT_STATUS_VARIANT[status]}>
-                {PAYMENT_STATUS_LABEL[status]}
-              </Badge>
+              <StatusBadge
+                variant={PAYMENT_STATUS_VARIANT[status]}
+                label={PAYMENT_STATUS_LABEL[status]}
+              />
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500">
               {partyName}

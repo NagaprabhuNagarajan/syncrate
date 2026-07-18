@@ -12,7 +12,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -23,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { StatTile } from "@/components/shared/stat-tile";
 import { BatchFormDialog } from "@/features/inventory/components/batch-form";
 import {
@@ -274,9 +274,10 @@ export function BatchesView({
                       {numberFormatter.format(batch.remainingQuantity)}
                     </TableCell>
                     <TableCell>
-                      <Badge dot variant={BATCH_STATUS_VARIANT[batch.status]}>
-                        {BATCH_STATUS_LABEL[batch.status]}
-                      </Badge>
+                      <StatusBadge
+                        variant={BATCH_STATUS_VARIANT[batch.status]}
+                        label={BATCH_STATUS_LABEL[batch.status]}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

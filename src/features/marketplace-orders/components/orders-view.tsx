@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { PlaceOrderForm } from "@/features/marketplace-orders/components/place-order-form";
 import {
   ORDER_STATUS_LABEL,
@@ -80,9 +81,10 @@ function OrderRow({ organizationId, order }: OrderRowProps) {
         {formatMoney(order.totalAmount, order.currency)}
       </td>
       <td className="px-3 py-2">
-        <Badge dot variant={ORDER_STATUS_VARIANT[order.status]}>
-          {ORDER_STATUS_LABEL[order.status]}
-        </Badge>
+        <StatusBadge
+          variant={ORDER_STATUS_VARIANT[order.status]}
+          label={ORDER_STATUS_LABEL[order.status]}
+        />
       </td>
     </tr>
   );

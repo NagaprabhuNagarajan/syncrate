@@ -21,7 +21,11 @@ import {
   Banknote,
   X,
 } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { FilterPills } from "@/components/shared/filter-pills";
+import {
+  StatusBadge,
+  type StatusConfig,
+} from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -56,39 +60,22 @@ import type {
 // ─────────────────────────────────────────────────────────────
 // Status presentation
 //
-// These maps are imported by 5 other files (marketplace-orders,
-// invoice-detail, sales-order-detail, dashboard-analytics). Keep them
-// exported from this module — do not move them.
+// These maps are imported by other files (marketplace-orders, invoice-detail,
+// sales-order-detail, payment-detail, dashboard-analytics). Keep them exported
+// from this module — do not move them.
 // ─────────────────────────────────────────────────────────────
 
-export const INV_STATUS_VARIANT: Record<InvoiceStatus, BadgeProps["variant"]> =
-  {
-    draft: "muted",
-    posted: "success",
-    cancelled: "destructive",
-  };
-
-export const INV_STATUS_LABEL: Record<InvoiceStatus, string> = {
-  draft: "Draft",
-  posted: "Posted",
-  cancelled: "Cancelled",
+export const INV_STATUS: StatusConfig<InvoiceStatus> = {
+  draft: { label: "Draft", variant: "muted" },
+  posted: { label: "Posted", variant: "success" },
+  cancelled: { label: "Cancelled", variant: "destructive" },
 };
 
-export const PAYMENT_STATUS_VARIANT: Record<
-  PaymentStatus,
-  BadgeProps["variant"]
-> = {
-  unpaid: "warning",
-  partial: "info",
-  paid: "success",
-  overdue: "destructive",
-};
-
-export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
-  unpaid: "Unpaid",
-  partial: "Partial",
-  paid: "Paid",
-  overdue: "Overdue",
+export const PAYMENT_STATUS: StatusConfig<PaymentStatus> = {
+  unpaid: { label: "Unpaid", variant: "warning" },
+  partial: { label: "Partial", variant: "info" },
+  paid: { label: "Paid", variant: "success" },
+  overdue: { label: "Overdue", variant: "destructive" },
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -97,65 +84,19 @@ export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
 
 const STATUS_FILTERS: readonly { value: string; label: string }[] = [
   { value: "", label: "All" },
-  { value: "draft", label: INV_STATUS_LABEL.draft },
-  { value: "posted", label: INV_STATUS_LABEL.posted },
-  { value: "cancelled", label: INV_STATUS_LABEL.cancelled },
+  { value: "draft", label: INV_STATUS.draft.label },
+  { value: "posted", label: INV_STATUS.posted.label },
+  { value: "cancelled", label: INV_STATUS.cancelled.label },
 ];
 
 const PAYMENT_FILTERS: readonly { value: string; label: string }[] = [
   { value: "", label: "All" },
-  { value: "unpaid", label: PAYMENT_STATUS_LABEL.unpaid },
-  { value: "partial", label: PAYMENT_STATUS_LABEL.partial },
-  { value: "paid", label: PAYMENT_STATUS_LABEL.paid },
-  { value: "overdue", label: PAYMENT_STATUS_LABEL.overdue },
+  { value: "unpaid", label: PAYMENT_STATUS.unpaid.label },
+  { value: "partial", label: PAYMENT_STATUS.partial.label },
+  { value: "paid", label: PAYMENT_STATUS.paid.label },
+  { value: "overdue", label: PAYMENT_STATUS.overdue.label },
 ];
 
-// ─────────────────────────────────────────────────────────────
-// Filter pill row
-// ─────────────────────────────────────────────────────────────
-
-function FilterPills({
-  label,
-  options,
-  active,
-  onSelect,
-}: {
-  readonly label: string;
-  readonly options: readonly { value: string; label: string }[];
-  readonly active: string;
-  readonly onSelect: (value: string) => void;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <div
-        className="flex flex-wrap items-center gap-1.5"
-        role="tablist"
-        aria-label={`Filter by ${label.toLowerCase()}`}
-      >
-        {options.map((option) => {
-          const isActive = active === option.value;
-          return (
-            <button
-              key={option.value || "all"}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => onSelect(option.value)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                isActive
-                  ? "border-transparent bg-gradient-brand text-white shadow-glow-primary"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600"
-              )}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────
 // Props
@@ -591,17 +532,12 @@ export function InvoicesView({
                         {invoice.dueDate ? formatDate(invoice.dueDate) : "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge dot variant={INV_STATUS_VARIANT[invoice.status]}>
-                          {INV_STATUS_LABEL[invoice.status]}
-                        </Badge>
+                        <StatusBadge {...INV_STATUS[invoice.status]} />
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          dot
-                          variant={PAYMENT_STATUS_VARIANT[invoice.paymentStatus]}
-                        >
-                          {PAYMENT_STATUS_LABEL[invoice.paymentStatus]}
-                        </Badge>
+                        <StatusBadge
+                          {...PAYMENT_STATUS[invoice.paymentStatus]}
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="nums font-medium text-slate-900 dark:text-slate-100">
