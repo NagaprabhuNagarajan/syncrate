@@ -22,6 +22,15 @@ function fail(code: ApprovalErrorCode, message: string): ApprovalResult<never> {
   return { success: false, error: { code, message } };
 }
 
+/**
+ * Who is deciding a request, for enforcing a rule's named approver role.
+ * `canOverride` lets privileged users (e.g. org admins) decide regardless.
+ */
+export interface ApproverEnforcement {
+  readonly deciderRoleId: string | null;
+  readonly canOverride: boolean;
+}
+
 /** Normalizes an optional string: trims and converts "" → null. */
 function nz(value: string | undefined | null): string | null {
   if (value === undefined || value === null) {
@@ -162,6 +171,15 @@ export class ApprovalService {
     return this.requests.listByOrg(organizationId, "pending");
   }
 
+  /** Every approval request raised against a specific document. */
+  async listRequestsForEntity(
+    organizationId: string,
+    entityType: string,
+    entityId: string
+  ): Promise<ApprovalRequest[]> {
+    return this.requests.listByEntity(organizationId, entityType, entityId);
+  }
+
   // ── Evaluate & raise ───────────────────────────────────────
 
   /**
@@ -206,17 +224,19 @@ export class ApprovalService {
   async approveRequest(
     id: string,
     deciderId: string,
-    reason?: string
+    reason?: string,
+    enforce?: ApproverEnforcement
   ): Promise<ApprovalResult<ApprovalRequest>> {
-    return this.decide(id, "approved", deciderId, reason);
+    return this.decide(id, "approved", deciderId, reason, enforce);
   }
 
   async rejectRequest(
     id: string,
     deciderId: string,
-    reason?: string
+    reason?: string,
+    enforce?: ApproverEnforcement
   ): Promise<ApprovalResult<ApprovalRequest>> {
-    return this.decide(id, "rejected", deciderId, reason);
+    return this.decide(id, "rejected", deciderId, reason, enforce);
   }
 
   async cancelRequest(
@@ -235,7 +255,8 @@ export class ApprovalService {
     id: string,
     status: ApprovalRequestStatus,
     deciderId: string,
-    reason?: string
+    reason?: string,
+    enforce?: ApproverEnforcement
   ): Promise<ApprovalResult<ApprovalRequest>> {
     const existing = await this.requests.findById(id);
     if (!existing) {
@@ -246,6 +267,26 @@ export class ApprovalService {
         "conflict",
         `This request has already been ${existing.status}.`
       );
+    }
+
+    // When the rule names a specific approver role, only a decider holding that
+    // role may approve/reject — unless they can override (e.g. org admins).
+    if (
+      enforce &&
+      !enforce.canOverride &&
+      (status === "approved" || status === "rejected") &&
+      existing.ruleId
+    ) {
+      const rule = await this.rules.findById(existing.ruleId);
+      if (
+        rule?.approverRoleId &&
+        rule.approverRoleId !== enforce.deciderRoleId
+      ) {
+        return fail(
+          "forbidden",
+          "This request can only be decided by the approver role set on its rule."
+        );
+      }
     }
 
     const updated = await this.requests.decide(

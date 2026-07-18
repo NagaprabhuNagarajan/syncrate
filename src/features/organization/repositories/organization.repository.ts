@@ -612,6 +612,8 @@ export class OrganizationRepository {
   async findRolesForOrg(organizationId: string): Promise<Role[]> {
     // Supabase JS can't infer join types without generated types from a live project.
     // We cast the response to our explicit type after the query.
+    // Org-scoped only: each org owns its copies of the system roles, so the
+    // global templates (and other orgs' system roles) must be excluded.
     const { data, error } = await this.supabase
       .from("roles")
       .select(
@@ -622,7 +624,7 @@ export class OrganizationRepository {
         )
       `
       )
-      .or(`organization_id.eq.${organizationId},is_system.eq.true`)
+      .eq("organization_id", organizationId)
       .is("deleted_at", null)
       .order("name");
 

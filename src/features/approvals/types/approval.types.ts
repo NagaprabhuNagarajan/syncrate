@@ -72,6 +72,29 @@ export interface ApprovalRequest {
   readonly version: number;
 }
 
+/**
+ * A document-facing view of an approval request: the request plus its rule name
+ * and whether the current viewer is allowed to decide it. Rendered on bill and
+ * invoice detail pages.
+ */
+export interface EntityApproval {
+  readonly id: string;
+  readonly status: ApprovalRequestStatus;
+  readonly ruleName: string | null;
+  readonly decisionReason: string | null;
+  readonly decidedAt: Date | null;
+  readonly createdAt: Date;
+  readonly canDecide: boolean;
+  /** Display name of the user who submitted the document for approval. */
+  readonly requestedByName: string | null;
+  /** Role of the user who submitted the document. */
+  readonly requestedByRole: string | null;
+  /** Display name of the user who approved or rejected it. */
+  readonly decidedByName: string | null;
+  /** Role of the user who approved or rejected it. */
+  readonly decidedByRole: string | null;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Inputs / commands
 // ─────────────────────────────────────────────────────────────

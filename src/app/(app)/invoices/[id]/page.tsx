@@ -6,6 +6,7 @@ import { InvoiceService } from "@/features/sales/services/invoice.service";
 import { CustomerPaymentService } from "@/features/payment/services/customer-payment.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { InvoiceDetail } from "@/features/sales/components/invoice-detail";
+import { getEntityApprovals } from "@/features/approvals/server/entity-approvals";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 
 interface InvoiceDetailPageProps {
@@ -131,17 +132,28 @@ export default async function InvoiceDetailPage({
   const invoice = result.data;
 
   const paymentService = new CustomerPaymentService(supabase);
-  const [customerName, productNames, salesOrderNumber, payments, availableCredit] =
-    await Promise.all([
-      lookupCustomerName(supabase, invoice.customerId),
-      lookupProductNames(
-        supabase,
-        invoice.items.map((item) => item.productId)
-      ),
-      lookupSalesOrderNumber(supabase, invoice.salesOrderId),
-      paymentService.listPaymentsForInvoice(activeOrg.id, invoice.id),
-      paymentService.getAvailableCredit(activeOrg.id, invoice.customerId),
-    ]);
+  const [
+    customerName,
+    productNames,
+    salesOrderNumber,
+    payments,
+    availableCredit,
+    approvals,
+  ] = await Promise.all([
+    lookupCustomerName(supabase, invoice.customerId),
+    lookupProductNames(
+      supabase,
+      invoice.items.map((item) => item.productId)
+    ),
+    lookupSalesOrderNumber(supabase, invoice.salesOrderId),
+    paymentService.listPaymentsForInvoice(activeOrg.id, invoice.id),
+    paymentService.getAvailableCredit(activeOrg.id, invoice.customerId),
+    getEntityApprovals(supabase, activeOrg.id, "sales_invoice", invoice.id, {
+      roleId: context.member.roleId,
+      canDecide: context.permissions.includes("approval.decide"),
+      canManage: context.permissions.includes("approval.manage"),
+    }),
+  ]);
 
   return (
     <InvoiceDetail
@@ -151,6 +163,7 @@ export default async function InvoiceDetailPage({
       salesOrderNumber={salesOrderNumber}
       payments={payments}
       availableCredit={availableCredit}
+      approvals={approvals}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("invoice.create")}
       canCancel={context.permissions.includes("invoice.cancel")}

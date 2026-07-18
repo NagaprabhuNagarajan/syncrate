@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { BillService } from "@/features/purchase/services/bill.service";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { AuditService } from "@/features/audit/services/audit.service";
+import { raiseApprovalsForEntity } from "@/features/approvals/server/raise-approvals";
 import {
   createBillSchema,
   updateBillSchema,
@@ -144,6 +145,20 @@ export async function createBillAction(
       entityId: result.data.id,
       summary: `Created bill ${result.data.invoiceNumber}`,
     });
+    // Only posted bills go through approval — a draft raises nothing until it
+    // is posted (see runTransition). Best-effort; never blocks creation.
+    if (result.data.status === "posted") {
+      await raiseApprovalsForEntity(supabase, {
+        organizationId,
+        entityType: "purchase_invoice",
+        entityId: result.data.id,
+        requestedBy: auth.userId,
+        fields: {
+          total_amount: result.data.totalAmount,
+          status: result.data.status,
+        },
+      });
+    }
   }
   return result;
 }
@@ -232,6 +247,20 @@ async function runTransition(
       entityId: billId,
       summary: `${auditAction} ${result.data.invoiceNumber}`,
     });
+    // A bill entering the posted state runs the approval rules. Cancel and
+    // other transitions do not. Best-effort — never blocks the transition.
+    if (result.data.status === "posted") {
+      await raiseApprovalsForEntity(supabase, {
+        organizationId,
+        entityType: "purchase_invoice",
+        entityId: billId,
+        requestedBy: auth.userId,
+        fields: {
+          total_amount: result.data.totalAmount,
+          status: result.data.status,
+        },
+      });
+    }
   }
   return result;
 }

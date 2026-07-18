@@ -63,10 +63,19 @@ export default async function ApprovalsPage({
     orgService.listRoles(activeOrg.id),
   ]);
 
-  const roleOptions: RoleOption[] = roles.map((role) => ({
-    id: role.id,
-    name: role.name,
-  }));
+  // Only roles that can actually approve (hold the "approval.decide" permission)
+  // are eligible to be a rule's approver, so a rule can never name a role that
+  // could never decide it.
+  const roleOptions: RoleOption[] = roles
+    .filter((role) =>
+      role.permissions.some(
+        (permission) => permission.name === "approval.decide"
+      )
+    )
+    .map((role) => ({
+      id: role.id,
+      name: role.name,
+    }));
 
   return (
     <ApprovalsView

@@ -1007,9 +1007,8 @@ describe("OrganizationRepository", () => {
         name: "invoice.create",
         description: "Create invoices",
       });
-      expect(builders[0].or).toHaveBeenCalledWith(
-        "organization_id.eq.org-1,is_system.eq.true"
-      );
+      // Org-scoped only — global templates and other orgs' system roles excluded.
+      expect(builders[0].eq).toHaveBeenCalledWith("organization_id", "org-1");
     });
 
     it("returns [] on error", async () => {

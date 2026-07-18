@@ -6,6 +6,7 @@ import { InvoiceService } from "@/features/sales/services/invoice.service";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { AuditService } from "@/features/audit/services/audit.service";
 import { DomainEventService } from "@/features/events/services/domain-event.service";
+import { raiseApprovalsForEntity } from "@/features/approvals/server/raise-approvals";
 import { DOMAIN_EVENTS } from "@/features/events/domain-events";
 import {
   createInvoiceSchema,
@@ -176,6 +177,20 @@ export async function createInvoiceAction(
         total_amount: result.data.totalAmount,
       },
     });
+    // Only posted invoices go through approval — a draft raises nothing until
+    // it is posted (see runTransition). Best-effort; never blocks creation.
+    if (result.data.status === "posted") {
+      await raiseApprovalsForEntity(supabase, {
+        organizationId,
+        entityType: "sales_invoice",
+        entityId: result.data.id,
+        requestedBy: auth.userId,
+        fields: {
+          total_amount: result.data.totalAmount,
+          status: result.data.status,
+        },
+      });
+    }
   }
   return result;
 }
@@ -262,6 +277,20 @@ async function runTransition(
       entityId: invoiceId,
       summary: `${auditAction} ${result.data.invoiceNumber}`,
     });
+    // An invoice entering the posted state runs the approval rules. Cancel and
+    // other transitions do not. Best-effort — never blocks the transition.
+    if (result.data.status === "posted") {
+      await raiseApprovalsForEntity(supabase, {
+        organizationId,
+        entityType: "sales_invoice",
+        entityId: invoiceId,
+        requestedBy: auth.userId,
+        fields: {
+          total_amount: result.data.totalAmount,
+          status: result.data.status,
+        },
+      });
+    }
   }
   return result;
 }

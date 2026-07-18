@@ -40,7 +40,8 @@ async function authorize(
   organizationId: string,
   permission: string
 ): Promise<
-  { ok: true; userId: string } | { ok: false; result: ApprovalResult<never> }
+  | { ok: true; userId: string; roleId: string; canManage: boolean }
+  | { ok: false; result: ApprovalResult<never> }
 > {
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) {
@@ -65,7 +66,13 @@ async function authorize(
     };
   }
 
-  return { ok: true, userId: authData.user.id };
+  return {
+    ok: true,
+    userId: authData.user.id,
+    roleId: context.member.roleId,
+    // Rule managers (org admins) may decide regardless of a rule's named role.
+    canManage: context.permissions.includes("approval.manage"),
+  };
 }
 
 /** Builds a validated condition from raw form fields. */
@@ -257,11 +264,22 @@ async function decideAction(
   }
 
   const service = new ApprovalService(supabase);
+  const enforce = { deciderRoleId: auth.roleId, canOverride: auth.canManage };
   let result: ApprovalResult<ApprovalRequest>;
   if (decision === "approved") {
-    result = await service.approveRequest(requestId, auth.userId, cleanReason);
+    result = await service.approveRequest(
+      requestId,
+      auth.userId,
+      cleanReason,
+      enforce
+    );
   } else if (decision === "rejected") {
-    result = await service.rejectRequest(requestId, auth.userId, cleanReason);
+    result = await service.rejectRequest(
+      requestId,
+      auth.userId,
+      cleanReason,
+      enforce
+    );
   } else {
     result = await service.cancelRequest(requestId, auth.userId, cleanReason);
   }

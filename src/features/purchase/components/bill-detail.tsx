@@ -48,6 +48,8 @@ import {
   deriveBillPaymentStatus,
 } from "@/features/purchase/utils/bill-display";
 import { formatCurrency, formatDate } from "@/utils/format";
+import { ApprovalPanel } from "@/features/approvals/components/approval-panel";
+import type { EntityApproval } from "@/features/approvals/types/approval.types";
 import type { BillWithItems } from "@/features/purchase/types/bill.types";
 import type {
   InvoicePaymentSummary,
@@ -363,6 +365,8 @@ interface BillDetailProps {
   readonly availableCredit?: number;
   /** Payments allocated to this bill (for the "Payments" panel). */
   readonly payments?: readonly InvoicePaymentSummary[];
+  /** Approval requests raised against this bill. */
+  readonly approvals?: readonly EntityApproval[];
   readonly organizationId: string;
   readonly canManage: boolean;
   readonly canCancel: boolean;
@@ -376,6 +380,7 @@ export function BillDetail({
   purchaseOrderNumber,
   availableCredit = 0,
   payments = [],
+  approvals = [],
   organizationId,
   canManage,
   canCancel,
@@ -581,6 +586,9 @@ export function BillDetail({
           index={3}
         />
       </div>
+
+      {/* Approvals */}
+      <ApprovalPanel organizationId={organizationId} approvals={approvals} />
 
       {/* Two-column body */}
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">

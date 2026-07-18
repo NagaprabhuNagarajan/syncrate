@@ -88,6 +88,26 @@ export class ApprovalRequestRepository {
     return data.map(mapRequest);
   }
 
+  /** Every approval request raised against a specific entity, newest first. */
+  async listByEntity(
+    organizationId: string,
+    entityType: string,
+    entityId: string
+  ): Promise<ApprovalRequest[]> {
+    const { data, error } = await this.supabase
+      .from("approval_requests")
+      .select("*")
+      .eq("organization_id", organizationId)
+      .eq("entity_type", entityType)
+      .eq("entity_id", entityId)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      return [];
+    }
+    return data.map(mapRequest);
+  }
+
   /**
    * Transitions a request to a decided state. Guarded so it only ever moves a
    * pending request (status = 'pending') matching the expected version forward.
