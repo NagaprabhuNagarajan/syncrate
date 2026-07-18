@@ -294,6 +294,26 @@ describe("AuditCenterService.list — ordering & filters", () => {
 
     expect(result.entries.map((e) => e.id)).toEqual(["business:b"]);
   });
+
+  it("treats a plain YYYY-MM-DD 'to' as inclusive of the whole day", async () => {
+    mockAuditList.mockResolvedValue([
+      buildAuditLog({ id: "morning", createdAt: new Date("2026-01-05T02:00:00") }),
+      buildAuditLog({ id: "evening", createdAt: new Date("2026-01-05T20:30:00") }),
+      buildAuditLog({ id: "next", createdAt: new Date("2026-01-06T09:00:00") }),
+    ]);
+
+    const result = await makeService().list(ORG_ID, {
+      from: "2026-01-05",
+      to: "2026-01-05",
+    });
+
+    // Both same-day entries are kept; the next day is excluded — the old code
+    // treated "to" as midnight and dropped everything after 00:00.
+    expect(result.entries.map((e) => e.id).sort()).toEqual([
+      "business:evening",
+      "business:morning",
+    ]);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────

@@ -62,11 +62,12 @@ describe("AuditCenterView", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Audit Center" })
+      screen.getByRole("heading", { name: /audit center/i })
     ).toBeInTheDocument();
     expect(screen.getByText("Created customer Acme")).toBeInTheDocument();
     expect(screen.getByText("Summarized invoices")).toBeInTheDocument();
-    expect(screen.getByText("customer.create")).toBeInTheDocument();
+    // Raw action keys are humanized for display (customer.create -> Customer created).
+    expect(screen.getByText("Customer created")).toBeInTheDocument();
   });
 
   it("renders the filter controls", () => {

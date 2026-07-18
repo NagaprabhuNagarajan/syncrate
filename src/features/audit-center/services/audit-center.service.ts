@@ -100,6 +100,21 @@ function wants(source: AuditCenterSourceFilter, target: string): boolean {
   return source === "all" || source === target;
 }
 
+/**
+ * Resolves a filter bound to epoch ms. A plain calendar date (YYYY-MM-DD, as
+ * the date pickers emit) expands to the *whole* local day — start = 00:00:00,
+ * end = 23:59:59.999 — so a "To" date includes everything that happened that
+ * day rather than cutting off at midnight. Full datetimes are used as-is.
+ */
+function boundaryMs(value: string, edge: "start" | "end"): number {
+  const trimmed = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const time = edge === "start" ? "00:00:00.000" : "23:59:59.999";
+    return new Date(`${trimmed}T${time}`).getTime();
+  }
+  return new Date(trimmed).getTime();
+}
+
 function matchesFilters(
   entry: AuditCenterEntry,
   filters: AuditCenterFilters
@@ -123,13 +138,13 @@ function matchesFilters(
 
   const time = new Date(entry.timestamp).getTime();
   if (filters.from && filters.from.trim() !== "") {
-    const from = new Date(filters.from).getTime();
+    const from = boundaryMs(filters.from, "start");
     if (!Number.isNaN(from) && time < from) {
       return false;
     }
   }
   if (filters.to && filters.to.trim() !== "") {
-    const to = new Date(filters.to).getTime();
+    const to = boundaryMs(filters.to, "end");
     if (!Number.isNaN(to) && time > to) {
       return false;
     }
@@ -150,14 +165,69 @@ function byNewestFirst(a: AuditCenterEntry, b: AuditCenterEntry): number {
  * {@link CbnEventsRepository} rather than duplicating their data access.
  */
 export class AuditCenterService {
+  private readonly supabase: AppSupabaseClient;
   private readonly auditService: AuditService;
   private readonly aiService: AiInteractionService;
   private readonly cbnEventsRepo: CbnEventsRepository;
 
   constructor(supabase: AppSupabaseClient) {
+    this.supabase = supabase;
     this.auditService = new AuditService(supabase);
     this.aiService = new AiInteractionService(supabase);
     this.cbnEventsRepo = new CbnEventsRepository(supabase);
+  }
+
+  /**
+   * Replaces each entry's actor id with the member's display name (falling back
+   * to email, then the raw id). Resolved once per distinct id via a single
+   * org-scoped members query, so entries stay readable and searchable by name.
+   */
+  private async resolveActorNames(
+    organizationId: string,
+    entries: AuditCenterEntry[]
+  ): Promise<AuditCenterEntry[]> {
+    const ids = [
+      ...new Set(
+        entries
+          .map((entry) => entry.actor)
+          .filter((actor): actor is string => actor !== null && actor !== "")
+      ),
+    ];
+    if (ids.length === 0) {
+      return entries;
+    }
+
+    const nameById = new Map<string, string>();
+    try {
+      const { data } = await this.supabase
+        .from("organization_members")
+        .select("user_id, users!user_id(full_name, email)")
+        .eq("organization_id", organizationId)
+        .in("user_id", ids)
+        .is("deleted_at", null);
+      const rows = (data ?? []) as unknown as ReadonlyArray<{
+        readonly user_id: string;
+        readonly users: {
+          readonly full_name: string | null;
+          readonly email: string | null;
+        } | null;
+      }>;
+      for (const row of rows) {
+        nameById.set(
+          row.user_id,
+          row.users?.full_name ?? row.users?.email ?? row.user_id
+        );
+      }
+    } catch {
+      // Best-effort — if name resolution fails, entries keep their raw actor id.
+      return entries;
+    }
+
+    return entries.map((entry) =>
+      entry.actor && nameById.has(entry.actor)
+        ? { ...entry, actor: nameById.get(entry.actor) ?? entry.actor }
+        : entry
+    );
   }
 
   /** Fetches, normalizes, filters and sorts (newest first) — no pagination. */
@@ -179,11 +249,13 @@ export class AuditCenterService {
         : Promise.resolve<CbnEvent[]>([]),
     ]);
 
-    const entries = [
+    const raw = await this.resolveActorNames(organizationId, [
       ...business.map(mapBusiness),
       ...ai.map(mapAi),
       ...network.map(mapNetwork),
-    ].filter((entry) => matchesFilters(entry, filters));
+    ]);
+
+    const entries = raw.filter((entry) => matchesFilters(entry, filters));
 
     entries.sort(byNewestFirst);
     return entries;
