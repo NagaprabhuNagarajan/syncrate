@@ -19,6 +19,7 @@ import type {
   Branch,
   BranchStatus,
 } from "@/features/organization/types/organization.types";
+import { INDIAN_STATES } from "@/features/organization/constants/indian-states";
 import { cn } from "@/utils/cn";
 
 // ─────────────────────────────────────────────────────────────
@@ -438,13 +439,18 @@ export function BranchForm({
               htmlFor="state"
               error={errors.state?.message}
             >
-              <input
+              <select
                 id="state"
-                type="text"
                 className={inputClass(!!errors.state)}
-                placeholder="Maharashtra"
                 {...register("state")}
-              />
+              >
+                <option value="">Select state</option>
+                {INDIAN_STATES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
             </FormField>
           </div>
 
