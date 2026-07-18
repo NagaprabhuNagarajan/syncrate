@@ -1,15 +1,34 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ShieldCheck, Plus, Pencil, Trash2, Inbox, ListChecks } from "lucide-react";
+import {
+  ShieldCheck,
+  Plus,
+  Pencil,
+  Trash2,
+  Inbox,
+  ListChecks,
+  ChevronLeft,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/shared/page-header";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorBanner } from "@/components/shared/error-banner";
-import { RuleForm, type RoleOption } from "@/features/approvals/components/rule-form";
+import {
+  RuleForm,
+  type RoleOption,
+} from "@/features/approvals/components/rule-form";
 import {
   approveRequestAction,
   deleteRuleAction,
@@ -25,6 +44,25 @@ import type {
 // Presentation helpers
 // ─────────────────────────────────────────────────────────────
 
+// Friendly labels for the raw entity_type stored on a rule.
+const ENTITY_TYPE_LABEL: Record<string, string> = {
+  purchase_invoice: "Bill",
+  sales_invoice: "Invoice",
+};
+
+function entityLabel(entityType: string): string {
+  return ENTITY_TYPE_LABEL[entityType] ?? entityType;
+}
+
+// Friendly labels for the raw condition field key stored on a rule.
+const FIELD_LABEL: Record<string, string> = {
+  total_amount: "Total amount",
+};
+
+function fieldLabel(field: string): string {
+  return FIELD_LABEL[field] ?? field;
+}
+
 const OPERATOR_SYMBOL: Record<ApprovalCondition["operator"], string> = {
   gte: "≥",
   gt: ">",
@@ -34,9 +72,9 @@ const OPERATOR_SYMBOL: Record<ApprovalCondition["operator"], string> = {
 };
 
 function describeCondition(condition: ApprovalCondition): string {
-  return `${condition.field} ${OPERATOR_SYMBOL[condition.operator]} ${String(
-    condition.value
-  )}`;
+  return `${fieldLabel(condition.field)} ${
+    OPERATOR_SYMBOL[condition.operator]
+  } ${String(condition.value)}`;
 }
 
 const INPUT_CLASS =
@@ -66,6 +104,10 @@ export function ApprovalsView({
   canDecide,
 }: ApprovalsViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const org = searchParams.get("org");
+  const settingsHref = org ? `/settings?org=${org}` : "/settings";
+
   const [tab, setTab] = useState<TabKey>("rules");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ApprovalRule | null>(null);
@@ -137,18 +179,46 @@ export function ApprovalsView({
 
   return (
     <div className="p-4 lg:p-6">
-      <PageHeader
-        title="Approvals"
-        description="Configure rules that require sign-off, and decide pending requests"
-        icon={ShieldCheck}
+      {/* Back to settings */}
+      <Link
+        href={settingsHref}
+        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        Settings
+      </Link>
+
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow-primary">
+            <ShieldCheck className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Approvals
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {rules.length}
+              </span>
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Configure rules that require sign-off, and decide pending requests
+            </p>
+          </div>
+        </div>
+
         {canManage && tab === "rules" && !formOpen && (
           <Button type="button" variant="gradient" onClick={openCreate}>
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
             New rule
           </Button>
         )}
-      </PageHeader>
+      </motion.div>
 
       {/* Tabs */}
       <div
@@ -165,7 +235,9 @@ export function ApprovalsView({
         >
           <ListChecks className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
           Rules
-          <span className="ml-1.5 text-xs text-slate-400 dark:text-slate-500">({rules.length})</span>
+          <span className="ml-1.5 text-xs text-slate-400 dark:text-slate-500">
+            ({rules.length})
+          </span>
         </button>
         <button
           type="button"
@@ -214,104 +286,105 @@ export function ApprovalsView({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card"
+                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900"
               >
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      <tr>
-                        <th scope="col" className="px-3 py-2 font-medium">
-                          Name
-                        </th>
-                        <th scope="col" className="px-3 py-2 font-medium">
-                          Entity
-                        </th>
-                        <th scope="col" className="px-3 py-2 font-medium">
-                          Condition
-                        </th>
-                        <th scope="col" className="px-3 py-2 font-medium">
-                          Approver
-                        </th>
-                        <th scope="col" className="px-3 py-2 font-medium">
-                          Status
-                        </th>
-                        {canManage && (
-                          <th
-                            scope="col"
-                            className="px-3 py-2 text-right font-medium"
-                          >
-                            Actions
-                          </th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {rules.map((rule) => (
-                        <tr key={rule.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100">
-                            {rule.name}
-                            {rule.description && (
-                              <p className="text-xs font-normal text-slate-500 dark:text-slate-400">
-                                {rule.description}
+                <Table
+                  className="[&_td]:px-5 [&_th]:px-5"
+                  wrapperClassName="rounded-none border-0 bg-transparent"
+                >
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Entity</TableHead>
+                      <TableHead>Condition</TableHead>
+                      <TableHead>Approver</TableHead>
+                      <TableHead>Status</TableHead>
+                      {canManage && (
+                        <TableHead className="text-right">Actions</TableHead>
+                      )}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rules.map((rule) => (
+                      <TableRow key={rule.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400">
+                              <ShieldCheck
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                {rule.name}
                               </p>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                            {rule.entityType}
-                          </td>
-                          <td className="px-3 py-2 font-mono text-xs text-slate-600 dark:text-slate-400">
-                            {describeCondition(rule.condition)}
-                          </td>
-                          <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                            {rule.approverRoleId
-                              ? (roleNameById.get(rule.approverRoleId) ??
-                                "Unknown role")
-                              : "Any approver"}
-                          </td>
-                          <td className="px-3 py-2">
-                            <Badge
-                              dot
-                              variant={rule.isActive ? "success" : "muted"}
-                            >
-                              {rule.isActive ? "Active" : "Inactive"}
-                            </Badge>
-                          </td>
-                          {canManage && (
-                            <td className="px-3 py-2">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  aria-label={`Edit ${rule.name}`}
-                                  onClick={() => openEdit(rule)}
-                                >
-                                  <Pencil
-                                    className="h-4 w-4"
-                                    aria-hidden="true"
-                                  />
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  aria-label={`Delete ${rule.name}`}
-                                  loading={isPending && busyId === rule.id}
-                                  onClick={() => handleDelete(rule)}
-                                >
-                                  <Trash2
-                                    className="h-4 w-4 text-error"
-                                    aria-hidden="true"
-                                  />
-                                </Button>
-                              </div>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                              {rule.description && (
+                                <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                                  {rule.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-slate-600 dark:text-slate-400">
+                          <Badge variant="info">
+                            {entityLabel(rule.entityType)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-slate-600 dark:text-slate-400">
+                          {describeCondition(rule.condition)}
+                        </TableCell>
+                        <TableCell className="text-slate-600 dark:text-slate-400">
+                          {rule.approverRoleId
+                            ? (roleNameById.get(rule.approverRoleId) ??
+                              "Unknown role")
+                            : "Any approver"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            dot
+                            variant={rule.isActive ? "success" : "muted"}
+                          >
+                            {rule.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        {canManage && (
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label={`Edit ${rule.name}`}
+                                onClick={() => openEdit(rule)}
+                              >
+                                <Pencil
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="text-error hover:bg-error/10 hover:text-error dark:text-error dark:hover:bg-error/10"
+                                aria-label={`Delete ${rule.name}`}
+                                loading={isPending && busyId === rule.id}
+                                onClick={() => handleDelete(rule)}
+                              >
+                                <Trash2
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </motion.div>
             )
           )}
@@ -335,7 +408,7 @@ export function ApprovalsView({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-card"
+                  className="rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -349,7 +422,9 @@ export function ApprovalsView({
                         Raised {request.createdAt.toLocaleString()}
                       </p>
                     </div>
-                    <Badge dot variant="warning">Pending</Badge>
+                    <Badge dot variant="warning">
+                      Pending
+                    </Badge>
                   </div>
 
                   {canDecide ? (

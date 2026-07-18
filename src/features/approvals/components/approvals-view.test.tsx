@@ -20,6 +20,7 @@ const { mockRefresh, approveMock, rejectMock, deleteMock } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mockRefresh, push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 vi.mock("@/features/approvals/actions/approval.actions", () => ({

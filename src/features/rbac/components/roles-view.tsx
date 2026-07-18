@@ -48,6 +48,7 @@ import type {
 interface RoleRowProps {
   readonly role: RoleWithPermissions;
   readonly canManage: boolean;
+  readonly isApprover: boolean;
   readonly onEdit: (role: RoleWithPermissions) => void;
   readonly onDelete: (role: RoleWithPermissions) => void;
   readonly onDuplicate: (role: RoleWithPermissions) => void;
@@ -56,6 +57,7 @@ interface RoleRowProps {
 function RoleRow({
   role,
   canManage,
+  isApprover,
   onEdit,
   onDelete,
   onDuplicate,
@@ -100,9 +102,17 @@ function RoleRow({
             )}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {role.name}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                {role.name}
+              </p>
+              {isApprover && (
+                <Badge variant="success">
+                  <ShieldCheck className="mr-1 h-3 w-3" aria-hidden="true" />
+                  Approver
+                </Badge>
+              )}
+            </div>
             {role.description && (
               <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                 {role.description}
@@ -263,6 +273,11 @@ export function RolesView({
   const org = searchParams.get("org");
   const settingsHref = org ? `/settings?org=${org}` : "/settings";
 
+  // A role is an "approver" when it holds the approval.decide permission.
+  const approverPermissionId = permissions.find(
+    (permission) => permission.name === "approval.decide"
+  )?.id;
+
   const [dialog, setDialog] = useState<DialogState>({ mode: "closed" });
   const [deleteTarget, setDeleteTarget] =
     useState<RoleWithPermissions | null>(null);
@@ -395,6 +410,10 @@ export function RolesView({
                     key={role.id}
                     role={role}
                     canManage={canManage}
+                    isApprover={
+                      approverPermissionId !== undefined &&
+                      role.permissionIds.includes(approverPermissionId)
+                    }
                     onEdit={handleOpenEdit}
                     onDelete={handleRequestDelete}
                     onDuplicate={handleOpenDuplicate}

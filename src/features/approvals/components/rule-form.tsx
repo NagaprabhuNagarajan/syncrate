@@ -17,13 +17,16 @@ export interface RoleOption {
   readonly name: string;
 }
 
+// Only entities whose creation flow actually evaluates approval rules today.
 const ENTITY_TYPE_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: "purchase_invoice", label: "Purchase invoice" },
-  { value: "sales_invoice", label: "Sales invoice" },
-  { value: "purchase_order", label: "Purchase order" },
-  { value: "sales_order", label: "Sales order" },
-  { value: "payment", label: "Payment" },
-  { value: "expense", label: "Expense" },
+  { value: "purchase_invoice", label: "Bill" },
+  { value: "sales_invoice", label: "Invoice" },
+];
+
+// Fields available to compare against. Values match the keys the creation
+// flows pass to the approval evaluator, so a rule never silently fails to fire.
+const CONDITION_FIELD_OPTIONS: readonly { value: string; label: string }[] = [
+  { value: "total_amount", label: "Total amount" },
 ];
 
 const OPERATOR_OPTIONS: readonly { value: ApprovalOperator; label: string }[] =
@@ -152,6 +155,9 @@ export function RuleForm({
               </option>
             ))}
           </select>
+          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+            Only roles with the “Approve or reject” permission are listed.
+          </p>
         </div>
       </div>
 
@@ -160,22 +166,28 @@ export function RuleForm({
           Condition
         </legend>
         <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-          Raise an approval when the entity field matches this comparison.
+          When a matching document is created and this comparison is true, a
+          pending approval is raised automatically.
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
             <label htmlFor="rule-condition-field" className={LABEL_CLASS}>
               Field
             </label>
-            <input
+            <select
               id="rule-condition-field"
               name="conditionField"
-              type="text"
-              required
-              defaultValue={rule?.condition.field ?? "total"}
-              placeholder="e.g. total"
+              defaultValue={
+                rule?.condition.field ?? CONDITION_FIELD_OPTIONS[0]?.value
+              }
               className={INPUT_CLASS}
-            />
+            >
+              {CONDITION_FIELD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label htmlFor="rule-condition-operator" className={LABEL_CLASS}>

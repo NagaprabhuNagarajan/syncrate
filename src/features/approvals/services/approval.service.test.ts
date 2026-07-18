@@ -346,6 +346,63 @@ describe("ApprovalService — decisions", () => {
     );
   });
 
+  it("blocks a decider who lacks the rule's named approver role", async () => {
+    mockRequestRepo.findById.mockResolvedValue(buildRequest({ version: 1 }));
+    mockRuleRepo.findById.mockResolvedValue(
+      buildRule({ approverRoleId: "role-1" })
+    );
+
+    const result = await makeService().approveRequest(
+      "req-1",
+      "user-2",
+      undefined,
+      { deciderRoleId: "role-2", canOverride: false }
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("forbidden");
+    }
+    expect(mockRequestRepo.decide).not.toHaveBeenCalled();
+  });
+
+  it("allows a decider who holds the rule's named approver role", async () => {
+    mockRequestRepo.findById.mockResolvedValue(buildRequest({ version: 1 }));
+    mockRuleRepo.findById.mockResolvedValue(
+      buildRule({ approverRoleId: "role-1" })
+    );
+    mockRequestRepo.decide.mockResolvedValue(
+      buildRequest({ status: "approved", version: 2 })
+    );
+
+    const result = await makeService().approveRequest(
+      "req-1",
+      "user-2",
+      undefined,
+      { deciderRoleId: "role-1", canOverride: false }
+    );
+    expect(result.success).toBe(true);
+    expect(mockRequestRepo.decide).toHaveBeenCalled();
+  });
+
+  it("lets an override decider (admin) decide regardless of role", async () => {
+    mockRequestRepo.findById.mockResolvedValue(buildRequest({ version: 1 }));
+    mockRuleRepo.findById.mockResolvedValue(
+      buildRule({ approverRoleId: "role-1" })
+    );
+    mockRequestRepo.decide.mockResolvedValue(
+      buildRequest({ status: "approved", version: 2 })
+    );
+
+    const result = await makeService().approveRequest(
+      "req-1",
+      "user-2",
+      undefined,
+      { deciderRoleId: "role-9", canOverride: true }
+    );
+    expect(result.success).toBe(true);
+    expect(mockRequestRepo.decide).toHaveBeenCalled();
+  });
+
   it("rejects a pending request", async () => {
     mockRequestRepo.findById.mockResolvedValue(buildRequest({ version: 1 }));
     mockRequestRepo.decide.mockResolvedValue(

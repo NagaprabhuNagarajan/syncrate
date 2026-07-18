@@ -49,6 +49,8 @@ import {
 import { RecordCustomerPaymentDialog } from "@/features/payment/components/record-customer-payment-dialog";
 import { applyCustomerCreditAction } from "@/features/payment/actions/customer-payment.actions";
 import { formatCurrency, formatDate } from "@/utils/format";
+import { ApprovalPanel } from "@/features/approvals/components/approval-panel";
+import type { EntityApproval } from "@/features/approvals/types/approval.types";
 import type { InvoiceWithItems } from "@/features/sales/types/invoice.types";
 import type {
   InvoicePaymentSummary,
@@ -369,6 +371,8 @@ interface InvoiceDetailProps {
   readonly salesOrderNumber?: string | null;
   readonly payments?: readonly InvoicePaymentSummary[];
   readonly availableCredit?: number;
+  /** Approval requests raised against this invoice. */
+  readonly approvals?: readonly EntityApproval[];
   readonly organizationId: string;
   readonly canManage: boolean;
   readonly canCancel: boolean;
@@ -382,6 +386,7 @@ export function InvoiceDetail({
   salesOrderNumber,
   payments = [],
   availableCredit = 0,
+  approvals = [],
   organizationId,
   canManage,
   canCancel,
@@ -612,6 +617,9 @@ export function InvoiceDetail({
           index={3}
         />
       </div>
+
+      {/* Approvals */}
+      <ApprovalPanel organizationId={organizationId} approvals={approvals} />
 
       {/* Two-column body */}
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">

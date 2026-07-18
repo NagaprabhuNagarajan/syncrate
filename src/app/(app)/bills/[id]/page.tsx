@@ -6,6 +6,7 @@ import { BillService } from "@/features/purchase/services/bill.service";
 import { SupplierPaymentService } from "@/features/payment/services/supplier-payment.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { BillDetail } from "@/features/purchase/components/bill-detail";
+import { getEntityApprovals } from "@/features/approvals/server/entity-approvals";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 
 interface BillDetailPageProps {
@@ -145,6 +146,7 @@ export default async function BillDetailPage({
     purchaseOrderNumber,
     availableCredit,
     payments,
+    approvals,
   ] = await Promise.all([
     lookupSupplierName(supabase, invoice.supplierId),
     lookupProductNames(
@@ -154,6 +156,11 @@ export default async function BillDetailPage({
     lookupPurchaseOrderNumber(supabase, invoice.purchaseOrderId),
     paymentService.getAvailableCredit(activeOrg.id, invoice.supplierId),
     paymentService.listPaymentsForBill(activeOrg.id, invoice.id),
+    getEntityApprovals(supabase, activeOrg.id, "purchase_invoice", invoice.id, {
+      roleId: context.member.roleId,
+      canDecide: context.permissions.includes("approval.decide"),
+      canManage: context.permissions.includes("approval.manage"),
+    }),
   ]);
 
   return (
@@ -164,6 +171,7 @@ export default async function BillDetailPage({
       purchaseOrderNumber={purchaseOrderNumber}
       availableCredit={availableCredit}
       payments={payments}
+      approvals={approvals}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("purchase.create")}
       canCancel={context.permissions.includes("purchase.cancel")}
