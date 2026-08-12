@@ -111,6 +111,13 @@ export interface ProductListParams {
   readonly sortDir?: "asc" | "desc";
 }
 
+/** Minimal product shape for dropdowns and mapping pickers. */
+export interface ProductOption {
+  readonly id: string;
+  readonly code: string;
+  readonly name: string;
+}
+
 export interface ProductListResult {
   readonly items: readonly Product[];
   readonly total: number;

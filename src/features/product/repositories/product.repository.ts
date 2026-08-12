@@ -4,6 +4,7 @@ import type {
   Product,
   ProductListParams,
   ProductListResult,
+  ProductOption,
   ProductStats,
 } from "@/features/product/types/product.types";
 
@@ -92,6 +93,32 @@ export class ProductRepository {
       return null;
     }
     return mapProduct(data);
+  }
+
+  /**
+   * Minimal id/code/name rows for pickers. Deliberately not `list()` or
+   * `findAllForExport()`: those return full product rows, which is a lot of
+   * payload for a dropdown that only ever shows a label.
+   */
+  async listOptions(
+    organizationId: string
+  ): Promise<readonly ProductOption[]> {
+    const { data, error } = await this.supabase
+      .from("products")
+      .select("id, code, name")
+      .eq("organization_id", organizationId)
+      .eq("status", "active")
+      .is("deleted_at", null)
+      .order("name", { ascending: true });
+
+    if (error || !data) {
+      return [];
+    }
+    return data.map((row) => ({
+      id: row.id,
+      code: row.code,
+      name: row.name,
+    }));
   }
 
   async list(

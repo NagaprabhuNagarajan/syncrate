@@ -20,9 +20,14 @@ import {
   Receipt,
   Percent,
   Wallet,
+  Network,
   type LucideIcon,
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import {
+  SendViaNetworkDialog,
+  type NetworkTarget,
+} from "@/features/cbn/components/SendViaNetworkDialog";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/shared/error-banner";
 import { KpiTile } from "@/components/shared/kpi-tile";
@@ -268,6 +273,8 @@ function LinkedDocTable({
 
 interface PurchaseOrderDetailProps {
   readonly purchaseOrder: PurchaseOrderWithItems;
+  /** Resolved from the PO's supplier; absent when they are not on the network. */
+  readonly networkTarget?: NetworkTarget | null;
   readonly supplierName: string | null;
   readonly branchName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
@@ -285,6 +292,7 @@ interface PurchaseOrderDetailProps {
 
 export function PurchaseOrderDetail({
   purchaseOrder,
+  networkTarget = null,
   supplierName,
   branchName,
   productNames,
@@ -302,6 +310,10 @@ export function PurchaseOrderDetail({
   const searchParams = useSearchParams();
   const [actionError, setActionError] = useState<string | null>(null);
   const [showCancel, setShowCancel] = useState(false);
+  const [showSendNetwork, setShowSendNetwork] = useState(false);
+
+  const openSendNetwork = (): void => setShowSendNetwork(true);
+  const closeSendNetwork = (): void => setShowSendNetwork(false);
   const [isPending, startTransition] = useTransition();
 
   const org = searchParams.get("org");
@@ -318,6 +330,11 @@ export function PurchaseOrderDetail({
 
   const { status } = purchaseOrder;
   const isDraft = status === "draft";
+  // Only approved/ordered POs can be sent — the RPC enforces the same rule.
+  const canSendToNetwork =
+    networkTarget !== null &&
+    networkTarget !== undefined &&
+    (status === "approved" || status === "ordered");
   const isSubmitted = status === "submitted";
   const isApproved = status === "approved";
   const isTerminal = status === "completed" || status === "cancelled";
@@ -386,6 +403,17 @@ export function PurchaseOrderDetail({
                   <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
                   Edit
                 </Link>
+              </Button>
+            )}
+            {canSendToNetwork && canManage && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openSendNetwork}
+              >
+                <Network className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Send via Network
               </Button>
             )}
             {isDraft && canManage && (
@@ -736,6 +764,15 @@ export function PurchaseOrderDetail({
       </div>
 
       <AnimatePresence>
+        {showSendNetwork && networkTarget && (
+          <SendViaNetworkDialog
+            kind="purchase_order"
+            invoiceId={purchaseOrder.id}
+            organizationId={organizationId}
+            target={networkTarget}
+            onClose={closeSendNetwork}
+          />
+        )}
         {showCancel && (
           <CancelDialog
             poNumber={purchaseOrder.poNumber}

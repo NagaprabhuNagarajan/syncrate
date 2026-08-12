@@ -37,6 +37,9 @@ import type {
   SalesOrderStatus,
 } from "@/features/sales/types/sales-order.types";
 import { cn } from "@/utils/cn";
+import { IncomingInvoicesPanel } from "@/features/cbn/components/IncomingInvoicesPanel";
+import type { IncomingDocument } from "@/features/cbn/types/cbn.types";
+import type { ProductOption } from "@/features/product/types/product.types";
 
 // ─────────────────────────────────────────────────────────────
 // Filters
@@ -65,17 +68,49 @@ interface SalesOrdersViewProps {
     readonly status?: SalesOrderStatus;
   };
   readonly canManage: boolean;
+  /** Purchase orders sent to this org over CBN, awaiting accept/reject. */
+  readonly incoming?: readonly IncomingDocument[];
+  /** Whether the network inbox tab is the active view. */
+  readonly showIncoming?: boolean;
+  /** Products offered when matching incoming order lines. */
+  readonly products?: readonly ProductOption[];
+}
+
+/** Underline-style tab, matching the Bills page. */
+function tabClass(active: boolean): string {
+  return active
+    ? "-mb-px flex items-center border-b-2 border-primary-600 px-3 py-2 text-sm font-medium text-primary-700 dark:text-primary-400"
+    : "-mb-px flex items-center border-b-2 border-transparent px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200";
 }
 
 export function SalesOrdersView({
+  organizationId,
   result,
   stats,
   filters,
   canManage,
+  incoming = [],
+  showIncoming = false,
+  products = [],
 }: SalesOrdersViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
+
+  // Switching views clears the order-only filters so returning doesn't land on
+  // a stale, empty filter combination.
+  const handleShowIncoming = (): void => {
+    pushWith({
+      view: "incoming",
+      status: undefined,
+      search: undefined,
+      page: undefined,
+    });
+  };
+
+  const handleShowOrders = (): void => {
+    pushWith({ view: undefined, page: undefined });
+  };
 
   const { items, total, page, pageSize } = result;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -211,6 +246,47 @@ export function SalesOrdersView({
         />
       </div>
 
+      {/* Sales orders / network inbox tabs */}
+      <div
+        role="tablist"
+        aria-label="Sales order source"
+        className="mt-5 flex items-center gap-1 border-b border-slate-200 dark:border-slate-800"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!showIncoming}
+          onClick={handleShowOrders}
+          className={tabClass(!showIncoming)}
+        >
+          Sales orders
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={showIncoming}
+          onClick={handleShowIncoming}
+          className={tabClass(showIncoming)}
+        >
+          Incoming
+          {incoming.length > 0 && (
+            <span className="ml-1.5 rounded-full bg-primary-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+              {incoming.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {showIncoming ? (
+        <IncomingInvoicesPanel
+          kind="purchase_order"
+          organizationId={organizationId}
+          invoices={incoming}
+          canManage={canManage}
+          products={products}
+        />
+      ) : (
+        <>
       {/* Filters */}
       <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <form
@@ -384,6 +460,8 @@ export function SalesOrdersView({
             </Button>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

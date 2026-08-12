@@ -2,6 +2,9 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { InvoiceSyncService } from "./invoice-sync.service";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 
+/** Every line must be matched to a local product before accepting. */
+const MAPPINGS = [{ cbnInvoiceItemId: "line-1", productId: "prod-1" }];
+
 // ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────
@@ -92,7 +95,7 @@ describe("InvoiceSyncService.acceptInvoice", () => {
     const supabase = makeSupabase({ data: "pur-inv-1", error: null });
     const service = new InvoiceSyncService(supabase);
 
-    const result = await service.acceptInvoice("cbn-inv-1", "org-buyer", "Looks good");
+    const result = await service.acceptInvoice("cbn-inv-1", "org-buyer", MAPPINGS, "Looks good");
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -102,6 +105,7 @@ describe("InvoiceSyncService.acceptInvoice", () => {
       p_cbn_invoice_id: "cbn-inv-1",
       p_buyer_org_id: "org-buyer",
       p_notes: "Looks good",
+      p_line_mappings: [{ line_id: "line-1", product_id: "prod-1" }],
     });
   });
 
@@ -109,12 +113,13 @@ describe("InvoiceSyncService.acceptInvoice", () => {
     const supabase = makeSupabase({ data: "pur-inv-2", error: null });
     const service = new InvoiceSyncService(supabase);
 
-    await service.acceptInvoice("cbn-inv-1", "org-buyer");
+    await service.acceptInvoice("cbn-inv-1", "org-buyer", MAPPINGS);
 
     expect(supabase.rpc).toHaveBeenCalledWith("accept_cbn_invoice", {
       p_cbn_invoice_id: "cbn-inv-1",
       p_buyer_org_id: "org-buyer",
       p_notes: null,
+      p_line_mappings: [{ line_id: "line-1", product_id: "prod-1" }],
     });
   });
 
@@ -125,7 +130,7 @@ describe("InvoiceSyncService.acceptInvoice", () => {
     });
     const service = new InvoiceSyncService(supabase);
 
-    const result = await service.acceptInvoice("missing", "org-buyer");
+    const result = await service.acceptInvoice("missing", "org-buyer", MAPPINGS);
 
     expect(result.success).toBe(false);
     if (!result.success) {

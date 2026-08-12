@@ -43,6 +43,8 @@ export interface Customer {
   readonly status: CustomerStatus;
   readonly tags: readonly string[];
   readonly notes: string | null;
+  /** Accepted CBN connection for this customer's org, when they're on the network. */
+  readonly cbnConnectionId: string | null;
   // Audit
   readonly createdAt: Date;
   readonly updatedAt: Date;

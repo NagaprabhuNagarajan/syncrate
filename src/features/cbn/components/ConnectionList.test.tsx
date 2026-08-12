@@ -72,6 +72,7 @@ function makeConnection(
     rejectedAt: null,
     disconnectedAt: null,
     rejectionReason: null,
+  requesterCounterpartyRole: null,
     createdAt: new Date("2026-01-01T10:00:00Z"),
     updatedAt: new Date("2026-01-01T10:00:00Z"),
     createdBy: null,

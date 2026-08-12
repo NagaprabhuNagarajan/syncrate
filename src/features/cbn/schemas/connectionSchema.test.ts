@@ -12,6 +12,8 @@ describe("requestConnectionSchema", () => {
     const result = requestConnectionSchema.safeParse({
       requesterOrgId: UUID,
       recipientOrgId: UUID_2,
+      counterpartyRole: "supplier",
+      linkEntityId: UUID,
       message: "Hi, let's connect",
     });
     expect(result.success).toBe(true);
@@ -21,6 +23,8 @@ describe("requestConnectionSchema", () => {
     const result = requestConnectionSchema.safeParse({
       requesterOrgId: UUID,
       recipientOrgId: UUID_2,
+      counterpartyRole: "supplier",
+      linkEntityId: UUID,
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -32,6 +36,8 @@ describe("requestConnectionSchema", () => {
     const result = requestConnectionSchema.safeParse({
       requesterOrgId: "not-a-uuid",
       recipientOrgId: UUID_2,
+      counterpartyRole: "supplier",
+      linkEntityId: UUID,
     });
     expect(result.success).toBe(false);
   });
@@ -40,6 +46,8 @@ describe("requestConnectionSchema", () => {
     const result = requestConnectionSchema.safeParse({
       requesterOrgId: UUID,
       recipientOrgId: "nope",
+      counterpartyRole: "supplier",
+      linkEntityId: UUID,
     });
     expect(result.success).toBe(false);
   });
@@ -49,6 +57,8 @@ describe("requestConnectionSchema", () => {
       requestConnectionSchema.safeParse({
         requesterOrgId: UUID,
         recipientOrgId: UUID_2,
+      counterpartyRole: "supplier",
+      linkEntityId: UUID,
         message: "a".repeat(500),
       }).success
     ).toBe(true);
@@ -56,6 +66,8 @@ describe("requestConnectionSchema", () => {
       requestConnectionSchema.safeParse({
         requesterOrgId: UUID,
         recipientOrgId: UUID_2,
+      counterpartyRole: "supplier",
+      linkEntityId: UUID,
         message: "a".repeat(501),
       }).success
     ).toBe(false);

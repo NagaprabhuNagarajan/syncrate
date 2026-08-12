@@ -133,6 +133,8 @@ type CustomersRow = AuditFields & {
   status: "active" | "inactive" | "blacklisted" | "archived";
   tags: string[];
   notes: string | null;
+  /** Accepted CBN connection representing this customer's organization. */
+  cbn_connection_id: string | null;
 };
 
 type SuppliersRow = AuditFields & {
@@ -163,6 +165,8 @@ type SuppliersRow = AuditFields & {
   status: "active" | "inactive" | "archived";
   tags: string[];
   notes: string | null;
+  /** Accepted CBN connection representing this supplier's organization. */
+  cbn_connection_id: string | null;
 };
 
 type AuditLogsRow = {
@@ -187,6 +191,9 @@ type ConnectionStatus =
   | "rejected"
   | "blocked"
   | "disconnected";
+
+/** What the counterparty is to the requester; the recipient's role is inverse. */
+type ConnectionPartyRole = "customer" | "supplier";
 
 type CbnSyncStatus = "pending" | "accepted" | "rejected" | "cancelled";
 
@@ -222,6 +229,7 @@ type BusinessConnectionsRow = AuditFields & {
   rejected_at: string | null;
   disconnected_at: string | null;
   rejection_reason: string | null;
+  requester_counterparty_role: ConnectionPartyRole | null;
 };
 
 type SupplierCatalogItemsRow = AuditFields & {
@@ -257,6 +265,57 @@ type CbnInvoicesRow = AuditFields & {
   rejected_by: string | null;
   rejection_reason: string | null;
   buyer_purchase_invoice_id: string | null;
+  buyer_purchase_order_id: string | null;
+};
+
+type CbnInvoiceItemsRow = AuditFields & {
+  id: string;
+  cbn_invoice_id: string;
+  organization_id: string;
+  sort_order: number;
+  /** The SENDER's products.id — deliberately not a foreign key (other tenant). */
+  supplier_product_id: string | null;
+  product_name: string | null;
+  product_sku: string | null;
+  product_barcode: string | null;
+  hsn_code: string | null;
+  description: string | null;
+  quantity: number;
+  unit_price: number;
+  discount_amount: number;
+  taxable_amount: number;
+  gst_rate: number;
+  tax_amount: number;
+  line_total: number;
+};
+
+type CbnProductLinksRow = AuditFields & {
+  id: string;
+  organization_id: string;
+  connection_id: string;
+  /** The connected org's products.id — not a foreign key (other tenant). */
+  counterparty_product_id: string;
+  product_id: string;
+};
+
+type CbnPurchaseOrderItemsRow = AuditFields & {
+  id: string;
+  cbn_purchase_order_id: string;
+  organization_id: string;
+  sort_order: number;
+  counterparty_product_id: string | null;
+  product_name: string | null;
+  product_sku: string | null;
+  product_barcode: string | null;
+  hsn_code: string | null;
+  description: string | null;
+  quantity: number;
+  unit_price: number;
+  discount_amount: number;
+  taxable_amount: number;
+  gst_rate: number;
+  tax_amount: number;
+  line_total: number;
 };
 
 type CbnPurchaseOrdersRow = AuditFields & {
@@ -2790,6 +2849,7 @@ export interface Database {
           rejected_at?: string | null;
           disconnected_at?: string | null;
           rejection_reason?: string | null;
+          requester_counterparty_role?: ConnectionPartyRole | null;
         };
         Update: Partial<BusinessConnectionsRow>;
         Relationships: [
@@ -2867,6 +2927,7 @@ export interface Database {
           rejected_by?: string | null;
           rejection_reason?: string | null;
           buyer_purchase_invoice_id?: string | null;
+          buyer_purchase_order_id?: string | null;
         };
         Update: Partial<CbnInvoicesRow>;
         Relationships: [
@@ -2875,6 +2936,96 @@ export interface Database {
             columns: ["connection_id"];
             isOneToOne: false;
             referencedRelation: "business_connections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── cbn_invoice_items ─────────────────────────────────
+      cbn_invoice_items: {
+        Row: CbnInvoiceItemsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          cbn_invoice_id: string;
+          organization_id: string;
+          sort_order?: number;
+          supplier_product_id?: string | null;
+          product_name?: string | null;
+          product_sku?: string | null;
+          product_barcode?: string | null;
+          hsn_code?: string | null;
+          description?: string | null;
+          quantity: number;
+          unit_price?: number;
+          discount_amount?: number;
+          taxable_amount?: number;
+          gst_rate?: number;
+          tax_amount?: number;
+          line_total?: number;
+        };
+        Update: Partial<CbnInvoiceItemsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "cbn_invoice_items_cbn_invoice_id_fkey";
+            columns: ["cbn_invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "cbn_invoices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── cbn_purchase_order_items ──────────────────────────
+      cbn_purchase_order_items: {
+        Row: CbnPurchaseOrderItemsRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          cbn_purchase_order_id: string;
+          organization_id: string;
+          sort_order?: number;
+          counterparty_product_id?: string | null;
+          product_name?: string | null;
+          product_sku?: string | null;
+          product_barcode?: string | null;
+          hsn_code?: string | null;
+          description?: string | null;
+          quantity: number;
+          unit_price?: number;
+          discount_amount?: number;
+          taxable_amount?: number;
+          gst_rate?: number;
+          tax_amount?: number;
+          line_total?: number;
+        };
+        Update: Partial<CbnPurchaseOrderItemsRow>;
+        Relationships: [
+          {
+            foreignKeyName: "cbn_purchase_order_items_cbn_purchase_order_id_fkey";
+            columns: ["cbn_purchase_order_id"];
+            isOneToOne: false;
+            referencedRelation: "cbn_purchase_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      // ── cbn_product_links ─────────────────────────────────
+      cbn_product_links: {
+        Row: CbnProductLinksRow;
+        Insert: Partial<AuditFields> & {
+          id?: string;
+          organization_id: string;
+          connection_id: string;
+          counterparty_product_id: string;
+          product_id: string;
+        };
+        Update: Partial<CbnProductLinksRow>;
+        Relationships: [
+          {
+            foreignKeyName: "cbn_product_links_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
         ];
@@ -3689,6 +3840,8 @@ export interface Database {
           p_cbn_invoice_id: string;
           p_buyer_org_id: string;
           p_notes?: string | null;
+          /** [{ cbn_invoice_item_id, product_id }] — one entry per line. */
+          p_line_mappings?: Json;
         };
         Returns: string;
       };
@@ -3710,6 +3863,8 @@ export interface Database {
           p_cbn_po_id: string;
           p_supplier_org_id: string;
           p_notes?: string | null;
+          /** [{ line_id, product_id }] — one entry per line. */
+          p_line_mappings?: Json;
         };
         Returns: string;
       };

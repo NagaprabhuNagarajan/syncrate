@@ -79,6 +79,22 @@ function makeStats(overrides: Partial<SalesOrderStats> = {}): SalesOrderStats {
   };
 }
 
+/** Renders with sane defaults so inbox tests only state what they care about. */
+function renderView(
+  props: Partial<React.ComponentProps<typeof SalesOrdersView>> = {}
+) {
+  return render(
+    <SalesOrdersView
+      organizationId="org-1"
+      result={makeResult([makeOrder()])}
+      stats={makeStats()}
+      filters={{}}
+      canManage
+      {...props}
+    />
+  );
+}
+
 describe("SalesOrdersView", () => {
   it("renders an empty state when there are no orders", () => {
     render(
@@ -268,5 +284,32 @@ describe("SalesOrdersView", () => {
 
     await user.click(screen.getByRole("button", { name: /previous/i }));
     expect(mockPush).toHaveBeenCalledWith("/sales-orders");
+  });
+
+  // ── Network inbox tab ────────────────────────────────────────
+  const incoming = [
+    {
+      id: "cbn-po-1",
+      connectionId: "conn-1",
+      number: "PO-0001",
+      date: "2026-07-21",
+      totalAmount: 600,
+      senderName: "Bharat Traders",
+    },
+  ];
+
+  it("badges the Incoming tab with the pending count", () => {
+    renderView({ incoming });
+    const tab = screen.getByRole("tab", { name: /incoming/i });
+    expect(tab).toHaveTextContent("1");
+    expect(tab).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("shows the purchase-order inbox instead of the order table", () => {
+    renderView({ incoming, showIncoming: true });
+    expect(
+      screen.getByRole("table", { name: /incoming network purchase orders/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("PO-0001")).toBeInTheDocument();
   });
 });

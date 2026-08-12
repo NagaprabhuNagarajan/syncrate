@@ -150,9 +150,20 @@ describe("BusinessDiscovery", () => {
       isError: false,
     };
     const user = userEvent.setup();
-    render(<BusinessDiscovery organizationId="org-1" />);
+    render(
+      <BusinessDiscovery
+        organizationId="org-1"
+        suppliers={[{ id: "sup-1", code: "SUP-001", name: "Acme Steel Co" }]}
+      />
+    );
 
     await user.click(screen.getByRole("button", { name: /connect with/i }));
+    // The relationship and the local record are both mandatory now.
+    await user.click(await screen.findByRole("button", { name: /^supplier/i }));
+    await user.selectOptions(
+      screen.getByLabelText(/which of your suppliers/i),
+      "sup-1"
+    );
     await user.click(
       await screen.findByRole("button", { name: /send request/i })
     );

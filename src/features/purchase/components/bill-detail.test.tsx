@@ -387,4 +387,30 @@ describe("BillDetail", () => {
     expect(screen.getByText("Bank Transfer")).toBeInTheDocument();
     expect(screen.getByText("₹750.00")).toBeInTheDocument();
   });
+
+  // ── Item-less bills (incomplete network sync) ────────────────
+  it("warns and hides Edit when a draft bill has no line items", () => {
+    const bill = makeInvoice("draft");
+    renderDetail({ ...bill, items: [] }, { canManage: true });
+
+    expect(
+      screen.getByText(/came from a network sync that predates/i)
+    ).toBeInTheDocument();
+    // Editing is a trap: the bill form requires a line, and saving recomputes
+    // the header from whatever lines exist — destroying the synced total.
+    expect(
+      screen.queryByRole("link", { name: /edit/i })
+    ).not.toBeInTheDocument();
+    // Posting stays available: it uses the stored total, which is correct.
+    expect(screen.getByRole("button", { name: /post/i })).toBeInTheDocument();
+  });
+
+  it("shows Edit and no warning when the bill has items", () => {
+    renderDetail(makeInvoice("draft"), { canManage: true });
+
+    expect(
+      screen.queryByText(/came from a network sync that predates/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /edit/i })).toBeInTheDocument();
+  });
 });

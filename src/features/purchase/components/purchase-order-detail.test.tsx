@@ -88,11 +88,17 @@ function renderDetail(
     linkedReturns?: readonly PurchaseReturnListItem[];
     linkedReceipts?: readonly GoodsReceiptListItem[];
     approvedByName?: string | null;
+    networkTarget?: {
+      connectionId: string;
+      name: string;
+      businessId?: string | null;
+    } | null;
   } = {}
 ) {
   return render(
     <PurchaseOrderDetail
       purchaseOrder={order}
+      networkTarget={perms.networkTarget ?? null}
       supplierName="Acme Supply"
       branchName="Main WH"
       productNames={{ "p-1": "Widget" }}
@@ -314,5 +320,35 @@ describe("PurchaseOrderDetail", () => {
 
     await user.click(screen.getByRole("button", { name: /submit/i }));
     expect(await screen.findByText("Cannot submit")).toBeInTheDocument();
+  });
+
+  // ── Send via Network ─────────────────────────────────────────
+  const TARGET = {
+    connectionId: "conn-1",
+    name: "Acme Supply Co",
+    businessId: "SYN-IN-000025",
+  };
+
+  it("offers Send via Network on an approved PO with a linked supplier", () => {
+    renderDetail(makeOrder("approved"), { canManage: true, networkTarget: TARGET });
+    expect(
+      screen.getByRole("button", { name: /send via network/i })
+    ).toBeInTheDocument();
+  });
+
+  it("hides Send via Network when the supplier is not on the network", () => {
+    renderDetail(makeOrder("approved"), { canManage: true });
+    expect(
+      screen.queryByRole("button", { name: /send via network/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides Send via Network on a draft PO", () => {
+    // The RPC only accepts approved/ordered POs, so offering it earlier would
+    // guarantee a failure.
+    renderDetail(makeOrder("draft"), { canManage: true, networkTarget: TARGET });
+    expect(
+      screen.queryByRole("button", { name: /send via network/i })
+    ).not.toBeInTheDocument();
   });
 });

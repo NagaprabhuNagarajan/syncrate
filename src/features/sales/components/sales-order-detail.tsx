@@ -21,6 +21,7 @@ import {
   MapPin,
   Truck,
   type LucideIcon,
+  Network,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -199,6 +200,8 @@ interface SalesOrderDetailProps {
   readonly branchName: string | null;
   readonly productNames: Readonly<Record<string, string>>;
   readonly linkedInvoices: readonly InvoiceListItem[];
+  /** The buyer's PO number when this order arrived over the network. */
+  readonly sourcePoNumber?: string | null;
   /** Resolved display name of the approver (falls back to the id). */
   readonly approvedByName?: string | null;
   readonly organizationId: string;
@@ -209,6 +212,7 @@ interface SalesOrderDetailProps {
 
 export function SalesOrderDetail({
   salesOrder,
+  sourcePoNumber = null,
   customerName,
   branchName,
   productNames,
@@ -542,6 +546,13 @@ export function SalesOrderDetail({
           <SectionCard title="Details" delay={0.1}>
             <dl className="space-y-4">
               <InfoRow icon={Users} label="Customer" value={customerName} />
+              {sourcePoNumber && (
+                <InfoRow
+                  icon={Network}
+                  label="From purchase order"
+                  value={sourcePoNumber}
+                />
+              )}
               <InfoRow icon={Building2} label="Branch" value={branchName} />
               <InfoRow
                 icon={Calendar}

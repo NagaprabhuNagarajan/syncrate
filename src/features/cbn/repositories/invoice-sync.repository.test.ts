@@ -79,6 +79,7 @@ function buildRow(overrides: Partial<DbRow> = {}): DbRow {
     rejected_by: null,
     rejection_reason: null,
     buyer_purchase_invoice_id: null,
+    buyer_purchase_order_id: null,
     created_at: "2026-01-01T00:00:00.000Z",
     updated_at: "2026-01-02T00:00:00.000Z",
     deleted_at: null,

@@ -21,6 +21,7 @@ import {
   CreditCard,
   Clock,
   Banknote,
+  Network,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,10 @@ import { RecordCustomerPaymentDialog } from "@/features/payment/components/recor
 import { applyCustomerCreditAction } from "@/features/payment/actions/customer-payment.actions";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { ApprovalPanel } from "@/features/approvals/components/approval-panel";
+import {
+  SendViaNetworkDialog,
+  type NetworkTarget,
+} from "@/features/cbn/components/SendViaNetworkDialog";
 import type { EntityApproval } from "@/features/approvals/types/approval.types";
 import type { InvoiceWithItems } from "@/features/sales/types/invoice.types";
 import type {
@@ -371,6 +376,9 @@ interface InvoiceDetailProps {
   readonly availableCredit?: number;
   /** Approval requests raised against this invoice. */
   readonly approvals?: readonly EntityApproval[];
+  /** Connected businesses this invoice can be sent to over the CBN. */
+  /** Resolved from the invoice's customer; absent when they are not on the network. */
+  readonly networkTarget?: NetworkTarget | null;
   readonly organizationId: string;
   readonly canManage: boolean;
   readonly canCancel: boolean;
@@ -385,6 +393,7 @@ export function InvoiceDetail({
   payments = [],
   availableCredit = 0,
   approvals = [],
+  networkTarget = null,
   organizationId,
   canManage,
   canCancel,
@@ -394,6 +403,7 @@ export function InvoiceDetail({
   const searchParams = useSearchParams();
   const [actionError, setActionError] = useState<string | null>(null);
   const [showCancel, setShowCancel] = useState(false);
+  const [showSendNetwork, setShowSendNetwork] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showCredit, setShowCredit] = useState(false);
   const [creditError, setCreditError] = useState<string | null>(null);
@@ -441,6 +451,9 @@ export function InvoiceDetail({
   };
 
   const closeCancel = (): void => setShowCancel(false);
+
+  const openSendNetwork = (): void => setShowSendNetwork(true);
+  const closeSendNetwork = (): void => setShowSendNetwork(false);
 
   const openPayment = (): void => setShowPayment(true);
 
@@ -549,6 +562,17 @@ export function InvoiceDetail({
               >
                 <CreditCard className="mr-1.5 h-4 w-4" aria-hidden="true" />
                 Apply credit
+              </Button>
+            )}
+            {status === "posted" && networkTarget && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openSendNetwork}
+              >
+                <Network className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Send via Network
               </Button>
             )}
             <Button asChild variant="outline" size="sm">
@@ -916,6 +940,14 @@ export function InvoiceDetail({
             error={creditError}
             onConfirm={handleApplyCredit}
             onClose={closeCredit}
+          />
+        )}
+        {showSendNetwork && networkTarget && (
+          <SendViaNetworkDialog
+            invoiceId={invoice.id}
+            organizationId={organizationId}
+            target={networkTarget}
+            onClose={closeSendNetwork}
           />
         )}
       </AnimatePresence>

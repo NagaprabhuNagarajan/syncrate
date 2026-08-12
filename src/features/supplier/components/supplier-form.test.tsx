@@ -60,6 +60,7 @@ function makeSupplier(overrides: Partial<Supplier> = {}): Supplier {
     status: "active",
     tags: ["preferred"],
     notes: "Reliable supplier",
+    cbnConnectionId: null,
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-01-01"),
     createdBy: null,

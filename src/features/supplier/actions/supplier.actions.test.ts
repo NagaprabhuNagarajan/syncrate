@@ -124,6 +124,7 @@ function buildSupplier(): Supplier {
     status: "active",
     tags: [],
     notes: null,
+    cbnConnectionId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     createdBy: "user-1",

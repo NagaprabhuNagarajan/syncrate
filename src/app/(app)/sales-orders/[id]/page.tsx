@@ -144,8 +144,20 @@ export default async function SalesOrderDetailPage({
     new InvoiceService(supabase).listInvoicesForSalesOrder(so.id),
   ]);
 
+  // If this order arrived over the network, surface the buyer's PO number so
+  // the chain is visible from here. The supplier is a participant on that
+  // cbn_purchase_orders row, so it is readable under RLS.
+  const { data: sourcePo } = await supabase
+    .from("cbn_purchase_orders")
+    .select("po_number")
+    .eq("supplier_sales_order_id", so.id)
+    .is("deleted_at", null)
+    .limit(1)
+    .maybeSingle();
+
   return (
     <SalesOrderDetail
+      sourcePoNumber={sourcePo?.po_number ?? null}
       salesOrder={so}
       customerName={customerName}
       branchName={branchName}

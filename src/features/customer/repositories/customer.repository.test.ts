@@ -79,6 +79,7 @@ function createMockClient(results: QueryResult[]): MockClient {
 
 function buildDbCustomer(overrides: Partial<DbCustomer> = {}): DbCustomer {
   return {
+    cbn_connection_id: null,
     id: "cust-1",
     organization_id: "org-1",
     code: "CUST-00001",
@@ -188,6 +189,7 @@ describe("CustomerRepository", () => {
         status: "active",
         tags: ["vip"],
         notes: "Important customer",
+        cbnConnectionId: null,
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
         updatedAt: new Date("2026-01-02T00:00:00.000Z"),
         createdBy: "user-1",

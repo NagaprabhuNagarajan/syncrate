@@ -79,6 +79,7 @@ function createMockClient(results: QueryResult[]): MockClient {
 
 function buildDbSupplier(overrides: Partial<DbSupplier> = {}): DbSupplier {
   return {
+    cbn_connection_id: null,
     id: "supplier-1",
     organization_id: "org-1",
     code: "SUPP-00001",

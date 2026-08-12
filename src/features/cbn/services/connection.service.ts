@@ -54,6 +54,8 @@ export class ConnectionService {
         p_requester_org_id: input.requesterOrgId,
         p_recipient_org_id: input.recipientOrgId,
         p_message: input.message ?? null,
+        p_counterparty_role: input.counterpartyRole,
+        p_link_entity_id: input.linkEntityId,
       }
     );
 
@@ -76,13 +78,15 @@ export class ConnectionService {
   }
 
   async acceptConnection(
-    connectionId: string
+    connectionId: string,
+    linkEntityId?: string
   ): Promise<CbnActionResult<void>> {
     const connection = await this.repo.findById(connectionId);
     if (!connection) {return fail("not_found", "Connection not found");}
 
     const { error } = await this.supabase.rpc("accept_connection_request", {
       p_connection_id: connectionId,
+      p_link_entity_id: linkEntityId ?? null,
     });
 
     if (error) {
@@ -181,6 +185,46 @@ export class ConnectionService {
       entityId: connectionId,
       summary: `Updated permissions for connection ${connectionId}`,
       metadata: { grants: myGrants },
+    });
+
+    return ok(undefined);
+  }
+
+  /**
+   * Removes a dead connection from both parties' lists. Only rejected or
+   * disconnected records qualify — a live connection must be disconnected
+   * first, so removal can never sever an active document flow.
+   */
+  async removeConnection(
+    connectionId: string,
+    actorUserId: string | null
+  ): Promise<CbnActionResult<void>> {
+    const connection = await this.repo.findById(connectionId);
+    if (!connection) {return fail("not_found", "Connection not found");}
+
+    if (
+      connection.status !== "rejected" &&
+      connection.status !== "disconnected"
+    ) {
+      return fail(
+        "validation",
+        "Only rejected or disconnected connections can be removed"
+      );
+    }
+
+    const removed = await this.repo.softDelete(connectionId, actorUserId);
+    if (!removed) {
+      return fail("unknown", "Could not remove the connection");
+    }
+
+    await this.audit.log({
+      organizationId: connection.organizationId,
+      actorUserId,
+      action: "cbn.connection.remove",
+      entityType: "business_connection",
+      entityId: connectionId,
+      summary: `Removed connection ${connectionId}`,
+      metadata: { previousStatus: connection.status },
     });
 
     return ok(undefined);

@@ -51,6 +51,7 @@ function mapCustomer(row: DbCustomer): Customer {
     status: row.status,
     tags: row.tags,
     notes: row.notes,
+    cbnConnectionId: row.cbn_connection_id,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     createdBy: row.created_by,

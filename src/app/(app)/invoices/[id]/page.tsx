@@ -7,6 +7,10 @@ import { CustomerPaymentService } from "@/features/payment/services/customer-pay
 import { ErrorState } from "@/components/shared/error-state";
 import { InvoiceDetail } from "@/features/sales/components/invoice-detail";
 import { getEntityApprovals } from "@/features/approvals/server/entity-approvals";
+import { ConnectionService } from "@/features/cbn/services/connection.service";
+import { CustomerRepository } from "@/features/customer/repositories/customer.repository";
+import { DiscoveryRepository } from "@/features/cbn/repositories/discovery.repository";
+import type { NetworkTarget } from "@/features/cbn/components/SendViaNetworkDialog";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 
 interface InvoiceDetailPageProps {
@@ -155,6 +159,53 @@ export default async function InvoiceDetailPage({
     }),
   ]);
 
+  // Where this invoice goes on the network is not a choice — it is whichever
+  // business the invoice's CUSTOMER is linked to. Resolve that one connection;
+  // an unlinked customer simply has no network target.
+  let networkTarget: NetworkTarget | null = null;
+  if (context.permissions.includes("cbn.sync")) {
+    const customer = await new CustomerRepository(supabase).findById(
+      invoice.customerId
+    );
+    const connectionId = customer?.cbnConnectionId ?? null;
+
+    if (connectionId) {
+      const connection = await new ConnectionService(supabase).getConnection(
+        connectionId
+      );
+
+      // Only an accepted connection carrying our `receive_invoices` grant can
+      // receive. The RPC enforces the same rule, so checking here avoids
+      // offering a send that is guaranteed to fail.
+      if (connection.success && connection.data.status === "accepted") {
+        const myGrants =
+          connection.data.requesterOrganizationId === activeOrg.id
+            ? connection.data.requesterGrants
+            : connection.data.recipientGrants;
+
+        if (myGrants.includes("receive_invoices")) {
+          const otherOrgId =
+            connection.data.requesterOrganizationId === activeOrg.id
+              ? connection.data.recipientOrganizationId
+              : connection.data.requesterOrganizationId;
+          const profile = await new DiscoveryRepository(
+            supabase
+          ).getPublicProfile(otherOrgId);
+
+          networkTarget = {
+            connectionId,
+            name:
+              profile?.displayName ??
+              profile?.name ??
+              customer?.name ??
+              "Connected business",
+            businessId: profile?.businessId ?? null,
+          };
+        }
+      }
+    }
+  }
+
   return (
     <InvoiceDetail
       invoice={invoice}
@@ -164,6 +215,7 @@ export default async function InvoiceDetailPage({
       payments={payments}
       availableCredit={availableCredit}
       approvals={approvals}
+      networkTarget={networkTarget}
       organizationId={activeOrg.id}
       canManage={context.permissions.includes("invoice.create")}
       canCancel={context.permissions.includes("invoice.cancel")}

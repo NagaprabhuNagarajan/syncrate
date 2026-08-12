@@ -21,6 +21,7 @@ const MOCK_CONNECTION: BusinessConnection = {
   rejectedAt: null,
   disconnectedAt: null,
   rejectionReason: null,
+  requesterCounterpartyRole: null,
   createdAt: new Date("2026-01-01"),
   updatedAt: new Date("2026-01-01"),
   createdBy: null,
@@ -89,6 +90,8 @@ describe("ConnectionService.requestConnection", () => {
       requesterOrgId: "org-a",
       recipientOrgId: "org-b",
       message: "Hello!",
+      counterpartyRole: "supplier",
+      linkEntityId: "sup-1",
     });
 
     expect(result.success).toBe(true);
@@ -99,6 +102,8 @@ describe("ConnectionService.requestConnection", () => {
       p_requester_org_id: "org-a",
       p_recipient_org_id: "org-b",
       p_message: "Hello!",
+      p_counterparty_role: "supplier",
+      p_link_entity_id: "sup-1",
     });
   });
 
@@ -112,6 +117,8 @@ describe("ConnectionService.requestConnection", () => {
     const result = await service.requestConnection({
       requesterOrgId: "org-a",
       recipientOrgId: "org-b",
+      counterpartyRole: "supplier",
+      linkEntityId: "sup-1",
     });
 
     expect(result.success).toBe(false);
@@ -130,6 +137,8 @@ describe("ConnectionService.requestConnection", () => {
     const result = await service.requestConnection({
       requesterOrgId: "org-a",
       recipientOrgId: "org-b",
+      counterpartyRole: "supplier",
+      linkEntityId: "sup-1",
     });
 
     expect(result.success).toBe(false);
@@ -156,6 +165,7 @@ describe("ConnectionService.acceptConnection", () => {
     expect(result.success).toBe(true);
     expect(supabase.rpc).toHaveBeenCalledWith("accept_connection_request", {
       p_connection_id: "conn-1",
+      p_link_entity_id: null,
     });
   });
 
@@ -423,8 +433,127 @@ describe("ConnectionService.requestConnection (default error)", () => {
     const result = await service.requestConnection({
       requesterOrgId: "org-a",
       recipientOrgId: "org-b",
+      counterpartyRole: "supplier",
+      linkEntityId: "sup-1",
     });
 
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("unknown");
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// removeConnection
+// ─────────────────────────────────────────────────────────────
+
+/** Mock whose `business_connections` table supports both select and update. */
+function makeSupabaseForRemove(
+  row: Record<string, unknown> | null,
+  updateError: { message: string } | null = null
+): { supabase: AppSupabaseClient; update: ReturnType<typeof vi.fn> } {
+  const single = vi
+    .fn()
+    .mockResolvedValue({ data: row, error: row ? null : { message: "not found" } });
+  const select = vi.fn().mockReturnValue({
+    eq: vi.fn().mockReturnValue({ is: vi.fn().mockReturnValue({ single }) }),
+  });
+  const update = vi.fn().mockReturnValue({
+    eq: vi.fn().mockReturnValue({
+      is: vi.fn().mockResolvedValue({ error: updateError }),
+    }),
+  });
+  const auditInsert = vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      single: vi.fn().mockResolvedValue({ data: { id: "audit-1" }, error: null }),
+    }),
+  });
+  const from = vi.fn((table: string) =>
+    table === "audit_logs" ? { insert: auditInsert } : { select, update }
+  );
+  return {
+    supabase: { from, rpc: vi.fn() } as unknown as AppSupabaseClient,
+    update,
+  };
+}
+
+describe("ConnectionService.removeConnection", () => {
+  it("soft-deletes a rejected connection", async () => {
+    const { supabase, update } = makeSupabaseForRemove(
+      makeDbRow({ status: "rejected" })
+    );
+
+    const result = await new ConnectionService(supabase).removeConnection(
+      "conn-1",
+      "user-1"
+    );
+
+    expect(result.success).toBe(true);
+    expect(update).toHaveBeenCalledTimes(1);
+    const patch = update.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(patch.deleted_at).toEqual(expect.any(String));
+    expect(patch.deleted_by).toBe("user-1");
+  });
+
+  it("soft-deletes a disconnected connection", async () => {
+    const { supabase } = makeSupabaseForRemove(
+      makeDbRow({ status: "disconnected" })
+    );
+    const result = await new ConnectionService(supabase).removeConnection(
+      "conn-1",
+      "user-1"
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("refuses to remove a live connection", async () => {
+    const { supabase, update } = makeSupabaseForRemove(
+      makeDbRow({ status: "accepted" })
+    );
+
+    const result = await new ConnectionService(supabase).removeConnection(
+      "conn-1",
+      "user-1"
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+    }
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("refuses to remove a pending request", async () => {
+    const { supabase, update } = makeSupabaseForRemove(makeDbRow());
+    const result = await new ConnectionService(supabase).removeConnection(
+      "conn-1",
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("returns not_found for a missing connection", async () => {
+    const { supabase } = makeSupabaseForRemove(null);
+    const result = await new ConnectionService(supabase).removeConnection(
+      "conn-1",
+      "user-1"
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+    }
+  });
+
+  it("reports a failure when the update errors", async () => {
+    const { supabase } = makeSupabaseForRemove(makeDbRow({ status: "rejected" }), {
+      message: "rls denied",
+    });
+    const result = await new ConnectionService(supabase).removeConnection(
+      "conn-1",
+      "user-1"
+    );
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.code).toBe("unknown");

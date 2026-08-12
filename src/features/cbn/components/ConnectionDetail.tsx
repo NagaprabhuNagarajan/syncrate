@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Settings2,
@@ -18,14 +20,20 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import {
   updateConnectionPermissions,
   disconnectBusiness,
+  acceptConnectionRequest,
+  rejectConnectionRequest,
+  sendConnectionRequest,
+  removeConnection,
 } from "@/features/cbn/actions/connection.actions";
 import { VerificationBadge } from "@/features/cbn/components/VerificationBadge";
 import { TrustScoreBadge } from "@/features/cbn/components/TrustScoreBadge";
 import type {
   BusinessConnection,
+  ConnectionPartyRole,
   ConnectionStatus,
   CbnSharedDocument,
   CbnEvent,
+  LinkableParty,
 } from "@/features/cbn/types/cbn.types";
 
 type DetailTab = "overview" | "documents" | "events";
@@ -61,8 +69,25 @@ interface ConnectionDetailProps {
   readonly connection: BusinessConnection;
   readonly myOrgId: string;
   readonly otherOrg: OtherOrgInfo;
+  /** Your unlinked customers — offered when this connection needs a customer. */
+  readonly customers?: readonly LinkableParty[];
+  /** Your unlinked suppliers — offered when this connection needs a supplier. */
+  readonly suppliers?: readonly LinkableParty[];
   readonly sharedDocuments: readonly CbnSharedDocument[];
   readonly events: readonly CbnEvent[];
+}
+
+/**
+ * A connection is always mirror-imaged: if they are my customer, I am their
+ * supplier. Null in, null out — connections predating party linking have no
+ * declared role.
+ */
+function invertRole(
+  role: ConnectionPartyRole | null
+): ConnectionPartyRole | null {
+  if (role === "customer") {return "supplier";}
+  if (role === "supplier") {return "customer";}
+  return null;
 }
 
 function formatDate(d: Date | null): string {
@@ -89,10 +114,14 @@ function OverviewTab({
   connection,
   myOrgId,
   otherOrg,
+  customers = [],
+  suppliers = [],
 }: {
   readonly connection: BusinessConnection;
   readonly myOrgId: string;
   readonly otherOrg: OtherOrgInfo;
+  readonly customers?: readonly LinkableParty[];
+  readonly suppliers?: readonly LinkableParty[];
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -127,6 +156,140 @@ function OverviewTab({
         return;
       }
       setSaved(true);
+    });
+  };
+
+  // A pending request is actionable only by the RECIPIENT — the requester just
+  // waits. Accepting grants both sides the default permission set server-side.
+  const router = useRouter();
+  const [deciding, startDecide] = useTransition();
+  const [decideError, setDecideError] = useState<string | null>(null);
+  const canDecideRequest = connection.status === "pending" && !isRequester;
+
+  // The requester declared what we are to them; our role is the inverse. If
+  // they called us their supplier, they are our customer.
+  const requiredRole: ConnectionPartyRole | null = invertRole(
+    connection.requesterCounterpartyRole
+  );
+  const acceptCandidates = requiredRole === "customer" ? customers : suppliers;
+  const [linkEntityId, setLinkEntityId] = useState("");
+
+  const handleAccept = (): void => {
+    setDecideError(null);
+    if (requiredRole && !linkEntityId) {
+      setDecideError(
+        `Select which of your ${requiredRole}s ${otherOrg.name} is before accepting.`
+      );
+      return;
+    }
+    startDecide(async () => {
+      const result = await acceptConnectionRequest(
+        connection.id,
+        myOrgId,
+        linkEntityId || undefined
+      );
+      if (!result.success) {
+        setDecideError(result.error.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  const handleReject = (): void => {
+    setDecideError(null);
+    startDecide(async () => {
+      const result = await rejectConnectionRequest(connection.id, myOrgId);
+      if (!result.success) {
+        setDecideError(result.error.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  // A rejected or disconnected connection is a dead record — reconnecting sends
+  // a brand-new request. The RPC soft-deletes the old row and returns a new id,
+  // so this route stops existing and we navigate to the replacement.
+  const otherOrgId = isRequester
+    ? connection.recipientOrganizationId
+    : connection.requesterOrganizationId;
+  const canReconnect =
+    connection.status === "rejected" || connection.status === "disconnected";
+
+  const [reconnecting, startReconnect] = useTransition();
+  const [reconnectError, setReconnectError] = useState<string | null>(null);
+
+  // A new request must declare the relationship afresh. Default to whatever
+  // this connection already recorded from our side, but let it be changed —
+  // connections made before party linking carry no role at all.
+  const myRole: ConnectionPartyRole | null = isRequester
+    ? connection.requesterCounterpartyRole
+    : invertRole(connection.requesterCounterpartyRole);
+  const [reconnectRole, setReconnectRole] = useState<ConnectionPartyRole | "">(
+    myRole ?? ""
+  );
+  const [reconnectEntityId, setReconnectEntityId] = useState("");
+  const reconnectCandidates =
+    reconnectRole === "customer"
+      ? customers
+      : reconnectRole === "supplier"
+        ? suppliers
+        : [];
+
+  const handleReconnectRoleChange = (next: ConnectionPartyRole | ""): void => {
+    setReconnectRole(next);
+    setReconnectEntityId("");
+  };
+
+  const handleReconnect = (): void => {
+    setReconnectError(null);
+    if (!reconnectRole) {
+      setReconnectError(
+        `Choose whether ${otherOrg.name} is your customer or supplier.`
+      );
+      return;
+    }
+    if (!reconnectEntityId) {
+      setReconnectError(
+        `Select which of your ${reconnectRole}s ${otherOrg.name} is.`
+      );
+      return;
+    }
+    startReconnect(async () => {
+      const formData = new FormData();
+      formData.set("requesterOrgId", myOrgId);
+      formData.set("recipientOrgId", otherOrgId);
+      formData.set("counterpartyRole", reconnectRole);
+      formData.set("linkEntityId", reconnectEntityId);
+      const result = await sendConnectionRequest(formData);
+      if (!result.success) {
+        setReconnectError(result.error.message);
+        return;
+      }
+      router.push(`/cbn/connections/${result.data}`);
+    });
+  };
+
+  const [removing, startRemove] = useTransition();
+  const [removeError, setRemoveError] = useState<string | null>(null);
+
+  const handleRemove = (): void => {
+    if (
+      !window.confirm(
+        `Remove ${otherOrg.name} from your network list? This also clears it for ${otherOrg.name}.`
+      )
+    ) {
+      return;
+    }
+    setRemoveError(null);
+    startRemove(async () => {
+      const result = await removeConnection(connection.id, myOrgId);
+      if (!result.success) {
+        setRemoveError(result.error.message);
+        return;
+      }
+      router.push("/cbn");
     });
   };
 
@@ -200,6 +363,183 @@ function OverviewTab({
           </div>
         )}
       </div>
+
+      {/* Pending request — the recipient decides, the requester waits. */}
+      {connection.status === "pending" && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+          {canDecideRequest ? (
+            <>
+              <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                {otherOrg.name} wants to connect
+              </p>
+              <p className="mt-0.5 text-sm text-amber-800 dark:text-amber-300">
+                They listed you as their{" "}
+                {connection.requesterCounterpartyRole ?? "partner"}, so they are
+                your {requiredRole ?? "partner"}. Accepting lets you exchange
+                invoices, orders and documents directly.
+              </p>
+
+              {requiredRole && (
+                <div className="mt-3">
+                  <label
+                    htmlFor="accept-link-entity"
+                    className="mb-1.5 block text-sm font-medium text-amber-900 dark:text-amber-200"
+                  >
+                    Which of your {requiredRole}s is {otherOrg.name}?
+                  </label>
+                  {acceptCandidates.length === 0 ? (
+                    <p className="text-sm text-amber-800 dark:text-amber-300">
+                      You have no unlinked {requiredRole}s. Add {otherOrg.name}{" "}
+                      as a {requiredRole} first, then accept.
+                    </p>
+                  ) : (
+                    <select
+                      id="accept-link-entity"
+                      value={linkEntityId}
+                      onChange={(e) => setLinkEntityId(e.target.value)}
+                      className="w-full max-w-sm rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30 focus:outline-none dark:border-amber-500/40 dark:bg-slate-900 dark:text-slate-100"
+                    >
+                      <option value="">Select a {requiredRole}…</option>
+                      {acceptCandidates.map((party) => (
+                        <option key={party.id} value={party.id}>
+                          {party.name} ({party.code})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="gradient"
+                  size="sm"
+                  loading={deciding}
+                  onClick={handleAccept}
+                >
+                  Accept connection
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={deciding}
+                  onClick={handleReject}
+                >
+                  Reject
+                </Button>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              Waiting for {otherOrg.name} to accept your connection request.
+            </p>
+          )}
+          {decideError && (
+            <p className="text-error mt-2 text-xs">{decideError}</p>
+          )}
+        </div>
+      )}
+
+      {/* Rejected / disconnected — offer a fresh request. */}
+      {canReconnect && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+            {connection.status === "rejected"
+              ? "This connection request was rejected"
+              : `You are no longer connected to ${otherOrg.name}`}
+          </p>
+          {connection.rejectionReason && (
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Reason: {connection.rejectionReason}
+            </p>
+          )}
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            You can send {otherOrg.name} a new connection request. They will need
+            to accept it before documents can be exchanged again.
+          </p>
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <div>
+              <label
+                htmlFor="reconnect-role"
+                className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+              >
+                They are my
+              </label>
+              <select
+                id="reconnect-role"
+                value={reconnectRole}
+                onChange={(e) =>
+                  handleReconnectRoleChange(
+                    e.target.value as ConnectionPartyRole | ""
+                  )
+                }
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+              >
+                <option value="">Select…</option>
+                <option value="customer">Customer</option>
+                <option value="supplier">Supplier</option>
+              </select>
+            </div>
+
+            {reconnectRole && (
+              <div>
+                <label
+                  htmlFor="reconnect-entity"
+                  className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                >
+                  Linked {reconnectRole}
+                </label>
+                <select
+                  id="reconnect-entity"
+                  value={reconnectEntityId}
+                  onChange={(e) => setReconnectEntityId(e.target.value)}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <option value="">Select a {reconnectRole}…</option>
+                  {reconnectCandidates.map((party) => (
+                    <option key={party.id} value={party.id}>
+                      {party.name} ({party.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              loading={reconnecting}
+              onClick={handleReconnect}
+            >
+              Send new request
+            </Button>
+            <button
+              type="button"
+              disabled={removing}
+              onClick={handleRemove}
+              className="text-xs font-medium text-slate-500 underline-offset-2 hover:text-red-600 hover:underline disabled:opacity-50 dark:text-slate-400 dark:hover:text-red-400"
+            >
+              {removing ? "Removing…" : "Remove from network"}
+            </button>
+          </div>
+          {reconnectError && (
+            <p role="alert" className="text-error mt-2 text-xs">
+              {reconnectError}{" "}
+              <Link href="/cbn" className="font-medium underline">
+                Go to Network
+              </Link>
+            </p>
+          )}
+          {removeError && (
+            <p role="alert" className="text-error mt-2 text-xs">
+              {removeError}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Permissions */}
       {connection.status === "accepted" && (
@@ -433,6 +773,8 @@ export function ConnectionDetail({
   connection,
   myOrgId,
   otherOrg,
+  customers,
+  suppliers,
   sharedDocuments,
   events,
 }: ConnectionDetailProps) {
@@ -480,6 +822,8 @@ export function ConnectionDetail({
             connection={connection}
             myOrgId={myOrgId}
             otherOrg={otherOrg}
+            customers={customers}
+            suppliers={suppliers}
           />
         )}
         {activeTab === "documents" && (

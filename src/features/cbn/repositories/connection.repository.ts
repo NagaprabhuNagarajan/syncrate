@@ -27,6 +27,7 @@ function mapRow(row: DbRow): BusinessConnection {
     rejectedAt: row.rejected_at ? new Date(row.rejected_at) : null,
     disconnectedAt: row.disconnected_at ? new Date(row.disconnected_at) : null,
     rejectionReason: row.rejection_reason,
+    requesterCounterpartyRole: row.requester_counterparty_role,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     createdBy: row.created_by,
@@ -117,5 +118,25 @@ export class ConnectionRepository {
 
     if (error || !data) {return [];}
     return data.map(mapRow);
+  }
+
+  /**
+   * Soft-deletes a dead (rejected/disconnected) connection so it drops off both
+   * parties' lists. The RLS update policy admits either side, and this mirrors
+   * what request_business_connection already does when a new request replaces
+   * an old dead row.
+   */
+  async softDelete(id: string, deletedBy: string | null): Promise<boolean> {
+    const { error } = await this.supabase
+      .from("business_connections")
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: deletedBy,
+        updated_by: deletedBy,
+      })
+      .eq("id", id)
+      .is("deleted_at", null);
+
+    return !error;
   }
 }

@@ -426,4 +426,71 @@ describe("BillsView", () => {
     await user.click(screen.getByRole("button", { name: /previous/i }));
     expect(mockPush).toHaveBeenCalledWith("/bills");
   });
+
+  // ── Network inbox tab ────────────────────────────────────────
+  const incoming = [
+    {
+      id: "cbn-inv-1",
+      connectionId: "conn-1",
+      number: "INV-00001",
+      date: "2026-07-20",
+      totalAmount: 800,
+      senderName: "Acme Steel",
+    },
+  ];
+
+  it("badges the Incoming tab with the pending count", () => {
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([makeInvoice()])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+        canMakePayment
+        incoming={incoming}
+      />
+    );
+    const tab = screen.getByRole("tab", { name: /incoming/i });
+    expect(tab).toHaveTextContent("1");
+    expect(tab).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("shows the inbox instead of the bills table when the tab is active", () => {
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([makeInvoice()])}
+        stats={makeStats()}
+        filters={{}}
+        canManage
+        canMakePayment
+        incoming={incoming}
+        showIncoming
+      />
+    );
+    expect(
+      screen.getByRole("table", { name: /incoming network invoices/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("PINV-00001")).not.toBeInTheDocument();
+  });
+
+  it("clears bill filters when switching to the inbox", async () => {
+    const user = userEvent.setup();
+    searchParamsRef.current = "status=draft&page=2";
+    render(
+      <BillsView
+        organizationId="org-1"
+        result={makeResult([makeInvoice()])}
+        stats={makeStats()}
+        filters={{ status: "draft" }}
+        canManage
+        canMakePayment
+        incoming={incoming}
+      />
+    );
+
+    await user.click(screen.getByRole("tab", { name: /incoming/i }));
+    expect(mockPush).toHaveBeenCalledWith("/bills?view=incoming");
+  });
 });

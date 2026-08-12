@@ -41,6 +41,9 @@ vi.mock("@/features/organization/services/organization.service", () => ({
 // Helpers
 // ─────────────────────────────────────────────────────────────
 
+/** Every line must be matched to a local product before a bill can be created. */
+const MAPPINGS = [{ cbnInvoiceItemId: "line-1", productId: "prod-1" }];
+
 const fakeSupabase = {
   auth: { getUser: getUserMock },
   rpc: rpcMock,
@@ -135,7 +138,7 @@ describe("sendCbnInvoice", () => {
       p_connection_id: "conn-1",
     });
     expect(result).toEqual({ success: true, data: "cbn-inv-1" });
-    expect(revalidateMock).toHaveBeenCalledWith("/cbn/synced-invoices");
+    expect(revalidateMock).toHaveBeenCalledWith("/invoices");
     expect(revalidateMock).toHaveBeenCalledWith("/cbn/connections/conn-1");
   });
 
@@ -158,8 +161,21 @@ describe("sendCbnInvoice", () => {
 // ─────────────────────────────────────────────────────────────
 
 describe("acceptCbnInvoice", () => {
+  it("refuses to accept with no line mappings", async () => {
+    // A bill missing lines understates a payable and cannot be edited
+    // afterwards, so an empty mapping is rejected before it reaches the RPC.
+    const result = await acceptCbnInvoice("cbn-inv-1", "buyer-1", []);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+      expect(result.error.message).toMatch(/match every line/i);
+    }
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
   it("returns validation when required args are missing", async () => {
-    const result = await acceptCbnInvoice("", "buyer-1");
+    const result = await acceptCbnInvoice("", "buyer-1", MAPPINGS);
 
     expect(result).toEqual({
       success: false,
@@ -170,10 +186,10 @@ describe("acceptCbnInvoice", () => {
     });
   });
 
-  it("returns permission_denied when caller lacks invoice.create", async () => {
+  it("returns permission_denied when caller lacks purchase.create", async () => {
     grantPermission("invoice.view");
 
-    const result = await acceptCbnInvoice("cbn-inv-1", "buyer-1");
+    const result = await acceptCbnInvoice("cbn-inv-1", "buyer-1", MAPPINGS);
 
     expect(result).toEqual({
       success: false,
@@ -182,39 +198,45 @@ describe("acceptCbnInvoice", () => {
   });
 
   it("passes the provided notes and revalidates on success", async () => {
-    grantPermission("invoice.create");
+    grantPermission("purchase.create");
     rpcMock.mockResolvedValue({ data: "pur-inv-1", error: null });
 
-    const result = await acceptCbnInvoice("cbn-inv-1", "buyer-1", "Looks good");
+    const result = await acceptCbnInvoice("cbn-inv-1", "buyer-1", MAPPINGS, "Looks good");
 
     expect(rpcMock).toHaveBeenCalledWith("accept_cbn_invoice", {
       p_cbn_invoice_id: "cbn-inv-1",
       p_buyer_org_id: "buyer-1",
       p_notes: "Looks good",
+      p_line_mappings: [
+        { line_id: "line-1", product_id: "prod-1" },
+      ],
     });
     expect(result).toEqual({ success: true, data: "pur-inv-1" });
-    expect(revalidateMock).toHaveBeenCalledWith("/cbn/synced-invoices");
+    expect(revalidateMock).toHaveBeenCalledWith("/bills");
     expect(revalidateMock).toHaveBeenCalledWith("/cbn");
   });
 
   it("passes null notes when omitted", async () => {
-    grantPermission("invoice.create");
+    grantPermission("purchase.create");
     rpcMock.mockResolvedValue({ data: "pur-inv-1", error: null });
 
-    await acceptCbnInvoice("cbn-inv-1", "buyer-1");
+    await acceptCbnInvoice("cbn-inv-1", "buyer-1", MAPPINGS);
 
     expect(rpcMock).toHaveBeenCalledWith("accept_cbn_invoice", {
       p_cbn_invoice_id: "cbn-inv-1",
       p_buyer_org_id: "buyer-1",
       p_notes: null,
+      p_line_mappings: [
+        { line_id: "line-1", product_id: "prod-1" },
+      ],
     });
   });
 
   it("returns unknown when the RPC errors", async () => {
-    grantPermission("invoice.create");
+    grantPermission("purchase.create");
     rpcMock.mockResolvedValue({ data: null, error: { message: "rpc failed" } });
 
-    const result = await acceptCbnInvoice("cbn-inv-1", "buyer-1");
+    const result = await acceptCbnInvoice("cbn-inv-1", "buyer-1", MAPPINGS);
 
     expect(result).toEqual({
       success: false,
@@ -240,7 +262,7 @@ describe("rejectCbnInvoice", () => {
     });
   });
 
-  it("returns permission_denied when caller lacks invoice.create", async () => {
+  it("returns permission_denied when caller lacks purchase.create", async () => {
     grantPermission("invoice.view");
 
     const result = await rejectCbnInvoice("cbn-inv-1", "buyer-1", "Wrong amount");
@@ -252,7 +274,7 @@ describe("rejectCbnInvoice", () => {
   });
 
   it("calls the RPC and revalidates on success", async () => {
-    grantPermission("invoice.create");
+    grantPermission("purchase.create");
     rpcMock.mockResolvedValue({ data: null, error: null });
 
     const result = await rejectCbnInvoice("cbn-inv-1", "buyer-1", "Wrong amount");
@@ -263,11 +285,11 @@ describe("rejectCbnInvoice", () => {
       p_reason: "Wrong amount",
     });
     expect(result).toEqual({ success: true, data: undefined });
-    expect(revalidateMock).toHaveBeenCalledWith("/cbn/synced-invoices");
+    expect(revalidateMock).toHaveBeenCalledWith("/bills");
   });
 
   it("returns unknown when the RPC errors", async () => {
-    grantPermission("invoice.create");
+    grantPermission("purchase.create");
     rpcMock.mockResolvedValue({ data: null, error: { message: "rpc failed" } });
 
     const result = await rejectCbnInvoice("cbn-inv-1", "buyer-1", "reason");
@@ -318,7 +340,7 @@ describe("sendCbnPurchaseOrder", () => {
       p_connection_id: "conn-1",
     });
     expect(result).toEqual({ success: true, data: "cbn-po-1" });
-    expect(revalidateMock).toHaveBeenCalledWith("/cbn/synced-orders");
+    expect(revalidateMock).toHaveBeenCalledWith("/purchases");
     expect(revalidateMock).toHaveBeenCalledWith("/cbn/connections/conn-1");
   });
 
@@ -341,7 +363,7 @@ describe("sendCbnPurchaseOrder", () => {
 
 describe("acceptCbnPurchaseOrder", () => {
   it("returns validation when required args are missing", async () => {
-    const result = await acceptCbnPurchaseOrder("", "supplier-1");
+    const result = await acceptCbnPurchaseOrder("", "supplier-1", MAPPINGS);
 
     expect(result).toEqual({
       success: false,
@@ -352,10 +374,10 @@ describe("acceptCbnPurchaseOrder", () => {
     });
   });
 
-  it("returns permission_denied when caller lacks purchase_order.update", async () => {
-    grantPermission("purchase_order.view");
+  it("returns permission_denied when caller lacks sales.create", async () => {
+    grantPermission("sales.view");
 
-    const result = await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1");
+    const result = await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1", MAPPINGS);
 
     expect(result).toEqual({
       success: false,
@@ -364,38 +386,40 @@ describe("acceptCbnPurchaseOrder", () => {
   });
 
   it("passes provided notes and revalidates on success", async () => {
-    grantPermission("purchase_order.update");
+    grantPermission("sales.create");
     rpcMock.mockResolvedValue({ data: "so-1", error: null });
 
-    const result = await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1", "ok");
+    const result = await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1", MAPPINGS, "ok");
 
     expect(rpcMock).toHaveBeenCalledWith("accept_cbn_purchase_order", {
       p_cbn_po_id: "cbn-po-1",
       p_supplier_org_id: "supplier-1",
       p_notes: "ok",
+      p_line_mappings: [{ line_id: "line-1", product_id: "prod-1" }],
     });
     expect(result).toEqual({ success: true, data: "so-1" });
-    expect(revalidateMock).toHaveBeenCalledWith("/cbn/synced-orders");
+    expect(revalidateMock).toHaveBeenCalledWith("/sales-orders");
   });
 
   it("passes null notes when omitted", async () => {
-    grantPermission("purchase_order.update");
+    grantPermission("sales.create");
     rpcMock.mockResolvedValue({ data: "so-1", error: null });
 
-    await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1");
+    await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1", MAPPINGS);
 
     expect(rpcMock).toHaveBeenCalledWith("accept_cbn_purchase_order", {
       p_cbn_po_id: "cbn-po-1",
       p_supplier_org_id: "supplier-1",
       p_notes: null,
+      p_line_mappings: [{ line_id: "line-1", product_id: "prod-1" }],
     });
   });
 
   it("returns unknown when the RPC errors", async () => {
-    grantPermission("purchase_order.update");
+    grantPermission("sales.create");
     rpcMock.mockResolvedValue({ data: null, error: { message: "rpc failed" } });
 
-    const result = await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1");
+    const result = await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1", MAPPINGS);
 
     expect(result).toEqual({
       success: false,
@@ -407,6 +431,36 @@ describe("acceptCbnPurchaseOrder", () => {
 // ─────────────────────────────────────────────────────────────
 // rejectCbnPurchaseOrder
 // ─────────────────────────────────────────────────────────────
+
+describe("acceptCbnPurchaseOrder line mappings", () => {
+  it("refuses to accept with no line mappings", async () => {
+    // A sales order missing lines cannot be converted to an invoice, so the
+    // chain would dead-end. Reject it before it reaches the RPC.
+    const result = await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1", []);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("validation");
+      expect(result.error.message).toMatch(/match every line/i);
+    }
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("sends the mapping under the neutral line_id key", async () => {
+    grantPermission("sales.create");
+    rpcMock.mockResolvedValue({ data: "so-1", error: null });
+
+    await acceptCbnPurchaseOrder("cbn-po-1", "supplier-1", MAPPINGS);
+
+    // Both document types share one payload shape so the dialog stays generic.
+    expect(rpcMock).toHaveBeenCalledWith(
+      "accept_cbn_purchase_order",
+      expect.objectContaining({
+        p_line_mappings: [{ line_id: "line-1", product_id: "prod-1" }],
+      })
+    );
+  });
+});
 
 describe("rejectCbnPurchaseOrder", () => {
   it("returns validation when reason is missing", async () => {
@@ -448,7 +502,7 @@ describe("rejectCbnPurchaseOrder", () => {
       p_reason: "Out of stock",
     });
     expect(result).toEqual({ success: true, data: undefined });
-    expect(revalidateMock).toHaveBeenCalledWith("/cbn/synced-orders");
+    expect(revalidateMock).toHaveBeenCalledWith("/sales-orders");
   });
 
   it("returns unknown when the RPC errors", async () => {

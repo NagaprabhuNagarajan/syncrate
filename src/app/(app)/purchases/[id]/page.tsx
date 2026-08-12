@@ -8,6 +8,10 @@ import { PurchaseReturnService } from "@/features/purchase/services/purchase-ret
 import { GoodsReceiptService } from "@/features/purchase/services/goods-receipt.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { PurchaseOrderDetail } from "@/features/purchase/components/purchase-order-detail";
+import { SupplierRepository } from "@/features/supplier/repositories/supplier.repository";
+import { ConnectionService } from "@/features/cbn/services/connection.service";
+import { DiscoveryRepository } from "@/features/cbn/repositories/discovery.repository";
+import type { NetworkTarget } from "@/features/cbn/components/SendViaNetworkDialog";
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 
 interface PurchaseOrderDetailPageProps {
@@ -158,9 +162,55 @@ export default async function PurchaseOrderDetailPage({
     lookupUserName(supabase, order.approvedBy),
   ]);
 
+  // Where this PO goes on the network is not a choice — it is whichever
+  // business the PO's SUPPLIER is linked to. An unlinked supplier has no target.
+  let networkTarget: NetworkTarget | null = null;
+  if (context.permissions.includes("cbn.sync")) {
+    const supplier = await new SupplierRepository(supabase).findById(
+      order.supplierId
+    );
+    const connectionId = supplier?.cbnConnectionId ?? null;
+
+    if (connectionId) {
+      const connection = await new ConnectionService(supabase).getConnection(
+        connectionId
+      );
+
+      // Only an accepted connection carrying our `receive_purchase_orders`
+      // grant can receive. The RPC enforces the same rule.
+      if (connection.success && connection.data.status === "accepted") {
+        const myGrants =
+          connection.data.requesterOrganizationId === activeOrg.id
+            ? connection.data.requesterGrants
+            : connection.data.recipientGrants;
+
+        if (myGrants.includes("receive_purchase_orders")) {
+          const otherOrgId =
+            connection.data.requesterOrganizationId === activeOrg.id
+              ? connection.data.recipientOrganizationId
+              : connection.data.requesterOrganizationId;
+          const profile = await new DiscoveryRepository(
+            supabase
+          ).getPublicProfile(otherOrgId);
+
+          networkTarget = {
+            connectionId,
+            name:
+              profile?.displayName ??
+              profile?.name ??
+              supplier?.name ??
+              "Connected business",
+            businessId: profile?.businessId ?? null,
+          };
+        }
+      }
+    }
+  }
+
   return (
     <PurchaseOrderDetail
       purchaseOrder={order}
+      networkTarget={networkTarget}
       supplierName={supplierName}
       branchName={branchName}
       productNames={productNames}

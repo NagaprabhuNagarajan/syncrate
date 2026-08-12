@@ -103,11 +103,13 @@ function renderDetail(
     canCancel?: boolean;
     approvedByName?: string | null;
     linkedInvoices?: readonly InvoiceListItem[];
+    sourcePoNumber?: string | null;
   } = {}
 ) {
   return render(
     <SalesOrderDetail
       salesOrder={order}
+      sourcePoNumber={perms.sourcePoNumber ?? null}
       customerName="Acme Retail"
       branchName="Main WH"
       productNames={{ "p-1": "Widget" }}
@@ -332,5 +334,17 @@ describe("SalesOrderDetail", () => {
     expect(screen.getByText("IGST")).toBeInTheDocument();
     expect(screen.queryByText("CGST")).not.toBeInTheDocument();
     expect(screen.queryByText("SGST")).not.toBeInTheDocument();
+  });
+
+  // ── Network trace ────────────────────────────────────────────
+  it("shows the originating purchase order for a synced order", () => {
+    renderDetail(makeOrder("draft"), { sourcePoNumber: "PO-0001" });
+    expect(screen.getByText("From purchase order")).toBeInTheDocument();
+    expect(screen.getByText("PO-0001")).toBeInTheDocument();
+  });
+
+  it("omits the trace row for a locally created order", () => {
+    renderDetail(makeOrder("draft"));
+    expect(screen.queryByText("From purchase order")).not.toBeInTheDocument();
   });
 });

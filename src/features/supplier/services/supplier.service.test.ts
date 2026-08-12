@@ -66,6 +66,7 @@ function buildSupplier(overrides: Partial<Supplier> = {}): Supplier {
     status: "active",
     tags: [],
     notes: null,
+    cbnConnectionId: null,
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
     createdBy: "user-1",
@@ -488,6 +489,7 @@ describe("SupplierService.exportSuppliersCsv", () => {
         status: "active",
         tags: ["preferred", "raw"],
         notes: null,
+    cbnConnectionId: null,
       }),
     ]);
 

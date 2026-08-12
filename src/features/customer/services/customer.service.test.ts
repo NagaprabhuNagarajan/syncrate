@@ -65,6 +65,7 @@ function buildCustomer(overrides: Partial<Customer> = {}): Customer {
     status: "active",
     tags: [],
     notes: null,
+    cbnConnectionId: null,
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
     createdBy: "user-1",

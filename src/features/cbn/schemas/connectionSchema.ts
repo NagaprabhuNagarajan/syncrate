@@ -16,6 +16,14 @@ export const requestConnectionSchema = z.object({
   requesterOrgId: z.string().uuid("Requester org ID must be a valid UUID"),
   recipientOrgId: z.string().uuid("Recipient org ID must be a valid UUID"),
   message: z.string().max(500, "Message must not exceed 500 characters").optional(),
+  // The local party is required: a connection with nothing to post against is
+  // the state that made document exchange fail at accept time.
+  counterpartyRole: z.enum(["customer", "supplier"], {
+    errorMap: () => ({ message: "Choose whether they are a customer or supplier" }),
+  }),
+  linkEntityId: z
+    .string()
+    .uuid("Select one of your customers or suppliers to link"),
 });
 
 export type RequestConnectionInput = z.infer<typeof requestConnectionSchema>;

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrganizationService } from "@/features/organization/services/organization.service";
 import { BillService } from "@/features/purchase/services/bill.service";
+import { InvoiceSyncService } from "@/features/cbn/services/invoice-sync.service";
+import { ProductRepository } from "@/features/product/repositories/product.repository";
 import { ErrorState } from "@/components/shared/error-state";
 import { BillsView } from "@/features/purchase/components/bills-view";
 import type {
@@ -58,6 +60,7 @@ export default async function BillsPage({
     status?: string;
     paymentStatus?: string;
     page?: string;
+    view?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -108,10 +111,30 @@ export default async function BillsPage({
   const page = parsePage(params.page);
 
   const service = new BillService(supabase);
-  const [result, stats] = await Promise.all([
+  // The incoming list is always fetched, not just when its tab is open — the
+  // tab carries a count badge, which is the only cue that anything is waiting.
+  const [result, stats, incoming] = await Promise.all([
     service.listBills(activeOrg.id, { search, status, paymentStatus, page }),
     service.getBillStats(activeOrg.id),
+    context.permissions.includes("cbn.view")
+      ? new InvoiceSyncService(supabase).listPendingIncoming(activeOrg.id)
+      : Promise.resolve([]),
   ]);
+
+  const incomingDocuments = incoming.map(({ invoice, senderName }) => ({
+    id: invoice.id,
+    connectionId: invoice.connectionId,
+    number: invoice.invoiceNumber,
+    date: invoice.invoiceDate,
+    totalAmount: invoice.totalAmount,
+    senderName,
+  }));
+
+  // Only needed to match incoming lines, so don't pay for it on the common path.
+  const products =
+    incoming.length > 0
+      ? await new ProductRepository(supabase).listOptions(activeOrg.id)
+      : [];
 
   return (
     <BillsView
@@ -121,6 +144,9 @@ export default async function BillsPage({
       filters={{ search, status, paymentStatus }}
       canManage={canManage}
       canMakePayment={canMakePayment}
+      incoming={incomingDocuments}
+      showIncoming={params.view === "incoming"}
+      products={products}
     />
   );
 }

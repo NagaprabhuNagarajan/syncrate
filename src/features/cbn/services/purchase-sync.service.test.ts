@@ -3,6 +3,9 @@ import type { AppSupabaseClient } from "@/lib/supabase/types";
 import type { CbnPurchaseOrder } from "@/features/cbn/types/cbn.types";
 import { PurchaseSyncService } from "./purchase-sync.service";
 
+/** Every line must be matched to a local product before accepting. */
+const MAPPINGS = [{ cbnInvoiceItemId: "line-1", productId: "prod-1" }];
+
 // ─────────────────────────────────────────────────────────────
 // Hoisted mocks
 // ─────────────────────────────────────────────────────────────
@@ -97,13 +100,14 @@ describe("PurchaseSyncService.acceptPurchaseOrder", () => {
   it("returns the sales order ID and audits on success", async () => {
     rpcMock.mockResolvedValue({ data: "so-1", error: null });
 
-    const result = await service().acceptPurchaseOrder("cbn-po-1", "sup-1", "ok");
+    const result = await service().acceptPurchaseOrder("cbn-po-1", "sup-1", MAPPINGS, "ok");
 
     expect(result).toEqual({ success: true, data: "so-1" });
     expect(rpcMock).toHaveBeenCalledWith("accept_cbn_purchase_order", {
       p_cbn_po_id: "cbn-po-1",
       p_supplier_org_id: "sup-1",
       p_notes: "ok",
+      p_line_mappings: [{ line_id: "line-1", product_id: "prod-1" }],
     });
     expect(auditLogMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: "cbn.purchase_order.accept" })
@@ -113,12 +117,13 @@ describe("PurchaseSyncService.acceptPurchaseOrder", () => {
   it("passes null notes when omitted", async () => {
     rpcMock.mockResolvedValue({ data: "so-1", error: null });
 
-    await service().acceptPurchaseOrder("cbn-po-1", "sup-1");
+    await service().acceptPurchaseOrder("cbn-po-1", "sup-1", MAPPINGS);
 
     expect(rpcMock).toHaveBeenCalledWith("accept_cbn_purchase_order", {
       p_cbn_po_id: "cbn-po-1",
       p_supplier_org_id: "sup-1",
       p_notes: null,
+      p_line_mappings: [{ line_id: "line-1", product_id: "prod-1" }],
     });
   });
 
@@ -128,7 +133,7 @@ describe("PurchaseSyncService.acceptPurchaseOrder", () => {
       error: { message: "invalid_status: already accepted" },
     });
 
-    const result = await service().acceptPurchaseOrder("cbn-po-1", "sup-1");
+    const result = await service().acceptPurchaseOrder("cbn-po-1", "sup-1", MAPPINGS);
 
     expect(result.success).toBe(false);
     if (!result.success) {

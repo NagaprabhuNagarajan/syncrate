@@ -1,11 +1,16 @@
 import type { AppSupabaseClient } from "@/lib/supabase/types";
 import { AuditService } from "@/features/audit/services/audit.service";
 import { InvoiceSyncRepository } from "@/features/cbn/repositories/invoice-sync.repository";
+import { DiscoveryRepository } from "@/features/cbn/repositories/discovery.repository";
+import { resolveDocumentLines } from "@/features/cbn/services/line-resolution";
 import type {
   CbnActionResult,
   CbnErrorCode,
   CbnInvoice,
   CbnInvoiceListParams,
+  IncomingCbnInvoice,
+  InvoiceLineMapping,
+  ResolvedInvoiceLine,
 } from "@/features/cbn/types/cbn.types";
 
 // ─────────────────────────────────────────────────────────────
@@ -82,12 +87,17 @@ export class InvoiceSyncService {
   async acceptInvoice(
     cbnInvoiceId: string,
     buyerOrgId: string,
+    lineMappings: readonly InvoiceLineMapping[],
     notes?: string
   ): Promise<CbnActionResult<string>> {
     const { data, error } = await this.supabase.rpc("accept_cbn_invoice", {
       p_cbn_invoice_id: cbnInvoiceId,
       p_buyer_org_id: buyerOrgId,
       p_notes: notes ?? null,
+      p_line_mappings: lineMappings.map((m) => ({
+        line_id: m.cbnInvoiceItemId,
+        product_id: m.productId,
+      })),
     });
 
     if (error) {
@@ -147,5 +157,53 @@ export class InvoiceSyncService {
     params?: CbnInvoiceListParams
   ): Promise<CbnInvoice[]> {
     return this.repo.listByReceiverOrg(orgId, params);
+  }
+
+  /** Delegates to the shared resolver; see line-resolution.ts. */
+  async resolveIncomingLines(
+    cbnInvoiceId: string,
+    buyerOrgId: string,
+    connectionId: string
+  ): Promise<CbnActionResult<readonly ResolvedInvoiceLine[]>> {
+    return resolveDocumentLines(
+      this.supabase,
+      cbnInvoiceId,
+      buyerOrgId,
+      connectionId,
+      "invoice"
+    );
+  }
+
+  /**
+   * Pending invoices awaiting this org's decision, each resolved to the sending
+   * business's display name. The organizations table is member-only, so the
+   * name comes from the public-profile RPC; a lookup miss degrades to the raw
+   * org ID rather than dropping the invoice from the inbox.
+   */
+  async listPendingIncoming(
+    orgId: string
+  ): Promise<readonly IncomingCbnInvoice[]> {
+    const invoices = await this.repo.listByReceiverOrg(orgId, {
+      status: "pending",
+    });
+    if (invoices.length === 0) {
+      return [];
+    }
+
+    const discovery = new DiscoveryRepository(this.supabase);
+    const senderIds = [...new Set(invoices.map((i) => i.organizationId))];
+    const profiles = await Promise.all(
+      senderIds.map((id) => discovery.getPublicProfile(id))
+    );
+
+    const names = new Map<string, string>();
+    senderIds.forEach((id, index) => {
+      names.set(id, profiles[index]?.name ?? id);
+    });
+
+    return invoices.map((invoice) => ({
+      invoice,
+      senderName: names.get(invoice.organizationId) ?? invoice.organizationId,
+    }));
   }
 }

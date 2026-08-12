@@ -42,6 +42,9 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
 import { RecordSupplierPaymentDialog } from "@/features/payment/components/record-supplier-payment-dialog";
+import { IncomingInvoicesPanel } from "@/features/cbn/components/IncomingInvoicesPanel";
+import type { IncomingDocument } from "@/features/cbn/types/cbn.types";
+import type { ProductOption } from "@/features/product/types/product.types";
 import {
   BILL_STATUS,
   BILL_PAYMENT_STATUS,
@@ -90,6 +93,19 @@ interface BillsViewProps {
   };
   readonly canManage: boolean;
   readonly canMakePayment: boolean;
+  /** Invoices sent to this org over CBN, awaiting accept/reject. */
+  readonly incoming?: readonly IncomingDocument[];
+  /** Whether the network inbox tab is the active view. */
+  readonly showIncoming?: boolean;
+  /** Products offered when matching incoming invoice lines. */
+  readonly products?: readonly ProductOption[];
+}
+
+/** Underline-style tab, matching the connection detail tabs. */
+function tabClass(active: boolean): string {
+  return active
+    ? "-mb-px flex items-center border-b-2 border-primary-600 px-3 py-2 text-sm font-medium text-primary-700 dark:text-primary-400"
+    : "-mb-px flex items-center border-b-2 border-transparent px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200";
 }
 
 export function BillsView({
@@ -99,6 +115,9 @@ export function BillsView({
   filters,
   canManage,
   canMakePayment,
+  incoming = [],
+  showIncoming = false,
+  products = [],
 }: BillsViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -159,6 +178,22 @@ export function BillsView({
 
   const handlePaymentSelect = (value: string): void => {
     pushWith({ paymentStatus: value || undefined, page: undefined });
+  };
+
+  // Switching views clears the bill-only filters so returning to Bills doesn't
+  // land on a stale, empty filter combination.
+  const handleShowIncoming = (): void => {
+    pushWith({
+      view: "incoming",
+      status: undefined,
+      paymentStatus: undefined,
+      search: undefined,
+      page: undefined,
+    });
+  };
+
+  const handleShowBills = (): void => {
+    pushWith({ view: undefined, page: undefined });
   };
 
   const editHref = (id: string): string => withOrg(`/bills/${id}/edit`);
@@ -314,6 +349,46 @@ export function BillsView({
         />
       </div>
 
+      {/* Bills / network inbox tabs */}
+      <div
+        role="tablist"
+        aria-label="Bill source"
+        className="mt-5 flex items-center gap-1 border-b border-slate-200 dark:border-slate-800"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!showIncoming}
+          onClick={handleShowBills}
+          className={tabClass(!showIncoming)}
+        >
+          Bills
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={showIncoming}
+          onClick={handleShowIncoming}
+          className={tabClass(showIncoming)}
+        >
+          Incoming
+          {incoming.length > 0 && (
+            <span className="ml-1.5 rounded-full bg-primary-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+              {incoming.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {showIncoming ? (
+        <IncomingInvoicesPanel
+          organizationId={organizationId}
+          invoices={incoming}
+          canManage={canManage}
+          products={products}
+        />
+      ) : (
+        <>
       {/* Search + filter pills */}
       <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <form
@@ -611,6 +686,9 @@ export function BillsView({
             </Button>
           </div>
         </div>
+      )}
+
+        </>
       )}
 
       {showPayment && paymentSupplier && (

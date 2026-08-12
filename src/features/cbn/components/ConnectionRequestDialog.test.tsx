@@ -13,6 +13,9 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+const CUSTOMERS = [{ id: "cust-1", code: "CUS-001", name: "Bharat Traders" }];
+const SUPPLIERS = [{ id: "sup-1", code: "SUP-001", name: "Acme Steel Co" }];
+
 function renderDialog(
   props: Partial<React.ComponentProps<typeof ConnectionRequestDialog>> = {}
 ) {
@@ -23,8 +26,19 @@ function renderDialog(
       requesterOrgId="org-1"
       open
       onClose={vi.fn()}
+      customers={CUSTOMERS}
+      suppliers={SUPPLIERS}
       {...props}
     />
+  );
+}
+
+/** Fills the now-mandatory relationship fields so submission can proceed. */
+async function pickSupplier(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: /^supplier/i }));
+  await user.selectOptions(
+    screen.getByLabelText(/which of your suppliers/i),
+    "sup-1"
   );
 }
 
@@ -57,6 +71,7 @@ describe("ConnectionRequestDialog", () => {
     renderDialog({ onSuccess, onClose });
 
     await user.type(screen.getByLabelText(/message/i), "Let us connect");
+    await pickSupplier(user);
     await user.click(screen.getByRole("button", { name: /send request/i }));
 
     await waitFor(() => expect(mockSend).toHaveBeenCalledTimes(1));
@@ -74,6 +89,7 @@ describe("ConnectionRequestDialog", () => {
     const user = userEvent.setup();
     renderDialog();
 
+    await pickSupplier(user);
     await user.click(screen.getByRole("button", { name: /send request/i }));
 
     await waitFor(() => expect(mockSend).toHaveBeenCalledTimes(1));
@@ -90,6 +106,7 @@ describe("ConnectionRequestDialog", () => {
     const user = userEvent.setup();
     renderDialog({ onClose });
 
+    await pickSupplier(user);
     await user.click(screen.getByRole("button", { name: /send request/i }));
 
     expect(
@@ -114,5 +131,74 @@ describe("ConnectionRequestDialog", () => {
       "[aria-hidden='true']"
     ) as Element);
     expect(onClose).toHaveBeenCalled();
+  });
+
+  // ── Relationship + party linking ─────────────────────────────
+  it("requires a relationship before sending", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(screen.getByRole("button", { name: /send request/i }));
+
+    expect(
+      await screen.findByText(/whether they are your customer or supplier/i)
+    ).toBeInTheDocument();
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it("offers customers when they are the customer, suppliers when supplier", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(screen.getByRole("button", { name: /^customer/i }));
+    expect(screen.getByRole("option", { name: /bharat traders/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^supplier/i }));
+    expect(screen.getByRole("option", { name: /acme steel co/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: /bharat traders/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("requires a party once a relationship is chosen", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(screen.getByRole("button", { name: /^supplier/i }));
+    await user.click(screen.getByRole("button", { name: /send request/i }));
+
+    expect(
+      await screen.findByText(/select which of your suppliers/i)
+    ).toBeInTheDocument();
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it("submits the relationship and the linked party", async () => {
+    mockSend.mockResolvedValue({ success: true, data: "conn-1" });
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(screen.getByRole("button", { name: /^supplier/i }));
+    await user.selectOptions(
+      screen.getByLabelText(/which of your suppliers/i),
+      "sup-1"
+    );
+    await user.click(screen.getByRole("button", { name: /send request/i }));
+
+    await waitFor(() => expect(mockSend).toHaveBeenCalledTimes(1));
+    const formData = mockSend.mock.calls[0]?.[0] as FormData;
+    expect(formData.get("counterpartyRole")).toBe("supplier");
+    expect(formData.get("linkEntityId")).toBe("sup-1");
+  });
+
+  it("guides the user to add a record when the book is empty", async () => {
+    const user = userEvent.setup();
+    renderDialog({ suppliers: [] });
+
+    await user.click(screen.getByRole("button", { name: /^supplier/i }));
+
+    expect(
+      screen.getByText(/you have no unlinked suppliers/i)
+    ).toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import type { ConnectionPartyRole } from "@/features/cbn/types/cbn.types";
 import type {
   BusinessConnection,
   ConnectionStatus,
@@ -21,6 +22,7 @@ type DbRow = {
   rejected_at: string | null;
   disconnected_at: string | null;
   rejection_reason: string | null;
+  requester_counterparty_role: ConnectionPartyRole | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -45,6 +47,7 @@ function mapRow(row: DbRow): BusinessConnection {
     rejectedAt: row.rejected_at ? new Date(row.rejected_at) : null,
     disconnectedAt: row.disconnected_at ? new Date(row.disconnected_at) : null,
     rejectionReason: row.rejection_reason,
+    requesterCounterpartyRole: row.requester_counterparty_role,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     createdBy: row.created_by,

@@ -399,6 +399,11 @@ export function BillDetail({
 
   const { status } = bill;
   const isDraft = status === "draft";
+  // A bill with no lines can only have come from an incomplete network sync.
+  // Editing it is a trap: the bill form requires at least one line, and saving
+  // recomputes the header from whatever lines are present — so the transmitted
+  // total would be replaced by whatever the user happened to type.
+  const hasItems = bill.items.length > 0;
   const balanceDue = bill.totalAmount - bill.amountPaid;
   const applicableCredit = Math.min(availableCredit, balanceDue);
   const canPay = status === "posted" && balanceDue > 0 && canMakePayment;
@@ -484,7 +489,7 @@ export function BillDetail({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {isDraft && canManage && (
+            {isDraft && canManage && hasItems && (
               <Button asChild type="button" variant="outline" size="sm">
                 <Link href={withOrg(`/bills/${bill.id}/edit`)}>
                   <Pencil className="mr-1.5 h-4 w-4" aria-hidden="true" />
@@ -543,6 +548,18 @@ export function BillDetail({
             )}
           </div>
         </div>
+
+        {!hasItems && (
+          <p
+            role="alert"
+            className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+          >
+            This bill has no line items — it came from a network sync that
+            predates line-item support. The total above is correct and it can
+            still be posted, but it cannot be edited without losing that total.
+            Ask the sender to resend the invoice to get a complete copy.
+          </p>
+        )}
       </div>
 
       {actionError && <ErrorBanner message={actionError} className="mb-4" />}

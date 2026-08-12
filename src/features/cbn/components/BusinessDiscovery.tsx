@@ -9,10 +9,17 @@ import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { BusinessProfileCard } from "@/features/cbn/components/BusinessProfileCard";
 import { ConnectionRequestDialog } from "@/features/cbn/components/ConnectionRequestDialog";
 import { useBusinessDiscovery } from "@/features/cbn/hooks/useBusinessDiscovery";
-import type { BusinessSearchResult } from "@/features/cbn/types/cbn.types";
+import type {
+  BusinessSearchResult,
+  LinkableParty,
+} from "@/features/cbn/types/cbn.types";
 
 interface BusinessDiscoveryProps {
   readonly organizationId: string;
+  /** Unlinked customers, offered when the found business is your customer. */
+  readonly customers?: readonly LinkableParty[];
+  /** Unlinked suppliers, offered when the found business is your supplier. */
+  readonly suppliers?: readonly LinkableParty[];
 }
 
 function useDebounce<T>(value: T, delayMs: number): T {
@@ -28,7 +35,11 @@ function useDebounce<T>(value: T, delayMs: number): T {
  * Full business discovery UI with search, filters, and grid of results.
  * Connects businesses via ConnectionRequestDialog.
  */
-export function BusinessDiscovery({ organizationId }: BusinessDiscoveryProps) {
+export function BusinessDiscovery({
+  organizationId,
+  customers = [],
+  suppliers = [],
+}: BusinessDiscoveryProps) {
   const [searchInput, setSearchInput] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [dialogTarget, setDialogTarget] = useState<BusinessSearchResult | null>(null);
@@ -155,6 +166,8 @@ export function BusinessDiscovery({ organizationId }: BusinessDiscoveryProps) {
           requesterOrgId={organizationId}
           open={dialogTarget !== null}
           onClose={handleDialogClose}
+          customers={customers}
+          suppliers={suppliers}
         />
       )}
     </div>

@@ -42,10 +42,20 @@ vi.mock("@/features/organization/services/organization.service", () => ({
 
 const ORG_A = "11111111-1111-1111-1111-111111111111";
 const ORG_B = "22222222-2222-2222-2222-222222222222";
+const LINK_ENTITY_ID = "33333333-3333-3333-3333-333333333333";
 
+/**
+ * Builds request FormData. The relationship fields are mandatory on the real
+ * form, so they are defaulted here — tests that care about them override.
+ */
 function fd(entries: Record<string, string>): FormData {
   const form = new FormData();
-  for (const [key, value] of Object.entries(entries)) {
+  const withDefaults = {
+    counterpartyRole: "supplier",
+    linkEntityId: LINK_ENTITY_ID,
+    ...entries,
+  };
+  for (const [key, value] of Object.entries(withDefaults)) {
     form.set(key, value);
   }
   return form;
@@ -152,6 +162,8 @@ describe("sendConnectionRequest", () => {
       p_requester_org_id: ORG_A,
       p_recipient_org_id: ORG_B,
       p_message: "Hello",
+      p_counterparty_role: "supplier",
+      p_link_entity_id: LINK_ENTITY_ID,
     });
     expect(result).toEqual({ success: true, data: "conn-1" });
     expect(revalidateMock).toHaveBeenCalledWith("/cbn");
@@ -169,6 +181,8 @@ describe("sendConnectionRequest", () => {
       p_requester_org_id: ORG_A,
       p_recipient_org_id: ORG_B,
       p_message: null,
+      p_counterparty_role: "supplier",
+      p_link_entity_id: LINK_ENTITY_ID,
     });
   });
 
@@ -176,18 +190,101 @@ describe("sendConnectionRequest", () => {
     grantPermission("cbn.connect");
     rpcMock.mockResolvedValue({
       data: null,
-      error: { message: "duplicate key value violates unique constraint" },
+      error: { message: "duplicate: a connection with this business already exists" },
     });
 
     const result = await sendConnectionRequest(
       fd({ requesterOrgId: ORG_A, recipientOrgId: ORG_B })
     );
 
-    expect(result).toEqual({
-      success: false,
-      error: { code: "duplicate", message: "Connection request already exists" },
-    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("duplicate");
+      expect(result.error.message).toMatch(/network list/i);
+    }
     expect(revalidateMock).not.toHaveBeenCalled();
+  });
+
+  it("does not disguise a unique-constraint violation as a normal duplicate", async () => {
+    grantPermission("cbn.connect");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: {
+        message:
+          'duplicate key value violates unique constraint "uq_business_connections_pair"',
+      },
+    });
+
+    const result = await sendConnectionRequest(
+      fd({ requesterOrgId: ORG_A, recipientOrgId: ORG_B })
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toMatch(/bug/i);
+      expect(result.error.message).toMatch(/uq_business_connections_pair/);
+    }
+  });
+
+  it("tells the user a pending request is what is blocking them", async () => {
+    grantPermission("cbn.connect");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: {
+        message:
+          "duplicate: a connection with this business already exists (status: pending)",
+      },
+    });
+
+    const result = await sendConnectionRequest(
+      fd({ requesterOrgId: ORG_A, recipientOrgId: ORG_B })
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toMatch(/pending connection request/i);
+      expect(result.error.message).toMatch(/accept it/i);
+    }
+  });
+
+  it("tells the user they are already connected", async () => {
+    grantPermission("cbn.connect");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: {
+        message:
+          "duplicate: a connection with this business already exists (status: accepted)",
+      },
+    });
+
+    const result = await sendConnectionRequest(
+      fd({ requesterOrgId: ORG_A, recipientOrgId: ORG_B })
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toMatch(/already connected/i);
+    }
+  });
+
+  it("explains when the target business is no longer discoverable", async () => {
+    grantPermission("cbn.connect");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: {
+        message: "not_found: target business not found or not discoverable",
+      },
+    });
+
+    const result = await sendConnectionRequest(
+      fd({ requesterOrgId: ORG_A, recipientOrgId: ORG_B })
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("not_found");
+      expect(result.error.message).toMatch(/no longer discoverable/i);
+    }
   });
 
   it("returns unknown for any other RPC error", async () => {
@@ -246,6 +343,7 @@ describe("acceptConnectionRequest", () => {
 
     expect(rpcMock).toHaveBeenCalledWith("accept_connection_request", {
       p_connection_id: "conn-1",
+      p_link_entity_id: null,
     });
     expect(result).toEqual({ success: true, data: undefined });
     expect(revalidateMock).toHaveBeenCalledWith("/cbn/connections/conn-1");

@@ -18,6 +18,7 @@ interface QueryResult {
 
 interface MockBuilder {
   select: Mock;
+  update: Mock;
   eq: Mock;
   is: Mock;
   or: Mock;
@@ -48,6 +49,7 @@ function createMockClient(results: QueryResult[]): MockClient {
       ) => Promise<unknown>;
     } = {
       select: vi.fn(() => builder),
+      update: vi.fn(() => builder),
       eq: vi.fn(() => builder),
       is: vi.fn(() => builder),
       or: vi.fn(() => builder),
@@ -86,6 +88,7 @@ function buildRow(overrides: Partial<DbRow> = {}): DbRow {
     rejected_at: null,
     disconnected_at: null,
     rejection_reason: null,
+    requester_counterparty_role: null,
     created_at: "2026-01-01T00:00:00.000Z",
     updated_at: "2026-01-02T00:00:00.000Z",
     deleted_at: null,
@@ -130,6 +133,7 @@ describe("ConnectionRepository", () => {
         rejectedAt: null,
         disconnectedAt: null,
         rejectionReason: null,
+        requesterCounterpartyRole: null,
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
         updatedAt: new Date("2026-01-02T00:00:00.000Z"),
         createdBy: "user-1",
@@ -276,6 +280,34 @@ describe("ConnectionRepository", () => {
       ]);
       const repo = new ConnectionRepository(client);
       expect(await repo.findPendingForOrg("org-b")).toEqual([]);
+    });
+  });
+
+  describe("softDelete", () => {
+    it("stamps deleted_at/deleted_by and only touches live rows", async () => {
+      const { client, builders } = createMockClient([
+        { data: null, error: null },
+      ]);
+      const repo = new ConnectionRepository(client);
+
+      expect(await repo.softDelete("conn-1", "user-1")).toBe(true);
+      const patch = builders[0]?.update.mock.calls[0]?.[0] as Record<
+        string,
+        unknown
+      >;
+      expect(patch.deleted_at).toEqual(expect.any(String));
+      expect(patch.deleted_by).toBe("user-1");
+      expect(patch.updated_by).toBe("user-1");
+      expect(builders[0]?.eq).toHaveBeenCalledWith("id", "conn-1");
+      expect(builders[0]?.is).toHaveBeenCalledWith("deleted_at", null);
+    });
+
+    it("returns false when the update errors", async () => {
+      const { client } = createMockClient([
+        { data: null, error: { message: "rls denied" } },
+      ]);
+      const repo = new ConnectionRepository(client);
+      expect(await repo.softDelete("conn-1", "user-1")).toBe(false);
     });
   });
 });

@@ -5,6 +5,8 @@ import { OrganizationService } from "@/features/organization/services/organizati
 import { SalesOrderService } from "@/features/sales/services/sales-order.service";
 import { ErrorState } from "@/components/shared/error-state";
 import { SalesOrdersView } from "@/features/sales/components/sales-orders-view";
+import { PurchaseSyncService } from "@/features/cbn/services/purchase-sync.service";
+import { ProductRepository } from "@/features/product/repositories/product.repository";
 import type { SalesOrderStatus } from "@/features/sales/types/sales-order.types";
 
 export const metadata: Metadata = {
@@ -42,6 +44,7 @@ export default async function SalesOrdersPage({
     search?: string;
     status?: string;
     page?: string;
+    view?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -89,10 +92,30 @@ export default async function SalesOrdersPage({
   const page = parsePage(params.page);
 
   const service = new SalesOrderService(supabase);
-  const [result, stats] = await Promise.all([
+  // The incoming list is always fetched, not just when its tab is open — the
+  // tab carries a count badge, which is the only cue that anything is waiting.
+  const [result, stats, incoming] = await Promise.all([
     service.listSalesOrders(activeOrg.id, { search, status, page }),
     service.getSalesOrderStats(activeOrg.id),
+    context.permissions.includes("cbn.view")
+      ? new PurchaseSyncService(supabase).listPendingIncoming(activeOrg.id)
+      : Promise.resolve([]),
   ]);
+
+  const incomingDocuments = incoming.map(({ purchaseOrder, senderName }) => ({
+    id: purchaseOrder.id,
+    connectionId: purchaseOrder.connectionId,
+    number: purchaseOrder.poNumber,
+    date: purchaseOrder.poDate,
+    totalAmount: purchaseOrder.totalAmount,
+    senderName,
+  }));
+
+  // Only needed to match incoming lines, so don't pay for it on the common path.
+  const products =
+    incoming.length > 0
+      ? await new ProductRepository(supabase).listOptions(activeOrg.id)
+      : [];
 
   return (
     <SalesOrdersView
@@ -101,6 +124,9 @@ export default async function SalesOrdersPage({
       stats={stats}
       filters={{ search, status }}
       canManage={canManage}
+      incoming={incomingDocuments}
+      showIncoming={params.view === "incoming"}
+      products={products}
     />
   );
 }

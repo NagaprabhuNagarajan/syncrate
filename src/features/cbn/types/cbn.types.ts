@@ -115,6 +115,8 @@ export interface BusinessConnection {
   readonly rejectedAt: Date | null;
   readonly disconnectedAt: Date | null;
   readonly rejectionReason: string | null;
+  /** What the counterparty is to the REQUESTER. Null on pre-linking connections. */
+  readonly requesterCounterpartyRole: ConnectionPartyRole | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly createdBy: string | null;
@@ -217,6 +219,83 @@ export interface CbnInvoice {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly createdBy: string | null;
+}
+
+/** What the counterparty is to the requester. The recipient's role is the inverse. */
+export type ConnectionPartyRole = "customer" | "supplier";
+
+/** A local customer/supplier record that can be bound to a connection. */
+export interface LinkableParty {
+  readonly id: string;
+  readonly code: string;
+  readonly name: string;
+}
+
+/** Which payload table a synced document's lines live in. */
+export type CbnDocumentKind = "invoice" | "purchase_order";
+
+/** One line of a document as it crossed the network — the sender's snapshot. */
+export interface CbnInvoiceLine {
+  readonly id: string;
+  readonly cbnInvoiceId: string;
+  readonly sortOrder: number;
+  /** The sender's product id: the key a remembered mapping is stored against. */
+  readonly supplierProductId: string | null;
+  readonly productName: string | null;
+  readonly productSku: string | null;
+  readonly productBarcode: string | null;
+  readonly hsnCode: string | null;
+  readonly description: string | null;
+  readonly quantity: number;
+  readonly unitPrice: number;
+  readonly gstRate: number;
+  readonly taxAmount: number;
+  readonly lineTotal: number;
+}
+
+/** How an incoming line was matched to a local product, for display. */
+export type ProductMatchSource = "link" | "barcode" | "sku" | "none";
+
+/** An incoming line together with the local product it resolved to, if any. */
+export interface ResolvedInvoiceLine {
+  readonly line: CbnInvoiceLine;
+  /** Null when nothing matched — the user must choose before accepting. */
+  readonly productId: string | null;
+  readonly productName: string | null;
+  readonly matchedBy: ProductMatchSource;
+}
+
+/** The user's decision for one line, sent to the accept RPC. */
+export interface InvoiceLineMapping {
+  readonly cbnInvoiceItemId: string;
+  readonly productId: string;
+}
+
+/**
+ * Neutral view-model for the incoming-document inbox. Invoices and purchase
+ * orders differ in field names (invoice_number vs po_number) but the inbox
+ * shows the same five things, so pages map into this rather than the panel
+ * knowing about both shapes.
+ */
+export interface IncomingDocument {
+  readonly id: string;
+  readonly connectionId: string;
+  readonly number: string;
+  readonly date: string;
+  readonly totalAmount: number;
+  readonly senderName: string;
+}
+
+/** A pending incoming purchase order paired with the sending business's name. */
+export interface IncomingCbnPurchaseOrder {
+  readonly purchaseOrder: CbnPurchaseOrder;
+  readonly senderName: string;
+}
+
+/** A pending incoming invoice paired with the sending business's display name. */
+export interface IncomingCbnInvoice {
+  readonly invoice: CbnInvoice;
+  readonly senderName: string;
 }
 
 export interface CbnPurchaseOrder {
